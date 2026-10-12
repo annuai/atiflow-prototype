@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "audit:map": "vite-node tools/audit-nav.ts"
   },
   "dependencies": {
     "@react-stately/utils": "^3.12.1",

@@ -7,7 +7,7 @@ export const copy = {
     materials: { label: 'Materials', subtitle: 'Manage the materials and material groups your workflow builder uses.' },
     'staging-area': { label: 'Staging Area', subtitle: 'Manage the staging areas' },
   },
-  sub: { materials: 'Materials', groups: 'Station Groups' },
+  sub: { materials: 'All materials', groups: 'Station groups' },
   materials: {
     note: 'Only materials selected from the material list are shown here. Materials can’t be deleted once added, as they may be used in workflows.',
     searchPlaceholder: 'Search materials by material groups, code, name',

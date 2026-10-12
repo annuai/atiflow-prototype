@@ -8,7 +8,7 @@ import { CameraModes, ZoomControl, FleetList, RobotPanel, StationPanel, MapLegen
 import { Button } from '@/components/base/buttons/button';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { Input } from '@/components/base/input/input';
-import { Select } from '@/components/base/select/select';
+import { FleetSelect } from '@/components/data/FleetSelect';
 import { WalkPad } from '@/ui/WalkPad'; import { useCoarse } from '@/ui/useCoarse';
 import { Send01, SearchLg, Stars02, XClose } from '@untitledui/icons';
 import { liveHits, useLiveNav } from './liveNav';
@@ -47,8 +47,7 @@ export function LiveFloorPage() {
         <div className="builder">
           <div className="bh"><span className="ic">▦</span><h2>Live View</h2><div style={{ flex: 1 }} />
             <span style={{ fontSize: 12, fontWeight: 600 }}>Fleet -</span>
-            <Select size="sm" aria-label="Fleet" className="fleet-select" selectedKey={fleetId} onSelectionChange={(k) => store.getState().setFleet(String(k))}
-              items={[{ id: 'all', label: 'All fleets' }, ...fleets.map((f) => ({ id: f.id, label: f.name }))]}>{(item) => <Select.Item {...item} />}</Select></div>
+            <FleetSelect className="fleet-select" value={fleetId} onChange={(id) => store.getState().setFleet(id)} /></div>
           <div className={'canvas' + (sel || selStation ? ' has-sel' : '')}><div className="gl" ref={holder} />{!ready && <div className="loading">Loading site…</div>}
             <CameraModes fleetOpen={fleetOpen} onFleet={() => setFleetOpen((o) => !o)} />{fleetOpen && <FleetList />}<RobotPanel /><StationPanel />{legendOpen && !sel && !selStation && <MapLegend onClose={() => setLegend(false)} />}
             {zone && <div className="float zonebar"><i className="dot" style={{ background: zone.color }} />{zone.name}<ButtonUtility size="xs" color="tertiary" icon={XClose} tooltip="Back to whole floor" onPress={() => handle.engine?.home()} /></div>}

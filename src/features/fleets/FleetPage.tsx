@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useDataset } from '@/data/dataset';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Dataflow03, LayoutGrid01, Package, Settings02 } from '@untitledui/icons';
 import { Tabs } from '@/components/application/tabs/tabs';
@@ -32,7 +33,7 @@ type TabId = (typeof TABS)[number]['id'];
 export function FleetPage() {
   const { name = '', tab = '' } = useParams(); const navigate = useNavigate();
   const renamedFrom = useRef('');
-  const known = useWorkflow((s) => s.fleetNames.includes(name)); const active = TABS.find((t) => t.id === tab);
+  const known = useDataset((s) => s.fleets.some((f) => f.name === name)); const active = TABS.find((t) => t.id === tab);
   const map = useMap(useFleets((s) => profileOf(s.profiles, name).mapId));
   const robots = useDevices((s) => s.robot).filter((d) => d.values.fleet === name).length; const hardware = useDevices((s) => s.hardware).filter((d) => d.values.fleet === name).length;
   const workflows = useWorkflow((s) => workflowsOfFleet(s.workflows, name).filter(isKept).length);

@@ -1,6 +1,7 @@
 import { Camera01, Cube01, CpuChip01, Package, StopSquare, Truck01, VolumeMax } from '@untitledui/icons';
 import xtLite from '../assets/xt-lite-illustration.png';
 import type { Device, DeviceKind, FieldDef } from './types';
+import DATASET from '@/data/dataset.json';
 
 /** Hardware type -> icon. The Figma file only has a placeholder square for these (annotation: "need appropriate icons"), so these are Untitled icons. */
 export const HARDWARE_ICONS = { 'Summon Button': StopSquare, Hooter: VolumeMax, 'Ati Eye': Camera01 } as const;
@@ -11,15 +12,6 @@ const ROBOT_TYPES = ['Tug 1.5T', 'Tug 3T'];
 const ADDONS = ['Auto-Hitch', 'Auto Un-hitch'];
 const HARDWARE_TYPES = Object.keys(HARDWARE_ICONS);
 const FLEET: FieldDef = { key: 'fleet', label: 'Assigned Fleet', control: 'fleet', detail: { editable: true } };
-
-const robot = (n: number, fleet: string): Device => ({
-  status: 'online',
-  values: {
-    name: `AMR-${String(n).padStart(3, '0')}`, manufacturer: 'Ati Robotics', sherpaType: 'Tug 1.5T', hardwareId: `HW-2024-AMR-08${43 + n}`, apiKey: `sk-amr${String(n).padStart(3, '0')}-f8a3b2c1d4e5`,
-    addons: ['Auto-Hitch', 'Auto Un-hitch'], ip: `192.168.1.${43 + n}`, firmware: 'v3.2.1', lastCalibration: 'Sep 15, 2026', fleet,
-  },
-});
-const hw = (name: string, type: string, id: string, fleet: string, status: Device['status']): Device => ({ status, values: { name, manufacturer: 'Ati Robotics', hwType: type, hardwareId: id, apiKey: `sk-${id.toLowerCase()}-c4d9e2a7`, fleet } });
 
 const ROBOT_FIELDS: FieldDef[] = [
   { key: 'name', label: 'Robot Name', control: 'text', placeholder: 'e.g. Sherpa-09', required: true, unique: true, modal: 'full', detailOrder: 1, detail: true },
@@ -58,7 +50,7 @@ export const KINDS: Record<'robot' | 'hardware', DeviceKind> = {
     preview: () => ({ image: robotPicture('h-[137px] w-[160px] object-contain'), caption: 'Sherpa XT Lite' }),
     empty: { headline: 'Let’s add your first robot!', description: 'Register your AMRs to start assigning them to fleets, maps and workflows.', hint: 'Keep the Hardware ID and API key from the robot’s label handy.' },
     emptyIllustration: robotPicture('h-[111px] w-[200px] object-contain'),
-    seed: [[1, 'Line Side Fleet'], [2, 'Line Side Fleet'], [3, 'Line Side Fleet'], [4, 'Line Side Fleet'], [5, 'Line Side Fleet'], [6, 'Assembly Fleet'], [7, 'Assembly Fleet'], [8, '']].map(([n, f]) => robot(n as number, f as string)),
+    seed: DATASET.robot as Device[],
   },
   hardware: {
     id: 'hardware', route: 'hardware', singular: 'Hardware', plural: 'Hardware',
@@ -75,9 +67,6 @@ export const KINDS: Record<'robot' | 'hardware', DeviceKind> = {
       quickPicks: HARDWARE_TYPES.map((t) => ({ label: t, value: t, icon: HARDWARE_ICONS[t as keyof typeof HARDWARE_ICONS] })),
     },
     emptyIllustration: <span className="flex flex-col items-center gap-1 text-secondary"><Cube01 className="size-20 stroke-1" /><CpuChip01 className="-my-3 size-16 stroke-1" /><Package className="size-20 stroke-1" /></span>,
-    seed: [
-      hw('Line 1 Summon', 'Summon Button', 'HW-2024-SMN-0101', 'Line Side Fleet', 'online'), hw('Line 5 Hooter', 'Hooter', 'HW-2024-HTR-0205', 'Line Side Fleet', 'online'),
-      hw('Line 5 Ati Eye', 'Ati Eye', 'HW-2024-EYE-0305', 'Assembly Fleet', 'online'), hw('Line 4 Hooter', 'Hooter', 'HW-2024-HTR-0204', '', 'offline'),
-    ],
+    seed: DATASET.hardware as Device[],
   },
 };

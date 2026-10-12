@@ -1,10 +1,10 @@
-import { Tabs } from '@/components/application/tabs/tabs';
+import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 
-/** Segmented switch ("Materials | Station Groups"): a small pill-style tab bar for switching between lists inside a panel. */
+/** Segmented switch ("Materials | Station Groups"): the button group used to switch between lists inside a panel (Master Data and the fleet page). */
 export function SegmentedTabs<T extends string>({ value, onChange, items, label }: { value: T; onChange(v: T): void; items: { id: T; label: string }[]; label: string }) {
   return (
-    <Tabs selectedKey={value} onSelectionChange={(k) => onChange(k as T)} className="w-auto">
-      <Tabs.List type="button-border" size="sm" aria-label={label} items={items} />
-    </Tabs>
+    <ButtonGroup size="sm" aria-label={label} selectedKeys={[value]} disallowEmptySelection onSelectionChange={(k) => { const id = [...k][0]; if (id) onChange(id as T); }}>
+      {items.map((i) => <ButtonGroupItem key={i.id} id={i.id}>{i.label}</ButtonGroupItem>)}
+    </ButtonGroup>
   );
 }

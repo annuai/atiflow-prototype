@@ -1,3 +1,4 @@
+import { datasetStore } from '../src/data/dataset';
 import { describe, expect, it } from 'vitest';
 import { addGroup, addToGroup, deleteGroup, freeStations, pruneMaterial, removeFromGroup, renameGroup, stationsOfMaterial, validateGroupForm } from '../src/features/fleets/model/logic';
 import { SYSTEM_MAPS as MAPS, mapById } from '../src/features/maps/model/maps';
@@ -25,7 +26,7 @@ describe('fleet profiles: each fleet has its own data', () => {
   });
   it('robots and hardware are spread over fleets in the seed (including unassigned)', () => {
     const by = (list: { values: Record<string, unknown> }[], f: string) => list.filter((d) => d.values.fleet === f).length;
-    expect(by(KINDS.robot.seed, 'Line Side Fleet')).toBe(5); expect(by(KINDS.robot.seed, 'Assembly Fleet')).toBe(2); expect(by(KINDS.robot.seed, '')).toBe(1);
+    expect(by(KINDS.robot.seed, 'Line Side Fleet')).toBe(7); expect(by(KINDS.robot.seed, 'Assembly Fleet')).toBe(7); expect(by(KINDS.robot.seed, '')).toBe(1);
     expect(by(KINDS.hardware.seed, 'Line Side Fleet')).toBe(2); expect(by(KINDS.hardware.seed, 'Assembly Fleet')).toBe(1);
   });
   it('fleet urls encode the name', () => expect(fleetPath('Line Side Fleet', 'materials')).toBe('/configurator/fleets/Line%20Side%20Fleet/materials'));
@@ -88,9 +89,9 @@ describe('renaming a fleet', () => {
     expect(renameFleet('Line Side Fleet', '  ')).toMatch(/needs a name/); expect(renameFleet('Line Side Fleet', 'assembly fleet')).toMatch(/already exists/);
     const wfName = Object.values(wfStore.getState().workflows).find((w) => w.fleet === 'Line Side Fleet')!.name;
     expect(renameFleet('Line Side Fleet', ' Line Feeding ')).toBe('');
-    expect(wfStore.getState().fleetNames).toContain('Line Feeding'); expect(wfStore.getState().fleetNames).not.toContain('Line Side Fleet');
+    expect(datasetStore.getState().fleets.map((f) => f.name)).toContain('Line Feeding'); expect(datasetStore.getState().fleets.map((f) => f.name)).not.toContain('Line Side Fleet');
     expect(Object.values(wfStore.getState().workflows).find((w) => w.fleet === 'Line Feeding')!.name).toBe(wfName);
-    expect(deviceStore.getState().robot.filter((d) => d.values.fleet === 'Line Feeding')).toHaveLength(5); expect(deviceStore.getState().hardware.filter((d) => d.values.fleet === 'Line Side Fleet')).toHaveLength(0);
+    expect(deviceStore.getState().robot.filter((d) => d.values.fleet === 'Line Feeding')).toHaveLength(7); expect(deviceStore.getState().hardware.filter((d) => d.values.fleet === 'Line Side Fleet')).toHaveLength(0);
     expect(masterDataStore.getState().materials.filter((m) => m.fleets.includes('Line Feeding'))).toHaveLength(4);
     expect(fleetsStore.getState().profiles['Line Feeding']).toBeDefined(); expect(fleetsStore.getState().profiles['Line Side Fleet']).toBeUndefined();
     expect(renameFleet('Line Feeding', 'line feeding')).toBe('');          // changing only the case of its own name is fine

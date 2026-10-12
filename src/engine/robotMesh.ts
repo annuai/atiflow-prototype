@@ -22,8 +22,8 @@ let decalTex: THREE.CanvasTexture | null = null;
 function decal() {
   if (decalTex) return decalTex;
   const c = document.createElement('canvas'); c.width = 512; c.height = 128; const x = c.getContext('2d')!;
-  x.fillStyle = '#111'; x.font = '700 64px Inter, Arial, sans-serif'; x.textBaseline = 'middle'; x.fillText('Ati', 8, 64);
-  x.font = '700 30px Inter, Arial, sans-serif'; x.fillText('SHERPA', 130, 38); x.fillText('XT LITE', 130, 88);
+  x.fillStyle = '#111'; x.font = '700 64px Blinker, Arial, sans-serif'; x.textBaseline = 'middle'; x.fillText('Ati', 8, 64);
+  x.font = '700 30px Blinker, Arial, sans-serif'; x.fillText('SHERPA', 130, 38); x.fillText('XT LITE', 130, 88);
   decalTex = new THREE.CanvasTexture(c); decalTex.colorSpace = THREE.SRGBColorSpace; return decalTex;
 }
 

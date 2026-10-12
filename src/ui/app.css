@@ -7,7 +7,8 @@ img { display: block; }
 .app { display: flex; height: 100vh; height: 100dvh; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); gap: 0; }
 
 /* ---------- sidebar ---------- */
-.sidebar { width: 280px; flex: none; transition: width .2s ease; display: flex; flex-direction: column; padding: var(--sp-2xl) 12px 12px; border-radius: var(--r-xl); color: var(--sb-text); overflow: hidden;
+.sidebar { width: 280px; flex: none; transition: width .2s ease; display: flex; flex-direction: column; padding: var(--sp-2xl) 12px 12px; border-radius: var(--r-xl); color: var(--sb-text); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+.sidebar::-webkit-scrollbar { display: none; } .sidebar > * { flex-shrink: 0; }      /* on a short screen the menu scrolls (swipe up) instead of being cut off */
   background: var(--surface-sidebar);
   box-shadow: 0 10px 15px rgba(15,23,32,.45); }
 .sb-ws { display: flex; align-items: center; justify-content: space-between; padding: 0 6px var(--sp-2xl); }
@@ -22,7 +23,7 @@ img { display: block; }
 .sb-item > span { display: flex; align-items: center; gap: 10px; } .sb-item img { width: 16px; height: 16px; }
 .sb-item:hover { background: rgba(255,255,255,.05); }
 .sb-item.active { background: linear-gradient(90deg, rgba(94,234,212,.18), rgba(94,234,212,.06)); border-left-color: var(--sb-accent); border-radius: var(--r-lg); font-weight: 600; }
-.sb-spacer { flex: 1; }
+.sb-spacer { flex: 1 0 12px; }
 .sb-foot { border-top: 1px solid rgba(255,255,255,.08); padding-top: 10px; display: flex; flex-direction: column; gap: 1px; }
 .sb-user { width: 100%; text-align: left; border: 0; cursor: pointer; color: inherit; display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,.06); border-radius: 14px; padding: 10px 6px 4px; margin-top: 4px; }
 .avatar { position: relative; width: 40px; height: 40px; border-radius: 50%; background: var(--bg-tertiary); border: .75px solid rgba(0,0,0,.1); display: grid; place-items: center; }
@@ -75,7 +76,7 @@ img { display: block; }
 .ritem .nm { font-weight: 600; font-size: 13px; line-height: 16px; } .ritem small { display: block; color: var(--text-placeholder); font-size: 11px; line-height: 14px; }
 .ritem .bat { margin-left: auto; font-size: 11px; font-weight: 600; }
 .events { border-top: 1px solid var(--border-secondary); max-height: 130px; overflow: auto; padding: 8px 12px; font-size: 11px; line-height: 15px; } .events b { display: block; margin-bottom: 4px; font-size: 12px; }
-.ev { display: flex; gap: 6px; padding: 2px 0; } .ev .dot { margin-top: 4px; flex: none; }
+.ev { display: flex; gap: 6px; padding: 3px 4px; margin: 0 -4px; width: calc(100% + 8px); border: 0; background: none; text-align: left; font: inherit; color: inherit; border-radius: 6px; cursor: pointer; } .ev:hover, .ev:focus-visible { background: rgba(20,184,166,.12); outline: none; } .ev span { text-decoration: underline dotted rgba(100,116,139,.6); text-underline-offset: 2px; } .ev .dot { margin-top: 4px; flex: none; }
 /* robot panel */
 .rpanel { top: 16px; right: 16px; width: 280px; padding: 14px; max-height: calc(100% - 16px - 76px); overflow: auto; }
 .rpanel h3 { margin: 0; font-size: 16px; display: flex; justify-content: space-between; align-items: center; } .rpanel .sub { color: var(--text-placeholder); font-size: 12px; margin-bottom: 10px; }

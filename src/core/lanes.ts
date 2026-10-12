@@ -16,13 +16,13 @@ export class LaneGraph {
   station(id: string) { return this.nav.stations.find((s) => s.id === id); }
   stationNode(id: string) { const s = this.station(id); return s ? this.nodes.get(s.nodeId) : undefined; }
   /** Dijkstra over lanes with a binary heap (a lane is only traversed forward, and never straight back into its paired lane: robots do not U-turn mid-route). Returns lanes or null. */
-  route(from: string, to: string, fleet: string, avoid?: ReadonlySet<string>): Lane[] | null {
+  route(from: string, to: string, fleet: string, avoid?: ReadonlySet<string>, cost?: (l: Lane) => number): Lane[] | null {
     if (!this.nodes.has(from) || !this.nodes.has(to)) return null;
     const dist = new Map<string, number>(), prev = new Map<string, Lane | null>(), done = new Set<string>(); let end: Lane | null = null;
     const heap: [number, Lane][] = [];
     const push = (d: number, l: Lane) => { heap.push([d, l]); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
     const pop = () => { const top = heap[0]; const last = heap.pop()!; if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
-    const relax = (l: Lane, d: number, p: Lane | null) => { if (!l.fleets.includes(fleet) || (avoid?.has(l.to) && l.to !== to)) return; const nd = d + l.len + 0.5; if (nd < (dist.get(l.id) ?? Infinity)) { dist.set(l.id, nd); prev.set(l.id, p); push(nd, l); } };
+    const relax = (l: Lane, d: number, p: Lane | null) => { if (!l.fleets.includes(fleet) || (avoid?.has(l.to) && l.to !== to)) return; const nd = d + l.len + 0.5 + (cost?.(l) ?? 0); if (nd < (dist.get(l.id) ?? Infinity)) { dist.set(l.id, nd); prev.set(l.id, p); push(nd, l); } };
     for (const l of this.out.get(from) ?? []) relax(l, 0, null);
     while (heap.length) {
       const [d, cur] = pop(); if (done.has(cur.id) || d > (dist.get(cur.id) ?? Infinity)) continue;
@@ -70,9 +70,9 @@ export class LaneGraph {
 /** Every place where two robots cannot pass each other: lanes of different flows closer than a robot pair needs (crossings, merges, forks, tight opposite lanes). Found from the lane geometry alone, so any map works. Each cluster is one intersection. */
 export class Intersections {
   readonly clusters = new Map<string, number>(); private pts: { x: number; y: number; c: string }[] = []; private cell = new Map<string, number[]>(); private reach: number;
-  constructor(graph: LaneGraph, gap = 0.95, reach = 2.0, join = 0) {
+  constructor(graph: LaneGraph, gap = 0.9, reach = 2.0, join = 0) {
     this.reach = reach; const sm = graph.smoothLanes(); type P = { x: number; y: number; lane: number };
-    const all: P[] = []; sm.forEach((l, li) => { let acc = 0; l.pts.forEach((q, i) => { if (i === 0) { all.push({ ...q, lane: li }); return; } const a = l.pts[i - 1]; acc += Math.hypot(q.x - a.x, q.y - a.y); if (acc >= 0.4 || i === l.pts.length - 1) { all.push({ ...q, lane: li }); acc = 0; } }); });
+    const all: P[] = []; sm.forEach((l, li) => { l.pts.forEach((q, i) => { all.push({ ...q, lane: li }); if (i === 0) return; const a = l.pts[i - 1]; const len = Math.hypot(q.x - a.x, q.y - a.y); for (let d = 0.4; d < len - 0.2; d += 0.4) all.push({ x: a.x + ((q.x - a.x) * d) / len, y: a.y + ((q.y - a.y) * d) / len, lane: li }); }); });      // a point every 0.4 m along every lane, long straight lanes included
     const lanes = graph.nav.lanes; const grid = new Map<string, number[]>(); const key = (x: number, y: number) => Math.floor(x) + ',' + Math.floor(y);
     all.forEach((p, i) => { const k = key(p.x, p.y); (grid.get(k) ?? grid.set(k, []).get(k)!).push(i); });
     const parent = all.map((_, i) => i); const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i]))); const flagged = new Set<number>();

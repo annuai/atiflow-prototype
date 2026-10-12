@@ -1,0 +1,335 @@
+{
+  "version": 1,
+  "fleets": [
+    {
+      "id": "line-side",
+      "name": "Line Side Fleet",
+      "color": "#14b8a6",
+      "liveId": "line-side"
+    },
+    {
+      "id": "assembly",
+      "name": "Assembly Fleet",
+      "color": "#f59e0b",
+      "liveId": "asrs"
+    }
+  ],
+  "robot": [
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-001",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0844",
+        "apiKey": "sk-amr001-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.44",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-002",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0845",
+        "apiKey": "sk-amr002-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.45",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-003",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0846",
+        "apiKey": "sk-amr003-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.46",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-004",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0847",
+        "apiKey": "sk-amr004-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.47",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-005",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 3T",
+        "hardwareId": "HW-2024-AMR-0848",
+        "apiKey": "sk-amr005-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.48",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-006",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0849",
+        "apiKey": "sk-amr006-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.49",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-007",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0850",
+        "apiKey": "sk-amr007-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.50",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-008",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0851",
+        "apiKey": "sk-amr008-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.51",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Assembly Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-009",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0852",
+        "apiKey": "sk-amr009-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.52",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Assembly Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-010",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 3T",
+        "hardwareId": "HW-2024-AMR-0853",
+        "apiKey": "sk-amr010-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.53",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Assembly Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-011",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0854",
+        "apiKey": "sk-amr011-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.54",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Assembly Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-012",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0855",
+        "apiKey": "sk-amr012-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.55",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Assembly Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-013",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0856",
+        "apiKey": "sk-amr013-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.56",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Assembly Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-014",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0857",
+        "apiKey": "sk-amr014-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.57",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Assembly Fleet"
+      }
+    },
+    {
+      "status": "offline",
+      "values": {
+        "name": "AMR-015",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Tug 1.5T",
+        "hardwareId": "HW-2024-AMR-0858",
+        "apiKey": "sk-amr015-f8a3b2c1d4e5",
+        "addons": [
+          "Auto-Hitch",
+          "Auto Un-hitch"
+        ],
+        "ip": "192.168.1.58",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": ""
+      }
+    }
+  ],
+  "hardware": [
+    {
+      "status": "online",
+      "values": {
+        "name": "Line 1 Summon",
+        "manufacturer": "Ati Robotics",
+        "hwType": "Summon Button",
+        "hardwareId": "HW-2024-SMN-0101",
+        "apiKey": "sk-hw-2024-smn-0101-c4d9e2a7",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "Line 5 Hooter",
+        "manufacturer": "Ati Robotics",
+        "hwType": "Hooter",
+        "hardwareId": "HW-2024-HTR-0205",
+        "apiKey": "sk-hw-2024-htr-0205-c4d9e2a7",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "Line 5 Ati Eye",
+        "manufacturer": "Ati Robotics",
+        "hwType": "Ati Eye",
+        "hardwareId": "HW-2024-EYE-0305",
+        "apiKey": "sk-hw-2024-eye-0305-c4d9e2a7",
+        "fleet": "Assembly Fleet"
+      }
+    },
+    {
+      "status": "offline",
+      "values": {
+        "name": "Line 4 Hooter",
+        "manufacturer": "Ati Robotics",
+        "hwType": "Hooter",
+        "hardwareId": "HW-2024-HTR-0204",
+        "apiKey": "sk-hw-2024-htr-0204-c4d9e2a7",
+        "fleet": ""
+      }
+    }
+  ]
+}

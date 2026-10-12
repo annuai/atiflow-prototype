@@ -1,21 +1,19 @@
 import { createNode, createStart } from './factory';
 import { defaultWorkflowName } from './names';
 import type { Workflow, Workflows } from './types';
-
-/** Fleets that exist at the start (the two from the reference design). */
-export const SEED_FLEETS = ['Line Side Fleet', 'Assembly Fleet'];
+import { FLEET_NAME } from '@/data/fleets';
 
 /** Starting workflows: one per seed fleet. */
 export function seedWorkflows(): Workflows {
   const list: Workflow[] = [
-    { id: 'w-line-side-1', name: defaultWorkflowName('Line Side Fleet'), fleet: 'Line Side Fleet', saved: true, nodes: [
+    { id: 'w-line-side-1', name: defaultWorkflowName(FLEET_NAME.lineSide), fleet: FLEET_NAME.lineSide, saved: true, nodes: [
       createStart(),
       createNode('material', { type: 'Material', code: 'DCP-1003', fromTablet: false, qty: '10' }),
       createNode('logic', { material: 'DCP-1003', station: 'S102', cond: 'Greater than', qty: '10' }),
       createNode('confirm', { op: 'Dispatch Button' }), createNode('station', { action: 'Drop Off', station: 'STA-102' }), createNode('station', { action: 'Pick Up', station: 'STA-103' }),
       createNode('container'), createNode('confirm', { op: 'Dispatch Button' }), createNode('station', { action: 'Drop Off', station: 'STA-104', lbl: 'Station' }),
       createNode('confirm', { op: 'Dispatch Button' }), createNode('end')] },
-    { id: 'w-assembly-1', name: defaultWorkflowName('Assembly Fleet'), fleet: 'Assembly Fleet', saved: true, nodes: [
+    { id: 'w-assembly-1', name: defaultWorkflowName(FLEET_NAME.assembly), fleet: FLEET_NAME.assembly, saved: true, nodes: [
       createStart({ trigger: 'Auto', request: 'MES' }),
       createNode('material', { type: 'Material', code: 'DCP-1005', qty: '10' }), createNode('confirm', { op: 'Tablet' }), createNode('station', { action: 'Pick Up', station: 'STA-103' }),
       createNode('confirm', { op: 'Dispatch Button' }), createNode('station', { action: 'Drop Off', station: 'SA-101' }), createNode('confirm', { op: 'Dispatch Button' }), createNode('end')] },

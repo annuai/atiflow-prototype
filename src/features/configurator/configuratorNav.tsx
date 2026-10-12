@@ -12,6 +12,7 @@ import { deviceStore } from '@/features/devices/model/store';
 import { nameOf } from '@/features/devices/model/validate';
 import { fleetPath } from '@/features/fleets/paths';
 import { builderNodeHits } from '@/features/workflow-builder/builderNav';
+import { datasetStore } from '@/data/dataset';
 import { useFleetNames, wfStore } from '@/features/workflow-builder/model/store';
 
 export const WORKFLOWS_PATH = '/configurator';          // "Workflows": opens a new workflow; /configurator/workflows/<id> shows one
@@ -20,7 +21,7 @@ const soon = (name: string) => () => notify.info(`${name} isn't part of this pro
 /** "Create new fleet" row + inline name form (sidebar group extra). Creating a fleet opens its fleet page. */
 function NewFleet() {
   const [open, setOpen] = useState(false); const [name, setName] = useState(''); const navigate = useNavigate();
-  const add = () => { const n = name; if (wfStore.getState().createFleet(n)) { setName(''); setOpen(false); navigate(fleetPath(wfStore.getState().fleetNames.at(-1)!)); } };
+  const add = () => { const n = name; if (wfStore.getState().createFleet(n)) { setName(''); setOpen(false); navigate(fleetPath(datasetStore.getState().fleets.at(-1)!.name)); } };
   return (
     <>
       <button className="sb-item" onClick={() => setOpen((o) => !o)}><span><img src={plusI} alt="" /><span className="t">Create new fleet</span></span></button>
@@ -56,7 +57,7 @@ export function configuratorHits(q: string): SearchHit[] {
   const devices = (['robot', 'hardware'] as const).flatMap((id) => d[id].filter((x) => (nameOf(x) + ' ' + KINDS[id].typeOf(x)).toLowerCase().includes(ql)).slice(0, 5)
     .map((x) => ({ kind: KINDS[id].singular, title: nameOf(x), sub: KINDS[id].typeOf(x), to: `${WORKFLOWS_PATH}/${KINDS[id].route}/${encodeURIComponent(nameOf(x))}` })));
   return [
-    ...s.fleetNames.filter((n) => n.toLowerCase().includes(ql)).map((n) => ({ kind: 'Fleet', title: n, to: fleetPath(n) })),
+    ...datasetStore.getState().fleets.map((f) => f.name).filter((n) => n.toLowerCase().includes(ql)).map((n) => ({ kind: 'Fleet', title: n, to: fleetPath(n) })),
     ...devices,
     ...(window.location.pathname.startsWith(`${WORKFLOWS_PATH}/workflows/`) ? builderNodeHits(q) : []),
   ];

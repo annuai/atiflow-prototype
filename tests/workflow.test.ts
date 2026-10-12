@@ -1,3 +1,4 @@
+import { datasetStore } from '../src/data/dataset';
 import { describe, it, expect } from 'vitest';
 import { blankWorkflow, isBlankDraft, seedWorkflows } from '../src/features/workflow-builder/model/seed';
 import { createNode } from '../src/features/workflow-builder/model/factory';
@@ -74,7 +75,7 @@ describe('Ati AI prompt parser', () => {
 describe('fleets and workflows in the store', () => {
   it('fleet names are unique ignoring case and get the Fleet suffix', async () => {
     const { wfStore } = await import('../src/features/workflow-builder/model/store');
-    expect(wfStore.getState().createFleet('Warehouse')).toBe(true); expect(wfStore.getState().fleetNames).toContain('Warehouse Fleet');
+    expect(wfStore.getState().createFleet('Warehouse')).toBe(true); expect(datasetStore.getState().fleets.map((f) => f.name)).toContain('Warehouse Fleet');
     expect(wfStore.getState().createFleet('warehouse fleet')).toBe(false); expect(wfStore.getState().createFleet('   ')).toBe(false);
   });
   it('a new workflow has no fleet; picking one names it <fleet>_workflow_<n> with the next free number', async () => {

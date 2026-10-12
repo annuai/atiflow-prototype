@@ -5,7 +5,8 @@ import { fleetMaterialCodes } from '@/features/master-data/model/selectors';
 import { createNode, syncIds } from './factory';
 import { applySteps, parsePrompt } from './parsePrompt';
 import { defaultWorkflowName, workflowNameError } from './names';
-import { blankWorkflow, isBlankDraft, isKept, SEED_FLEETS, seedWorkflows } from './seed';
+import { datasetStore, useDataset } from '@/data/dataset';
+import { blankWorkflow, isBlankDraft, isKept, seedWorkflows } from './seed';
 import { insertNode, locate, moveNode, removeNode, updateField, type Problem } from './tree';
 import { publishProblem } from './validate';
 import type { FieldValue, ListKey, NodeTypeId, WfNode, Workflow, Workflows } from './types';
@@ -17,7 +18,7 @@ interface History { undo: string[]; redo: string[] }
 
 export interface WfState {
   /** Fleets that exist (a fleet can have many workflows). */
-  fleetNames: string[]; workflows: Workflows;
+  workflows: Workflows;
   /** Id of the workflow open in the builder, null before any. */
   current: string | null; selected: string | null; justAdded: string | null; hist: Record<string, History>; sim: SimState;
   nodes(): WfNode[];
@@ -53,26 +54,26 @@ export const selectNodes = (s: WfState) => (s.current ? (s.workflows[s.current]?
 export const selectFleet = (s: WfState) => (s.current ? (s.workflows[s.current]?.fleet ?? '') : '');
 export const workflowsOfFleet = (workflows: Workflows, fleet: string) => Object.values(workflows).filter((w) => w.fleet === fleet);
 
-type Saved = { fleetNames: string[]; workflows: Workflows; current: string | null };
+type Saved = { workflows: Workflows; current: string | null };
 function load(): Saved {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null');
     const keep = (ws: Workflows): Workflows => Object.fromEntries(Object.entries(ws).filter(([, w]) => isKept(w)));       // unsaved workflows do not survive a reload
-    if (raw?.workflows && Array.isArray(raw.fleetNames)) { const workflows = keep(raw.workflows); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { fleetNames: raw.fleetNames, workflows, current: null }; }
+    if (raw?.workflows && Array.isArray(raw.fleetNames)) { const workflows = keep(raw.workflows); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
     const v3 = JSON.parse(localStorage.getItem(KEY_V3) ?? 'null');         // v3: no saved flag; built workflows with a fleet count as saved
     if (v3?.workflows && Array.isArray(v3.fleetNames)) {
       const workflows = Object.fromEntries(Object.entries(v3.workflows as Workflows).filter(([, w]) => w.fleet && w.nodes.length > 2).map(([id, w]) => [id, { ...w, saved: true }]));
-      Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { fleetNames: v3.fleetNames, workflows, current: null };
+      Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null };
     }
     const old = JSON.parse(localStorage.getItem(KEY_V2) ?? 'null');       // v2: one workflow per fleet, keyed by fleet name
     if (old?.fleets) {
       const workflows: Workflows = {}; Object.entries(old.fleets as Record<string, { wf?: string; nodes: WfNode[]; published?: boolean }>).forEach(([fleet, f], i) => {
         syncIds(f.nodes); const id = `w-v2-${i}`; workflows[id] = { id, fleet, nodes: f.nodes, published: f.published, saved: true, name: !f.wf || f.wf === 'Workflow Canvas' ? defaultWorkflowName(fleet) : f.wf };
       });
-      return { fleetNames: Object.keys(old.fleets), workflows, current: null };
+      return { workflows, current: null };
     }
   } catch { /* fall through */ }
-  return { fleetNames: SEED_FLEETS, workflows: seedWorkflows(), current: null };
+  return { workflows: seedWorkflows(), current: null };
 }
 const boot = load();
 
@@ -87,7 +88,7 @@ export const wfStore = createStore<WfState>((set, get) => {
     set({ workflows: { ...workflows, [current]: { ...workflows[current], nodes: next, published: false } }, hist: { ...hist, [current]: { undo: [...h.undo, before].slice(-100), redo: [] } } }); return true;
   };
   return {
-    fleetNames: boot.fleetNames, workflows: boot.workflows, current: boot.current, selected: null, justAdded: null, hist: {}, sim: SIM_IDLE,
+    workflows: boot.workflows, current: boot.current, selected: null, justAdded: null, hist: {}, sim: SIM_IDLE,
     nodes: () => selectNodes(get()),
     select: (selected) => set({ selected }),
     openWorkflow(id) { if (get().workflows[id] && get().current !== id) set({ current: id, selected: null, sim: SIM_IDLE }); },
@@ -111,13 +112,13 @@ export const wfStore = createStore<WfState>((set, get) => {
       const e = workflowNameError(name); if (e) { notify.warning(e, undefined, 'wf-name'); return false; }
       const { current, workflows } = get(); if (!current) return false; if (workflows[current].name !== name.trim()) patch(current, { name: name.trim() }); return true;
     },
-    renameFleet(from, to) { set({ fleetNames: get().fleetNames.map((f) => (f === from ? to : f)), workflows: Object.fromEntries(Object.entries(get().workflows).map(([id, w]) => [id, w.fleet === from ? { ...w, fleet: to } : w])) }); },
+    renameFleet(from, to) { set({ workflows: Object.fromEntries(Object.entries(get().workflows).map(([id, w]) => [id, w.fleet === from ? { ...w, fleet: to } : w])) }); },
     createFleet(name) {
       let n = name.trim();
       if (!n) { notify.warning('Give the fleet a name first.', 'For example: Warehouse Fleet', 'fleet-name'); return false; }
       if (!/fleet$/i.test(n)) n += ' Fleet';
-      if (get().fleetNames.some((k) => k.toLowerCase() === n.toLowerCase())) { notify.warning(`${n} already exists.`, 'Pick a different name.', 'fleet-name'); return false; }   // names are unique ignoring case
-      set({ fleetNames: [...get().fleetNames, n] });
+      if (datasetStore.getState().fleets.some((k) => k.name.toLowerCase() === n.toLowerCase()) ) { notify.warning(`${n} already exists.`, 'Pick a different name.', 'fleet-name'); return false; }
+      datasetStore.getState().addFleet(n);
       notify.success(`${n} created`, 'Assign robots, hardware and materials, then build its workflows.', 'fleet-created'); return true;
     },
     addNode(t, key = 'main', at) {
@@ -158,10 +159,10 @@ export const wfStore = createStore<WfState>((set, get) => {
 });
 export const useWorkflow = <T,>(sel: (s: WfState) => T) => useStore(wfStore, sel);
 /** Names of all fleets (re-renders only when the list changes). */
-export const useFleetNames = () => useWorkflow((s) => s.fleetNames.join('|')).split('|').filter(Boolean);
+export const useFleetNames = () => useDataset((s) => s.fleets.map((f) => f.name).join('|')).split('|').filter(Boolean);
 
 // persist workflows (not history/sim) shortly after any change
 let timer: ReturnType<typeof setTimeout> | undefined;
-wfStore.subscribe((s, p) => { if (s.workflows === p.workflows && s.fleetNames === p.fleetNames && s.current === p.current) return; clearTimeout(timer); timer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify({ fleetNames: s.fleetNames, workflows: s.workflows, current: s.current })); } catch { /* no storage (tests / private mode) */ } }, 250); });
+wfStore.subscribe((s, p) => { if (s.workflows === p.workflows && s.current === p.current) return; clearTimeout(timer); timer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify({ workflows: s.workflows, current: s.current })); } catch { /* no storage (tests / private mode) */ } }, 250); });
 
 if (import.meta.env.DEV && typeof window !== 'undefined') Object.assign(window, { __wf: wfStore });   // dev-only handle for console testing

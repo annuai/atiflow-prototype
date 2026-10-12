@@ -5,6 +5,7 @@ import { handle } from '@/ui/engineHandle';
 import master from '@/ui/icons/master-data.svg'; import fleetI from '@/ui/icons/fleet.svg'; 
 import bell from '@/ui/icons/bell.svg'; import gear from '@/ui/icons/settings.svg';
 import { notify } from '@/ui/toast';
+import { useFleetDirectory } from '@/data/fleetDirectory';
 import type { NavModel, SearchHit } from '@/shell/types';
 
 const soon = (name: string) => () => notify.info(`${name} isn't part of this prototype`, 'The supervisor view covers the Live Floor.', 'soon');
@@ -13,7 +14,7 @@ export const DASHBOARD_PATH = '/supervisor/dashboard', LIVE_FLOOR_PATH = '/super
 
 /** Sidebar content of the supervisor area: Dashboard and Live Floor are pages (the URL decides which one is highlighted); the fleet items filter the Live Floor. */
 export function useLiveNav(): NavModel {
-  const fleets = useApp((s) => s.fleets), navSel = useApp((s) => s.navSel), robots = useApp((s) => s.robots), events = useApp((s) => s.events);
+  const fleets = useFleetDirectory().map((f) => ({ id: f.liveId ?? f.id, name: f.name })), navSel = useApp((s) => s.navSel), events = useApp((s) => s.events);
   const navigate = useNavigate(); const path = useLocation().pathname; const onLive = path === LIVE_FLOOR_PATH;
   const st = store.getState(); const alerts = events.filter((e) => e.level !== 'info').length;
   const pick = (sel: string, fleet: string) => () => { st.setNav(sel); st.setFleet(fleet); if (!onLive) navigate(LIVE_FLOOR_PATH); };
@@ -25,7 +26,7 @@ export function useLiveNav(): NavModel {
       ] },
       { id: 'fleets', label: 'Fleets', items: [
         { id: 'all', label: 'All fleets', icon: fleetI, active: onLive && navSel === 'fleet:all', onSelect: pick('fleet:all', 'all') },
-        ...fleets.map((f) => ({ id: f.id, label: `${f.name} (${Object.values(robots).filter((r) => r.fleetId === f.id).length})`, icon: fleetI, active: onLive && navSel === 'fleet:' + f.id, onSelect: pick('fleet:' + f.id, f.id) })),
+        ...fleets.map((f) => ({ id: f.id, label: f.name, icon: fleetI, active: onLive && navSel === 'fleet:' + f.id, onSelect: pick('fleet:' + f.id, f.id) })),
       ] },
     ],
     footerItems: [{ id: 'notif', label: 'Notifications', icon: bell, badge: alerts, onSelect: soon('Notifications') }, { id: 'settings', label: 'Settings', icon: gear, onSelect: soon('Settings') }],

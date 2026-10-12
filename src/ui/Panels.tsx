@@ -15,6 +15,7 @@ import { ZoomBar } from './ZoomBar';
 import { ProgressBar } from '@/components/base/progress-indicators/progress-indicators';
 import { Home01, Minus, Plus, Users01 } from '@untitledui/icons';
 import type { RobotTelemetry } from '../core/types';
+import { locateTarget } from '@/features/live-floor/locate';
 
 type Mode = 'orbit' | 'top' | 'walk' | 'follow';
 export function CameraModes({ fleetOpen, onFleet }: { fleetOpen: boolean; onFleet: () => void }) {
@@ -48,7 +49,7 @@ export function FleetList() {
     <div className="counts">{counts.map(([s, n]) => <button key={s} className={'cnt' + (f === s ? ' on' : '')} aria-pressed={f === s} onClick={() => setF(f === s ? null : s)}><BadgeWithDot size="sm" color={STATE_TONE[s]}>{n} {s}</BadgeWithDot></button>)}</div>
     <div className="rlist">{list.map((r) => <button key={r.id} className={'ritem' + (sel === r.id ? ' sel' : '')} onClick={() => handle.engine?.focusRobot(r.id)}>
       <i className="dot" style={{ background: STATE_COLOR[r.state], width: 10, height: 10 }} /><div><div className="nm">{r.id}</div><small>{r.task ? `${r.task.type} → ${r.task.to}` : r.state}</small></div><span className="bat" style={{ color: r.battery < 25 ? '#dc2626' : undefined }}>{r.battery}%</span></button>)}</div>
-    <div className="events"><b>Live events</b>{events.slice(0, 6).map((e, i) => <div className="ev" key={i}><i className="dot" style={{ background: e.level === 'critical' ? '#ef4444' : '#14b8a6' }} /><span>{e.text}</span></div>)}{!events.length && <span style={{ color: '#737373' }}>No events yet</span>}</div>
+    <div className="events"><b>Live events</b>{events.slice(0, 6).map((e, i) => <button type="button" className="ev" key={i} title={`Show ${e.robotId} on the map`} aria-label={`${e.text}. Show ${e.robotId} on the map`} onClick={() => locateTarget(e.robotId)}><i className="dot" style={{ background: e.level === 'critical' ? '#ef4444' : '#14b8a6' }} /><span>{e.text}</span></button>)}{!events.length && <span style={{ color: '#737373' }}>No events yet</span>}</div>
   </div>;
 }
 

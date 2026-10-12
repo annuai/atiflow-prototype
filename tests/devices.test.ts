@@ -6,9 +6,9 @@ const { robot, hardware } = KINDS;
 const filled = (kind: typeof robot, over: Record<string, string> = {}) => ({ ...blankValues(kind), name: 'Sherpa-09', hardwareId: 'HW-1234-09', apiKey: 'flow_api_x', ...over });
 
 describe('device registry (robots + hardware share one model)', () => {
-  it('seeds: 8 robots spread over two fleets (one unassigned), 4 hardware items', () => {
-    expect(robot.seed).toHaveLength(8); expect(hardware.seed).toHaveLength(4);
-    expect(robot.seed.filter((d) => d.values.fleet === 'Line Side Fleet')).toHaveLength(5); expect(robot.seed.filter((d) => d.values.fleet === '')).toHaveLength(1); expect(robot.seed.every((d) => d.status === 'online')).toBe(true);
+  it('seeds: 15 robots spread over two fleets (one unassigned), 4 hardware items', () => {
+    expect(robot.seed).toHaveLength(15); expect(hardware.seed).toHaveLength(4);
+    expect(robot.seed.filter((d) => d.values.fleet === 'Line Side Fleet')).toHaveLength(7); expect(robot.seed.filter((d) => d.values.fleet === '')).toHaveLength(1); expect(robot.seed.filter((d) => d.values.fleet).every((d) => d.status === 'online')).toBe(true);
     expect(hardware.seed.map((d) => d.values.hwType)).toEqual(['Summon Button', 'Hooter', 'Ati Eye', 'Hooter']);
   });
   it('seed names and hardware ids are unique', () => {
@@ -32,4 +32,20 @@ describe('device registry (robots + hardware share one model)', () => {
   });
   it('presets (empty-state quick picks) override defaults', () => expect(blankValues(hardware, { hwType: 'Ati Eye' }).hwType).toBe('Ati Eye'));
   it('findDevice ignores case', () => expect(nameOf(findDevice(robot.seed, 'amr-004')!)).toBe('AMR-004'));
+});
+
+describe('shared dataset', () => {
+  it('one document with the fleets and devices; fleet names in the devices exist in the fleet list', async () => {
+    const { datasetStore, datasetDoc } = await import('../src/data/dataset');
+    const d = datasetStore.getState(); const names = d.fleets.map((f) => f.name);
+    for (const dev of [...d.robot, ...d.hardware]) if (dev.values.fleet) expect(names).toContain(dev.values.fleet);
+    expect(datasetDoc.parse(datasetDoc.exportText({ version: 1, fleets: d.fleets, robot: d.robot, hardware: d.hardware }))).toHaveProperty('value');
+    expect(datasetDoc.parse('{"x":1}')).toHaveProperty('error'); expect(datasetDoc.parse('nope')).toHaveProperty('error');
+  });
+  it('the Live Floor roster comes from it: assigned, not offline, one entry per robot, every fleet present', async () => {
+    const { rosterFrom } = await import('../src/features/live-floor/liveFeed');
+    const nav = JSON.parse((await import('node:fs')).readFileSync('public/sites/ecc/nav.json', 'utf8'));
+    const r = rosterFrom(nav); expect(r).toHaveLength(14); expect(new Set(r.map((x) => x.id)).size).toBe(14); expect(r.map((x) => x.id)).not.toContain('AMR-015');
+    expect(new Set(r.map((x) => x.fleetId))).toEqual(new Set(['line-side', 'asrs']));
+  });
 });

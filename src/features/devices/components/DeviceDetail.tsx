@@ -34,8 +34,8 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
   const remove = () => { deviceStore.getState().remove(kind.id, name); navigate(back, { replace: true }); notify.success(`${name} removed`, undefined, 'device-removed'); };
   const tabs = kind.detail.tabs;
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-[20px] border border-secondary bg-primary p-4 shadow-xs sm:p-6" data-testid="device-detail">
-      <div className="flex flex-wrap items-end justify-between gap-4 sm:min-h-[140px] sm:flex-nowrap">
+    <>
+      <div className="flex shrink-0 flex-wrap items-end justify-between gap-4 px-1 sm:min-h-[140px] sm:flex-nowrap">
         <div className="flex h-full min-w-0 flex-1 flex-col justify-between gap-6">
           <DetailBreadcrumb trail={trail} />
           <div className="flex flex-wrap items-end gap-x-4 gap-y-2 sm:px-3">
@@ -49,7 +49,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
         </div>
         <div className="hidden h-[134px] w-[290px] shrink-0 items-center justify-center lg:flex">{kind.illustration(device)}</div>
       </div>
-
+    <div className="mb-3 mt-3 flex min-h-0 flex-1 flex-col overflow-y-auto rounded-[20px] border border-secondary bg-primary p-4 shadow-xs sm:p-6" data-testid="device-detail">
       {tabs ? (
         <Tabs selectedKey={tab} onSelectionChange={(k) => setTab(String(k))} className="mt-6 min-w-0">
           <Tabs.List type="underline" size="md" fullWidth className="overflow-x-auto" aria-label="Sections" items={tabs.map((t, i) => ({ id: t, label: t, icon: TAB_ICONS[i] }))} />
@@ -77,5 +77,6 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
       </div>
       <ConfirmDialog isOpen={confirm} onOpenChange={setConfirm} title={`Remove ${name}?`} description={`This ${kind.singular.toLowerCase()} will be deleted from the configurator. You can register it again later.`} confirmLabel="Remove" onConfirm={remove} />
     </div>
+    </>
   );
 }

@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 export function labelSprite(text: string, opts: { color?: string; bg?: string; size?: number } = {}) {
   const size = opts.size ?? 56; const c = document.createElement('canvas'); const ctx = c.getContext('2d')!;
-  ctx.font = `600 ${size}px Inter, system-ui, sans-serif`; const w = Math.ceil(ctx.measureText(text).width) + size; c.width = w; c.height = size * 1.7;
-  ctx.font = `600 ${size}px Inter, system-ui, sans-serif`;
+  ctx.font = `600 ${size}px Blinker, system-ui, sans-serif`; const w = Math.ceil(ctx.measureText(text).width) + size; c.width = w; c.height = size * 1.7;
+  ctx.font = `600 ${size}px Blinker, system-ui, sans-serif`;
   ctx.fillStyle = opts.bg ?? 'rgba(15,27,36,.82)'; const r = size * 0.45; const h = c.height;
   ctx.beginPath(); ctx.roundRect(0, 0, w, h, r); ctx.fill();
   ctx.fillStyle = opts.color ?? '#e2e8f0'; ctx.textBaseline = 'middle'; ctx.fillText(text, size / 2, h / 2 + 2);
@@ -24,7 +24,7 @@ export function liveLabel(w = 480, h = 88) {
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false })); sprite.userData.aspect = w / h; let cur = '';
   const set = (text: string, bg = 'rgba(15,27,36,.88)', fg = '#f1f5f9') => {
     const k = text + bg; if (k === cur) return; cur = k; ctx.clearRect(0, 0, w, h); ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(2, 2, w - 4, h - 4, h * 0.4); ctx.fill();
-    ctx.fillStyle = fg; ctx.font = `600 ${h * 0.5}px Inter, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, w / 2, h / 2 + 2); tex.needsUpdate = true;
+    ctx.fillStyle = fg; ctx.font = `600 ${h * 0.5}px Blinker, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, w / 2, h / 2 + 2); tex.needsUpdate = true;
   };
   return { sprite, set };
 }

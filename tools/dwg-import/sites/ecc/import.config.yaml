@@ -39,7 +39,7 @@ zones:                     # active = robots operate here (clickable). Rects in 
 # ---- fleet / traffic rules (SAMPLE data for the ECC demo: replace with the client's real map rules) ----
 fleets:                    # each fleet may only drive inside its areas; an area listed by two fleets is a shared map area
   - {id: line-side, name: Line Side Fleet,    color: "#14b8a6", areas: [smt-lines, assembly, east-strip]}
-  - {id: asrs,      name: ASRS Shuttle Fleet, color: "#f59e0b", areas: [asrs-prep, east-strip]}
+  - {id: asrs,      name: Assembly Fleet, color: "#f59e0b", areas: [asrs-prep, east-strip]}
 forbidden:                 # robots never enter (DWG coords). Lanes/stations are removed from these areas.
   - {id: fz-01, name: Quarantine Cage,       reason: Quality hold, no AMR access, rect: [478000, 276000, 486000, 286000]}
   - {id: fz-02, name: Chemical Store,        reason: Hazardous materials,       rect: [537000, 276000, 545000, 286000]}

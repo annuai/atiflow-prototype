@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
+import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import type { PickerRow } from '@/features/master-data/components/MaterialPicker';
 import { useMasterData } from '@/features/master-data/model/store';
 import { copy } from '../copy';
@@ -14,11 +14,7 @@ export function MaterialsPanel({ fleet }: { fleet: string }) {
   const all = useMasterData((s) => s.materials); const masterGroups = useMasterData((s) => s.groups);
   const materials = all.filter((m) => m.fleets.includes(fleet)); const [sub, setSub] = useState<Sub>('all'); const [assigning, setAssigning] = useState(false); const [grouping, setGrouping] = useState<string[] | null>(null); const [epoch, setEpoch] = useState(0);   // bumping the epoch clears the table selection after a group dialog
   const rows: PickerRow[] = materials.map((m) => ({ code: m.code, name: m.name, group: masterGroups.find((g) => g.id === m.group)?.name ?? '', status: 'available' as const }));
-  const tabs = (
-    <ButtonGroup size="sm" aria-label="Materials" selectedKeys={[sub]} disallowEmptySelection onSelectionChange={(k) => { const id = [...k][0]; if (id) setSub(id as Sub); }}>
-      {(Object.keys(copy.materials.sub) as Sub[]).map((id) => <ButtonGroupItem key={id} id={id}>{copy.materials.sub[id]}</ButtonGroupItem>)}
-    </ButtonGroup>
-  );
+  const tabs = <SegmentedTabs<Sub> value={sub} onChange={setSub} label="Materials" items={(Object.keys(copy.materials.sub) as Sub[]).map((id) => ({ id, label: copy.materials.sub[id] }))} />;
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       {sub === 'all'
