@@ -14,7 +14,7 @@ const Item = ({ item }: { item: NavItem }) => {
   return (
     <Tooltip title={item.label} placement="right" isDisabled={!collapsed}>
       <AriaButton className={'sb-item' + (item.active ? ' active' : '')} onPress={() => { item.onSelect?.(); afterSelect(); }}>
-        <span><img src={item.icon} alt="" /><span className="t">{item.label}</span></span>{item.badge ? <Badge size="sm" color="brand" className="sb-badge">{item.badge}</Badge> : null}
+        <span>{typeof item.icon === 'string' ? <img src={item.icon} alt="" /> : <item.icon className="size-4 shrink-0" />}<span className="t">{item.label}</span></span>{item.badge ? <Badge size="sm" color="brand" className="sb-badge">{item.badge}</Badge> : null}
       </AriaButton>
     </Tooltip>
   );

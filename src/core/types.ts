@@ -38,7 +38,7 @@ export interface RobotTelemetry {
   path?: Vec2[]; currentNode?: string; nextNode?: string;
   laneId?: string | null;                                            // lane currently driven (from localization)
   traffic?: { zoneId: string; status: 'waiting' | 'inside' } | null;  // traffic-zone state reported by the robot
-  waitReason?: 'traffic' | 'headway' | null;
+  waitReason?: 'traffic' | 'headway' | 'intersection' | null;
   atStation?: string | null;
   alerts?: { code: string; severity: 'info' | 'warn' | 'critical'; msg: string }[];
   ts: number;

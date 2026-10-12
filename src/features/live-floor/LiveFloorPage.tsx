@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { store, useApp } from '@/core/store';
 import { Engine } from '@/engine/Engine';
-import { MockSimulator } from '@/adapters/mock';
-import type { NavGraph, SiteLayout, TelemetryAdapter } from '@/core/types';
 import { AppShell } from '@/shell/AppShell';
 import { handle } from '@/ui/engineHandle';
 import { CameraModes, ZoomControl, FleetList, RobotPanel, StationPanel, MapLegend } from '@/ui/Panels';
@@ -14,24 +13,23 @@ import { WalkPad } from '@/ui/WalkPad'; import { useCoarse } from '@/ui/useCoars
 import { Send01, SearchLg, Stars02, XClose } from '@untitledui/icons';
 import { liveHits, useLiveNav } from './liveNav';
 import { LocateBox } from './LocateBox';
-
-const SITE = new URLSearchParams(location.search).get('site') ?? 'ecc';
+import { feed } from './liveFeed';
+import { locateTarget } from './locate';
 
 /** Supervisor home: the 3D live floor. Content only; chrome comes from AppShell. */
 export function LiveFloorPage() {
+  const routeState = useLocation().state;                       // the Dashboard can send us here to locate a robot or station
   const holder = useRef<HTMLDivElement>(null); const [view, setView] = useState({ x: 0, y: 0, yaw: 0, zoomPct: 100 }); const [ready, setReady] = useState(false); const [fleetOpen, setFleetOpen] = useState(() => window.innerWidth > 1100);
   const fleets = useApp((s) => s.fleets), fleetId = useApp((s) => s.fleetId), mode = useApp((s) => s.cameraMode), site = useApp((s) => s.site), zoneId = useApp((s) => s.activeZoneId), q = useApp((s) => s.query);
   useEffect(() => {
-    let adapter: TelemetryAdapter | null = null; let dead = false; const eng = new Engine(holder.current!); handle.engine = eng; eng.onView = setView;
-    (async () => {
-      const [s, n] = await Promise.all([fetch(`/sites/${SITE}/site.json`).then((r) => r.json() as Promise<SiteLayout>), fetch(`/sites/${SITE}/nav.json`).then((r) => r.json() as Promise<NavGraph>)]);
-      if (dead) return;
-      store.getState().setSite(s, n); eng.load(s, n); setReady(true);
-      adapter = new MockSimulator(n, s.siteId);
-      adapter.onTelemetry((b) => { store.getState().ingest(b); eng.updateRobots(b); }); adapter.connect(); if (import.meta.env.DEV) Object.assign(window, { __adapter: adapter });  // dev-only: lets tests inject faults
-    })();
-    return () => { dead = true; adapter?.disconnect(); eng.dispose(); handle.engine = null;
-      store.setState({ selectedId: null, selectedStationId: null, activeZoneId: null, cameraMode: 'orbit', navSel: 'live', fleetId: 'all', query: '', robots: {}, traffic: {}, events: [] }); };   // clean slate for the next sign-in
+    let dead = false; const eng = new Engine(holder.current!); handle.engine = eng; eng.onView = setView;
+    const release = feed.acquire(); const off = feed.onBatch((b) => eng.updateRobots(b));
+    feed.ready().then(({ site: s, nav: n }) => {
+      if (dead) return; eng.load(s, n); setReady(true); eng.updateRobots(Object.values(store.getState().robots));     // robots already on the floor (coming from the Dashboard) show at once
+      const target = (routeState as { locate?: string } | null)?.locate; if (target) locateTarget(target);
+    });
+    return () => { dead = true; off(); release(); eng.dispose(); handle.engine = null;
+      store.setState({ selectedId: null, selectedStationId: null, activeZoneId: null, cameraMode: 'orbit', navSel: 'live', fleetId: 'all', query: '' }); };   // clean slate for the next visit
   }, []);
   useEffect(() => { handle.engine?.applyFilter(fleetId, q); }, [fleetId, q]);
   const sel = useApp((s) => s.selectedId); const selStation = useApp((s) => s.selectedStationId);

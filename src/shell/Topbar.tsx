@@ -25,7 +25,7 @@ export function Topbar({ onMenu, searchPlaceholder, getHits, onAi, onSupport }: 
       <div className="search">
         <Input size="sm" icon={SearchLg} placeholder={searchPlaceholder} aria-label="Search" value={q}
           onChange={(v) => { setQ(v); setOpen(true); }} onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)} />
-        {open && hits.length > 0 && <div className="results">{hits.map((h, i) => <button key={i} onMouseDown={() => { h.go?.(); if (h.to) navigate(h.to); setQ(''); }}><b>{h.title}</b><small>{h.kind}{h.sub ? ` · ${h.sub}` : ''}</small></button>)}</div>}
+        {open && hits.length > 0 && <div className="results">{hits.map((h, i) => <button key={i} onMouseDown={() => { h.go?.(); if (h.to) navigate(h.to, { state: h.state }); setQ(''); }}><b>{h.title}</b><small>{h.kind}{h.sub ? ` · ${h.sub}` : ''}</small></button>)}</div>}
       </div>
       <div className="tb-spacer" />
       <Button aria-label="Go to Support" size="sm" color="secondary" iconLeading={HeadsetHelp} onPress={onSupport ?? (() => notify.info('Support', 'Reach the AtiFlow support desk from the full app.', 'support'))}><span className="tb-text">Go to Support</span></Button>

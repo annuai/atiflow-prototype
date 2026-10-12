@@ -1,3 +1,4 @@
+import { segDist } from './geom';
 import type { Lane, NavGraph, NavNode, Vec2 } from './types';
 
 export interface PathPlan { pts: Vec2[]; laneAt: (string | null)[]; cum: number[]; total: number }
@@ -9,38 +10,43 @@ export class LaneGraph {
     nav.nodes.forEach((n) => { this.nodes.set(n.id, n); this.out.set(n.id, []); });
     for (const l of nav.lanes) { this.lanes.set(l.id, l); this.out.get(l.from)?.push(l); }
   }
+  private xings: Intersections | null = null;
+  /** The map's intersections (derived from the lanes, cached). */
+  get intersections() { return (this.xings ??= new Intersections(this)); }
   station(id: string) { return this.nav.stations.find((s) => s.id === id); }
   stationNode(id: string) { const s = this.station(id); return s ? this.nodes.get(s.nodeId) : undefined; }
-  /** Dijkstra over lanes (a lane is only traversed forward, and never straight back into its paired lane: robots do not U-turn mid-route). Returns lanes or null. */
+  /** Dijkstra over lanes with a binary heap (a lane is only traversed forward, and never straight back into its paired lane: robots do not U-turn mid-route). Returns lanes or null. */
   route(from: string, to: string, fleet: string, avoid?: ReadonlySet<string>): Lane[] | null {
     if (!this.nodes.has(from) || !this.nodes.has(to)) return null;
     const dist = new Map<string, number>(), prev = new Map<string, Lane | null>(), done = new Set<string>(); let end: Lane | null = null;
-    const relax = (l: Lane, d: number, p: Lane | null) => { if (!l.fleets.includes(fleet) || (avoid?.has(l.to) && l.to !== to)) return; const nd = d + l.len + 0.5; if (nd < (dist.get(l.id) ?? Infinity)) { dist.set(l.id, nd); prev.set(l.id, p); } };
+    const heap: [number, Lane][] = [];
+    const push = (d: number, l: Lane) => { heap.push([d, l]); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+    const pop = () => { const top = heap[0]; const last = heap.pop()!; if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+    const relax = (l: Lane, d: number, p: Lane | null) => { if (!l.fleets.includes(fleet) || (avoid?.has(l.to) && l.to !== to)) return; const nd = d + l.len + 0.5; if (nd < (dist.get(l.id) ?? Infinity)) { dist.set(l.id, nd); prev.set(l.id, p); push(nd, l); } };
     for (const l of this.out.get(from) ?? []) relax(l, 0, null);
-    for (;;) {
-      let cur: Lane | null = null, best = Infinity;
-      for (const [id, d] of dist) if (!done.has(id) && d < best) { best = d; cur = this.lanes.get(id)!; }
-      if (!cur) return null; if (cur.to === to) { end = cur; break; } done.add(cur.id);
-      for (const l of this.out.get(cur.to) ?? []) if (!(l.to === cur.from)) relax(l, best, cur);
+    while (heap.length) {
+      const [d, cur] = pop(); if (done.has(cur.id) || d > (dist.get(cur.id) ?? Infinity)) continue;
+      if (cur.to === to) { end = cur; break; } done.add(cur.id);
+      for (const l of this.out.get(cur.to) ?? []) if (l.to !== cur.from) relax(l, d, cur);
     }
+    if (!end) return null;
     const lanes: Lane[] = []; for (let l: Lane | null = end; l; l = prev.get(l.id) ?? null) lanes.unshift(l);
     return lanes;
   }
   /** Concatenate lane geometries (consecutive lanes are joined by a short connector segment). `start` is the robot's current pose. */
-  plan(lanes: Lane[], start?: Vec2): PathPlan {
+  plan(lanes: Lane[], start?: Vec2, midLane = false): PathPlan {
     const pts: Vec2[] = [], laneAt: (string | null)[] = [];
     if (start) { pts.push(start); laneAt.push(lanes[0]?.id ?? null); }
-    for (const l of lanes) for (const g of l.geom) {
+    lanes.forEach((l, li) => { let from = 0;
+      if (midLane && li === 0 && start) {                                           // the robot is part-way along the first lane: continue from the segment it is on
+        let best = Infinity; for (let i = 0; i + 1 < l.geom.length; i++) { const d = segDist(start.x, start.y, l.geom[i][0], l.geom[i][1], l.geom[i + 1][0], l.geom[i + 1][1]).d; if (d < best) { best = d; from = i + 1; } }
+      }
+      for (const g of l.geom.slice(from)) {
       const q = { x: g[0], y: g[1] };
       const last = pts[pts.length - 1]; if (last && Math.hypot(q.x - last.x, q.y - last.y) < 0.02) { laneAt[laneAt.length - 1] = l.id; continue; }   // zero-length lanes / repeated points would hide reversals below
-      // offset lanes of different edges can join slightly out of order at junctions; drop a lane-end point that would make the path reverse (>107 deg) over a short hop
-      for (;;) {
-        const n = pts.length; if (n < 2) break; const a = pts[n - 2], b = pts[n - 1];
-        const d1x = b.x - a.x, d1y = b.y - a.y, d2x = q.x - b.x, d2y = q.y - b.y, L1 = Math.hypot(d1x, d1y), L2 = Math.hypot(d2x, d2y);
-        if (L1 > 1e-6 && L2 > 1e-6 && L2 < 1.5 && (d1x * d2x + d1y * d2y) / (L1 * L2) < -0.3) { pts.pop(); laneAt.pop(); } else break;
-      }
       pts.push(q); laneAt.push(l.id);
-    }
+      }
+    });
     const sm = smoothPolyline(pts, laneAt);
     const cum = [0]; for (let i = 1; i < sm.pts.length; i++) cum.push(cum[i - 1] + Math.hypot(sm.pts[i].x - sm.pts[i - 1].x, sm.pts[i].y - sm.pts[i - 1].y));
     return { pts: sm.pts, laneAt: sm.laneAt, cum, total: cum[cum.length - 1] };
@@ -58,6 +64,37 @@ export class LaneGraph {
   /** Each lane as the smooth curve robots actually drive. */
   smoothLanes(): { id: string; fleets: string[]; pts: Vec2[] }[] {
     return this.nav.lanes.map((l) => { const raw = l.geom.map(([x, y]) => ({ x, y })); return { id: l.id, fleets: l.fleets, pts: smoothPolyline(raw, raw.map(() => null)).pts }; });
+  }
+}
+
+/** Every place where two robots cannot pass each other: lanes of different flows closer than a robot pair needs (crossings, merges, forks, tight opposite lanes). Found from the lane geometry alone, so any map works. Each cluster is one intersection. */
+export class Intersections {
+  readonly clusters = new Map<string, number>(); private pts: { x: number; y: number; c: string }[] = []; private cell = new Map<string, number[]>(); private reach: number;
+  constructor(graph: LaneGraph, gap = 0.95, reach = 2.0, join = 0) {
+    this.reach = reach; const sm = graph.smoothLanes(); type P = { x: number; y: number; lane: number };
+    const all: P[] = []; sm.forEach((l, li) => { let acc = 0; l.pts.forEach((q, i) => { if (i === 0) { all.push({ ...q, lane: li }); return; } const a = l.pts[i - 1]; acc += Math.hypot(q.x - a.x, q.y - a.y); if (acc >= 0.4 || i === l.pts.length - 1) { all.push({ ...q, lane: li }); acc = 0; } }); });
+    const lanes = graph.nav.lanes; const grid = new Map<string, number[]>(); const key = (x: number, y: number) => Math.floor(x) + ',' + Math.floor(y);
+    all.forEach((p, i) => { const k = key(p.x, p.y); (grid.get(k) ?? grid.set(k, []).get(k)!).push(i); });
+    const parent = all.map((_, i) => i); const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i]))); const flagged = new Set<number>();
+    const follows = (a: number, b: number) => lanes[a].to === lanes[b].from && lanes[b].to !== lanes[a].from;      // b continues a (not a U-turn into the paired lane)
+    for (let i = 0; i < all.length; i++) {
+      const p = all[i]; const cx = Math.floor(p.x), cy = Math.floor(p.y);
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const j of grid.get(cx + dx + ',' + (cy + dy)) ?? []) {
+        if (j <= i) continue; const q = all[j]; if (q.lane === p.lane || follows(p.lane, q.lane) || follows(q.lane, p.lane)) continue;
+        if (Math.hypot(p.x - q.x, p.y - q.y) < gap) { flagged.add(i); flagged.add(j); parent[find(i)] = find(j); }
+      }
+    }
+    const fl = [...flagged];
+    if (join > 0) for (const i of fl) { const p = all[i]; for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const j of grid.get(Math.floor(p.x) + dx + ',' + (Math.floor(p.y) + dy)) ?? []) if (j > i && flagged.has(j) && Math.hypot(p.x - all[j].x, p.y - all[j].y) < join) parent[find(i)] = find(j); }
+    const ids = new Map<number, string>(); let n = 0;
+    for (const i of fl) { const r = find(i); if (!ids.has(r)) ids.set(r, 'X' + ++n); const c = ids.get(r)!; this.pts.push({ x: all[i].x, y: all[i].y, c }); this.clusters.set(c, (this.clusters.get(c) ?? 0) + 1); }
+    this.pts.forEach((p, i) => { const k = key(p.x, p.y); (this.cell.get(k) ?? this.cell.set(k, []).get(k)!).push(i); });
+  }
+  /** Every intersection whose area (within `reach` of one of its points) contains the position. */
+  near(x: number, y: number): string[] {
+    const cx = Math.floor(x), cy = Math.floor(y), out = new Set<string>(); const R = Math.ceil(this.reach) + 1;
+    for (let dx = -R; dx <= R; dx++) for (let dy = -R; dy <= R; dy++) for (const i of this.cell.get(cx + dx + ',' + (cy + dy)) ?? []) { const p = this.pts[i]; if (Math.hypot(p.x - x, p.y - y) < this.reach) out.add(p.c); }
+    return [...out];
   }
 }
 

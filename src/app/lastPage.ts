@@ -8,7 +8,7 @@ const normalize = (path: string) => (path.startsWith('/configurator/workflows/')
 const belongsTo = (path: string, user: PublicUser) => path === ROLES[user.role].home || path.startsWith(`/${user.role}/`) || path === `/${user.role}`;
 
 export function rememberPage(user: PublicUser, path: string) {
-  if (path === '/login' || !belongsTo(normalize(path), user)) return;
+  if (path === '/login' || path === `/${user.role}` || !belongsTo(normalize(path), user)) return;     // (the bare role url only redirects)
   try { localStorage.setItem(key(user.username), normalize(path)); } catch { /* storage unavailable: nothing to remember */ }
 }
 export function landingFor(user: PublicUser): string {

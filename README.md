@@ -2,7 +2,7 @@
 
 A role-based web app for Ati Robotics AMR fleets, in two parts:
 
-- **Supervisor:** a real-time 3D Live Floor. A client's CAD floor plan (DWG) becomes a Three.js scene you can orbit, pan, zoom and walk through, with robots driven by a telemetry feed (a built-in simulator for now).
+- **Supervisor:** a Dashboard (fleet at a glance) and a real-time 3D Live Floor. A client's CAD floor plan (DWG) becomes a Three.js scene you can orbit, pan, zoom and walk through, with robots driven by a telemetry feed (a built-in simulator for now).
 - **Configurator:** Workflow Builder, Robots, Hardware, Master Data, Fleets and Maps pages for setting a site up.
 
 Stack: Vite, TypeScript, React 19, vanilla Three.js, zustand, Tailwind v4 with Untitled UI components, vitest.
@@ -22,7 +22,7 @@ Prototype accounts live in `src/features/auth/users.ts` (plain text on purpose, 
 
 | username | role | lands on |
 |---|---|---|
-| arjun | supervisor | `/supervisor/livefloor` |
+| arjun | supervisor | `/supervisor/dashboard` (or the page they left) |
 | kavin, meera | configurator | `/configurator` (Workflow Builder) |
 
 Each user returns to the page they last left after logging back in. Roles never see each other's pages.
