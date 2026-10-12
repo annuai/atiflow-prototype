@@ -35,8 +35,8 @@ export function DashboardPage() {
   return (
     <AppShell useNavModel={useLiveNav} getHits={liveHits} searchPlaceholder="Search robots, stations, zones…">
       <div className="content">
+        <div className="title-block"><div><h1>{greeting(now.getHours())} {user ? firstName(user.name) : 'there'}</h1><p>Here&apos;s what&apos;s happening today</p></div><div className="actions" /></div>
         <div className="builder md-card"><div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
-          <header><p className="text-sm text-secondary">{greeting(now.getHours())}</p><h1 className="text-display-xs font-semibold text-primary sm:text-display-sm">{user ? firstName(user.name) : 'there'}</h1><p className="text-sm text-secondary">Here&apos;s what&apos;s happening today</p></header>
           <MetricCards cards={metricCards(summary, compare)} />
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
             <PerformanceCard now={now} bars={bars} stats={stats} compare={compare} onCompare={setCompare} onOpen={soon} />
