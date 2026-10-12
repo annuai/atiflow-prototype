@@ -37,6 +37,7 @@ export function liveHits(q: string): SearchHit[] {
   const ql = q.toLowerCase(); const { robots, site, nav } = store.getState();
   return [
     ...Object.values(robots).filter((r) => r.id.toLowerCase().includes(ql)).slice(0, 5).map((r) => ({ kind: 'Robot', title: r.id, sub: r.state, ...(handle.engine ? { go: () => handle.engine?.focusRobot(r.id) } : { to: LIVE_FLOOR_PATH, state: { locate: r.id } }) })),
+    ...Object.values(robots).filter((r) => r.task && r.task.id.toLowerCase().includes(ql)).slice(0, 4).map((r) => ({ kind: 'Trip', title: r.task!.id, sub: `${r.id} → ${r.task!.to}`, ...(handle.engine ? { go: () => handle.engine?.focusRobot(r.id) } : { to: LIVE_FLOOR_PATH, state: { locate: r.id } }) })),
     ...(site?.zones.filter((z) => z.active && z.name.toLowerCase().includes(ql)).map((z) => ({ kind: 'Zone', title: z.name, sub: z.kind, ...(handle.engine ? { go: () => handle.engine?.focusZone(z.id) } : { to: LIVE_FLOOR_PATH }) })) ?? []),
     ...(nav?.stations.filter((s) => (s.id + ' ' + s.name).toLowerCase().includes(ql)).slice(0, 6).map((s) => ({ kind: 'Station', title: `${s.id} · ${s.name}`, sub: s.type, ...(handle.engine ? { go: () => store.getState().selectStation(s.id) } : { to: LIVE_FLOOR_PATH, state: { locate: s.id } }) })) ?? []),
   ];

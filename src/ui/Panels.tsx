@@ -13,8 +13,8 @@ import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 import { ZoomBar } from './ZoomBar';
 import { ProgressBar } from '@/components/base/progress-indicators/progress-indicators';
-import { Home01, Minus, Plus, Users01 } from '@untitledui/icons';
-import type { RobotTelemetry } from '../core/types';
+import { ChevronDown, ChevronRight, Home01, Minus, Plus, Users01 } from '@untitledui/icons';
+import type { NavGraph, RobotTelemetry } from '../core/types';
 import { locateTarget } from '@/features/live-floor/locate';
 
 type Mode = 'orbit' | 'top' | 'walk' | 'follow';
@@ -55,23 +55,39 @@ export function FleetList() {
 
 const pathLen = (r: RobotTelemetry) => (r.path ?? []).reduce((a, p, i, all) => (i ? a + Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y) : 0), 0);
 
+/** The robot's trip (TRP-001...): click it to see where it started, the stops on the way and the destination, and which one it is driving to. */
+function TripSection({ r, nav }: { r: RobotTelemetry; nav: NavGraph | null }) {
+  const [open, setOpen] = useState(false); const t = r.task; if (!t) return null;
+  const stops = t.stops ?? []; const leg = t.leg ?? 0; const name = (id?: string) => nav?.stations.find((x) => x.id === id)?.name ?? '';
+  const rows = [...(t.origin ? [{ id: t.origin, label: 'Start', status: 'done' }] : []),
+    ...stops.map((id, i) => ({ id, label: `Stop ${i + 1}`, status: i < leg ? 'done' : i === leg ? 'now' : 'next' })),
+    { id: t.to ?? '', label: 'Destination', status: leg >= stops.length ? 'now' : 'next' }].filter((x) => x.id);
+  const text: Record<string, string> = { done: 'done', now: 'heading here', next: 'next' };
+  return <div className="trip">
+    <button type="button" className="trip-head" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+      {open ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}<b>{t.id}</b><span>{t.type} · {stops.length ? `${stops.length} stop${stops.length > 1 ? 's' : ''} · ` : ''}to {t.to}</span></button>
+    {open && <div className="info-list">{rows.map((x) => <button key={x.label} onClick={() => locateTarget(x.id)}><i className="dot" style={{ background: x.status === 'now' ? '#14b8a6' : x.status === 'done' ? '#94a3b8' : '#f59e0b' }} /><b>{x.id}</b><span>{x.label}{name(x.id) ? ` · ${name(x.id)}` : ''}</span><em>{text[x.status]}</em></button>)}</div>}
+  </div>;
+}
+
 export function RobotPanel() {
   const id = useApp((s) => s.selectedId); const r = useApp((s) => (id ? s.robots[id] : null)); const nav = useApp((s) => s.nav); const fleets = useApp((s) => s.fleets);
-  if (!r) return null; const fleet = fleets.find((f) => f.id === r.fleetId); const dest = nav?.stations.find((s) => s.id === r.task?.to);
+  if (!r) return null; const fleet = fleets.find((f) => f.id === r.fleetId); const dest = nav?.stations.find((s) => s.id === (r.task?.next ?? r.task?.to));
   const trafficTxt = r.traffic ? (r.traffic.status === 'waiting' ? `Waiting for ${r.traffic.zoneId}` : `Inside ${r.traffic.zoneId}`) : 'Clear';
   return <InfoPanel title={r.id} onClose={() => store.getState().select(null)}
     subtitle={`${r.model === 'sherpa-tug' ? 'Sherpa Tug' : 'Sherpa XT Lite'} · ${fleet?.name ?? r.fleetId}`}
     pill={{ label: r.state, tone: STATE_TONE[r.state] }} chips={fleet ? [{ label: fleet.name, color: fleet.color }] : []}
     stats={[
       { label: 'Battery', value: r.battery + '%', bar: { pct: r.battery, tone: r.battery < 25 ? 'error' : 'success' } }, { label: 'Speed', value: r.speed.toFixed(1) + ' m/s' },
-      { label: 'Task', value: r.task?.type ?? '—' }, { label: 'Destination', value: dest ? dest.id : '—' },
+      { label: 'Trip', value: r.task?.id ?? '—' }, { label: 'Destination', value: r.task?.to ?? '—' },
       { label: 'Payload', value: r.payload ? `${r.payload.kind} ×${r.payload.qty}` : 'Empty' }, { label: 'Lane', value: r.laneId ?? '—' },
       { label: 'Traffic zone', value: trafficTxt }, { label: 'At station', value: r.atStation ?? '—' },
     ]}
     alerts={(r.alerts ?? []).map((a) => ({ text: a.msg, severity: a.severity }))}
     actions={[{ label: 'Locate', onClick: () => handle.engine?.focusRobot(r.id) }, { label: 'Follow', onClick: () => store.getState().setCameraMode('follow') }]}>
     {dest && <div className="sub" style={{ margin: '0 0 8px' }}>Heading to <b>{dest.id}</b> · {dest.name}</div>}
-    {r.task?.progress != null && <div className="progress"><small>Route progress</small><ProgressBar className="mt-1 h-1.5" value={Math.round((r.task.progress ?? 0) * 100)} /></div>}
+    <TripSection key={r.task?.id} r={r} nav={nav} />
+    {r.task?.progress != null && <div className="progress"><small>Trip progress</small><ProgressBar className="mt-1 h-1.5" value={Math.round((r.task.progress ?? 0) * 100)} /></div>}
   </InfoPanel>;
 }
 
@@ -79,7 +95,7 @@ export function StationPanel() {
   const id = useApp((s) => s.selectedStationId); const nav = useApp((s) => s.nav); const robots = useApp((s) => s.robots); const fleets = useApp((s) => s.fleets); const site = useApp((s) => s.site);
   const st = nav?.stations.find((x) => x.id === id); if (!st || !nav) return null;
   const all = Object.values(robots); const docked = all.filter((r) => r.atStation === st.id);
-  const incoming = all.filter((r) => r.task?.to === st.id && r.atStation !== st.id && ['moving', 'waiting', 'blocked'].includes(r.state)).sort((a, b) => pathLen(a) - pathLen(b));
+  const incoming = all.filter((r) => (r.task?.next ?? r.task?.to) === st.id && r.atStation !== st.id && ['moving', 'waiting', 'blocked'].includes(r.state)).sort((a, b) => pathLen(a) - pathLen(b));
   const charging = docked.some((r) => r.state === 'charging'); const status = charging ? 'Charging' : docked.length ? 'Occupied' : incoming.length ? 'Robot inbound' : 'Free';
   const zone = site?.zones.find((z) => z.id === st.zone); const owners = fleets.filter((f) => st.fleets.includes(f.id));
   return <InfoPanel title={st.id} subtitle={`${st.name} · ${st.type === 'asrs' ? 'ASRS' : st.type[0].toUpperCase() + st.type.slice(1)} station`} onClose={() => store.getState().selectStation(null)}

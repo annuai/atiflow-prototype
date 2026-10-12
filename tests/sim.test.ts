@@ -59,7 +59,7 @@ describe('FleetSim behaviour', () => {
       occupied += Object.values(rules.traffic(snap)).filter((z) => z.occupants.length).length;
     }
     expect(occupied).toBeGreaterThan(0); expect(trafficWaits).toBeGreaterThan(0);
-    expect(longest).toBeLessThan(300);       // (seed 11 measured 144 s; the share of long waits over all seeds is checked below)
+    expect(longest).toBeLessThan(300);       // (the share of long waits over all seeds is checked below)
     for (const [id, d] of travelled) expect(d, `${id} travelled`).toBeGreaterThan(100);
   });
 });
@@ -108,6 +108,6 @@ describe('waiting', () => {
         for (const r of sim.snapshot()) { if (r.state === 'waiting') { const s0 = since.get(r.id) ?? t; since.set(r.id, s0); if (t - s0 > 120) long += 0.1; } else since.delete(r.id); }
       }
     }
-    expect(long / robotTime).toBeLessThan(0.08);       // measured 5.4% (target: lower; the remaining stalls are head-on traps that only a robot backing up could undo)
+    expect(long / robotTime).toBeLessThan(0.08);       // measured 5.8% with far-away destinations (the remaining stalls are head-on traps that only a robot backing up could undo) (target: lower; the remaining stalls are head-on traps that only a robot backing up could undo)
   }, 120000);
 });

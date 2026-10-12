@@ -34,7 +34,7 @@ export interface RobotTelemetry {
   payload?: { kind: string; qty?: number } | null;
   /** Pose of the trolley the robot is towing (only while it pulls one); renderers draw the trolley there. */
   trailer?: { x: number; y: number; theta: number } | null;
-  task?: { id: string; type: string; from?: string; to?: string; progress?: number } | null;
+  task?: { id: string; type: string; from?: string; to?: string; progress?: number; /** the trip: stations it calls at on the way, the one it is driving to now, and which leg that is */ stops?: string[]; next?: string; leg?: number; origin?: string } | null;
   path?: Vec2[]; currentNode?: string; nextNode?: string;
   laneId?: string | null;                                            // lane currently driven (from localization)
   traffic?: { zoneId: string; status: 'waiting' | 'inside' } | null;  // traffic-zone state reported by the robot

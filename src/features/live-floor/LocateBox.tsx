@@ -25,7 +25,7 @@ export function LocateBox({ legendClosed, onOpenLegend }: { legendClosed: boolea
       {open && hits.length > 0 && (
         <ul role="listbox" aria-label="Matches" className="absolute right-0 bottom-full left-0 z-20 mb-2 overflow-hidden rounded-xl border border-secondary bg-primary shadow-lg">
           {hits.map((h, i) => (
-            <li key={h.kind + h.id} role="option" aria-selected={i === active} onMouseEnter={() => setActive(i)} onMouseDown={(e) => { e.preventDefault(); locate(h); }}
+            <li key={h.kind + h.id + h.title} role="option" aria-selected={i === active} onMouseEnter={() => setActive(i)} onMouseDown={(e) => { e.preventDefault(); locate(h); }}
               className={cx('flex cursor-pointer items-center justify-between gap-3 px-4 py-2.5 text-sm', i === active && 'bg-primary_hover')}>
               <span className="font-semibold text-primary">{h.title}</span><span className="truncate text-tertiary">{h.sub}</span>
             </li>))}
