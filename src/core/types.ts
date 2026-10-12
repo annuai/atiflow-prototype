@@ -39,6 +39,8 @@ export interface RobotTelemetry {
   laneId?: string | null;                                            // lane currently driven (from localization)
   traffic?: { zoneId: string; status: 'waiting' | 'inside' } | null;  // traffic-zone state reported by the robot
   waitReason?: 'traffic' | 'headway' | 'intersection' | null;
+  /** the robots this one is waiting for (first in line first), while it waits */
+  waitsOn?: string[];
   atStation?: string | null;
   alerts?: { code: string; severity: 'info' | 'warn' | 'critical'; msg: string }[];
   ts: number;

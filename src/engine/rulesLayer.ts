@@ -33,8 +33,8 @@ export class RulesLayer {
         for (; acc < len; acc += 5) g.arrows.push([ax + ((bx - ax) * acc) / len, ay + ((by - ay) * acc) / len, Math.atan2(by - ay, bx - ax)]); acc -= len;
       }
     };
-    for (const l of lg.smoothLanes()) add(l.fleets, l.pts, true);          // the curves robots drive (corners rounded)
-    for (const c of lg.connectors()) add(c.fleets, c.pts, false);          // and the turns that join one lane to the next, so the network is drawn connected
+    for (const l of lg.roadLanes()) add(l.fleets, l.pts, true);            // the lanes as driven, cut short at junctions
+    for (const c of lg.connectors()) add(c.fleets, c.pts, false);          // and one smooth curve for every turn that joins one lane to the next
     const arrowGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute([0.55, 0, 0, -0.3, 0, -0.34, -0.3, 0, 0.34], 3)); arrowGeo.setIndex([0, 1, 2]); arrowGeo.computeVertexNormals();
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
     for (const [key, g] of groups) {

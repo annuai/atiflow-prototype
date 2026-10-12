@@ -108,6 +108,6 @@ describe('waiting', () => {
         for (const r of sim.snapshot()) { if (r.state === 'waiting') { const s0 = since.get(r.id) ?? t; since.set(r.id, s0); if (t - s0 > 120) long += 0.1; } else since.delete(r.id); }
       }
     }
-    expect(long / robotTime).toBeLessThan(0.08);       // measured 5.8% with far-away destinations (the remaining stalls are head-on traps that only a robot backing up could undo) (target: lower; the remaining stalls are head-on traps that only a robot backing up could undo)
+    expect(long / robotTime).toBeLessThan(0.08);       // measured 4.3% with far-away destinations, trips never reassigned once started and clean lane joins (the remaining stalls are head-on traps that only a robot backing up could undo) (target: lower; the remaining stalls are head-on traps that only a robot backing up could undo)
   }, 120000);
 });

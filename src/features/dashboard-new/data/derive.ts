@@ -37,7 +37,7 @@ export function attentionList(i: DashboardInput, clock: ConditionClock): Attenti
     if (r.state === 'error' || r.state === 'blocked') { const seconds = secs(r.state); cands.push({ kind: r.state, level: 'critical', seconds, title: r.state === 'error' ? 'has an error' : 'is blocked', detail: r.alerts?.[0]?.msg ?? (r.state === 'error' ? 'Reported a fault' : 'Something is in its way') }); }
     if (r.state === 'waiting') {
       const seconds = secs('waiting');
-      if (seconds >= WAIT_WARN_S) cands.push({ kind: 'waiting', level: seconds >= WAIT_CRITICAL_S ? 'critical' : 'warn', seconds, title: `has waited ${fmtDuration(seconds)}`, detail: `Waiting ${WAIT_TEXT[r.waitReason ?? ''] ?? 'for the road ahead'}${r.traffic ? ` (${r.traffic.zoneId})` : ''}` });
+      if (seconds >= WAIT_WARN_S) cands.push({ kind: 'waiting', level: seconds >= WAIT_CRITICAL_S ? 'critical' : 'warn', seconds, title: `has waited ${fmtDuration(seconds)}`, detail: `Waiting ${WAIT_TEXT[r.waitReason ?? ''] ?? 'for the road ahead'}${r.traffic ? ` (${r.traffic.zoneId})` : ''}${r.waitsOn?.length ? `, ${r.waitsOn[0]} is first` : ''}` });
     }
     if (r.battery < BATTERY_LOW && r.state !== 'charging' && r.task?.type !== 'charge') cands.push({ kind: 'battery', level: r.battery < BATTERY_CRITICAL ? 'critical' : 'warn', seconds: secs('battery'), title: `battery at ${Math.round(r.battery)}%`, detail: 'Not heading to a charger' });
     const top = cands.sort((a, b) => (a.level === b.level ? b.seconds - a.seconds : a.level === 'critical' ? -1 : 1))[0];

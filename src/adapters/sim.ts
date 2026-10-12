@@ -12,10 +12,10 @@ const STUCK_ALERT = 90, CYCLE_AFTER = 3;      // seconds waiting before a robot 
 /** Footprints are chains of circles: the robot (1.2 x 0.85 m) and the trolley it tows (1.1 x 0.7 m). Opposite lanes are about 0.95 m apart, so neighbours in parallel lanes pass each other. */
 type Circle = { x: number; y: number; r: number };
 type Pose = { x: number; y: number; th: number };
-const ROBOT_R = 0.43, TROLLEY_R = 0.37;
+const ROBOT_R = 0.435, TROLLEY_R = 0.375;     // the circle chains cover the 1.2 x 0.85 m body with about 1 cm to spare
 const TURN_R = 0.47;                                           // turning on the spot swings the corners of the 1.2 x 0.85 m body out past the circle chain, so that check uses wider circles
 export const robotCircles = (p: Pose, r = ROBOT_R): Circle[] => [-0.45, -0.15, 0.15, 0.45].map((o) => ({ x: p.x + Math.cos(p.th) * o, y: p.y + Math.sin(p.th) * o, r }));
-export const trolleyCircles = (p: Pose): Circle[] => [-0.4, -0.13, 0.13, 0.4].map((o) => ({ x: p.x + Math.cos(p.th) * o, y: p.y + Math.sin(p.th) * o, r: TROLLEY_R }));
+export const trolleyCircles = (p: Pose, r = TROLLEY_R): Circle[] => [-0.4, -0.13, 0.13, 0.4].map((o) => ({ x: p.x + Math.cos(p.th) * o, y: p.y + Math.sin(p.th) * o, r }));
 const hit = (a: Circle[], b: Circle[]) => a.some((p) => b.some((q) => Math.hypot(p.x - q.x, p.y - q.y) < p.r + q.r + CLEAR));
 
 /** One permit request along a route: the traffic zones and intersections it passes through, within `GROUP_GAP` of each other, taken all together or not at all. */
@@ -32,6 +32,8 @@ interface Bot {
 interface Trip { id: string; kind: 'transport' | 'return' | 'charge' | 'park'; origin?: string; legs: string[]; leg: number; loaded: boolean; payload: RobotTelemetry['payload'] }
 /** Stations that work is sent to (not parking spots or chargers). */
 const WORK = (s: NavGraph['stations'][number]) => s.type !== 'charge' && s.type !== 'park';
+/** A trip counts as started once the robot is this far (m) from its station; until then it may still be swapped for another one (after that it never is). */
+const SET_OFF = 1;
 const FAR = 30;                                                // m: a trip's destination is at least this far from where it starts (when the fleet has such a station)
 interface Permit { occ: Set<string>; waiters: Set<string>; lanes?: Map<string, Set<string>> }
 
@@ -62,7 +64,7 @@ export class FleetSim {
   private parked(b: Bot) { return b.state === 'idle' || b.state === 'working' || b.state === 'charging'; }
   /** Nodes where a robot stands still: other robots are never routed through them. */
   private occupiedNodes(except: Bot) { return new Set(this.bots.filter((o) => o !== except && ((o.stationId && this.parked(o)) || (o.plan && o.s < 0.5))).map((o) => o.node)); }
-  private planRoute(b: Bot): boolean { if (b.trip && this.startLeg(b)) return true; return this.startTrip(b); }
+  private planRoute(b: Bot): boolean { return b.trip ? this.startLeg(b) : this.startTrip(b); }
   /** Task shown to the supervisor: the trip's id, its stops and destination, which leg is being driven. */
   private syncTask(b: Bot, frac = 0) {
     const t = b.trip; if (!t || !b.task) return;
@@ -79,9 +81,10 @@ export class FleetSim {
         Object.assign(b, { prio: this.time, plan, s: 0, entries: this.entriesOf(plan), entryIdx: 0, state: 'moving', dest: id, stationId: null, timer: 0, v: 0, loaded: t.loaded, payload: t.payload, attached: false, trailer: null, gateAt: -9, task: { id: t.id, type: t.kind, from } });
         this.syncTask(b); return true;
       }
-      if (t.leg === t.legs.length - 1) break; t.legs.splice(t.leg, 1);
+      if (t.leg === t.legs.length - 1) return false;          // the destination is never changed: the robot waits and asks again
+      t.legs.splice(t.leg, 1);       // a stop that is taken or cannot be reached is skipped
     }
-    b.trip = null; b.task = null; return false;
+    return false;
   }
   /** Stations to call at on the way: near the planned route, away from its ends and from each other. */
   private pickStops(b: Bot, dest: string, plan: PathPlan, spoken: Set<string>, crowded: (s: NavGraph['stations'][number]) => boolean): string[] {
@@ -155,27 +158,18 @@ export class FleetSim {
   private byId(id: string) { return this.bots.find((o) => o.id === id)!; }
   private dropLock(b: Bot, id: string) { const p = this.xing(id); p.occ.delete(b.id); p.lanes?.delete(b.id); b.locks.delete(id); }
   /** Plan another way to the same destination from the end of the lane the robot is on, steering clear of everything standing still. The robot keeps the trail behind it (so its trolley does not jump). */
-  private reroute(b: Bot, to?: string): boolean {
+  private reroute(b: Bot): boolean {
     const old = b.plan!; if (b.holds.size) return false;
-    const lane = this.graph.lanes.get(pointAt(old, b.s).lane ?? ''); const st = this.graph.station(to ?? b.dest ?? ''); if (!lane || !st) return false;
+    const lane = this.graph.lanes.get(pointAt(old, b.s).lane ?? ''); const st = this.graph.station(b.dest ?? ''); if (!lane || !st) return false;
     const still = this.bots.filter((o) => o !== b && o.state !== 'offline' && o.v < 0.3);
     const avoid = new Set<string>(); for (const n of this.graph.nodes.values()) if (n.id !== lane.to && still.some((o) => Math.hypot(o.pos.x - n.x, o.pos.y - n.y) < 2.6)) avoid.add(n.id);
     const rest = lane.to === st.nodeId ? [] : this.graph.route(lane.to, st.nodeId, b.fleetId, avoid); if (!rest) return false;
-    const lanes = [lane, ...rest]; const ahead = [...new Set(old.laneAt.filter((_, i) => old.cum[i] > b.s))]; if (!to && lanes.map((l) => l.id).join() === ahead.join()) return false;      // no other way
+    const lanes = [lane, ...rest]; const ahead = [...new Set(old.laneAt.filter((_, i) => old.cum[i] > b.s))]; if (lanes.map((l) => l.id).join() === ahead.join()) return false;      // no other way
     const tail = this.graph.plan(lanes, b.pos, true); const trailLen = Math.min(b.s, TD + 0.4); const trail: Vec2[] = [], trailLane: (string | null)[] = [];
     for (let q = b.s - trailLen; q < b.s - 0.05; q += 0.2) { const p = pointAt(old, Math.max(0, q)); trail.push({ x: p.x, y: p.y }); trailLane.push(p.lane); }
     const pts = [...trail, ...tail.pts], laneAt = [...trailLane, ...tail.laneAt]; const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
     for (const id of [...b.locks.keys()]) this.dropLock(b, id);        // the new road is asked for again from scratch
-    if (to) { b.dest = to; if (b.trip) { b.trip.legs[b.trip.leg] = to; this.syncTask(b); } else if (b.task) b.task.to = to; }
     b.plan = { pts, laneAt, cum, total: cum[cum.length - 1] }; b.s = cum[trail.length] ?? 0; b.entries = this.entriesOf(b.plan).filter((e) => e.exitS > b.s + 0.5); b.entryIdx = 0; b.queued = null; b.gateAt = -9; b.gateOk = true; b.stoppedSince = -1; b.waitReason = null; return true;
-  }
-  /** Its destination cannot be reached (something stands in the way and cannot move first): head for another free station of the fleet, going forward from here. */
-  private redirect(b: Bot): boolean {
-    const taken = new Set(this.bots.filter((o) => o !== b).flatMap((o) => [o.stationId, o.dest]).filter((id): id is string => !!id)); const kind = b.task?.type === 'charge' ? 'charge' : b.task?.type === 'park' ? 'park' : null;
-    const here = b.pos; const list = this.graph.nav.stations.filter((q) => q.fleets.includes(b.fleetId) && q.id !== b.dest && !taken.has(q.id) && (kind ? q.type === kind : WORK(q)))
-      .sort((p, q) => { const a = this.graph.nodes.get(p.nodeId)!, c = this.graph.nodes.get(q.nodeId)!; return Math.hypot(a.x - here.x, a.y - here.y) - Math.hypot(c.x - here.x, c.y - here.y); });
-    for (const q of list.slice(0, 8)) if (this.reroute(b, q.id)) return true;
-    return false;
   }
   private cancelTrip(b: Bot) {
     if (b.ticketFor) b.aged = b.aged >= 0 ? Math.min(b.aged, b.ticket) : b.ticket; if (b.trip) b.spare = b.trip.id;          // the trip never left: its id and its place in the queue are kept for the next one
@@ -189,8 +183,8 @@ export class FleetSim {
   /** Nobody is standing (parked, waiting, broken down) where the robot and its trolley will sweep while it passes through the entry, and the road beyond it has room for the whole robot. */
   private entryClear(b: Bot, e: Entry): Bot | null {
     const plan = b.plan!; const still = this.bots.filter((o) => o !== b && o.state !== 'offline' && o.v < 0.3); if (!still.length) return null;
-    for (let q = Math.max(0, e.s - 0.5); q <= e.exitS + EXIT_SPACE; q += SAMPLE) {
-      const qq = Math.min(q, plan.total); const c = [...robotCircles(this.poseAt(plan, qq)), ...(b.loaded ? trolleyCircles(this.poseAt(plan, qq - TD)) : [])];
+    for (let q = Math.max(b.s + SAMPLE, e.s - 0.5); q <= e.exitS + EXIT_SPACE; q += SAMPLE) {         // ahead of where the robot stands, never backwards or on the spot: the circle chains are longer than the real body, so a robot right behind it overlaps its footprint now but is left behind as it moves
+      const qq = Math.min(q, plan.total); const c = [...robotCircles(this.poseAt(plan, qq)), ...(b.loaded && qq - TD >= b.s - 0.2 ? trolleyCircles(this.poseAt(plan, qq - TD)) : [])];       // (the stretch behind the robot, where its trolley hangs now, is not swept: a robot waiting right behind it would block it while it waits for the leader)
       const o = still.find((r) => hit(c, this.body(r))); if (o) return o;
       if (qq >= plan.total) break;
     }
@@ -274,14 +268,14 @@ export class FleetSim {
       if (ring.some((b) => this.time - b.resolvedAt < 6)) continue; this.deadlocksFound++;
       const youngest = (list: Bot[]) => list.sort((a, c) => c.ticket - a.ticket || c.prio - a.prio)[0];
       // 1. a robot still at its station gives its trip up
-      const atStation = ring.filter((b) => b.plan && b.s < 0.5 && !b.holds.size);
+      const atStation = ring.filter((b) => b.plan && b.s < SET_OFF && !b.holds.size);
       if (atStation.length) { const v = youngest(atStation); v.resolvedAt = this.time; this.cancelTrip(v); continue; }
       // 2. a robot hands over the intersections it holds
       const holders = ring.filter((b) => b.locks.size > 0);
       if (holders.length) { const v = youngest(holders); v.resolvedAt = this.time; for (const id of [...v.locks.keys()]) this.dropLock(v, id); continue; }
-      // 3. a robot on the road takes another road, or heads for another station, going forward from where it is
+      // 3. a robot on the road takes another road to the same destination, going forward from where it is (a trip that has set off is never given to anyone else)
       let done = false;
-      for (const v of ring.filter((b) => b.plan && !b.holds.size).sort((a, c) => c.ticket - a.ticket)) if (this.reroute(v) || this.redirect(v)) { v.resolvedAt = this.time; done = true; break; }
+      for (const v of ring.filter((b) => b.plan && !b.holds.size).sort((a, c) => c.ticket - a.ticket)) if (this.reroute(v)) { v.resolvedAt = this.time; done = true; break; }
       if (done) continue;
       ring.forEach((b) => (b.resolvedAt = this.time));
     }
@@ -320,7 +314,7 @@ export class FleetSim {
       else limit = Math.min(limit, hold);
     }
     // Still at its station and unable to leave (something stands in its way, or it keeps losing the permit): give the trip up and ask the dispatcher for another one instead of waiting for ever.
-    if (gate && b.s < 0.5) { if (b.stuckSince < 0) b.stuckSince = this.time; if (this.time - b.stuckSince > 8) { this.cancelTrip(b); return; } } else b.stuckSince = -1;
+    if (gate && b.s < SET_OFF) { if (b.stuckSince < 0) b.stuckSince = this.time; if (this.time - b.stuckSince > 8) { this.cancelTrip(b); return; } } else b.stuckSince = -1;
     // Held up for a long time by something standing in the way (not by a traffic rule): take another road ahead, never back.
     if (b.s >= 0.5 && b.v < 0.05 && !(zoneWait) && (gate || b.waitReason === 'headway')) { if (b.stoppedSince < 0) b.stoppedSince = this.time; if (this.time - b.stoppedSince > REROUTE_AFTER && this.time - b.rerouteAt > 20) { b.rerouteAt = this.time; if (this.reroute(b)) return; } } else if (b.v > 0.1) b.stoppedSince = -1;
     const free = gate ? { len: 0, claim: [] as Circle[], by: null as Bot | null } : this.freeLength(b, claims);
@@ -336,7 +330,7 @@ export class FleetSim {
     let vt = V * (1 - 0.5 * curve) * Math.max(0.15, 1 - lag / 0.7); vt = Math.min(vt, Math.sqrt(2 * DEC * room));
     b.v = vt > b.v ? Math.min(vt, b.v + ACC * dt) : Math.max(vt, b.v - DEC * dt);
     const ds = Math.min(b.v * dt, room); b.s += ds;
-    const p = this.poseAt(plan, b.s); b.pos = { x: p.x, y: p.y }; { const d = angleDiff(b.theta, this.headingAt(plan, b.s)); b.theta += Math.max(-TURN_RATE * dt, Math.min(TURN_RATE * dt, d)); } b.lane = pointAt(plan, b.s).lane;
+    const p = this.poseAt(plan, b.s); b.pos = { x: p.x, y: p.y }; { const d = angleDiff(b.theta, this.headingAt(plan, b.s)); const dth = Math.max(-TURN_RATE * dt, Math.min(TURN_RATE * dt, d)); if (b.v > 0.05 || !this.touches(b, robotCircles({ ...b.pos, th: b.theta + dth }, TURN_R), claims)) b.theta += dth; }       // a robot standing still only swings its corners out when nobody is there b.lane = pointAt(plan, b.s).lane;
     b.trailer = this.trailerPose(b); b.speed = ds / dt;
     const held = gate || blocked;
     b.state = held && ds / dt < 0.3 ? 'waiting' : 'moving'; if (b.state === 'waiting' && b.v < 0.03) b.v = 0;
@@ -361,14 +355,15 @@ export class FleetSim {
     return this.bots.map((b) => {
       const moving = (b.state === 'moving' || b.state === 'waiting' || b.state === 'blocked') && b.plan;
       const traffic = b.waitingZone ? { zoneId: b.waitingZone, status: 'waiting' as const } : b.holds.size ? { zoneId: [...b.holds.keys()][0], status: 'inside' as const } : null;
-      const alerts: NonNullable<RobotTelemetry['alerts']> = [];
+      const alerts: NonNullable<RobotTelemetry['alerts']> = []; const who = b.waitsOn.length ? ` (${b.waitsOn.slice(0, 2).join(', ')} first)` : '';
       if (b.state === 'blocked') alerts.push({ code: 'OBSTACLE', severity: 'critical', msg: 'Path obstructed' });
       if (b.battery < 25) alerts.push({ code: 'LOW_BATT', severity: 'warn', msg: 'Low battery' });
       if (b.waitingZone) alerts.push({ code: 'TRAFFIC_WAIT', severity: 'info', msg: `Waiting for ${b.waitingZone}` });
-      else if (b.waitReason === 'intersection' && b.state === 'waiting') alerts.push({ code: 'INTERSECTION_WAIT', severity: 'info', msg: 'Waiting for the intersection to clear' });
+      else if (b.state === 'waiting' && b.waitReason === 'intersection') alerts.push({ code: 'INTERSECTION_WAIT', severity: 'info', msg: `Waiting for the intersection to clear${who}` });
+      else if (b.state === 'waiting' && b.waitReason === 'headway') alerts.push({ code: 'HEADWAY_WAIT', severity: 'info', msg: b.waitsOn.length ? `Queued behind ${b.waitsOn[0]}` : 'Queued behind another robot' });
       if (b.state === 'waiting' && b.waitSince >= 0 && this.time - b.waitSince > STUCK_ALERT) alerts.push({ code: 'STUCK', severity: 'warn', msg: `Waiting for ${Math.round((this.time - b.waitSince) / 60)} min, needs a look` });
       return { id: b.id, model: b.model, fleetId: b.fleetId, siteId: this.siteId, pose: { x: b.pos.x, y: b.pos.y, theta: b.theta }, speed: b.speed, state: b.state, battery: Math.round(b.battery),
-        payload: b.attached ? b.payload : null, trailer: b.trailer ? { x: b.trailer.x, y: b.trailer.y, theta: b.trailer.th } : null, task: b.task, path: moving ? [b.pos, ...b.plan!.pts.filter((_, i) => b.plan!.cum[i] > b.s)] : [], laneId: b.lane, traffic, waitReason: b.waitReason,
+        payload: b.attached ? b.payload : null, trailer: b.trailer ? { x: b.trailer.x, y: b.trailer.y, theta: b.trailer.th } : null, task: b.task, path: moving ? [b.pos, ...b.plan!.pts.filter((_, i) => b.plan!.cum[i] > b.s)] : [], laneId: b.lane, traffic, waitReason: b.waitReason, waitsOn: b.state === 'waiting' ? [...b.waitsOn] : [],
         atStation: b.stationId && (b.state === 'working' || b.state === 'charging' || b.state === 'idle') ? b.stationId : null, alerts, ts };
     });
   }

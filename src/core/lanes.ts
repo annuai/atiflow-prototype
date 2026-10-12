@@ -3,6 +3,31 @@ import type { Lane, NavGraph, NavNode, Vec2 } from './types';
 
 export interface PathPlan { pts: Vec2[]; laneAt: (string | null)[]; cum: number[]; total: number }
 
+
+/** Lane geometry at junctions: every lane is cut short of the node it meets other lanes at, and each turn is one smooth curve from the end of one lane to the start of the next (no overshoot, no doubling back). */
+const SETBACK_JUNCTION = 1.5, SETBACK_BEND = 1.0;       // m cut off a lane end at a junction (3+ lanes) / at a simple bend (2 lanes)
+const dist = (a: Vec2, b: Vec2) => Math.hypot(a.x - b.x, a.y - b.y);
+const polyLen = (p: Vec2[]) => p.reduce((a, q, i) => (i ? a + dist(p[i - 1], q) : 0), 0);
+/** The part of a polyline between `from` m after its start and `to` m before its end. */
+function trimPoly(p: Vec2[], from: number, to: number): Vec2[] {
+  const total = polyLen(p); const a = from, b = total - to; if (b - a < 0.05) { const m = pointAtArc(p, Math.min(Math.max(from, 0), total)).p; return [m, m]; }
+  const out: Vec2[] = [pointAtArc(p, a).p]; let acc = 0;
+  for (let i = 1; i < p.length; i++) { acc += dist(p[i - 1], p[i]); if (acc > a + 1e-6 && acc < b - 1e-6) out.push(p[i]); }
+  out.push(pointAtArc(p, b).p); return out;
+}
+function pointAtArc(p: Vec2[], s: number): { p: Vec2; d: Vec2 } {
+  let acc = 0;
+  for (let i = 1; i < p.length; i++) { const l = dist(p[i - 1], p[i]); if (acc + l >= s || i === p.length - 1) { const t = l > 1e-9 ? Math.min(Math.max((s - acc) / l, 0), 1) : 0; return { p: { x: p[i - 1].x + (p[i].x - p[i - 1].x) * t, y: p[i - 1].y + (p[i].y - p[i - 1].y) * t }, d: l > 1e-9 ? { x: (p[i].x - p[i - 1].x) / l, y: (p[i].y - p[i - 1].y) / l } : { x: 1, y: 0 } }; } acc += l; }
+  return { p: p[0], d: { x: 1, y: 0 } };
+}
+/** A cubic curve leaving `p0` along `d0` and arriving at `p3` along `d3` (the end points are not included). */
+function turnCurve(p0: Vec2, d0: Vec2, p3: Vec2, d3: Vec2): Vec2[] {
+  const chord = dist(p0, p3); if (chord < 0.06) return []; const h = 0.4 * chord;
+  const p1 = { x: p0.x + d0.x * h, y: p0.y + d0.y * h }, p2 = { x: p3.x - d3.x * h, y: p3.y - d3.y * h }; const n = Math.max(2, Math.ceil(chord / 0.2)); const out: Vec2[] = [];
+  for (let i = 1; i < n; i++) { const t = i / n, u = 1 - t; out.push({ x: u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x, y: u * u * u * p0.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * p3.y }); }
+  return out;
+}
+
 /** Directed lane graph. Routing is fleet-aware: a fleet can only use lanes tagged with it. */
 export class LaneGraph {
   nodes = new Map<string, NavNode>(); lanes = new Map<string, Lane>(); out = new Map<string, Lane[]>();
@@ -33,18 +58,45 @@ export class LaneGraph {
     const lanes: Lane[] = []; for (let l: Lane | null = end; l; l = prev.get(l.id) ?? null) lanes.unshift(l);
     return lanes;
   }
+
+  /** How much of a lane end is cut off at its node: nothing at a dead end (the lane really goes there), more at a junction than at a simple bend, never more than 45% of the lane. */
+  private setback(l: Lane, end: 'from' | 'to'): number {
+    const deg = this.out.get(end === 'from' ? l.from : l.to)?.length ?? 0; if (deg < 2) return 0;
+    return Math.min(deg >= 3 ? SETBACK_JUNCTION : SETBACK_BEND, 0.45 * polyLen(l.geom.map(([x, y]) => ({ x, y }))));
+  }
+  /** A lane as driven: cut short at junctions (`from` / `to` choose which ends), optionally starting at a given vertex. */
+  private piece(l: Lane, cutStart: boolean, cutEnd: boolean, fromVertex = 0): Vec2[] {
+    const raw = l.geom.slice(fromVertex).map(([x, y]) => ({ x, y })); return trimPoly(raw, cutStart ? this.setback(l, 'from') : 0, cutEnd ? this.setback(l, 'to') : 0);
+  }
+  private curves = new Map<string, Vec2[]>();
+  /** The curve from the (cut) end of lane `a` to the (cut) start of lane `b`, end points excluded. Cached. */
+  private turn(a: Lane, b: Lane): Vec2[] {
+    const key = a.id + '>' + b.id; let c = this.curves.get(key); if (c) return c;
+    const pa = this.piece(a, false, true), pb = this.piece(b, true, false); const ea = pointAtArc(pa, polyLen(pa)), sb = pointAtArc(pb, 0);
+    return this.curves.set(key, turnCurve(ea.p, ea.d, sb.p, sb.d)).get(key)!;
+  }
   /** Concatenate lane geometries (consecutive lanes are joined by a short connector segment). `start` is the robot's current pose. */
   plan(lanes: Lane[], start?: Vec2, midLane = false): PathPlan {
     const pts: Vec2[] = [], laneAt: (string | null)[] = [];
+    const add = (q: Vec2, id: string) => { const last = pts[pts.length - 1]; if (last && dist(q, last) < 0.02) { laneAt[laneAt.length - 1] = id; return; } pts.push(q); laneAt.push(id); };      // (zero-length lanes / repeated points would hide reversals below)
     if (start) { pts.push(start); laneAt.push(lanes[0]?.id ?? null); }
-    lanes.forEach((l, li) => { let from = 0;
-      if (midLane && li === 0 && start) {                                           // the robot is part-way along the first lane: continue from the segment it is on
+    lanes.forEach((l, li) => {
+      const first = li === 0, last = li === lanes.length - 1; let from = 0;
+      if (midLane && first && start) {                                              // the robot is part-way along the first lane: continue from the segment it is on
         let best = Infinity; for (let i = 0; i + 1 < l.geom.length; i++) { const d = segDist(start.x, start.y, l.geom[i][0], l.geom[i][1], l.geom[i + 1][0], l.geom[i + 1][1]).d; if (d < best) { best = d; from = i + 1; } }
       }
-      for (const g of l.geom.slice(from)) {
-      const q = { x: g[0], y: g[1] };
-      const last = pts[pts.length - 1]; if (last && Math.hypot(q.x - last.x, q.y - last.y) < 0.02) { laneAt[laneAt.length - 1] = l.id; continue; }   // zero-length lanes / repeated points would hide reversals below
-      pts.push(q); laneAt.push(l.id);
+      let curveFrom: { p: Vec2; d: Vec2 } | null = null;
+      if (first && from > 0 && start) {
+        // part-way along the first lane: drive on from where the robot is; when it is already inside the cut-off part near the junction the turn starts right here
+        const rest = [start, ...l.geom.slice(from).map(([x, y]) => ({ x, y }))]; const cutLen = last ? 0 : this.setback(l, 'to');
+        if (polyLen(rest) - cutLen > 0.05) trimPoly(rest, 0, cutLen).forEach((q) => add(q, l.id));
+        else if (!last) { const d = pointAtArc(rest, 0).d; curveFrom = { p: start, d }; }
+      } else this.piece(l, !first, !last).forEach((q) => add(q, l.id));
+      if (!last) {
+        const nxt = lanes[li + 1]; let curve: Vec2[];
+        if (curveFrom) { const sb = pointAtArc(this.piece(nxt, true, false), 0); curve = turnCurve(curveFrom.p, curveFrom.d, sb.p, sb.d); }
+        else curve = this.turn(l, nxt);
+        curve.forEach((q, i) => add(q, i < curve.length / 2 ? l.id : nxt.id));
       }
     });
     const sm = smoothPolyline(pts, laneAt);
@@ -56,10 +108,15 @@ export class LaneGraph {
     const out: { fleets: string[]; pts: Vec2[] }[] = [];
     for (const a of this.nav.lanes) for (const b of this.out.get(a.to) ?? []) {
       const fleets = a.fleets.filter((f) => b.fleets.includes(f)); if (!fleets.length) continue;
-      const raw = [...a.geom.slice(-2), ...b.geom.slice(0, 2)].map(([x, y]) => ({ x, y }));
-      out.push({ fleets, pts: smoothPolyline(raw, raw.map(() => null)).pts });
+      if (b.to === a.from && (this.out.get(a.to)?.length ?? 0) > 1) continue;      // robots never turn back into the paired lane except at a dead end
+      const pa = this.piece(a, false, true), pb = this.piece(b, true, false);
+      out.push({ fleets, pts: [pa[pa.length - 1], ...this.turn(a, b), pb[0]] });
     }
     return out;
+  }
+  /** The lanes as drawn and driven: each cut short at its junctions (the turns between them are `connectors()`). */
+  roadLanes(): { id: string; fleets: string[]; pts: Vec2[] }[] {
+    return this.nav.lanes.map((l) => { const raw = this.piece(l, true, true); return { id: l.id, fleets: l.fleets, pts: smoothPolyline(raw, raw.map(() => null)).pts }; });
   }
   /** Each lane as the smooth curve robots actually drive. */
   smoothLanes(): { id: string; fleets: string[]; pts: Vec2[] }[] {
