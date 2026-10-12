@@ -96,11 +96,13 @@ img { display: block; }
   .menu-btn { display: grid; } .sb-ver { display: none; }
   .topbar { padding: 0 12px; } .content { padding: 0 12px; }
   .search { flex: 1; max-width: none; width: auto; min-width: 0; }
+  .tb-spacer { display: none; }                      /* the search box takes all the free width */
   .tb-text { display: none; }                      /* phones: Go to Support / Ati AI show only their icons */
 }
 @media (max-width: 720px) {
   .hide-sm { display: none !important; }
-  .topbar { height: 56px; }
+  .topbar { height: 56px; gap: 4px; padding: 0 8px; }   /* phones: one row, the search box takes every pixel the buttons leave */
+  .topbar [aria-label="Go to Support"], .topbar [aria-label="Ati AI"] { padding-left: 10px; padding-right: 10px; }
   .title-block { height: auto; padding: 4px 2px 0; } .title-block h1 { font-size: 20px; line-height: 24px; } .title-block p { display: none; }
   .bh { padding: 0 12px; } .bh span[style] { display: none; } .bh h2 { white-space: nowrap; }
   .modes { right: 12px; left: 12px; top: 10px; flex-wrap: wrap; justify-content: flex-start; }   /* natural button sizes; wraps to a 2nd row on very narrow phones instead of squeezing */
