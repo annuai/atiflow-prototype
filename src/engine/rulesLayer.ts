@@ -6,7 +6,7 @@ import { LaneGraph } from '../core/lanes';
 import { labelSprite, liveLabel, stripeTexture } from './labels';
 
 export const SHARED_COLOR = '#6366f1';
-export const STATION_COLOR: Record<StationType, string> = { pick: '#14b8a6', drop: '#ec4899', buffer: '#3b82f6', asrs: '#f59e0b', charge: '#22c55e' };
+export const STATION_COLOR: Record<StationType, string> = { pick: '#14b8a6', drop: '#ec4899', buffer: '#3b82f6', asrs: '#f59e0b', charge: '#22c55e', park: '#64748b' };
 const lighten = (c: string, k: number) => new THREE.Color(c).lerp(new THREE.Color('#ffffff'), k);
 
 /** Draws everything the map rules say: fleet lanes (one direction each, with arrows), traffic zones (live occupancy), forbidden zones, stations. */

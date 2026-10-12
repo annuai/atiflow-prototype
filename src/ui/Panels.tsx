@@ -91,6 +91,7 @@ export function RobotPanel() {
   </InfoPanel>;
 }
 
+const STATION_KIND: Record<string, string> = { asrs: 'ASRS station', park: 'Parking spot', charge: 'Charging station' };
 export function StationPanel() {
   const id = useApp((s) => s.selectedStationId); const nav = useApp((s) => s.nav); const robots = useApp((s) => s.robots); const fleets = useApp((s) => s.fleets); const site = useApp((s) => s.site);
   const st = nav?.stations.find((x) => x.id === id); if (!st || !nav) return null;
@@ -98,7 +99,7 @@ export function StationPanel() {
   const incoming = all.filter((r) => (r.task?.next ?? r.task?.to) === st.id && r.atStation !== st.id && ['moving', 'waiting', 'blocked'].includes(r.state)).sort((a, b) => pathLen(a) - pathLen(b));
   const charging = docked.some((r) => r.state === 'charging'); const status = charging ? 'Charging' : docked.length ? 'Occupied' : incoming.length ? 'Robot inbound' : 'Free';
   const zone = site?.zones.find((z) => z.id === st.zone); const owners = fleets.filter((f) => st.fleets.includes(f.id));
-  return <InfoPanel title={st.id} subtitle={`${st.name} · ${st.type === 'asrs' ? 'ASRS' : st.type[0].toUpperCase() + st.type.slice(1)} station`} onClose={() => store.getState().selectStation(null)}
+  return <InfoPanel title={st.id} subtitle={`${st.name} · ${STATION_KIND[st.type] ?? st.type[0].toUpperCase() + st.type.slice(1) + ' station'}`} onClose={() => store.getState().selectStation(null)}
     pill={{ label: status, tone: charging ? 'success' : docked.length ? 'warning' : incoming.length ? 'brand' : 'gray' }} chips={owners.map((f) => ({ label: f.name, color: f.color }))}
     stats={[{ label: 'Actual name', value: st.name }, { label: 'Type', value: st.type }, { label: 'Map area', value: zone?.name ?? '—' + (owners.length > 1 ? ' (shared)' : '') },
       { label: 'Incoming bots', value: incoming.length }, { label: 'Docked now', value: docked.length ? docked.map((r) => r.id).join(', ') : '—' }, { label: 'Served by', value: owners.length > 1 ? 'Both fleets (shared)' : owners[0]?.name ?? '—' }]}
@@ -123,6 +124,8 @@ export function MapLegend({ onClose }: { onClose(): void }) {
       <div className="lg"><i className="sq tz" />Traffic zone <small>wait if occupied</small></div>
       <div className="lg"><i className="sq fz" />Forbidden zone <small>never entered</small></div>
       <div className="lg"><i className="pin" />Station <small>STA-1xx</small></div>
+      <div className="lg"><i className="pin" style={{ borderTopColor: STATION_COLOR.park }} />Parking <small>PARK-001</small></div>
+      <div className="lg"><i className="pin" style={{ borderTopColor: STATION_COLOR.charge }} />Charging <small>CHARGE-001</small></div>
       <div className="lg-stats"><span>Traffic zones: <b>{occ}</b> occupied · <b>{wait}</b> waiting</span><span className={violations ? 'bad' : 'good'}>Rule violations: <b>{violations}</b></span></div>
     </></div>;
 }

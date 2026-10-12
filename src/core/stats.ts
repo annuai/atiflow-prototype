@@ -11,7 +11,7 @@ export function summarise(robots: RobotTelemetry[]): FleetSummary {
   return {
     total, attention,
     active: robots.filter((r) => r.state !== 'offline' && r.state !== 'idle').length,
-    activeTrips: robots.filter((r) => r.task && (r.task.progress ?? 0) < 1 && IN_TRIP.has(r.state)).length,
+    activeTrips: robots.filter((r) => r.task && r.task.type !== 'park' && (r.task.progress ?? 0) < 1 && IN_TRIP.has(r.state)).length,
     health: Math.round((100 * (total - attention)) / total),
     utilisation: Math.round((100 * robots.filter((r) => BUSY.has(r.state)).length) / total),
   };
@@ -29,7 +29,7 @@ export class StatsTracker {
       this.distanceM += r.speed * dt;
       if (r.state === 'waiting' || r.state === 'blocked' || r.state === 'error' || r.state === 'offline') this.downtimeS += dt;
       this.totalS[hour] += dt; if (BUSY.has(r.state)) this.busyS[hour] += dt;
-      if (r.task && (r.task.progress ?? 0) >= 1 && r.task.type !== 'charge') this.done.add(r.task.id);
+      if (r.task && (r.task.progress ?? 0) >= 1 && r.task.type !== 'charge' && r.task.type !== 'park') this.done.add(r.task.id);
     }
   }
   /** Share of robot time spent moving or working in this hour (null before anything was measured). */

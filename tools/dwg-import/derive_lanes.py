@@ -210,6 +210,15 @@ def main():
         for i, p in enumerate(fps(S0, 8, (zr["assembly"][0], zr["assembly"][1] + 2, zr["assembly"][2], zr["assembly"][3] - 2)), 1): reqs.append({"p": (p[0], p[1]), "type": "drop", "name": f"Assembly Workstation {i}"})
     if "east-strip" in zr:
         for i, p in enumerate(fps(S0, 3, (zr["east-strip"][0] + 1, zr["east-strip"][1] + 2, zr["east-strip"][2] - 1, zr["east-strip"][3] - 2), 12), 1): reqs.append({"p": (p[0], p[1]), "type": "charge", "name": f"Charging Dock {i}"})
+    # parking spots (idle robots wait there) and extra chargers inside the fleets' own areas; asked for after the others so the existing stations keep their places
+    def spots(zone, k, minsep=6.0):
+        if zone not in zr: return []
+        far = [c for c in S0 if all(math.hypot(c[0] - q["p"][0], c[1] - q["p"][1]) >= 6.0 for q in reqs)]
+        return fps(far, k, (zr[zone][0] + 1, zr[zone][1] + 2, zr[zone][2] - 1, zr[zone][3] - 2), minsep)
+    for zone, k in (("smt-lines", 2), ("assembly", 2), ("asrs-prep", 2), ("east-strip", 2)):
+        for p in spots(zone, k): reqs.append({"p": (p[0], p[1]), "type": "park", "name": "Parking"})
+    for zone in ("assembly", "asrs-prep"):
+        for p in spots(zone, 1): reqs.append({"p": (p[0], p[1]), "type": "charge", "name": "Charging Dock"})
     stations = []; snodes = {}
     for q in reqs:
         S = samples(); iy, ix = iy_n[min(max(int((q["p"][1] - y0) / CELL), 0), H - 1), min(max(int((q["p"][0] - x0) / CELL), 0), W - 1)], ix_n[min(max(int((q["p"][1] - y0) / CELL), 0), H - 1), min(max(int((q["p"][0] - x0) / CELL), 0), W - 1)]
@@ -268,7 +277,12 @@ def main():
             if find(s["nodeId"]) != main: ERR.append(f"fleet {f['id']}: station '{s['name']}' unreachable (disconnected lane network)")
     # ---------- station ids (STA-101..)
     stations.sort(key=lambda s: (zorder.get(zone_of(s["p"]) or "", 99), -round(s["p"][1] / 4), s["p"][0]))
-    for i, s in enumerate(stations): s["id"] = f"STA-{101 + i}"
+    n_id = defaultdict(int)       # stations STA-101.., parking spots PARK001.., chargers CHARGE001.. (parking and charging are named by their id)
+    for s in stations:
+        prefix = {"park": "PARK", "charge": "CHARGE"}.get(s["type"])
+        n_id[prefix] += 1
+        if prefix: s["id"] = s["name"] = f"{prefix}-{n_id[prefix]:03d}"
+        else: s["id"] = f"STA-{100 + n_id[prefix]}"
     cnt_names = defaultdict(int); tot_names = defaultdict(int)
     for s in stations: tot_names[s["name"]] += 1
     for s in stations:

@@ -29,7 +29,9 @@ interface Bot {
   aged: number; spare: string | null; trip: Trip | null; task: RobotTelemetry['task']; payload: RobotTelemetry['payload']; dest: string | null; lane: string | null;
 }
 /** One piece of work for one robot: from where it stands, past the stops, to the destination (the last of `legs`). `leg` is the one it is driving now. */
-interface Trip { id: string; kind: 'transport' | 'return' | 'charge'; origin?: string; legs: string[]; leg: number; loaded: boolean; payload: RobotTelemetry['payload'] }
+interface Trip { id: string; kind: 'transport' | 'return' | 'charge' | 'park'; origin?: string; legs: string[]; leg: number; loaded: boolean; payload: RobotTelemetry['payload'] }
+/** Stations that work is sent to (not parking spots or chargers). */
+const WORK = (s: NavGraph['stations'][number]) => s.type !== 'charge' && s.type !== 'park';
 const FAR = 30;                                                // m: a trip's destination is at least this far from where it starts (when the fleet has such a station)
 interface Permit { occ: Set<string>; waiters: Set<string>; lanes?: Map<string, Set<string>> }
 
@@ -48,7 +50,7 @@ export class FleetSim {
       const fleet = roster ? roster[i].fleetId : nav.fleets[i % nav.fleets.length].id;
       const spot = (s: NavGraph['stations'][number]) => this.graph.nodes.get(s.nodeId)!;
       const apart = (s: NavGraph['stations'][number]) => this.bots.every((o) => Math.hypot(o.pos.x - spot(s).x, o.pos.y - spot(s).y) > 4);   // parked robots start well apart
-      let own = nav.stations.filter((s) => s.fleets.includes(fleet) && s.type !== 'charge' && !used.has(s.id) && apart(s)); if (!own.length) own = nav.stations.filter((s) => s.fleets.includes(fleet) && !used.has(s.id));
+      let own = nav.stations.filter((s) => s.fleets.includes(fleet) && WORK(s) && !used.has(s.id) && apart(s)); if (!own.length) own = nav.stations.filter((s) => s.fleets.includes(fleet) && !used.has(s.id));
       const st = own[Math.floor(this.rand() * own.length)]; used.add(st.id); const n = this.graph.nodes.get(st.nodeId)!;
       const bot: Bot = { id: roster ? roster[i].id : `AMR-${String(i + 1).padStart(3, '0')}`, model: roster ? roster[i].model : i % 5 === 4 ? 'sherpa-tug' : 'sherpa-xt-lite', fleetId: fleet, pos: { x: n.x, y: n.y }, theta: 0, battery: 45 + this.rand() * 55, state: 'idle', node: n.id, stationId: st.id,
         plan: null, s: 0, entries: [], entryIdx: 0, holds: new Map(), locks: new Map(), waitingZone: null, waitReason: null, timer: this.rand() * 4, speed: 0, v: 0, blockedUntil: 0, loaded: false, nextLoaded: i % 2 === 0, attached: false, trailer: null, prio: 0, gateAt: -9, gateOk: true, stuckSince: -1, stoppedSince: -1, rerouteAt: -99, queued: null, ticket: 0, ticketFor: null, waitsOn: [], waitSince: -1, gateBlock: null, resolvedAt: -99,
@@ -86,7 +88,7 @@ export class FleetSim {
     const k = Math.min(plan.total > 60 ? 2 : plan.total > 30 ? 1 : 0, Math.floor(this.rand() * 3)); if (!k) return [];
     const near: { id: string; at: number }[] = [];
     for (const s of this.graph.nav.stations) {
-      if (s.type === 'charge' || s.id === dest || s.id === b.stationId || spoken.has(s.id) || !s.fleets.includes(b.fleetId) || crowded(s)) continue;
+      if (!WORK(s) || s.id === dest || s.id === b.stationId || spoken.has(s.id) || !s.fleets.includes(b.fleetId) || crowded(s)) continue;
       const n = this.graph.nodes.get(s.nodeId)!; let best = 1e9, at = 0;
       for (let i = 0; i < plan.pts.length; i += 2) { const d = Math.hypot(plan.pts[i].x - n.x, plan.pts[i].y - n.y); if (d < best) { best = d; at = plan.cum[i]; } }
       if (best <= 5 && at > 0.2 * plan.total && at < 0.85 * plan.total) near.push({ id: s.id, at });
@@ -97,21 +99,23 @@ export class FleetSim {
   }
   /** A new trip: loaded out, empty back, or to a charger when the battery is low. Destinations are far from where the robot starts, with stops on the way. */
   private startTrip(b: Bot): boolean {
-    const low = b.battery < 25; const g = this.graph.nav; const loaded = !low && b.nextLoaded; const avoid = this.occupiedNodes(b); const stationNodes = new Set(g.stations.map((q) => q.nodeId));
+    const low = b.battery < 25; const g = this.graph.nav;
+    const park = !low && b.nextLoaded && g.stations.some((q) => q.type === 'park' && q.fleets.includes(b.fleetId)) && this.rand() < 0.15;       // now and then a robot with no work goes to a parking spot and waits
+    const kind: 'charge' | 'park' | null = low ? 'charge' : park ? 'park' : null; const loaded = !kind && b.nextLoaded; const avoid = this.occupiedNodes(b); const stationNodes = new Set(g.stations.map((q) => q.nodeId));
     const spoken = new Set(this.bots.filter((o) => o !== b).flatMap((o) => [o.stationId, o.dest, o.trip?.legs[o.trip.legs.length - 1]]).filter((id): id is string => !!id));      // one robot per station: never send two to the same spot
     const busy = this.bots.filter((o) => o !== b).flatMap((o) => [o.stationId, o.dest]).filter((id): id is string => !!id).map((id) => this.graph.stationNode(id)!);       // stations of other robots (parked or heading there)
-    const wanted = g.stations.filter((s) => s.fleets.includes(b.fleetId) && s.id !== b.stationId && !spoken.has(s.id) && (low ? s.type === 'charge' : s.type !== 'charge'));
+    const wanted = g.stations.filter((s) => s.fleets.includes(b.fleetId) && s.id !== b.stationId && !spoken.has(s.id) && (kind ? s.type === kind : WORK(s)));
     const crowded = (s: NavGraph['stations'][number]) => busy.some((n) => { const q = this.graph.nodes.get(s.nodeId)!; return Math.hypot(n.x - q.x, n.y - q.y) < 4; });
     const order = (list: typeof wanted) => list.map((st) => { const n = this.graph.nodes.get(st.nodeId)!; const d = Math.hypot(n.x - b.pos.x, n.y - b.pos.y);
-      return { st, cost: low ? d / 12 + this.rand() * 3 : (d >= FAR ? 0 : 1000 - d) + this.rand() * 10 }; }).sort((p, q) => p.cost - q.cost).map((c) => c.st);      // a charger: the nearest; work: far away, else the farthest there is
+      return { st, cost: kind ? d / 12 + this.rand() * 3 : (d >= FAR ? 0 : 1000 - d) + this.rand() * 10 }; }).sort((p, q) => p.cost - q.cost).map((c) => c.st);      // a charger: the nearest; work: far away, else the farthest there is
     const cands = [...order(wanted.filter((s) => !crowded(s))), ...order(wanted.filter(crowded))];       // stations away from other robots first; a crowded one is better than leaving the robot idle in someone's way
     for (const st of cands) {
       const lanes = this.graph.route(b.node, st.nodeId, b.fleetId, stationNodes) ?? this.graph.route(b.node, st.nodeId, b.fleetId, avoid);
       if (!lanes || !lanes.length) continue;
-      const stops = low ? [] : this.pickStops(b, st.id, this.graph.plan(lanes, b.pos), spoken, crowded);
-      const reused = b.spare; b.spare = null; b.trip = { id: reused ?? `TRP-${String(++this.tripSeq).padStart(3, '0')}`, kind: low ? 'charge' : loaded ? 'transport' : 'return', origin: b.stationId ?? undefined, legs: [...stops, st.id], leg: 0, loaded,
+      const stops = kind ? [] : this.pickStops(b, st.id, this.graph.plan(lanes, b.pos), spoken, crowded);
+      const reused = b.spare; b.spare = null; b.trip = { id: reused ?? `TRP-${String(++this.tripSeq).padStart(3, '0')}`, kind: kind ?? (loaded ? 'transport' : 'return'), origin: b.stationId ?? undefined, legs: [...stops, st.id], leg: 0, loaded,
         payload: loaded ? { kind: ['PCBA tray', 'Reel box', 'Material'][Math.floor(this.rand() * 3)], qty: 1 + Math.floor(this.rand() * 9) } : null };
-      if (this.startLeg(b)) { if (!low) b.nextLoaded = !b.nextLoaded; return true; }          // loaded trip out, empty trip back
+      if (this.startLeg(b)) { if (!kind) b.nextLoaded = !b.nextLoaded; return true; }          // loaded trip out, empty trip back
       if (reused) b.spare = reused; else this.tripSeq--;
     }
     return false;
@@ -167,8 +171,8 @@ export class FleetSim {
   }
   /** Its destination cannot be reached (something stands in the way and cannot move first): head for another free station of the fleet, going forward from here. */
   private redirect(b: Bot): boolean {
-    const taken = new Set(this.bots.filter((o) => o !== b).flatMap((o) => [o.stationId, o.dest]).filter((id): id is string => !!id)); const low = b.task?.type === 'charge';
-    const here = b.pos; const list = this.graph.nav.stations.filter((q) => q.fleets.includes(b.fleetId) && q.id !== b.dest && !taken.has(q.id) && (low ? q.type === 'charge' : q.type !== 'charge'))
+    const taken = new Set(this.bots.filter((o) => o !== b).flatMap((o) => [o.stationId, o.dest]).filter((id): id is string => !!id)); const kind = b.task?.type === 'charge' ? 'charge' : b.task?.type === 'park' ? 'park' : null;
+    const here = b.pos; const list = this.graph.nav.stations.filter((q) => q.fleets.includes(b.fleetId) && q.id !== b.dest && !taken.has(q.id) && (kind ? q.type === kind : WORK(q)))
       .sort((p, q) => { const a = this.graph.nodes.get(p.nodeId)!, c = this.graph.nodes.get(q.nodeId)!; return Math.hypot(a.x - here.x, a.y - here.y) - Math.hypot(c.x - here.x, c.y - here.y); });
     for (const q of list.slice(0, 8)) if (this.reroute(b, q.id)) return true;
     return false;
@@ -346,7 +350,7 @@ export class FleetSim {
       for (const id of [...b.locks.keys()]) this.dropLock(b, id);          // a parked robot holds no permit: others wait because its body is in the way, and it asks again when it leaves
       b.attached = false; b.trailer = null; b.loaded = false; b.payload = null;                      // delivered: the trolley is unhitched and the load handed over
       const t = b.trip; if (t) t.leg++; const done = !t || t.leg >= t.legs.length; if (done) b.trip = null;                    // a stop on the way: a short call, then the next leg
-      const charge = b.task?.type === 'charge'; b.state = charge ? 'charging' : 'working'; b.timer = charge ? 3 : done ? 3 + this.rand() * 4 : 1.5 + this.rand() * 2;
+      const charge = b.task?.type === 'charge', parking = b.task?.type === 'park'; b.state = charge ? 'charging' : parking ? 'idle' : 'working'; b.timer = charge ? 3 : parking ? 8 + this.rand() * 12 : done ? 3 + this.rand() * 4 : 1.5 + this.rand() * 2;
       if (b.task) { if (done) b.task.progress = 1; else this.syncTask(b); } return;
     }
     claims.set(b.id, free.claim);

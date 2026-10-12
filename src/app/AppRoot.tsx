@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth/authStore';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { LiveFloorPage } from '@/features/live-floor/LiveFloorPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import { DashboardNewPage } from '@/features/dashboard-new/DashboardNewPage';
 import { DeviceDetailPage } from '@/features/devices/DeviceDetailPage';
 import { DeviceListPage } from '@/features/devices/DeviceListPage';
 import { MapsPage } from '@/features/maps/MapsPage';
@@ -45,6 +46,7 @@ export function AppRoot() {
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/supervisor" element={<RequireRole role="supervisor"><RootRedirect /></RequireRole>} />
         <Route path="/supervisor/dashboard" element={<RequireRole role="supervisor"><DashboardPage /></RequireRole>} />
+        <Route path="/supervisor/dashboard-new" element={<RequireRole role="supervisor"><DashboardNewPage /></RequireRole>} />
         <Route path="/supervisor/livefloor" element={<RequireRole role="supervisor"><LiveFloorPage /></RequireRole>} />
         <Route path="/configurator" element={<RequireRole role="configurator"><NewWorkflow /></RequireRole>} />
         <Route path="/configurator/workflows/:id" element={<RequireRole role="configurator"><WorkflowBuilderPage /></RequireRole>} />

@@ -10,7 +10,7 @@ import type { NavModel, SearchHit } from '@/shell/types';
 
 const soon = (name: string) => () => notify.info(`${name} isn't part of this prototype`, 'The supervisor view covers the Live Floor.', 'soon');
 
-export const DASHBOARD_PATH = '/supervisor/dashboard', LIVE_FLOOR_PATH = '/supervisor/livefloor';
+export const DASHBOARD_PATH = '/supervisor/dashboard', DASHBOARD_NEW_PATH = '/supervisor/dashboard-new', LIVE_FLOOR_PATH = '/supervisor/livefloor';
 
 /** Sidebar content of the supervisor area: Dashboard and Live Floor are pages (the URL decides which one is highlighted); the fleet items filter the Live Floor. */
 export function useLiveNav(): NavModel {
@@ -22,6 +22,7 @@ export function useLiveNav(): NavModel {
     groups: [
       { id: 'ops', label: 'Operations', items: [
         { id: 'dashboard', label: 'Dashboard', icon: BarChartSquare02, active: path === DASHBOARD_PATH, onSelect: () => navigate(DASHBOARD_PATH) },
+        { id: 'dashboard-new', label: 'Dashboard (new)', icon: BarChartSquare02, active: path === DASHBOARD_NEW_PATH, onSelect: () => navigate(DASHBOARD_NEW_PATH) },
         { id: 'live', label: 'Live Floor', icon: master, active: onLive && navSel === 'live', onSelect: pick('live', 'all') },
       ] },
       { id: 'fleets', label: 'Fleets', items: [

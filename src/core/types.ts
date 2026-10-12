@@ -11,7 +11,7 @@ export interface SiteLayout {
   equipment: Equipment[]; doors: unknown[]; labels: { text: string; x: number; y: number }[];
 }
 
-export type StationType = 'pick' | 'drop' | 'buffer' | 'asrs' | 'charge';
+export type StationType = 'pick' | 'drop' | 'buffer' | 'asrs' | 'charge' | 'park';
 export interface NavNode { id: string; x: number; y: number; kind: 'waypoint' | 'station' }
 /** One lane = one direction of travel, always. Opposite directions are separate paired lanes. */
 export interface Lane { id: string; from: string; to: string; geom: [number, number][]; fleets: string[]; speed: number; len: number }
