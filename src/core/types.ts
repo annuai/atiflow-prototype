@@ -32,6 +32,8 @@ export interface RobotTelemetry {
   pose: { x: number; y: number; theta: number };
   speed: number; state: RobotState; battery: number;
   payload?: { kind: string; qty?: number } | null;
+  /** Pose of the trolley the robot is towing (only while it pulls one); renderers draw the trolley there. */
+  trailer?: { x: number; y: number; theta: number } | null;
   task?: { id: string; type: string; from?: string; to?: string; progress?: number } | null;
   path?: Vec2[]; currentNode?: string; nextNode?: string;
   laneId?: string | null;                                            // lane currently driven (from localization)

@@ -5,16 +5,21 @@ import { toScene, fromScene } from '../core/coords';
 import type { CameraMode, LayerKey, NavGraph, RobotTelemetry, SiteLayout, Zone } from '../core/types';
 import { CollisionWorld } from './walk';
 import { labelSprite, dotSprite } from './labels';
-import { ROBOT_MODELS, DEFAULT_MODEL } from './robotMesh';
+import { ROBOT_MODELS, DEFAULT_MODEL, buildTrolley } from './robotMesh';
 import { RulesLayer, SHARED_COLOR } from './rulesLayer';
 import { STATE_COLOR, STATE_PULSE } from './stateStyle';
 
 const KIND_COLOR: Record<string, number> = { 'smt-machine': 0x7e9a94, equipment: 0x9aa9a5, workstation: 0xb4beba };
 const MUTED = 0xcfd5d3;
-const ROBOT_SCALE = 1.4;
+const ROBOT_SCALE = 1;   // true size: the simulator keeps robots 1 m apart in neighbouring lanes, so anything larger would visibly overlap
 const EYE = 1.7;
+const dist400 = (cam: THREE.Camera, o: THREE.Object3D) => cam.position.distanceTo(o.position) < 400;
 
-interface RobotVis { group: THREE.Group; light: THREE.Mesh; dot: THREE.Sprite; halo: THREE.Mesh; ring: THREE.Mesh; tgt: { x: number; y: number; th: number }; v: number; t?: RobotTelemetry; lightMat: THREE.MeshBasicMaterial }
+interface RobotVis { group: THREE.Group; light: THREE.Mesh; dot: THREE.Sprite; halo: THREE.Mesh; ring: THREE.Mesh; tgt: { x: number; y: number; th: number }; v: number; t?: RobotTelemetry; lightMat: THREE.MeshBasicMaterial;
+  /** Smooth playback between telemetry ticks: from the pose shown when the tick arrived to the new pose, finished when the next tick is due. */
+  from: { x: number; y: number; th: number }; tArr: number; dt: number;
+  trolley: THREE.Group | null; trolleyKey: string; trFrom: { x: number; y: number; th: number } | null; trTgt: { x: number; y: number; th: number } | null }
+const lerpAngle = (a: number, b: number, k: number) => a + (((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * k;
 
 export class Engine {
   readonly renderer: THREE.WebGLRenderer; readonly scene = new THREE.Scene(); readonly camera: THREE.PerspectiveCamera;
@@ -146,21 +151,36 @@ export class Engine {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.07, 10, 48), new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.8, depthWrite: false })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.1; ring.visible = false;
     const dot = dotSprite('#14b8a6'); dot.position.y = 2.4; dot.renderOrder = 10; dot.userData.robotId = t.id;
     root.add(halo, ring, dot); this.robotRoot.add(root); this.layerGroups.robots.push(root);
-    r = { group: root, light, dot, halo, ring, tgt: { x: t.pose.x, y: t.pose.y, th: t.pose.theta }, v: 0, lightMat: light.material as THREE.MeshBasicMaterial };
+    r = { group: root, light, dot, halo, ring, tgt: { x: t.pose.x, y: t.pose.y, th: t.pose.theta }, v: 0, lightMat: light.material as THREE.MeshBasicMaterial, from: { x: t.pose.x, y: t.pose.y, th: t.pose.theta }, tArr: performance.now(), dt: 100, trolley: null, trolleyKey: '', trFrom: null, trTgt: null };
     const [x, , z] = toScene(t.pose.x, t.pose.y); root.position.set(x, 0, z); root.rotation.y = t.pose.theta; this.robots.set(t.id, r); return r;
+  }
+  /** Pose currently drawn for a robot (playback between the last two telemetry ticks). */
+  private shown(r: RobotVis, now = performance.now()) { const k = Math.min(1, Math.max(0, (now - r.tArr) / r.dt)); return { x: r.from.x + (r.tgt.x - r.from.x) * k, y: r.from.y + (r.tgt.y - r.from.y) * k, th: lerpAngle(r.from.th, r.tgt.th, k) }; }
+  /** A trolley hangs behind the robot only while it tows one (payload + trailer pose reported); empty robots are drawn alone. */
+  private syncTrolley(r: RobotVis, t: RobotTelemetry) {
+    const key = t.trailer && t.payload ? `${t.payload.kind}|${t.payload.qty ?? 3}` : '';
+    if (key !== r.trolleyKey) {
+      if (r.trolley) { this.robotRoot.remove(r.trolley); r.trolley = null; }
+      r.trolleyKey = key;
+      if (key) { const g = buildTrolley(t.payload!.kind, t.payload!.qty); g.userData.robotId = t.id; g.traverse((o) => { o.userData.robotId = t.id; }); this.robotRoot.add(g); r.trolley = g; r.trFrom = null; }
+    }
+    if (t.trailer) { r.trFrom = r.trTgt ? { ...r.trTgt } : { x: t.trailer.x, y: t.trailer.y, th: t.trailer.theta }; r.trTgt = { x: t.trailer.x, y: t.trailer.y, th: t.trailer.theta }; } else { r.trFrom = r.trTgt = null; }
   }
   updateRobots(batch: RobotTelemetry[]) {
     for (const t of batch) {
-      const r = this.ensure(t); r.t = t; r.tgt = { x: t.pose.x, y: t.pose.y, th: t.pose.theta }; r.v = t.speed;
+      const r = this.ensure(t); const now = performance.now(); r.t = t; r.v = t.speed;
+      const cur = this.shown(r); const gap = now - r.tArr; if (r.t && gap > 0) r.dt = THREE.MathUtils.clamp(0.5 * r.dt + 0.5 * gap, 40, 1500);
+      r.from = Math.hypot(cur.x - t.pose.x, cur.y - t.pose.y) > 8 ? { x: t.pose.x, y: t.pose.y, th: t.pose.theta } : cur; r.tgt = { x: t.pose.x, y: t.pose.y, th: t.pose.theta }; r.tArr = now;
+      this.syncTrolley(r, t);
       const c = STATE_COLOR[t.state]; r.lightMat.color.set(c); (r.dot.material as THREE.SpriteMaterial).color.set(c === '#cbd5e1' ? '#ffffff' : '#ffffff'); this.tintDot(r, c);
     }
     const s = store.getState(); this.applyFilter(s.fleetId, s.query);
   }
   private tintDot(r: RobotVis, c: string) { const m = r.dot.material as THREE.SpriteMaterial; if (r.dot.userData.c !== c) { r.dot.userData.c = c; const n = dotSprite(c); m.map = n.material.map; m.needsUpdate = true; } }
   applyFilter(fleetId: string, query: string) {
-    const q = query.trim().toLowerCase();
+    void query;                                                  // the bottom search box locates a robot or station; it no longer hides the others
     this.rules?.setFleet(fleetId);
-    this.robots.forEach((r, id) => { const t = r.t; r.group.visible = store.getState().layers.robots && (!t || ((fleetId === 'all' || t.fleetId === fleetId) && (!q || id.toLowerCase().includes(q)))); });
+    this.robots.forEach((r, id) => { const t = r.t; r.group.visible = store.getState().layers.robots && (!t || ((fleetId === 'all' || t.fleetId === fleetId))); });
   }
   private onSelect() {
     const id = store.getState().selectedId; this.robots.forEach((r, k) => (r.halo.visible = k === id));
@@ -309,9 +329,11 @@ export class Engine {
     if (!this.site) { this.renderer.render(this.scene, this.camera); return; }
     // robots: dead-reckon + smooth toward telemetry
     this.robots.forEach((r) => {
-      const [tx, , tz] = toScene(r.tgt.x, r.tgt.y); const g = r.group; const k = 1 - Math.exp(-dt * 8);
-      g.position.x += (tx - g.position.x) * k; g.position.z += (tz - g.position.z) * k;
-      let d = ((r.tgt.th - g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI; g.rotation.y += d * k;
+      const g = r.group; const now = performance.now(); const p = this.shown(r, now); const [px, , pz] = toScene(p.x, p.y); g.position.set(px, 0, pz); g.rotation.y = p.th;
+      if (r.trolley && r.trTgt) {
+        const f = r.trFrom ?? r.trTgt; const k = Math.min(1, Math.max(0, (now - r.tArr) / r.dt)); const [qx, , qz] = toScene(f.x + (r.trTgt.x - f.x) * k, f.y + (r.trTgt.y - f.y) * k);
+        r.trolley.position.set(qx, 0, qz); r.trolley.rotation.y = lerpAngle(f.th, r.trTgt.th, k); r.trolley.visible = g.visible && dist400(this.camera, r.trolley);
+      }
       const st = r.t?.state ?? 'idle'; const pu = STATE_PULSE[st]; const s = pu ? 0.5 + 0.5 * Math.sin(time * pu * 6) : 0;
       r.ring.visible = st === 'blocked' || st === 'error' || !!r.t?.alerts?.some((a) => a.severity === 'critical'); if (r.ring.visible) { (r.ring.material as THREE.MeshBasicMaterial).opacity = 0.3 + 0.55 * s; r.ring.scale.setScalar(1 + 0.12 * s); }
       if (r.halo.visible) { (r.halo.material as THREE.MeshBasicMaterial).opacity = 0.55 + 0.35 * (0.5 + 0.5 * Math.sin(time * 3.2)); r.halo.scale.setScalar(1 + 0.1 * (0.5 + 0.5 * Math.sin(time * 3.2))); }

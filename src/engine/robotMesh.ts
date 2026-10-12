@@ -82,3 +82,42 @@ export const ROBOT_MODELS: Record<string, RobotModelDef> = {
   'sherpa-tug': { label: 'Sherpa Tug', footprint: [1.45, 0.9], build: () => sherpa(1.45, 0.9, { tug: true }) },
 };
 export const DEFAULT_MODEL = 'sherpa-xt-lite';
+
+// ---- trolley (towed cart) ---------------------------------------------------------------------------------
+// Local frame like the robot: +X points at the robot (front of the trolley), ground at y = 0. Footprint 1.1 x 0.7 m; the drawbar reaches the robot's rear hitch.
+const T = {
+  frame: new THREE.MeshStandardMaterial({ color: 0x3b4450, roughness: 0.6, metalness: 0.3 }),
+  deck: new THREE.MeshStandardMaterial({ color: 0x59636f, roughness: 0.7 }),
+  rail: new THREE.MeshStandardMaterial({ color: 0xfcd900, roughness: 0.5 }),
+  cardboard: new THREE.MeshStandardMaterial({ color: 0xc89a5f, roughness: 0.85 }),
+  tote: new THREE.MeshStandardMaterial({ color: 0x2f6fd6, roughness: 0.6 }),
+  tray: new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.7 }),
+  reel: new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 0.5 }),
+};
+const trolleyCache = new Map<string, THREE.Group>();
+/** A material trolley carrying `qty` units of `kind` ('PCBA tray' = stacked ESD trays, 'Reel box' = component reels, anything else = cartons). Built once per kind/qty and cloned (geometry and materials are shared). */
+export function buildTrolley(kind: string, qty = 3): THREE.Group {
+  const n = Math.max(1, Math.min(6, Math.round(qty / 1.7)));       // 1..6 stacked units
+  const key = `${kind}|${n}`; const cached = trolleyCache.get(key); if (cached) return cached.clone();
+  const g = new THREE.Group(); const L = 1.1, W = 0.7, deckY = 0.15;
+  part(g, GEO.box, T.frame, [0, deckY - 0.025, 0], [L, 0.05, W], true);                                         // chassis
+  part(g, GEO.box, T.deck, [0, deckY + 0.008, 0], [L - 0.06, 0.016, W - 0.06]);                                 // deck plate
+  for (const sx of [1, -1]) for (const sz of [1, -1]) {
+    const w = part(g, GEO.cyl, M.tire, [sx * (L / 2 - 0.12), 0.07, sz * (W / 2 - 0.05)], [0.07, 0.05, 0.07], true); w.rotation.x = Math.PI / 2;     // caster wheels
+    part(g, GEO.box, T.frame, [sx * (L / 2 - 0.12), 0.115, sz * (W / 2 - 0.05)], [0.07, 0.03, 0.05]);
+  }
+  part(g, GEO.box, T.frame, [L / 2 + 0.12, deckY + 0.01, 0], [0.26, 0.025, 0.04]);                              // drawbar to the robot's hitch
+  part(g, GEO.box, T.frame, [L / 2 + 0.01, deckY + 0.02, 0.12], [0.02, 0.02, 0.2]); part(g, GEO.box, T.frame, [L / 2 + 0.01, deckY + 0.02, -0.12], [0.02, 0.02, 0.2]);
+  for (const sz of [1, -1]) part(g, GEO.box, T.rail, [-0.02, deckY + 0.12, sz * (W / 2 - 0.02)], [L - 0.2, 0.014, 0.014]);        // side rails
+  for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]] as const) part(g, GEO.box, T.rail, [sx * (L / 2 - 0.06), deckY + 0.07, sz * (W / 2 - 0.02)], [0.014, 0.12, 0.014]);   // posts
+  part(g, GEO.box, T.rail, [-L / 2 + 0.03, deckY + 0.3, 0], [0.014, 0.014, W - 0.04]); for (const sz of [1, -1]) part(g, GEO.box, T.rail, [-L / 2 + 0.03, deckY + 0.17, sz * (W / 2 - 0.02)], [0.014, 0.3, 0.014]);   // push handle at the back
+  // load
+  const slots: [number, number][] = [[0.22, 0.17], [0.22, -0.17], [-0.2, 0.17], [-0.2, -0.17], [0.0, 0.0], [-0.4, 0.0]];
+  for (let i = 0; i < n; i++) {
+    const [x, z] = slots[i % slots.length]; const layer = Math.floor(i / slots.length); const y0 = deckY + 0.016 + layer * 0.2;
+    if (kind === 'PCBA tray') { for (let k = 0; k < 4; k++) part(g, GEO.box, k % 2 ? T.tray : T.tote, [x, y0 + 0.03 + k * 0.05, z], [0.4, 0.04, 0.3], true); }
+    else if (kind === 'Reel box') { for (let k = 0; k < 2; k++) { const r = part(g, GEO.cyl, T.reel, [x, y0 + 0.1 + k * 0.001, z + (k ? 0.0 : 0)], [0.15, 0.04, 0.15], true); r.rotation.x = Math.PI / 2; r.position.y = y0 + 0.15; r.position.z = z + (k ? 0.045 : -0.045); } part(g, GEO.box, T.cardboard, [x, y0 + 0.02, z], [0.34, 0.04, 0.3]); }
+    else { part(g, GEO.box, T.cardboard, [x, y0 + 0.1, z], [0.36, 0.2, 0.3], true); part(g, GEO.box, M.white, [x, y0 + 0.202, z], [0.12, 0.003, 0.3]); }       // carton with tape
+  }
+  trolleyCache.set(key, g); return g.clone();
+}

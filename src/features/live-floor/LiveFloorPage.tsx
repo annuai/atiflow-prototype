@@ -13,6 +13,7 @@ import { Select } from '@/components/base/select/select';
 import { WalkPad } from '@/ui/WalkPad'; import { useCoarse } from '@/ui/useCoarse';
 import { Send01, SearchLg, Stars02, XClose } from '@untitledui/icons';
 import { liveHits, useLiveNav } from './liveNav';
+import { LocateBox } from './LocateBox';
 
 const SITE = new URLSearchParams(location.search).get('site') ?? 'ecc';
 
@@ -35,6 +36,8 @@ export function LiveFloorPage() {
   useEffect(() => { handle.engine?.applyFilter(fleetId, q); }, [fleetId, q]);
   const sel = useApp((s) => s.selectedId); const selStation = useApp((s) => s.selectedStationId);
   useEffect(() => { const f = () => handle.engine?.setInset(fleetOpen && window.innerWidth > 720 ? 300 : 0); f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, [fleetOpen, ready]);
+  const [legendOpen, setLegendOpen] = useState(() => localStorage.getItem('atiflow.legendOpen') !== '0');         // map key: open by default, remembered once closed
+  const setLegend = (o: boolean) => { setLegendOpen(o); localStorage.setItem('atiflow.legendOpen', o ? '1' : '0'); };
   const coarse = useCoarse();
   const zone = site?.zones.find((z) => z.id === zoneId);
   return (
@@ -49,12 +52,10 @@ export function LiveFloorPage() {
             <Select size="sm" aria-label="Fleet" className="fleet-select" selectedKey={fleetId} onSelectionChange={(k) => store.getState().setFleet(String(k))}
               items={[{ id: 'all', label: 'All fleets' }, ...fleets.map((f) => ({ id: f.id, label: f.name }))]}>{(item) => <Select.Item {...item} />}</Select></div>
           <div className={'canvas' + (sel || selStation ? ' has-sel' : '')}><div className="gl" ref={holder} />{!ready && <div className="loading">Loading site…</div>}
-            <CameraModes fleetOpen={fleetOpen} onFleet={() => setFleetOpen((o) => !o)} />{fleetOpen && <FleetList />}<RobotPanel /><StationPanel />{!sel && !selStation && <MapLegend />}
+            <CameraModes fleetOpen={fleetOpen} onFleet={() => setFleetOpen((o) => !o)} />{fleetOpen && <FleetList />}<RobotPanel /><StationPanel />{legendOpen && !sel && !selStation && <MapLegend onClose={() => setLegend(false)} />}
             {zone && <div className="float zonebar"><i className="dot" style={{ background: zone.color }} />{zone.name}<ButtonUtility size="xs" color="tertiary" icon={XClose} tooltip="Back to whole floor" onPress={() => handle.engine?.home()} /></div>}
             {mode === 'walk' && <div className="float hint">{coarse ? 'Left stick: move (push far to run) · Drag to look' : 'WASD move · Mouse look · Shift run · Esc exit'}</div>}<WalkPad />
-            <div className="float cmd"><span className="ai"><Stars02 className="size-4" /></span>
-              <Input size="sm" icon={SearchLg} className="flex-1" wrapperClassName="shadow-none ring-0 bg-transparent" placeholder="Search robots by ID…" aria-label="Search robots by ID" value={q} onChange={(v) => store.getState().setQuery(v)} />
-              <Button size="sm" color="primary" iconLeading={Send01} aria-label="Search" /></div>
+            <LocateBox legendClosed={!legendOpen} onOpenLegend={() => setLegend(true)} />
             <ZoomControl pct={view.zoomPct} />
           </div></div>
       </div>

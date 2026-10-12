@@ -25,7 +25,7 @@ export function CameraModes({ fleetOpen, onFleet }: { fleetOpen: boolean; onFlee
   };
   return <div className="float modes">
     <ButtonGroup size="sm" aria-label="Camera mode" selectedKeys={[m]} disallowEmptySelection onSelectionChange={(k) => { const v = [...k][0] as Mode | undefined; if (v) change(v); }}>
-      <ButtonGroupItem id="orbit">3D</ButtonGroupItem><ButtonGroupItem id="top">Top</ButtonGroupItem><ButtonGroupItem id="walk">Walk</ButtonGroupItem><ButtonGroupItem id="follow">Follow</ButtonGroupItem>
+      <ButtonGroupItem id="orbit">3D</ButtonGroupItem><ButtonGroupItem id="top">2D</ButtonGroupItem><ButtonGroupItem id="walk">Walk</ButtonGroupItem><ButtonGroupItem id="follow">Follow</ButtonGroupItem>
     </ButtonGroup>
     <Button size="sm" color="secondary" aria-label="Home (whole floor)" iconLeading={Home01} onPress={() => handle.engine?.home()}><span className="lbl">Home</span></Button>
     <Button size="sm" color={fleetOpen ? 'primary' : 'secondary'} iconLeading={Users01} aria-label="Fleet list" aria-pressed={fleetOpen} onPress={onFleet}><span className="lbl">Fleet</span></Button>
@@ -95,16 +95,17 @@ export function StationPanel() {
   </InfoPanel>;
 }
 
-export function MapLegend() {
-  const violations = useApp((s) => s.violations); const traffic = useApp((s) => s.traffic); const fleets = useApp((s) => s.fleets); const [open, setOpen] = useState(true);
+/** The map key. Open or closed is owned by the page (the footer bar shows a "Map key" button while it is closed). */
+export function MapLegend({ onClose }: { onClose(): void }) {
+  const violations = useApp((s) => s.violations); const traffic = useApp((s) => s.traffic); const fleets = useApp((s) => s.fleets);
   const zs = Object.values(traffic); const occ = zs.filter((z) => z.occupants.length).length, wait = zs.reduce((a, z) => a + z.waiting.length, 0);
-  return <div className="float legend"><button className="lg-head" onClick={() => setOpen(!open)}>Map key <span>{open ? '–' : '+'}</span></button>
-    {open && <>
+  return <div className="float legend"><button className="lg-head" onClick={onClose} aria-label="Close map key">Map key <span>–</span></button>
+    <>
       {fleets.map((f) => <div className="lg" key={f.id}><i className="lane" style={{ background: f.color }} />{f.name} lanes <small>→ one way</small></div>)}
       <div className="lg"><i className="lane" style={{ background: SHARED_COLOR }} />Shared map area <small>both fleets</small></div>
       <div className="lg"><i className="sq tz" />Traffic zone <small>wait if occupied</small></div>
       <div className="lg"><i className="sq fz" />Forbidden zone <small>never entered</small></div>
       <div className="lg"><i className="pin" />Station <small>STA-1xx</small></div>
       <div className="lg-stats"><span>Traffic zones: <b>{occ}</b> occupied · <b>{wait}</b> waiting</span><span className={violations ? 'bad' : 'good'}>Rule violations: <b>{violations}</b></span></div>
-    </>}</div>;
+    </></div>;
 }

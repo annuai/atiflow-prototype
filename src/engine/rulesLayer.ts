@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { toScene } from '../core/coords';
 import type { NavGraph, SiteLayout, StationType } from '../core/types';
 import type { TrafficZoneState } from '../core/rules';
+import { LaneGraph } from '../core/lanes';
 import { labelSprite, liveLabel, stripeTexture } from './labels';
 
 export const SHARED_COLOR = '#6366f1';
@@ -22,14 +23,18 @@ export class RulesLayer {
 
   private buildLanes() {
     const color = new Map(this.nav.fleets.map((f) => [f.id, f.color])); const groups = new Map<string, { segs: [number, number, number, number][]; arrows: [number, number, number][]; color: string }>();
-    for (const l of this.nav.lanes) {
-      const key = l.fleets.length > 1 ? 'shared' : l.fleets[0]; const g = groups.get(key) ?? groups.set(key, { segs: [], arrows: [], color: key === 'shared' ? SHARED_COLOR : color.get(key) ?? '#64748b' }).get(key)!;
+    const lg = new LaneGraph(this.nav);
+    const add = (fleets: string[], pts: { x: number; y: number }[], arrows: boolean) => {
+      const key = fleets.length > 1 ? 'shared' : fleets[0]; const g = groups.get(key) ?? groups.set(key, { segs: [], arrows: [], color: key === 'shared' ? SHARED_COLOR : color.get(key) ?? '#64748b' }).get(key)!;
       let acc = 2;
-      for (let i = 0; i + 1 < l.geom.length; i++) {
-        const [ax, ay] = l.geom[i], [bx, by] = l.geom[i + 1]; const len = Math.hypot(bx - ax, by - ay); if (len < 0.05) continue; g.segs.push([ax, ay, bx, by]);
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const { x: ax, y: ay } = pts[i], { x: bx, y: by } = pts[i + 1]; const len = Math.hypot(bx - ax, by - ay); if (len < 0.05) continue; g.segs.push([ax, ay, bx, by]);
+        if (!arrows) continue;
         for (; acc < len; acc += 5) g.arrows.push([ax + ((bx - ax) * acc) / len, ay + ((by - ay) * acc) / len, Math.atan2(by - ay, bx - ax)]); acc -= len;
       }
-    }
+    };
+    for (const l of lg.smoothLanes()) add(l.fleets, l.pts, true);          // the curves robots drive (corners rounded)
+    for (const c of lg.connectors()) add(c.fleets, c.pts, false);          // and the turns that join one lane to the next, so the network is drawn connected
     const arrowGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute([0.55, 0, 0, -0.3, 0, -0.34, -0.3, 0, 0.34], 3)); arrowGeo.setIndex([0, 1, 2]); arrowGeo.computeVertexNormals();
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
     for (const [key, g] of groups) {

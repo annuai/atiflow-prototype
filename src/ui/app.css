@@ -60,6 +60,9 @@ img { display: block; }
 /* minimap */
 .minimap { top: 16px; right: 16px; width: 196px; overflow: hidden; } .minimap header { height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--border-secondary); } .minimap canvas { display: block; width: 196px; height: 110px; cursor: crosshair; }
 /* bottom bar */
+.cmdrow { position: absolute; left: 16px; right: 168px; bottom: 16px; z-index: 5; display: flex; align-items: center; gap: 12px; }
+.cmdrow .cmd { position: relative; left: auto; right: auto; bottom: auto; flex: 1; min-width: 0; }
+.mapkey { position: relative; flex: none; height: 48px; display: flex; align-items: center; padding: 0 6px; }
 .cmd { left: 16px; right: 168px; bottom: 16px; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 8px 0 10px; }
 .cmd .ai { width: 32px; height: 32px; border-radius: 50%; background: #e8f7f5; color: #0f766e; display: grid; place-items: center; font-size: 14px; }
 .zoom { right: 16px; bottom: 16px; width: 132px; height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 7px; font-size: 12px; font-weight: 500; }
@@ -103,7 +106,7 @@ img { display: block; }
   .modes { right: 12px; left: 12px; top: 10px; flex-wrap: wrap; justify-content: flex-start; }   /* natural button sizes; wraps to a 2nd row on very narrow phones instead of squeezing */
   .fleet, .rpanel { left: 8px; right: 8px; width: auto; top: auto; bottom: 68px; max-height: 45%; }
   .fleet { height: 45%; } .canvas.has-sel .fleet { display: none; }
-  .cmd { left: 8px; right: 8px; bottom: 8px; } .zoom { display: none; }
+  .cmdrow { left: 8px; right: 8px; bottom: 8px; } .mapkey { display: none; } .zoom { display: none; }
   .zonebar { bottom: 68px; left: auto; right: 8px; } .hint { bottom: 68px; max-width: 90%; text-align: center; }
 }
 
