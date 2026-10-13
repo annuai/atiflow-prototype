@@ -3,6 +3,7 @@ import { useApp, store } from '../core/store';
 import type { RobotState } from '../core/types';
 import { handle } from './engineHandle';
 import { STATE_COLOR } from '../engine/stateStyle';
+import { robotTypeById } from '../data/robotTypes';
 import { STATION_COLOR, SHARED_COLOR } from '../engine/rulesLayer';
 import { InfoPanel } from './InfoPanel';
 import { STATE_TONE } from './tones';
@@ -75,7 +76,7 @@ export function RobotPanel() {
   if (!r) return null; const fleet = fleets.find((f) => f.id === r.fleetId); const dest = nav?.stations.find((s) => s.id === (r.task?.next ?? r.task?.to));
   const trafficTxt = r.traffic ? (r.traffic.status === 'waiting' ? `Waiting for ${r.traffic.zoneId}` : `Inside ${r.traffic.zoneId}`) : 'Clear';
   return <InfoPanel title={r.id} onClose={() => store.getState().select(null)}
-    subtitle={`${r.model === 'sherpa-tug' ? 'Sherpa Tug' : 'Sherpa XT Lite'} · ${fleet?.name ?? r.fleetId}`}
+    subtitle={`${robotTypeById(r.model).label} · ${fleet?.name ?? r.fleetId}`}
     pill={{ label: r.state, tone: STATE_TONE[r.state] }} chips={fleet ? [{ label: fleet.name, color: fleet.color }] : []}
     stats={[
       { label: 'Battery', value: r.battery + '%', bar: { pct: r.battery, tone: r.battery < 25 ? 'error' : 'success' } }, { label: 'Speed', value: r.speed.toFixed(1) + ' m/s' },

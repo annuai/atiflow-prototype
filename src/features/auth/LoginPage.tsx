@@ -8,7 +8,7 @@ import type { PublicUser } from './types';
 import { notify } from '@/ui/toast';
 import bg from './assets/login-bg.jpg';
 import logo from '@/ui/icons/ati-logo.svg';       // the light-on-dark logo (same one as the sidebar)
-import robot from './assets/xt-lite.png';
+import robot from '@/assets/robots/sherpa-xt-lite.svg';
 import ribbonTip from './assets/ribbon-tip.svg';
 import './login.css';
 

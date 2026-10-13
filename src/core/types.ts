@@ -42,13 +42,29 @@ export interface RobotTelemetry {
   /** the robots this one is waiting for (first in line first), while it waits */
   waitsOn?: string[];
   atStation?: string | null;
+  /** Distance driven since the robot started, in metres, split by whether it towed a load. Cumulative, so any period is a difference of two readings. */
+  odometer?: { empty: number; loaded: number };
+  /** Energy used for driving since the robot started (kWh, cumulative). */
+  energyKWh?: number;
   alerts?: { code: string; severity: 'info' | 'warn' | 'critical'; msg: string }[];
   ts: number;
 }
 
+/**
+ * Things that happen at a moment (as opposed to the state a robot is in): the fleet manager / traffic controller report them next to the telemetry.
+ * `at` fields are epoch ms. Work trips (transport / return) carry the three trip times the KPIs need: assigned, started (first movement) and the SLA deadline.
+ */
+export type FleetEvent =
+  | { type: 'trip-completed'; ts: number; robotId: string; fleetId: string; tripId: string; kind: 'transport' | 'return' | 'charge' | 'park'; assignedAt: number; startedAt: number; deadlineAt: number | null }
+  | { type: 'deadlock'; ts: number; robotIds: string[]; fleetIds: string[]; /** how long the longest-waiting robot of the ring had been waiting when the ring was found (s) */ waitedS: number }
+  | { type: 'fault'; ts: number; robotId: string; fleetId: string; code: string; needsIntervention: boolean }
+  | { type: 'fault-cleared'; ts: number; robotId: string; fleetId: string };
+
 export interface TelemetryAdapter {
   connect(): void; disconnect(): void;
   onTelemetry(cb: (batch: RobotTelemetry[]) => void): void;
+  /** Optional: moments reported by the fleet manager (trip completed, deadlock, fault). */
+  onEvent?(cb: (e: FleetEvent) => void): void;
 }
 
 export type CameraMode = 'orbit' | 'top' | 'walk' | 'follow';

@@ -24,7 +24,7 @@ export function createNotificationStore(api: NotificationApi, cache: (username: 
     return {
       owner: null, items: [],
       open(user) {
-        const cur = get().owner; if (cur?.username === user?.username && cur?.role === user?.role) return;
+        const cur = get().owner; if (cur?.username === user?.username && cur?.role === user?.role && JSON.stringify(cur?.custom) === JSON.stringify(user?.custom)) return;
         clearTimeout(timer); if (saved && cur) saved.save(center.items);          // (a save still waiting is done now, so a quick log out loses nothing)
         stop?.(); stop = null; saved = user ? cache(user.username) : null; center = new NotificationCenter(saved ? saved.load() : []); set({ owner: user, items: center.items });
         if (!user) return;

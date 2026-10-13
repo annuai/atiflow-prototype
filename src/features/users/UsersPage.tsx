@@ -1,0 +1,46 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronRight, Plus, SearchLg } from '@untitledui/icons';
+import { Button } from '@/components/base/buttons/button';
+import { ButtonUtility } from '@/components/base/buttons/button-utility';
+import { Input } from '@/components/base/input/input';
+import { DataTable, type Column } from '@/components/data/DataTable';
+import { roleById, USERS_PATH } from '@/features/access';
+import { toPublic, useUsers } from '@/features/auth/userDirectory';
+import type { PublicUser } from '@/features/auth/types';
+import { configuratorHits, useConfiguratorNav } from '@/features/configurator/configuratorNav';
+import { AppShell } from '@/shell/AppShell';
+import '@/features/devices/devices.css';
+import { AddUserModal } from './components/AddUserModal';
+import { RoleBadge } from './components/RoleBadge';
+import { UserAvatar } from './components/UserAvatar';
+import { copy } from './copy';
+
+/** The users of the app. Only configurators (and the superuser) can open it (see features/access). Same layout as Robots / Hardware: title block with search and Add, one card with the table. */
+export function UsersPage() {
+  const navigate = useNavigate(); const users = useUsers((s) => s.users).map(toPublic); const [adding, setAdding] = useState(false), [searching, setSearching] = useState(false), [q, setQ] = useState('');
+  const ql = q.trim().toLowerCase(); const rows = ql ? users.filter((u) => [u.name, u.username, u.email, roleById(u.role).label].some((x) => x.toLowerCase().includes(ql))) : users;
+  const columns: Column<PublicUser>[] = [
+    { id: 'name', header: copy.columns.name, cell: (u) => <div className="flex items-center gap-3 whitespace-nowrap"><UserAvatar user={u} /><span className="font-semibold text-primary">{u.name}</span></div> },
+    { id: 'username', header: copy.columns.username, cell: (u) => u.username },
+    { id: 'email', header: copy.columns.email, cell: (u) => u.email },
+    { id: 'role', header: copy.columns.role, cell: (u) => <RoleBadge role={u.role} /> },
+    { id: 'go', header: '', className: 'w-10', cell: () => <ChevronRight className="size-5 text-fg-brand-primary" aria-hidden /> },
+  ];
+  return (
+    <AppShell useNavModel={useConfiguratorNav} getHits={configuratorHits} searchPlaceholder="Search live operations, fleets, trips, analytics...">
+      <div className="content">
+        <div className="title-block"><div><h1>{copy.title}</h1><p>{copy.subtitle}</p></div>
+          <div className="actions">
+            {searching && <Input size="sm" aria-label="Search users" placeholder={copy.search} value={q} onChange={setQ} autoFocus wrapperClassName="dv-search" />}
+            <ButtonUtility icon={SearchLg} tooltip="Search" color="secondary" size="sm" onPress={() => { setSearching((s) => !s); setQ(''); }} />
+            <Button size="sm" color="primary" iconLeading={Plus} onPress={() => setAdding(true)}>{copy.add}</Button>
+          </div></div>
+        <div className="builder dv-card">
+          {rows.length === 0 ? <p className="dv-none">{copy.none(q)}</p> : <div className="dv-scroll"><DataTable label={copy.title} rows={rows} rowKey={(u) => u.username} columns={columns} onRowAction={(u) => navigate(`${USERS_PATH}/${encodeURIComponent(u.username)}`)} /></div>}
+        </div>
+      </div>
+      <AddUserModal isOpen={adding} onOpenChange={setAdding} />
+    </AppShell>
+  );
+}

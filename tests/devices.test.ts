@@ -6,9 +6,9 @@ const { robot, hardware } = KINDS;
 const filled = (kind: typeof robot, over: Record<string, string> = {}) => ({ ...blankValues(kind), name: 'Sherpa-09', hardwareId: 'HW-1234-09', apiKey: 'flow_api_x', ...over });
 
 describe('device registry (robots + hardware share one model)', () => {
-  it('seeds: 15 robots spread over two fleets (one unassigned), 4 hardware items', () => {
-    expect(robot.seed).toHaveLength(15); expect(hardware.seed).toHaveLength(4);
-    expect(robot.seed.filter((d) => d.values.fleet === 'Line Side Fleet')).toHaveLength(7); expect(robot.seed.filter((d) => d.values.fleet === '')).toHaveLength(1); expect(robot.seed.filter((d) => d.values.fleet).every((d) => d.status === 'online')).toBe(true);
+  it('seeds: 19 robots spread over two fleets (one unassigned), 4 hardware items', () => {
+    expect(robot.seed).toHaveLength(19); expect(hardware.seed).toHaveLength(4);
+    expect(robot.seed.filter((d) => d.values.fleet === 'Line Side Fleet')).toHaveLength(9); expect(robot.seed.filter((d) => d.values.fleet === '')).toHaveLength(1); expect(robot.seed.filter((d) => d.values.fleet).every((d) => d.status === 'online')).toBe(true);
     expect(hardware.seed.map((d) => d.values.hwType)).toEqual(['Summon Button', 'Hooter', 'Ati Eye', 'Hooter']);
   });
   it('seed names and hardware ids are unique', () => {
@@ -28,7 +28,7 @@ describe('device registry (robots + hardware share one model)', () => {
     expect(hardware.fields.filter((f) => f.modal).map((f) => f.key)).toEqual(['name', 'manufacturer', 'hwType', 'hardwareId', 'apiKey']);
   });
   it('blankValues: fresh robots are unassigned with unknown connection details', () => {
-    const v = blankValues(robot); expect(v.fleet).toBe(''); expect(v.ip).toBe('—'); expect(v.addons).toEqual([]); expect(v.sherpaType).toBe('Tug 1.5T');
+    const v = blankValues(robot); expect(v.fleet).toBe(''); expect(v.ip).toBe('—'); expect(v.addons).toEqual([]); expect(v.sherpaType).toBe('Sherpa XT Lite');
   });
   it('presets (empty-state quick picks) override defaults', () => expect(blankValues(hardware, { hwType: 'Ati Eye' }).hwType).toBe('Ati Eye'));
   it('findDevice ignores case', () => expect(nameOf(findDevice(robot.seed, 'amr-004')!)).toBe('AMR-004'));
@@ -45,7 +45,7 @@ describe('shared dataset', () => {
   it('the Live Floor roster comes from it: assigned, not offline, one entry per robot, every fleet present', async () => {
     const { rosterFrom } = await import('../src/features/live-floor/liveFeed');
     const nav = JSON.parse((await import('node:fs')).readFileSync('public/sites/ecc/nav.json', 'utf8'));
-    const r = rosterFrom(nav); expect(r).toHaveLength(14); expect(new Set(r.map((x) => x.id)).size).toBe(14); expect(r.map((x) => x.id)).not.toContain('AMR-015');
+    const r = rosterFrom(nav); expect(r).toHaveLength(18); expect(new Set(r.map((x) => x.id)).size).toBe(18); expect(r.map((x) => x.id)).not.toContain('AMR-015');
     expect(new Set(r.map((x) => x.fleetId))).toEqual(new Set(['line-side', 'asrs']));
   });
 });

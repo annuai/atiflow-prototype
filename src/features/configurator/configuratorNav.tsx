@@ -15,6 +15,8 @@ import { builderNodeHits } from '@/features/workflow-builder/builderNav';
 import { datasetStore } from '@/data/dataset';
 import { useUnreadCount } from '@/features/notifications/NotificationsProvider';
 import { useFleetNames, wfStore } from '@/features/workflow-builder/model/store';
+import { canNow, useAccess } from '@/features/access/useAccess';
+import { USERS_PATH } from '@/features/access';
 
 export const WORKFLOWS_PATH = '/configurator';          // "Workflows": opens a new workflow; /configurator/workflows/<id> shows one
 const soon = (name: string) => () => notify.info(`${name} isn't part of this prototype`, 'This prototype covers Workflows, Robots, Hardware, Maps and Master Data.', 'soon');
@@ -38,16 +40,20 @@ export function useConfiguratorNav(): NavModel {
   const names = useFleetNames(); const unread = useUnreadCount();
   const { pathname } = useLocation(); const navigate = useNavigate();
   const onWorkflows = pathname === WORKFLOWS_PATH || pathname.startsWith(`${WORKFLOWS_PATH}/workflows/`); const at = (route: string) => pathname.startsWith(`${WORKFLOWS_PATH}/${route}`);
+  const { can, canManageUsers } = useAccess();                  // the sidebar only offers what the user may open
+  const groups = [
+    { id: 'global', label: 'Global Setup', items: [
+      can('configurator.robots') && { id: 'robots', label: 'Robots', icon: robotsI, active: at(KINDS.robot.route), onSelect: () => navigate(`${WORKFLOWS_PATH}/${KINDS.robot.route}`) },
+      can('configurator.maps') && { id: 'maps', label: 'Maps', icon: mapsI, active: at('maps'), onSelect: () => navigate(`${WORKFLOWS_PATH}/maps`) },
+      can('configurator.hardware') && { id: 'hw', label: 'Hardware', icon: hardwareI, active: at(KINDS.hardware.route), onSelect: () => navigate(`${WORKFLOWS_PATH}/${KINDS.hardware.route}`) },
+      canManageUsers && { id: 'users', label: 'Users', icon: usersI, active: pathname.startsWith(USERS_PATH), onSelect: () => navigate(USERS_PATH) }] },
+    { id: 'build', label: 'Build', items: [
+      can('configurator.master-data') && { id: 'md', label: 'Master Data', icon: masterI, active: at('master-data'), onSelect: () => navigate(`${WORKFLOWS_PATH}/master-data`) },
+      can('configurator.workflows') && { id: 'wf', label: 'Workflows', icon: workflowsI, active: onWorkflows, onSelect: () => navigate(WORKFLOWS_PATH) }] },
+    ...(can('configurator.fleets') ? [{ id: 'fleets', label: 'Fleets', items: names.map((n) => ({ id: n, label: n, icon: fleetI, active: pathname.startsWith(fleetPath(n, '')), onSelect: () => navigate(fleetPath(n)) })), extra: <NewFleet /> }] : []),
+  ].map((g) => ({ ...g, items: g.items.filter(Boolean) as NavModel['groups'][number]['items'] })).filter((g) => g.items.length || g.extra);
   return {
-    groups: [
-      { id: 'global', label: 'Global Setup', items: [
-        { id: 'robots', label: 'Robots', icon: robotsI, active: at(KINDS.robot.route), onSelect: () => navigate(`${WORKFLOWS_PATH}/${KINDS.robot.route}`) },
-        { id: 'maps', label: 'Maps', icon: mapsI, active: at('maps'), onSelect: () => navigate(`${WORKFLOWS_PATH}/maps`) },
-        { id: 'hw', label: 'Hardware', icon: hardwareI, active: at(KINDS.hardware.route), onSelect: () => navigate(`${WORKFLOWS_PATH}/${KINDS.hardware.route}`) },
-        { id: 'users', label: 'Users', icon: usersI, onSelect: soon('Users') }] },
-      { id: 'build', label: 'Build', items: [{ id: 'md', label: 'Master Data', icon: masterI, active: at('master-data'), onSelect: () => navigate(`${WORKFLOWS_PATH}/master-data`) }, { id: 'wf', label: 'Workflows', icon: workflowsI, active: onWorkflows, onSelect: () => navigate(WORKFLOWS_PATH) }] },
-      { id: 'fleets', label: 'Fleets', items: names.map((n) => ({ id: n, label: n, icon: fleetI, active: pathname.startsWith(fleetPath(n, '')), onSelect: () => navigate(fleetPath(n)) })), extra: <NewFleet /> },
-    ],
+    groups,
     footerItems: [{ id: 'notif', label: 'Notifications', icon: bellI, badge: unread || undefined, active: pathname === '/configurator/notifications', onSelect: () => navigate('/configurator/notifications') }, { id: 'settings', label: 'Settings', icon: gearI, onSelect: soon('Settings') }],
   };
 }
@@ -55,11 +61,11 @@ export function useConfiguratorNav(): NavModel {
 /** Top-bar search for every configurator page: fleets, robots, hardware (open their page) and, on the builder, the nodes of the open workflow. */
 export function configuratorHits(q: string): SearchHit[] {
   const ql = q.toLowerCase(); const s = wfStore.getState(); const d = deviceStore.getState();
-  const devices = (['robot', 'hardware'] as const).flatMap((id) => d[id].filter((x) => (nameOf(x) + ' ' + KINDS[id].typeOf(x)).toLowerCase().includes(ql)).slice(0, 5)
+  const devices = (['robot', 'hardware'] as const).filter((id) => canNow(`configurator.${id === 'robot' ? 'robots' : 'hardware'}`)).flatMap((id) => d[id].filter((x) => (nameOf(x) + ' ' + KINDS[id].typeOf(x)).toLowerCase().includes(ql)).slice(0, 5)
     .map((x) => ({ kind: KINDS[id].singular, title: nameOf(x), sub: KINDS[id].typeOf(x), to: `${WORKFLOWS_PATH}/${KINDS[id].route}/${encodeURIComponent(nameOf(x))}` })));
   return [
-    ...datasetStore.getState().fleets.map((f) => f.name).filter((n) => n.toLowerCase().includes(ql)).map((n) => ({ kind: 'Fleet', title: n, to: fleetPath(n) })),
+    ...(canNow('configurator.fleets') ? datasetStore.getState().fleets.map((f) => f.name).filter((n) => n.toLowerCase().includes(ql)).map((n) => ({ kind: 'Fleet', title: n, to: fleetPath(n) })) : []),
     ...devices,
-    ...(window.location.pathname.startsWith(`${WORKFLOWS_PATH}/workflows/`) ? builderNodeHits(q) : []),
+    ...(window.location.pathname.startsWith(`${WORKFLOWS_PATH}/workflows/`) && canNow('configurator.workflows') ? builderNodeHits(q) : []),
   ];
 }

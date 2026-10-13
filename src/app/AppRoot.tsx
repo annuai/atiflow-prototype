@@ -5,6 +5,7 @@ import { LoginPage } from '@/features/auth/LoginPage';
 import { LiveFloorPage } from '@/features/live-floor/LiveFloorPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { DashboardNewPage } from '@/features/dashboard-new/DashboardNewPage';
+import { ReportsPage } from '@/features/reports/ReportsPage';
 import { DeviceDetailPage } from '@/features/devices/DeviceDetailPage';
 import { DeviceListPage } from '@/features/devices/DeviceListPage';
 import { MapsPage } from '@/features/maps/MapsPage';
@@ -17,7 +18,10 @@ import { notificationApi } from '@/features/notifications';
 import { NotificationsProvider } from '@/features/notifications/NotificationsProvider';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { AppToaster } from '@/ui/toast';
-import { RequireRole } from './guards';
+import { UserDetailPage } from '@/features/users/UserDetailPage';
+import { UsersPage } from '@/features/users/UsersPage';
+import { NoAccessPage } from '@/features/access/NoAccessPage';
+import { RequireAccess } from './guards';
 import { landingFor, rememberPage } from './lastPage';
 
 function LoginRoute() {
@@ -39,7 +43,7 @@ function PageMemory() {
 }
 function RootRedirect() { const user = useAuth((s) => s.user); return <Navigate to={user ? landingFor(user) : '/login'} replace />; }
 
-/** Route table: one public route (/login) and one page per role. Add a role = add a route + entry in roles.ts. */
+/** Route table: one public route (/login) and every other page behind one guard. What a user may open comes from the access catalog (features/access), not from the routes. */
 export function AppRoot() {
   return (
     <BrowserRouter>
@@ -48,23 +52,27 @@ export function AppRoot() {
       <PageMemory />
       <Routes>
         <Route path="/login" element={<LoginRoute />} />
-        <Route path="/supervisor" element={<RequireRole role="supervisor"><RootRedirect /></RequireRole>} />
-        <Route path="/supervisor/dashboard" element={<RequireRole role="supervisor"><DashboardPage /></RequireRole>} />
-        <Route path="/supervisor/dashboard-new" element={<RequireRole role="supervisor"><DashboardNewPage /></RequireRole>} />
-        <Route path="/supervisor/notifications" element={<RequireRole role="supervisor"><NotificationsPage /></RequireRole>} />
-        <Route path="/supervisor/livefloor" element={<RequireRole role="supervisor"><LiveFloorPage /></RequireRole>} />
-        <Route path="/configurator" element={<RequireRole role="configurator"><NewWorkflow /></RequireRole>} />
-        <Route path="/configurator/workflows/:id" element={<RequireRole role="configurator"><WorkflowBuilderPage /></RequireRole>} />
+        <Route path="/supervisor" element={<RootRedirect />} />
+        <Route path="/supervisor/dashboard" element={<RequireAccess><DashboardPage /></RequireAccess>} />
+        <Route path="/supervisor/reports" element={<RequireAccess><ReportsPage /></RequireAccess>} />
+        <Route path="/supervisor/dashboard-new" element={<RequireAccess><DashboardNewPage /></RequireAccess>} />
+        <Route path="/supervisor/notifications" element={<RequireAccess><NotificationsPage /></RequireAccess>} />
+        <Route path="/supervisor/livefloor" element={<RequireAccess><LiveFloorPage /></RequireAccess>} />
+        <Route path="/configurator" element={<RequireAccess><NewWorkflow /></RequireAccess>} />
+        <Route path="/configurator/workflows/:id" element={<RequireAccess><WorkflowBuilderPage /></RequireAccess>} />
         {(['robot', 'hardware'] as const).map((k) => (
           <Route key={k} path={`/configurator/${KINDS[k].route}`}>
-            <Route index element={<RequireRole role="configurator"><DeviceListPage kind={KINDS[k]} /></RequireRole>} />
-            <Route path=":name" element={<RequireRole role="configurator"><DeviceDetailPage kind={KINDS[k]} /></RequireRole>} />
+            <Route index element={<RequireAccess><DeviceListPage kind={KINDS[k]} /></RequireAccess>} />
+            <Route path=":name" element={<RequireAccess><DeviceDetailPage kind={KINDS[k]} /></RequireAccess>} />
           </Route>
         ))}
-        <Route path="/configurator/master-data/:tab?" element={<RequireRole role="configurator"><MasterDataPage /></RequireRole>} />
-        <Route path="/configurator/fleets/:name/:tab?" element={<RequireRole role="configurator"><FleetPage /></RequireRole>} />
-        <Route path="/configurator/notifications" element={<RequireRole role="configurator"><NotificationsPage /></RequireRole>} />
-        <Route path="/configurator/maps" element={<RequireRole role="configurator"><MapsPage /></RequireRole>} />
+        <Route path="/configurator/master-data/:tab?" element={<RequireAccess><MasterDataPage /></RequireAccess>} />
+        <Route path="/configurator/fleets/:name/:tab?" element={<RequireAccess><FleetPage /></RequireAccess>} />
+        <Route path="/configurator/notifications" element={<RequireAccess><NotificationsPage /></RequireAccess>} />
+        <Route path="/configurator/users" element={<RequireAccess><UsersPage /></RequireAccess>} />
+        <Route path="/configurator/users/:username" element={<RequireAccess><UserDetailPage /></RequireAccess>} />
+        <Route path="/no-access" element={<NoAccessPage />} />
+        <Route path="/configurator/maps" element={<RequireAccess><MapsPage /></RequireAccess>} />
         <Route path="*" element={<RootRedirect />} />
       </Routes>
      </NotificationsProvider>

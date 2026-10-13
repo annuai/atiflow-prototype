@@ -50,10 +50,10 @@ describe('configurator: MES notifications', () => {
     const old = mesBackfill(1_000_000); expect(old.length).toBeGreaterThanOrEqual(3); expect(old.every((x) => x.at < 1_000_000 && !x.actions)).toBe(true);
     const stock = mesNext(5, 0, () => 0), data = mesNext(6, 1, () => 0); expect(stock).toMatchObject({ kind: 'stock', title: 'New stock has been added' }); expect(stock.body).toMatch(/DCP-\d+ · .+: \+\d+ units/); expect(data).toMatchObject({ kind: 'mes', title: 'New data from MES' }); expect(stock.actions).toBeUndefined();
   });
-  it('each role has its own sources', () => { expect(SOURCES.supervisor()).toHaveLength(1); expect(SOURCES.configurator()).toHaveLength(1); expect(SOURCES.supervisor()[0]).not.toBe(SOURCES.configurator()[0]); });
+  it('each audience has its own sources', () => { expect(SOURCES.supervisor()).toHaveLength(1); expect(SOURCES.configurator()).toHaveLength(1); expect(SOURCES.supervisor()[0]).not.toBe(SOURCES.configurator()[0]); });
 });
 
-const user = (username: string, role: 'supervisor' | 'configurator' = 'supervisor'): PublicUser => ({ username, role, name: username, title: '', avatar: '' });
+const user = (username: string, role: 'supervisor' | 'configurator' = 'supervisor', custom?: PublicUser['custom']): PublicUser => ({ username, role, custom, name: username, firstName: username, lastName: '', email: `${username}@x.com`, title: '', avatar: '' });
 const memCache = () => { const mem = new Map<string, AppNotification[]>(); const doc = (u: string) => ({ load: () => mem.get(u) ?? [], save: (v: AppNotification[]) => void mem.set(u, v), reset: () => [], exportText: () => '', parse: () => ({ error: '' }) }) as never; return { mem, doc }; };
 /** A fake notification API: records what the store asks for and lets the test push new notifications. */
 function fakeApi(history: Record<string, NewNotification[]> = {}) {
@@ -87,9 +87,13 @@ describe('the data component: any API plugs in', () => {
     let release: (v: NewNotification[]) => void = () => {}; const slow: NotificationApi = { subscribe: () => () => {}, history: (u) => (u.username === 'arjun' ? new Promise((r) => { release = r; }) : Promise.resolve([])) };
     const st = createNotificationStore(slow, memCache().doc); st.getState().open(user('arjun')); st.getState().open(user('kavin', 'configurator')); release([n('late', 1)]); await settle(); expect(st.getState().items).toEqual([]);
   });
-  it('the local implementation runs the sources of the user\'s role', () => {
+  it('the local implementation runs the sources of the audiences the user belongs to (a configurator with the supervisor pages ticked, both)', () => {
     const started: string[] = []; const src = (name: string) => ({ start: () => { started.push(name); return () => void started.push('stop ' + name); } });
     const api = localApi({ supervisor: () => [src('live')], configurator: () => [src('mes'), src('other')] }); const stop = api.subscribe(user('kavin', 'configurator'), () => {}); expect(started).toEqual(['mes', 'other']); stop(); expect(started).toEqual(['mes', 'other', 'stop mes', 'stop other']);
+  });
+  it('a configurator who also holds the supervisor pages receives the notifications of both workspaces', () => {
+    const started: string[] = []; const src = (name: string) => ({ start: () => { started.push(name); return () => {}; } }); const api = localApi({ supervisor: () => [src('live')], configurator: () => [src('mes')] });
+    api.subscribe(user('meera', 'configurator', { add: ['supervisor.dashboard'], remove: [] }), () => {}); expect(started.sort()).toEqual(['live', 'mes']);
   });
 });
 

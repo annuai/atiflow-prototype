@@ -19,14 +19,17 @@ import { publishProblem } from './model/validate';
 import { runSimulation, stopSimulation } from './sim/runner';
 import './workflow.css';
 
-const NO_FLEET = { title: 'Select a fleet to start building workflows', body: 'Choose the fleet this workflow is for. Its materials, stations and robots are used while you build.', draft: 'New workflow', placeholder: 'Select a fleet' };
+const NO_FLEET = { title: 'Select a fleet to start building workflows', body: 'Choose the fleet this workflow is for. Its materials, stations and robots are used while you build.', draft: 'New workflow', placeholder: 'Select a fleet', none: 'No fleets yet: create one in the sidebar' };
 
 /** Canvas stand-in shown until the user picks a fleet for the new workflow. */
 function SelectFleetPrompt() {
+  const fleets = useFleetNames();
   return (
     <div className="canvas wf-canvas wf-nofleet">
       <FeaturedIcon icon={Dataflow03} color="gray" theme="modern" size="xl" />
       <p className="wf-nofleet-t">{NO_FLEET.title}</p><p className="wf-nofleet-b">{NO_FLEET.body}</p>
+      <Select size="md" aria-label="Fleet for this workflow" className="mt-4 w-64" selectedKey={null} placeholder={fleets.length ? NO_FLEET.placeholder : NO_FLEET.none} isDisabled={!fleets.length}
+        onSelectionChange={(k) => wfStore.getState().assignFleet(String(k))} items={fleets.map((n) => ({ id: n, label: n }))}>{(item) => <Select.Item {...item} />}</Select>
     </div>
   );
 }

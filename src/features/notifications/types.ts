@@ -1,4 +1,7 @@
-import type { PublicUser, Role } from '@/features/auth/types';
+import type { PublicUser } from '@/features/auth/types';
+
+/** Who a notification is for: the workspaces that have notifications. A user receives those of every workspace they can enter (a superuser both). */
+export type Audience = 'supervisor' | 'configurator';
 
 export type NotificationLevel = 'critical' | 'warn' | 'info' | 'success';
 /** What a button on a notification does. Plain data (not a function) so notifications can be saved and sent by a backend. */
@@ -21,7 +24,7 @@ export type NewNotification = Omit<AppNotification, 'read'>;
  * Today the sources are the live robot feed (supervisors) and a mock MES feed (configurators); a backend or websocket source replaces them without touching the page.
  */
 export interface NotificationSource { start(emit: (items: NewNotification[]) => void): () => void }
-export type SourcesByRole = Record<Role, () => NotificationSource[]>;
+export type SourcesByAudience = Record<Audience, () => NotificationSource[]>;
 
 /**
  * The one thing the notification feature needs from the outside: where a user's notifications come from and where read state goes.

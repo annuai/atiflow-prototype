@@ -1,9 +1,13 @@
 import { SOURCES } from './sources';
-import type { NewNotification, NotificationApi, SourcesByRole } from './types';
+import { enterableWorkspaces } from '@/features/access';
+import type { Audience, NewNotification, NotificationApi, SourcesByAudience } from './types';
 
-/** Today's implementation: each role's sources inside this app (live robot alerts, the mock MES feed). */
-export const localApi = (sources: SourcesByRole = SOURCES): NotificationApi => ({
-  subscribe(user, emit) { const stops = sources[user.role]().map((s) => s.start(emit)); return () => stops.forEach((stop) => stop()); },
+/** The audiences a user belongs to: the workspaces they can enter that have notifications. */
+export const audiencesOf = (user: Parameters<typeof enterableWorkspaces>[0]): Audience[] => enterableWorkspaces(user).map((w) => w.id).filter((id): id is Audience => id === 'supervisor' || id === 'configurator');
+
+/** Today's implementation: each audience's sources inside this app (live robot alerts, the mock MES feed). */
+export const localApi = (sources: SourcesByAudience = SOURCES): NotificationApi => ({
+  subscribe(user, emit) { const stops = audiencesOf(user).flatMap((a) => sources[a]().map((s) => s.start(emit))); return () => stops.forEach((stop) => stop()); },
 });
 
 export interface RestApiOptions {

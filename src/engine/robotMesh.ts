@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { ROBOT_TYPES, DEFAULT_ROBOT_TYPE, type RobotTypeId } from '../data/robotTypes';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 
-export interface RobotModelDef { label: string; footprint: [number, number]; build(): { group: THREE.Group; light: THREE.Mesh } }
+export interface RobotModelDef { footprint: [number, number]; build(): { group: THREE.Group; light: THREE.Mesh } }
 
 // Ati Robotics Sherpa look (from the supplied side illustration + KeyShot render):
 // yellow hip-roofed body, black bumper skirt, dark roof plate, lidar mast with orange beacon,
@@ -77,11 +80,42 @@ function sherpa(L: number, W: number, opts: { tug?: boolean } = {}) {
   return { group: g, light: led };
 }
 
-export const ROBOT_MODELS: Record<string, RobotModelDef> = {
-  'sherpa-xt-lite': { label: 'Sherpa XT Lite', footprint: [1.2, 0.85], build: () => sherpa(1.2, 0.85) },
-  'sherpa-tug': { label: 'Sherpa Tug', footprint: [1.45, 0.9], build: () => sherpa(1.45, 0.9, { tug: true }) },
+// ---- simplified CAD models (public/models/robots/*.glb, made by tools/glb-compress) -----------------------------
+// Each file is a few meshes: `mat1` (dark parts), `mat2`/`mat3` (body), `light_status` (the vehicle's own status lights: diffusers + beacon)
+// and `light_red` (its red warning lights). The status lights take the robot's state colour; they replace the LED band of the procedural body.
+const loaded: Record<string, THREE.Group> = {};
+const RED_LIGHT = new THREE.MeshBasicMaterial({ color: 0xff3b30 });
+
+/** Fetches the model files once. Models that fail to load keep the procedural body. */
+export function loadRobotModels(): Promise<void> {
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  return Promise.all(ROBOT_TYPES.map(async ({ id: key }) => { const file = `${key}.glb`;
+    try {
+      const { scene } = await loader.loadAsync(`${import.meta.env.BASE_URL}models/robots/${file}`);
+      scene.traverse((o) => {
+        const m = o as THREE.Mesh; if (!m.isMesh) return;
+        if (m.name === 'light_red') m.material = RED_LIGHT;
+        else if (m.name !== 'light_status') { const c = (m.material as THREE.MeshStandardMaterial).color; m.material = new THREE.MeshStandardMaterial({ color: c, roughness: 0.55, flatShading: true }); m.castShadow = true; }
+      });
+      loaded[key] = scene;
+    } catch (e) { console.warn(`robot model ${file} not loaded, using the procedural body`, e); }
+  })).then(() => undefined);
+}
+
+function fromGlb(key: string) {
+  const group = loaded[key].clone(true);
+  const mat = new THREE.MeshBasicMaterial({ color: 0x14b8a6, transparent: true });       // one per robot: the engine tints it with the robot's state
+  let light!: THREE.Mesh;
+  group.traverse((o) => { if (o.name === 'light_status') { (o as THREE.Mesh).material = mat; light = o as THREE.Mesh; } });
+  return { group, light };
+}
+
+/** 3D side of each robot type of the catalog (`data/robotTypes.ts`): footprint and body. */
+export const ROBOT_MODELS: Record<RobotTypeId, RobotModelDef> = {
+  'sherpa-xt-lite': { footprint: [1.2, 0.85], build: () => loaded['sherpa-xt-lite'] ? fromGlb('sherpa-xt-lite') : sherpa(1.2, 0.85) },
+  'pallet-mover': { footprint: [1.45, 0.9], build: () => loaded['pallet-mover'] ? fromGlb('pallet-mover') : sherpa(1.45, 0.9, { tug: true }) },
 };
-export const DEFAULT_MODEL = 'sherpa-xt-lite';
+export const DEFAULT_MODEL: RobotTypeId = DEFAULT_ROBOT_TYPE.id;
 
 // ---- trolley (towed cart) ---------------------------------------------------------------------------------
 // Local frame like the robot: +X points at the robot (front of the trolley), ground at y = 0. Footprint 1.1 x 0.7 m; the drawbar reaches the robot's rear hitch.
