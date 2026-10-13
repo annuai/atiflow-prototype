@@ -1,14 +1,20 @@
-/** Roles are plain strings so new roles can be added without touching the auth feature; the app maps role -> landing page (src/app/roles.ts). */
-export type Role = 'supervisor' | 'configurator';
+import type { Custom, RoleId } from '@/features/access';
+
+/** Who may do what is the access feature's business: a user has a role (a preset of permissions) and may be customised on top. */
+export type Role = RoleId;
 
 export interface UserRecord {
   username: string;
   /** PROTOTYPE ONLY: plain text on purpose (no encryption requested). Replace with a real backend before any real use. */
   password: string;
+  firstName: string; lastName: string; email: string;
   role: Role;
-  name: string;      // display name
-  title: string;     // role title shown under the name
-  avatar: string;    // image url
+  /** Permissions added to / removed from the role's preset for this one user. */
+  custom?: Custom;
+  /** Shown under the avatar; defaults to the role's name. */
+  title: string;
+  /** A picture chosen when the user was added (a small data URL). The starting users have theirs in `users.ts`. */
+  avatar?: string;
 }
-/** What the rest of the app may see: never the password. */
-export type PublicUser = Omit<UserRecord, 'password'>;
+/** What the rest of the app may see: never the password. `name` is first + last name, `avatar` the picture (none for users without one: the UI shows initials). */
+export type PublicUser = Omit<UserRecord, 'password'> & { name: string };

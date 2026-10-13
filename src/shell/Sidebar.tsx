@@ -4,6 +4,7 @@ import { Badge } from '@/components/base/badges/badges';
 import { Tooltip } from '@/components/base/tooltip/tooltip';
 import type { PublicUser } from '@/features/auth/types';
 import logo from '@/ui/icons/ati-logo.svg'; import chev from '@/ui/icons/chevron-down.svg';
+import { HeaderSwitcher, type SwitcherItem } from './HeaderSwitcher';
 import { UserMenu } from './UserMenu';
 import type { NavGroup, NavItem, NavModel } from './types';
 
@@ -32,11 +33,11 @@ function Group({ g }: { g: NavGroup }) {
 }
 
 interface Props {
-  title: string; useNavModel: () => NavModel; user: PublicUser; onLogout: () => void;
+  title: string; switcher: { items: SwitcherItem[]; value: string | null; onChange(id: string): void }; useNavModel: () => NavModel; user: PublicUser; onLogout: () => void;
   open: boolean; onClose: () => void; collapsed: boolean; onToggle: () => void;
 }
 /** Data-driven sidebar: the page supplies groups/items (`useNavModel`), the shell supplies chrome, collapse and the account menu. */
-export function Sidebar({ title, useNavModel, user, onLogout, open, onClose, collapsed, onToggle }: Props) {
+export function Sidebar({ title, switcher, useNavModel, user, onLogout, open, onClose, collapsed, onToggle }: Props) {
   const { groups, footerItems } = useNavModel();
   return (
     <CollapsedCtx.Provider value={collapsed}><SelectCtx.Provider value={onClose}>
@@ -44,7 +45,7 @@ export function Sidebar({ title, useNavModel, user, onLogout, open, onClose, col
         <button className="sb-close" aria-label="Close menu" onClick={onClose}>×</button>
         <div className="sb-ws"><div className="sb-logo"><span className="mark"><img src={logo} alt="" /></span><span className="t">Flow</span></div><span className="sb-ver">v4.0</span>
           <button className="sb-collapse" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!collapsed} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={onToggle}>{collapsed ? '›' : '‹'}</button></div>
-        <div className="sb-head">{title}</div>
+        <HeaderSwitcher title={title} {...switcher} />
         {groups.map((g) => <Group key={g.id} g={g} />)}
         <div className="sb-spacer" />
         <div className="sb-foot">

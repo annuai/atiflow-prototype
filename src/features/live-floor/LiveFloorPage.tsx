@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { store, useApp } from '@/core/store';
 import { Engine } from '@/engine/Engine';
+import { loadRobotModels } from '@/engine/robotMesh';
 import { AppShell } from '@/shell/AppShell';
 import { handle } from '@/ui/engineHandle';
 import { CameraModes, ZoomControl, FleetList, RobotPanel, StationPanel, MapLegend } from '@/ui/Panels';
@@ -23,12 +24,12 @@ export function LiveFloorPage() {
   const fleets = useApp((s) => s.fleets), fleetId = useApp((s) => s.fleetId), mode = useApp((s) => s.cameraMode), site = useApp((s) => s.site), zoneId = useApp((s) => s.activeZoneId), q = useApp((s) => s.query);
   useEffect(() => {
     let dead = false; const eng = new Engine(holder.current!); handle.engine = eng; eng.onView = setView;
-    const release = feed.acquire(); const off = feed.onBatch((b) => eng.updateRobots(b));
-    feed.ready().then(({ site: s, nav: n }) => {
-      if (dead) return; eng.load(s, n); setReady(true); eng.updateRobots(Object.values(store.getState().robots));     // robots already on the floor (coming from the Dashboard) show at once
+    const offReset = feed.onReset(() => eng.clearRobots()); const release = feed.acquire(); let live = false; const off = feed.onBatch((b) => { if (live) eng.updateRobots(b); });
+    Promise.all([feed.ready(), loadRobotModels()]).then(([{ site: s, nav: n }]) => {
+      if (dead) return; live = true; eng.load(s, n); setReady(true); eng.updateRobots(Object.values(store.getState().robots));     // robots already on the floor (coming from the Dashboard) show at once
       const target = (routeState as { locate?: string } | null)?.locate; if (target) locateTarget(target);
     });
-    return () => { dead = true; off(); release(); eng.dispose(); handle.engine = null;
+    return () => { dead = true; off(); offReset(); release(); eng.dispose(); handle.engine = null;
       store.setState({ selectedId: null, selectedStationId: null, activeZoneId: null, cameraMode: 'orbit', navSel: 'live', fleetId: 'all', query: '' }); };   // clean slate for the next visit
   }, []);
   useEffect(() => { handle.engine?.applyFilter(fleetId, q); }, [fleetId, q]);

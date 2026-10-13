@@ -1,6 +1,7 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { authenticate, findUser } from './authService';
+import { userDirectory } from './userDirectory';
 import type { PublicUser } from './types';
 
 const KEY = 'atiflow.session';
@@ -31,3 +32,9 @@ export const authStore = createStore<AuthState>((set) => ({
   logout() { persist(null, false); set({ user: null }); },
 }));
 export const useAuth = <T,>(sel: (s: AuthState) => T) => useStore(authStore, sel);
+
+/** The signed-in user follows the directory: when a configurator changes their role or access (here or in another tab) it applies at once, and a deleted user is signed out. */
+userDirectory.subscribe(() => {
+  const cur = authStore.getState().user; if (!cur) return; const fresh = findUser(cur.username);
+  if (!fresh) authStore.getState().logout(); else if (JSON.stringify(fresh) !== JSON.stringify(cur)) authStore.setState({ user: fresh });
+});

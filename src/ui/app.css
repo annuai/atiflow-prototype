@@ -15,6 +15,8 @@ img { display: block; }
 .sb-logo { display: flex; align-items: center; gap: 4px; font-size: 20px; font-weight: 600; color: var(--sb-accent); line-height: 19.5px; }
 .sb-logo .mark { width: 32px; height: 32px; position: relative; } .sb-logo img { position: absolute; left: 6.25%; right: 6.25%; top: 25%; bottom: 25%; width: 87.5%; height: 50%; }
 .sb-ver { background: rgba(94,234,212,.12); color: var(--sb-accent); font-size: 11px; font-weight: 500; line-height: 16px; padding: 1px 6px; border-radius: var(--r-sm); }
+.sb-switch { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; text-align: left; }
+.sb-switch:hover { background: rgba(255,255,255,.1); }
 .sb-head { background: rgba(255,255,255,.06); border: 1px solid var(--border-secondary); border-radius: var(--r-lg); padding: 8px 12px; font-weight: 700; color: var(--sb-text); }
 .sb-group { display: flex; flex-direction: column; gap: 2px; padding-bottom: 6px; }
 .sb-label { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px 4px; font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 500; color: var(--sb-label); }

@@ -5,6 +5,7 @@ import { toScene, fromScene } from '../core/coords';
 import type { CameraMode, LayerKey, NavGraph, RobotTelemetry, SiteLayout, Zone } from '../core/types';
 import { CollisionWorld } from './walk';
 import { labelSprite, dotSprite } from './labels';
+import type { RobotTypeId } from '../data/robotTypes';
 import { ROBOT_MODELS, DEFAULT_MODEL, buildTrolley, robotPlanTexture } from './robotMesh';
 import { RulesLayer, SHARED_COLOR } from './rulesLayer';
 import { STATE_COLOR, STATE_PULSE } from './stateStyle';
@@ -158,7 +159,7 @@ export class Engine {
   // ---------------------------------------------------------------- robots
   private ensure(t: RobotTelemetry): RobotVis {
     let r = this.robots.get(t.id); if (r) return r;
-    const def = ROBOT_MODELS[t.model] ?? ROBOT_MODELS[DEFAULT_MODEL]; const { group, light } = def.build();
+    const def = ROBOT_MODELS[t.model as RobotTypeId] ?? ROBOT_MODELS[DEFAULT_MODEL]; const { group, light } = def.build();
     const inner = new THREE.Group(); inner.add(group); inner.scale.setScalar(ROBOT_SCALE);
     const root = new THREE.Group(); root.add(inner); root.userData.robotId = t.id;
     group.traverse((o) => { o.userData.robotId = t.id; });
@@ -175,6 +176,8 @@ export class Engine {
     r = { group: root, light, dot, halo, ring, glyph, glyphMat, bodyMat, inner, tgt: { x: t.pose.x, y: t.pose.y, th: t.pose.theta }, v: 0, lightMat: light.material as THREE.MeshBasicMaterial, from: { x: t.pose.x, y: t.pose.y, th: t.pose.theta }, tArr: performance.now(), dt: 100, trolley: null, trolleyKey: '', trFrom: null, trTgt: null };
     const [x, , z] = toScene(t.pose.x, t.pose.y); root.position.set(x, 0, z); root.rotation.y = t.pose.theta; this.robots.set(t.id, r); return r;
   }
+  /** Drops every robot (the feed restarted with a different set of robots; the next batch draws the new ones). */
+  clearRobots() { this.robots.forEach((r) => { this.robotRoot.remove(r.group); if (r.trolley) this.robotRoot.remove(r.trolley); }); this.robots.clear(); this.layerGroups.robots.length = 0; }
   /** A trolley is its 3D model in the 3D views and a flat rectangle in the plan view. */
   private showTrolleyAs(g: THREE.Group) { g.children.forEach((c) => { c.visible = c.userData.flat ? this.plan : !this.plan; }); }
   /** The look of the plan view: flat light (no sun, no shadows, no fog), outlines on walls and machines, robots as flat symbols. */

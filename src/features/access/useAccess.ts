@@ -1,0 +1,11 @@
+import { authStore, useAuth } from '@/features/auth/authStore';
+import { canManageUsers, can, type PermissionId } from '.';
+
+/** What the signed-in user may do, for components (re-renders when their role or access changes). Imported directly (not from the index) because it reads the auth store. */
+export function useAccess() {
+  const user = useAuth((s) => s.user);
+  return { user, can: (perm: PermissionId) => !!user && can(user, perm), canManageUsers: !!user && canManageUsers(user) };
+}
+/** The same for code outside React (search hits, event handlers). */
+export const canNow = (perm: PermissionId) => { const u = authStore.getState().user; return !!u && can(u, perm); };
+export const canManageUsersNow = () => { const u = authStore.getState().user; return !!u && canManageUsers(u); };

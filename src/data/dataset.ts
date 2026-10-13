@@ -28,7 +28,8 @@ export interface DatasetState extends DatasetData {
 const COLORS = ['#14b8a6', '#f59e0b', '#6366f1', '#ec4899', '#22c55e', '#0ea5e9', '#a855f7'];
 const seed = (): DatasetData => structuredClone(seedJson) as DatasetData;
 const isDataset = (v: unknown): v is DatasetData => { const d = v as DatasetData; return !!d && d.version === 1 && Array.isArray(d.fleets) && Array.isArray(d.robot) && Array.isArray(d.hardware); };
-export const datasetDoc = createDocument<DatasetData>(localBackend('atiflow.dataset.v1'), seed, isDataset);
+const KEY = 'atiflow.dataset.v1';
+export const datasetDoc = createDocument<DatasetData>(localBackend(KEY), seed, isDataset);
 
 const nameOf = (d: Device) => String(d.values.name ?? '');
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'fleet';
@@ -56,5 +57,9 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 datasetStore.subscribe((s, p) => {
   if (s.fleets === p.fleets && s.robot === p.robot && s.hardware === p.hardware) return;
   clearTimeout(timer); timer = setTimeout(() => datasetDoc.save({ version: 1, fleets: s.fleets, robot: s.robot, hardware: s.hardware }), 250);
+});
+// another tab (e.g. a configurator editing robots while a supervisor watches the floor) saved the dataset: take it over, so every window shows the same robots
+if (typeof window !== 'undefined') window.addEventListener('storage', (e) => {
+  if (e.key !== KEY || !e.newValue) return; const r = datasetDoc.parse(e.newValue); if ('value' in r) datasetStore.setState({ ...r.value });
 });
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __dataset: datasetStore, __datasetDoc: datasetDoc });   // dev-only: inspect / export / import from the console

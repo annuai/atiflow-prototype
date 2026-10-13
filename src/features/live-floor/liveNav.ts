@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BarChartSquare02 } from '@untitledui/icons';
+import { BarChartSquare02, File05 } from '@untitledui/icons';
 import { store, useApp } from '@/core/store';
 import { handle } from '@/ui/engineHandle';
 import master from '@/ui/icons/master-data.svg'; import fleetI from '@/ui/icons/fleet.svg'; 
@@ -7,11 +7,12 @@ import bell from '@/ui/icons/bell.svg'; import gear from '@/ui/icons/settings.sv
 import { notify } from '@/ui/toast';
 import { useUnreadCount } from '@/features/notifications/NotificationsProvider';
 import { useFleetDirectory } from '@/data/fleetDirectory';
+import { canNow, useAccess } from '@/features/access/useAccess';
 import type { NavModel, SearchHit } from '@/shell/types';
 
 const soon = (name: string) => () => notify.info(`${name} isn't part of this prototype`, 'The supervisor view covers the Live Floor.', 'soon');
 
-export const DASHBOARD_PATH = '/supervisor/dashboard', DASHBOARD_NEW_PATH = '/supervisor/dashboard-new', LIVE_FLOOR_PATH = '/supervisor/livefloor';
+export const DASHBOARD_PATH = '/supervisor/dashboard', DASHBOARD_NEW_PATH = '/supervisor/dashboard-new', LIVE_FLOOR_PATH = '/supervisor/livefloor', REPORTS_PATH = '/supervisor/reports';
 
 /** Sidebar content of the supervisor area: Dashboard and Live Floor are pages (the URL decides which one is highlighted); the fleet items filter the Live Floor. */
 export function useLiveNav(): NavModel {
@@ -19,23 +20,28 @@ export function useLiveNav(): NavModel {
   const navigate = useNavigate(); const path = useLocation().pathname; const onLive = path === LIVE_FLOOR_PATH;
   const st = store.getState(); const unread = useUnreadCount();
   const pick = (sel: string, fleet: string) => () => { st.setNav(sel); st.setFleet(fleet); if (!onLive) navigate(LIVE_FLOOR_PATH); };
+  const { can } = useAccess();                                  // the sidebar only offers what the user may open
+  const live = can('supervisor.live-floor'), dash = can('supervisor.dashboard');
+  const groups = [
+    { id: 'ops', label: 'Operations', items: [
+      dash && { id: 'dashboard', label: 'Dashboard', icon: BarChartSquare02, active: path === DASHBOARD_PATH, onSelect: () => navigate(DASHBOARD_PATH) },
+      dash && { id: 'dashboard-new', label: 'Dashboard (new)', icon: BarChartSquare02, active: path === DASHBOARD_NEW_PATH, onSelect: () => navigate(DASHBOARD_NEW_PATH) },
+      can('supervisor.reports') && { id: 'reports', label: 'Reports', icon: File05, active: path === REPORTS_PATH, onSelect: () => navigate(REPORTS_PATH) },
+      live && { id: 'live', label: 'Live Floor', icon: master, active: onLive && navSel === 'live', onSelect: pick('live', 'all') },
+    ] },
+    ...(live ? [{ id: 'fleets', label: 'Fleets', items: [
+      { id: 'all', label: 'All fleets', icon: fleetI, active: onLive && navSel === 'fleet:all', onSelect: pick('fleet:all', 'all') },
+      ...fleets.map((f) => ({ id: f.id, label: f.name, icon: fleetI, active: onLive && navSel === 'fleet:' + f.id, onSelect: pick('fleet:' + f.id, f.id) })),
+    ] }] : []),
+  ].map((g) => ({ ...g, items: g.items.filter(Boolean) as NavModel['groups'][number]['items'] })).filter((g) => g.items.length);
   return {
-    groups: [
-      { id: 'ops', label: 'Operations', items: [
-        { id: 'dashboard', label: 'Dashboard', icon: BarChartSquare02, active: path === DASHBOARD_PATH, onSelect: () => navigate(DASHBOARD_PATH) },
-        { id: 'dashboard-new', label: 'Dashboard (new)', icon: BarChartSquare02, active: path === DASHBOARD_NEW_PATH, onSelect: () => navigate(DASHBOARD_NEW_PATH) },
-        { id: 'live', label: 'Live Floor', icon: master, active: onLive && navSel === 'live', onSelect: pick('live', 'all') },
-      ] },
-      { id: 'fleets', label: 'Fleets', items: [
-        { id: 'all', label: 'All fleets', icon: fleetI, active: onLive && navSel === 'fleet:all', onSelect: pick('fleet:all', 'all') },
-        ...fleets.map((f) => ({ id: f.id, label: f.name, icon: fleetI, active: onLive && navSel === 'fleet:' + f.id, onSelect: pick('fleet:' + f.id, f.id) })),
-      ] },
-    ],
+    groups,
     footerItems: [{ id: 'notif', label: 'Notifications', icon: bell, badge: unread || undefined, active: path === '/supervisor/notifications', onSelect: () => navigate('/supervisor/notifications') }, { id: 'settings', label: 'Settings', icon: gear, onSelect: soon('Settings') }],
   };
 }
 
 export function liveHits(q: string): SearchHit[] {
+  if (!canNow('supervisor.live-floor')) return [];                // robots, trips, zones and stations are Live Floor content
   const ql = q.toLowerCase(); const { robots, site, nav } = store.getState();
   return [
     ...Object.values(robots).filter((r) => r.id.toLowerCase().includes(ql)).slice(0, 5).map((r) => ({ kind: 'Robot', title: r.id, sub: r.state, ...(handle.engine ? { go: () => handle.engine?.focusRobot(r.id) } : { to: LIVE_FLOOR_PATH, state: { locate: r.id } }) })),

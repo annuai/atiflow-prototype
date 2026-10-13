@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { authenticate, findUser } from '../src/features/auth/authService';
-import { USERS } from '../src/features/auth/users';
+import { AVATARS, SEED_USERS } from '../src/features/auth/users';
 
 describe('auth service (prototype directory)', () => {
   it.each([['arjun', 'supervisor'], ['kavin', 'configurator'], ['meera', 'configurator']])('%s signs in with 1234 as %s', (u, role) => {
@@ -11,6 +11,6 @@ describe('auth service (prototype directory)', () => {
   });
   it('rejects unknown users', () => { expect(authenticate('nobody', '1234')).toBeNull(); expect(findUser('nobody')).toBeNull(); });
   it('every user has an avatar, a name and a unique username', () => {
-    expect(new Set(USERS.map((u) => u.username)).size).toBe(USERS.length); for (const u of USERS) { expect(u.avatar).toBeTruthy(); expect(u.name).toBeTruthy(); }
+    expect(new Set(SEED_USERS.map((u) => u.username)).size).toBe(SEED_USERS.length); for (const u of SEED_USERS) { expect(AVATARS[u.username]).toBeTruthy(); expect(findUser(u.username)?.name).toBeTruthy(); expect(u.email).toMatch(/@/); }
   });
 });

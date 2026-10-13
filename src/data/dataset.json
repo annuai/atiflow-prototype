@@ -20,7 +20,7 @@
       "values": {
         "name": "AMR-001",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0844",
         "apiKey": "sk-amr001-f8a3b2c1d4e5",
         "addons": [
@@ -38,7 +38,7 @@
       "values": {
         "name": "AMR-002",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0845",
         "apiKey": "sk-amr002-f8a3b2c1d4e5",
         "addons": [
@@ -56,7 +56,7 @@
       "values": {
         "name": "AMR-003",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0846",
         "apiKey": "sk-amr003-f8a3b2c1d4e5",
         "addons": [
@@ -74,7 +74,7 @@
       "values": {
         "name": "AMR-004",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0847",
         "apiKey": "sk-amr004-f8a3b2c1d4e5",
         "addons": [
@@ -92,13 +92,10 @@
       "values": {
         "name": "AMR-005",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 3T",
+        "sherpaType": "Pallet Mover",
         "hardwareId": "HW-2024-AMR-0848",
         "apiKey": "sk-amr005-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": [],
         "ip": "192.168.1.48",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -110,7 +107,7 @@
       "values": {
         "name": "AMR-006",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0849",
         "apiKey": "sk-amr006-f8a3b2c1d4e5",
         "addons": [
@@ -128,7 +125,7 @@
       "values": {
         "name": "AMR-007",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0850",
         "apiKey": "sk-amr007-f8a3b2c1d4e5",
         "addons": [
@@ -146,7 +143,7 @@
       "values": {
         "name": "AMR-008",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0851",
         "apiKey": "sk-amr008-f8a3b2c1d4e5",
         "addons": [
@@ -164,7 +161,7 @@
       "values": {
         "name": "AMR-009",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0852",
         "apiKey": "sk-amr009-f8a3b2c1d4e5",
         "addons": [
@@ -182,13 +179,10 @@
       "values": {
         "name": "AMR-010",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 3T",
+        "sherpaType": "Pallet Mover",
         "hardwareId": "HW-2024-AMR-0853",
         "apiKey": "sk-amr010-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": [],
         "ip": "192.168.1.53",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -200,7 +194,7 @@
       "values": {
         "name": "AMR-011",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0854",
         "apiKey": "sk-amr011-f8a3b2c1d4e5",
         "addons": [
@@ -218,7 +212,7 @@
       "values": {
         "name": "AMR-012",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0855",
         "apiKey": "sk-amr012-f8a3b2c1d4e5",
         "addons": [
@@ -236,7 +230,7 @@
       "values": {
         "name": "AMR-013",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0856",
         "apiKey": "sk-amr013-f8a3b2c1d4e5",
         "addons": [
@@ -254,7 +248,7 @@
       "values": {
         "name": "AMR-014",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0857",
         "apiKey": "sk-amr014-f8a3b2c1d4e5",
         "addons": [
@@ -272,7 +266,7 @@
       "values": {
         "name": "AMR-015",
         "manufacturer": "Ati Robotics",
-        "sherpaType": "Tug 1.5T",
+        "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0858",
         "apiKey": "sk-amr015-f8a3b2c1d4e5",
         "addons": [
@@ -283,6 +277,66 @@
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
         "fleet": ""
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-016",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Pallet Mover",
+        "hardwareId": "HW-2024-AMR-0859",
+        "apiKey": "sk-amr016-f8a3b2c1d4e5",
+        "addons": [],
+        "ip": "192.168.1.59",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-017",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Pallet Mover",
+        "hardwareId": "HW-2024-AMR-0860",
+        "apiKey": "sk-amr017-f8a3b2c1d4e5",
+        "addons": [],
+        "ip": "192.168.1.60",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Line Side Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-018",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Pallet Mover",
+        "hardwareId": "HW-2024-AMR-0861",
+        "apiKey": "sk-amr018-f8a3b2c1d4e5",
+        "addons": [],
+        "ip": "192.168.1.61",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Assembly Fleet"
+      }
+    },
+    {
+      "status": "online",
+      "values": {
+        "name": "AMR-019",
+        "manufacturer": "Ati Robotics",
+        "sherpaType": "Pallet Mover",
+        "hardwareId": "HW-2024-AMR-0862",
+        "apiKey": "sk-amr019-f8a3b2c1d4e5",
+        "addons": [],
+        "ip": "192.168.1.62",
+        "firmware": "v3.2.1",
+        "lastCalibration": "Sep 15, 2026",
+        "fleet": "Assembly Fleet"
       }
     }
   ],

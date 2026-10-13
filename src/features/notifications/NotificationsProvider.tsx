@@ -11,8 +11,8 @@ const Context = createContext<NotificationStore | null>(null);
  * keeps them up to date, remembers what was read and exposes it all through the hooks below. Anything inside it (the page, the sidebar badge, a bell somewhere else) reads the same data.
  */
 export function NotificationsProvider({ api, children }: { api: NotificationApi; children: ReactNode }) {
-  const store = useMemo(() => createNotificationStore(api), [api]); const user = useAuth((s) => s.user); const username = user?.username ?? null; const role = user?.role ?? null;
-  useEffect(() => { store.getState().open(user); return () => store.getState().open(null); }, [store, username, role]);       // eslint-disable-line react-hooks/exhaustive-deps
+  const store = useMemo(() => createNotificationStore(api), [api]); const user = useAuth((s) => s.user); const username = user?.username ?? null; const access = user ? `${user.role}|${JSON.stringify(user.custom ?? null)}` : null;
+  useEffect(() => { store.getState().open(user); return () => store.getState().open(null); }, [store, username, access]);       // eslint-disable-line react-hooks/exhaustive-deps
   return <Context.Provider value={store}>{children}</Context.Provider>;
 }
 
