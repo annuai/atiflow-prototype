@@ -13,6 +13,7 @@ import { nameOf } from '@/features/devices/model/validate';
 import { fleetPath } from '@/features/fleets/paths';
 import { builderNodeHits } from '@/features/workflow-builder/builderNav';
 import { datasetStore } from '@/data/dataset';
+import { useUnreadCount } from '@/features/notifications/NotificationsProvider';
 import { useFleetNames, wfStore } from '@/features/workflow-builder/model/store';
 
 export const WORKFLOWS_PATH = '/configurator';          // "Workflows": opens a new workflow; /configurator/workflows/<id> shows one
@@ -34,7 +35,7 @@ function NewFleet() {
 
 /** Sidebar shared by every configurator page. The highlighted item follows the URL, so each page only has to be a route. */
 export function useConfiguratorNav(): NavModel {
-  const names = useFleetNames();
+  const names = useFleetNames(); const unread = useUnreadCount();
   const { pathname } = useLocation(); const navigate = useNavigate();
   const onWorkflows = pathname === WORKFLOWS_PATH || pathname.startsWith(`${WORKFLOWS_PATH}/workflows/`); const at = (route: string) => pathname.startsWith(`${WORKFLOWS_PATH}/${route}`);
   return {
@@ -47,7 +48,7 @@ export function useConfiguratorNav(): NavModel {
       { id: 'build', label: 'Build', items: [{ id: 'md', label: 'Master Data', icon: masterI, active: at('master-data'), onSelect: () => navigate(`${WORKFLOWS_PATH}/master-data`) }, { id: 'wf', label: 'Workflows', icon: workflowsI, active: onWorkflows, onSelect: () => navigate(WORKFLOWS_PATH) }] },
       { id: 'fleets', label: 'Fleets', items: names.map((n) => ({ id: n, label: n, icon: fleetI, active: pathname.startsWith(fleetPath(n, '')), onSelect: () => navigate(fleetPath(n)) })), extra: <NewFleet /> },
     ],
-    footerItems: [{ id: 'notif', label: 'Notifications', icon: bellI, onSelect: soon('Notifications') }, { id: 'settings', label: 'Settings', icon: gearI, onSelect: soon('Settings') }],
+    footerItems: [{ id: 'notif', label: 'Notifications', icon: bellI, badge: unread || undefined, active: pathname === '/configurator/notifications', onSelect: () => navigate('/configurator/notifications') }, { id: 'settings', label: 'Settings', icon: gearI, onSelect: soon('Settings') }],
   };
 }
 

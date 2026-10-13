@@ -95,22 +95,23 @@ export class RulesLayer {
     this.stations.forEach((s, id) => { const st = this.nav.stations.find((q) => q.id === id)!; s.group.visible = fleetId === 'all' || st.fleets.includes(fleetId) || id === this.selected; });
   }
 
-  tick(time: number, camera: THREE.Camera) {
+  /** `lens` = how much further away the camera is than in the 3D view (the plan view uses a narrow lens), so the same sizes and fade distances apply. */
+  tick(time: number, camera: THREE.Camera, lens = 1) {
     this.tz.forEach((o, id) => {
       const st = this.traffic[id]; const occ = st?.occupants.length ?? 0, wait = st?.waiting.length ?? 0; const over = !!st?.over;
       const mat = o.fill.material as THREE.MeshBasicMaterial, em = o.edge.material as THREE.LineBasicMaterial; const pulse = 0.5 + 0.5 * Math.sin(time * 6);
       const color = over ? '#d946ef' : wait ? '#ef4444' : occ ? '#f97316' : '#f59e0b'; mat.color.set(color); em.color.set(color);
       mat.opacity = over ? 0.6 : wait ? 0.35 + 0.2 * pulse : occ ? 0.38 : 0.14;
-      const d = camera.position.distanceTo(o.center); o.label.sprite.visible = occ > 0 || wait > 0 || d < 75;
+      const d = camera.position.distanceTo(o.center) / lens; o.label.sprite.visible = occ > 0 || wait > 0 || d < 75;
       const cap = st?.zone.capacity ?? 1; o.label.set(wait ? `${id} · ${occ}/${cap} · ${wait} waiting` : occ ? `${id} · ${occ}/${cap} occupied` : `${id} · free`, over ? 'rgba(162,28,175,.92)' : wait ? 'rgba(185,28,28,.92)' : occ ? 'rgba(194,65,12,.92)' : 'rgba(15,27,36,.82)');
       const k = THREE.MathUtils.clamp(d * 0.022, 2.4, 9); o.label.sprite.scale.set(k * 1.45, (k * 1.45) / o.label.sprite.userData.aspect, 1);
     });
     this.stations.forEach((s, id) => {
-      const d = camera.position.distanceTo(s.pos); const sel = id === this.selected; const k = THREE.MathUtils.clamp(d * 0.009, 0.55, 2.2);
+      const d = camera.position.distanceTo(s.pos) / lens; const sel = id === this.selected; const k = THREE.MathUtils.clamp(d * 0.009, 0.55, 2.2);
       s.label.visible = sel || d < 130; s.label.scale.set(k * 1.7 * s.label.userData.aspect * 0.5, k * 0.85, 1);
       s.ring.scale.setScalar(sel ? 1.25 + 0.15 * Math.sin(time * 4) : 1); if (sel) s.halo.scale.setScalar(1 + 0.1 * Math.sin(time * 4));
     });
-    this.fzLabels.forEach((l) => { l.visible = camera.position.distanceTo(l.position) < 140; });
+    this.fzLabels.forEach((l) => { l.visible = camera.position.distanceTo(l.position) / lens < 140; });
   }
   pick(ray: THREE.Raycaster): string | null { const h = ray.intersectObjects(this.hits.filter((m) => m.parent?.visible), false)[0]; return h ? (h.object.userData.stationId as string) : null; }
 }

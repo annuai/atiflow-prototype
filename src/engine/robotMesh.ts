@@ -121,3 +121,25 @@ export function buildTrolley(kind: string, qty = 3): THREE.Group {
   }
   trolleyCache.set(key, g); return g.clone();
 }
+
+/**
+ * The robot as seen from above, drawn once on a canvas (the plan / 2D view): Ati yellow body, black bumper skirt, dark roof plate, lidar mast with orange beacon,
+ * red e-stop and the black front panel with its green lights, like the 3D model. The front points to +x (right) and fills the whole canvas.
+ */
+let planTexture: THREE.CanvasTexture | null = null;
+export function robotPlanTexture(): THREE.CanvasTexture {
+  if (planTexture) return planTexture;
+  const W = 512, H = 362; const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d')!;
+  const rr = (x: number, y: number, w: number, h: number, r: number, fill: string) => { g.beginPath(); g.roundRect(x, y, w, h, r); g.fillStyle = fill; g.fill(); };
+  const dot = (x: number, y: number, r: number, fill: string) => { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fillStyle = fill; g.fill(); };
+  rr(0, 0, W, H, 34, '#17181a');                                   // bumper skirt
+  rr(16, 16, W - 32, H - 32, 26, '#fcd900');                       // yellow body
+  rr(W * 0.05 + 10, H * 0.2, W * 0.44, H * 0.6, 18, '#2a2c2f');    // dark roof plate (rear)
+  rr(W * 0.58, H * 0.14, W * 0.16, H * 0.72, 12, '#e6c400');       // roof ridge towards the nose
+  rr(W * 0.8, H * 0.2, W * 0.15, H * 0.6, 14, '#17181a');          // front panel
+  dot(W * 0.875, H * 0.36, 11, '#34d058'); dot(W * 0.875, H * 0.64, 11, '#34d058');   // its lights
+  dot(W * 0.27, H * 0.5, 26, '#111214'); dot(W * 0.27, H * 0.5, 15, '#ff8a1f');       // lidar mast with the orange beacon
+  dot(W * 0.12, H * 0.28, 11, '#e11d2e');                           // e-stop
+  for (let i = 0; i < 3; i++) rr(W * 0.56 + i * 14, H * 0.9 - 6, 8, 12, 3, '#9a8300');   // vent slits on the side
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return (planTexture = t);
+}

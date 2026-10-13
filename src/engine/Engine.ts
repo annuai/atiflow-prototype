@@ -5,7 +5,7 @@ import { toScene, fromScene } from '../core/coords';
 import type { CameraMode, LayerKey, NavGraph, RobotTelemetry, SiteLayout, Zone } from '../core/types';
 import { CollisionWorld } from './walk';
 import { labelSprite, dotSprite } from './labels';
-import { ROBOT_MODELS, DEFAULT_MODEL, buildTrolley } from './robotMesh';
+import { ROBOT_MODELS, DEFAULT_MODEL, buildTrolley, robotPlanTexture } from './robotMesh';
 import { RulesLayer, SHARED_COLOR } from './rulesLayer';
 import { STATE_COLOR, STATE_PULSE } from './stateStyle';
 
@@ -13,11 +13,14 @@ const KIND_COLOR: Record<string, number> = { 'smt-machine': 0x7e9a94, equipment:
 const MUTED = 0xcfd5d3;
 const ROBOT_SCALE = 1;   // true size: the simulator keeps robots 1 m apart in neighbouring lanes, so anything larger would visibly overlap
 const EYE = 1.7;
-const dist400 = (cam: THREE.Camera, o: THREE.Object3D) => cam.position.distanceTo(o.position) < 400;
+/** Plan (2D) view = the same scene seen with a very narrow field of view from far away: no perspective, so the plan is to scale everywhere. `kOf` is how many times further away the camera sits than in the 3D view for the same picture. */
+const FOV_3D = 42, FOV_PLAN = 5;
+const kOf = (fov: number) => Math.tan(THREE.MathUtils.degToRad(FOV_3D / 2)) / Math.tan(THREE.MathUtils.degToRad(fov / 2));
 
 interface RobotVis { group: THREE.Group; light: THREE.Mesh; dot: THREE.Sprite; halo: THREE.Mesh; ring: THREE.Mesh; tgt: { x: number; y: number; th: number }; v: number; t?: RobotTelemetry; lightMat: THREE.MeshBasicMaterial;
   /** Smooth playback between telemetry ticks: from the pose shown when the tick arrived to the new pose, finished when the next tick is due. */
   from: { x: number; y: number; th: number }; tArr: number; dt: number;
+  glyph: THREE.Group; glyphMat: THREE.MeshBasicMaterial; bodyMat: THREE.MeshBasicMaterial; inner: THREE.Group;
   trolley: THREE.Group | null; trolleyKey: string; trFrom: { x: number; y: number; th: number } | null; trTgt: { x: number; y: number; th: number } | null }
 const lerpAngle = (a: number, b: number, k: number) => a + (((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * k;
 
@@ -33,6 +36,7 @@ export class Engine {
   private hoverZone: string | null = null; private ray = new THREE.Raycaster(); private ptr = new THREE.Vector2();
   private fly: { t: number; dur: number; p0: THREE.Vector3; p1: THREE.Vector3; t0: THREE.Vector3; t1: THREE.Vector3 } | null = null;
   private mode: CameraMode = 'orbit'; private keys = new Set<string>(); private walk = { x: 0, y: 0, yaw: 0, pitch: 0 };
+  private hemi!: THREE.HemisphereLight; private planLines: THREE.LineSegments | null = null; private plan = false; private fovAnim: { f0: number; f1: number; F0: number; F1: number } | null = null;
   private sun!: THREE.DirectionalLight; private unsub: (() => void)[] = []; private homePos = new THREE.Vector3(); private homeTarget = new THREE.Vector3();
   private lastView = 0; onView: (v: { x: number; y: number; yaw: number; dist: number; zoomPct: number }) => void = () => {};
   private downAt = { x: 0, y: 0 }; private ptrType = 'mouse';
@@ -52,7 +56,7 @@ export class Engine {
       mouseButtons: { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.PAN },
       touches: { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN } });   // touch: 1 finger orbits, 2 fingers pinch-zoom + pan (twist rotates, see onTouchGesture)   // like DCC tools: MMB-drag pans, LMB orbits, wheel zooms
     this.scene.background = new THREE.Color(0xe6ebe9); this.scene.fog = new THREE.Fog(0xe6ebe9, 500, 1500);
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x8ea39c, 2.1));
+    this.hemi = new THREE.HemisphereLight(0xffffff, 0x8ea39c, 2.1); this.scene.add(this.hemi);
     this.sun = new THREE.DirectionalLight(0xffffff, 2.2); this.sun.castShadow = true; this.sun.shadow.mapSize.set(this.coarse ? 1024 : 2048, this.coarse ? 1024 : 2048);
     Object.assign(this.sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, near: 1, far: 400 }); this.sun.shadow.bias = -0.0004;
     this.scene.add(this.sun, this.sun.target, this.robotRoot);
@@ -82,6 +86,12 @@ export class Engine {
     if (import.meta.env.DEV) Object.assign(window, { __engine: this, __store: store }); // dev-only debug handles
     this.loop();
   }
+
+  /** How much further away the camera is than in the 3D view (1 in 3D, about 8 in the plan view). Every distance that decides what is shown (labels, dots) is divided by it. */
+  private get k() { return kOf(this.camera.fov); }
+  /** The `k` the view will have when the lens change in progress is over: distances for camera moves are worked out with it. */
+  private get kTarget() { return kOf(this.fovAnim ? this.fovAnim.f1 : this.camera.fov); }
+  private dist(p: THREE.Vector3) { return this.camera.position.distanceTo(p) / this.k; }
 
   // ---------------------------------------------------------------- scene
   load(site: SiteLayout, nav: NavGraph) {
@@ -120,6 +130,11 @@ export class Engine {
       eq.setColorAt(i, col.set(KIND_COLOR[e.kind] ?? 0x9aa9a5));
     });
     eq.castShadow = eq.receiveShadow = true; this.scene.add(eq); this.layerGroups.equipment.push(eq);
+    // outlines of walls and machines, drawn only in the plan view (flat drawings need crisp edges, shading does not exist there)
+    const lines: number[] = []; const edge = (a: [number, number], b: [number, number], z: number) => { lines.push(...toScene(a[0], a[1], z), ...toScene(b[0], b[1], z)); };
+    const box = (cx: number, cy: number, w: number, d: number, th: number, z: number) => { const c = Math.cos(th), sn = Math.sin(th); const P = ([[-w, -d], [w, -d], [w, d], [-w, d]] as [number, number][]).map(([x, y]): [number, number] => [cx + (x * c - y * sn) / 2, cy + (x * sn + y * c) / 2]); for (let i = 0; i < 4; i++) edge(P[i], P[(i + 1) % 4], z); };
+    site.equipment.forEach((e) => box(e.x, e.y, e.w, e.d, 0, e.h + 0.04)); site.walls.forEach((w) => { const th = Math.max(w.t, 0.14); box((w.a[0] + w.b[0]) / 2, (w.a[1] + w.b[1]) / 2, Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) + th, th, Math.atan2(w.b[1] - w.a[1], w.b[0] - w.a[0]), w.h + 0.04); });
+    this.planLines = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(lines, 3)), new THREE.LineBasicMaterial({ color: 0x3d4a46, transparent: true, opacity: 0.75 })); this.planLines.visible = this.plan; this.planLines.frustumCulled = false; this.scene.add(this.planLines);
 
     // zones
     for (const z of site.zones) {
@@ -150,9 +165,24 @@ export class Engine {
     const halo = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.07, 10, 48), new THREE.MeshBasicMaterial({ color: 0x14b8a6, transparent: true, opacity: 0.9, depthWrite: false })); halo.rotation.x = Math.PI / 2; halo.position.y = 0.1; halo.visible = false;
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.07, 10, 48), new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.8, depthWrite: false })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.1; ring.visible = false;
     const dot = dotSprite('#14b8a6'); dot.position.y = 2.4; dot.renderOrder = 10; dot.userData.robotId = t.id;
-    root.add(halo, ring, dot); this.robotRoot.add(root); this.layerGroups.robots.push(root);
-    r = { group: root, light, dot, halo, ring, tgt: { x: t.pose.x, y: t.pose.y, th: t.pose.theta }, v: 0, lightMat: light.material as THREE.MeshBasicMaterial, from: { x: t.pose.x, y: t.pose.y, th: t.pose.theta }, tArr: performance.now(), dt: 100, trolley: null, trolleyKey: '', trFrom: null, trTgt: null };
+    // top view for the plan view: the same yellow robot with its black details, plus a small LED in the state colour at the tail
+    const [fw, fd] = def.footprint; const glyph = new THREE.Group(); glyph.position.y = 0.4; glyph.visible = this.plan; const glyphMat = new THREE.MeshBasicMaterial({ color: STATE_COLOR.idle, transparent: true, depthTest: false });
+    const bodyMat = new THREE.MeshBasicMaterial({ map: robotPlanTexture(), transparent: true, depthTest: false });
+    const flat = new THREE.Mesh(new THREE.PlaneGeometry(fw, fd), bodyMat); flat.rotation.x = -Math.PI / 2; flat.renderOrder = 20;
+    const led = new THREE.Mesh(new THREE.CircleGeometry(0.075, 20), glyphMat); led.rotation.x = -Math.PI / 2; led.position.set(-fw * 0.38, 0.01, 0); led.renderOrder = 21;
+    glyph.add(flat, led); glyph.traverse((o) => { o.userData.robotId = t.id; });
+    root.add(halo, ring, dot, glyph); this.robotRoot.add(root); this.layerGroups.robots.push(root);
+    r = { group: root, light, dot, halo, ring, glyph, glyphMat, bodyMat, inner, tgt: { x: t.pose.x, y: t.pose.y, th: t.pose.theta }, v: 0, lightMat: light.material as THREE.MeshBasicMaterial, from: { x: t.pose.x, y: t.pose.y, th: t.pose.theta }, tArr: performance.now(), dt: 100, trolley: null, trolleyKey: '', trFrom: null, trTgt: null };
     const [x, , z] = toScene(t.pose.x, t.pose.y); root.position.set(x, 0, z); root.rotation.y = t.pose.theta; this.robots.set(t.id, r); return r;
+  }
+  /** A trolley is its 3D model in the 3D views and a flat rectangle in the plan view. */
+  private showTrolleyAs(g: THREE.Group) { g.children.forEach((c) => { c.visible = c.userData.flat ? this.plan : !this.plan; }); }
+  /** The look of the plan view: flat light (no sun, no shadows, no fog), outlines on walls and machines, robots as flat symbols. */
+  private setPlanLook(on: boolean) {
+    if (this.plan === on) return; this.plan = on;
+    this.sun.intensity = on ? 0 : 2.2; this.sun.castShadow = !on; this.hemi.intensity = on ? 3.1 : 2.1; this.scene.fog = on ? null : new THREE.Fog(0xe6ebe9, 500, 1500);
+    if (this.planLines) this.planLines.visible = on;
+    this.robots.forEach((r) => { r.inner.visible = !on; r.glyph.visible = on; if (r.trolley) this.showTrolleyAs(r.trolley); });
   }
   /** Pose currently drawn for a robot (playback between the last two telemetry ticks). */
   private shown(r: RobotVis, now = performance.now()) { const k = Math.min(1, Math.max(0, (now - r.tArr) / r.dt)); return { x: r.from.x + (r.tgt.x - r.from.x) * k, y: r.from.y + (r.tgt.y - r.from.y) * k, th: lerpAngle(r.from.th, r.tgt.th, k) }; }
@@ -162,7 +192,9 @@ export class Engine {
     if (key !== r.trolleyKey) {
       if (r.trolley) { this.robotRoot.remove(r.trolley); r.trolley = null; }
       r.trolleyKey = key;
-      if (key) { const g = buildTrolley(t.payload!.kind, t.payload!.qty); g.userData.robotId = t.id; g.traverse((o) => { o.userData.robotId = t.id; }); this.robotRoot.add(g); r.trolley = g; r.trFrom = null; }
+      if (key) { const g = buildTrolley(t.payload!.kind, t.payload!.qty); g.userData.robotId = t.id; g.traverse((o) => { o.userData.robotId = t.id; }); const flatT = new THREE.Group(); flatT.userData.flat = true; flatT.position.y = 0.38; flatT.visible = false;
+        const tm = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.7), new THREE.MeshBasicMaterial({ color: 0xd9dedb })); tm.rotation.x = -Math.PI / 2; flatT.add(tm, new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([[-0.55, -0.35], [0.55, -0.35], [0.55, 0.35], [-0.55, 0.35]].map(([x, z]) => new THREE.Vector3(x, 0.01, z))), new THREE.LineBasicMaterial({ color: 0x1f2937 }))); flatT.traverse((o) => { o.userData.robotId = t.id; });
+        g.add(flatT); this.robotRoot.add(g); r.trolley = g; r.trFrom = null; this.showTrolleyAs(g); }
     }
     if (t.trailer) { r.trFrom = r.trTgt ? { ...r.trTgt } : { x: t.trailer.x, y: t.trailer.y, th: t.trailer.theta }; r.trTgt = { x: t.trailer.x, y: t.trailer.y, th: t.trailer.theta }; } else { r.trFrom = r.trTgt = null; }
   }
@@ -207,11 +239,15 @@ export class Engine {
   private setMode(m: CameraMode) {
     const prev = this.mode; this.mode = m;
     if (prev === 'walk' && m !== 'walk') { this.touchMove = { f: 0, s: 0 }; this.lookPrev.clear(); if (document.pointerLockElement) document.exitPointerLock(); this.syncTargetFromCamera(); }
+    this.setPlanLook(m === 'top');
+    // the plan view is the same scene seen through a very narrow lens: the lens change is animated together with the camera flight so the picture stays the same size
+    const wantFov = m === 'top' ? FOV_PLAN : FOV_3D; this.fovAnim = null;
+    if (this.camera.fov !== wantFov) { if (m === 'top' || (m === 'orbit' && prev === 'top')) this.fovAnim = (() => { const F = this.camera.position.distanceTo(this.controls.target) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)); return { f0: this.camera.fov, f1: wantFov, F0: F, F1: F }; })(); else { this.camera.fov = wantFov; this.camera.updateProjectionMatrix(); } }
     const c = this.controls; c.enabled = m === 'orbit' || m === 'top';
     c.maxPolarAngle = m === 'top' ? 0.0001 : Math.PI / 2.05; c.minPolarAngle = m === 'top' ? 0 : 0.05;
-    if (m === 'top') { const t = c.target.clone(); this.flyTo(new THREE.Vector3(t.x, Math.max(this.camera.position.distanceTo(t), 60), t.z + 0.001), t); }
+    if (m === 'top') { const t = c.target.clone(); this.flyTo(new THREE.Vector3(t.x, Math.max(this.dist(t), 60) * this.kTarget, t.z + 0.001), t); }
     if (m === 'walk') this.enterWalk();
-    if (m === 'orbit' && prev === 'top') { const t = c.target.clone(); const d = this.camera.position.distanceTo(t); this.flyTo(new THREE.Vector3(t.x - d * 0.3, d * 0.8, t.z + d * 0.55), t); }
+    if (m === 'orbit' && prev === 'top') { const t = c.target.clone(); const d = this.dist(t); this.flyTo(new THREE.Vector3(t.x - d * 0.3, d * 0.8, t.z + d * 0.55), t); }
   }
   /** Walk mode moves the camera directly, so the orbit target is stale. Re-aim it along the current view direction so leaving walk mode keeps the picture exactly as it was. */
   private syncTargetFromCamera() {
@@ -233,19 +269,19 @@ export class Engine {
   private onLock = () => { if (!document.pointerLockElement && this.mode === 'walk') store.getState().setCameraMode('orbit'); };
   private onLook = (e: MouseEvent) => { if (this.mode !== 'walk' || !document.pointerLockElement) return; this.walk.yaw -= e.movementX * 0.0022; this.walk.pitch = Math.max(-1.2, Math.min(1.2, this.walk.pitch - e.movementY * 0.0022)); this.applyWalkLook(); };
   private onKey = (e: KeyboardEvent) => { if ((e.target as HTMLElement)?.tagName === 'INPUT') return; e.type === 'keydown' ? this.keys.add(e.code) : this.keys.delete(e.code); if (e.code === 'Escape' && this.mode === 'follow') store.getState().setCameraMode('orbit'); };
-  flyTo(pos: THREE.Vector3, target: THREE.Vector3, dur = 1) { this.fly = { t: 0, dur, p0: this.camera.position.clone(), p1: pos, t0: this.controls.target.clone(), t1: target }; }
+  flyTo(pos: THREE.Vector3, target: THREE.Vector3, dur = 1) { if (this.fovAnim) this.fovAnim.F1 = (pos.distanceTo(target) / this.kTarget) * Math.tan(THREE.MathUtils.degToRad(FOV_3D / 2)); this.fly = { t: 0, dur, p0: this.camera.position.clone(), p1: pos, t0: this.controls.target.clone(), t1: target }; }
   home() { store.getState().setZone(null); store.getState().select(null); store.getState().setCameraMode('orbit'); this.flyTo(this.homePos.clone(), this.homeTarget.clone()); }
   zoomBy(f: number) { const o = this.camera.position.clone().sub(this.controls.target).multiplyScalar(f); const L = THREE.MathUtils.clamp(o.length(), this.controls.minDistance, this.controls.maxDistance); this.camera.position.copy(this.controls.target).add(o.setLength(L)); }
   focusZone(id: string) {
     const z = this.site.zones.find((q) => q.id === id); if (!z) return; store.getState().setZone(id); if (this.mode === 'walk' || this.mode === 'follow') store.getState().setCameraMode('orbit');
     const cx = (z.polygon[0][0] + z.polygon[2][0]) / 2, cy = (z.polygon[0][1] + z.polygon[2][1]) / 2, w = z.polygon[2][0] - z.polygon[0][0], d = z.polygon[2][1] - z.polygon[0][1];
     const dist = Math.max(w, d) * 1.5; const tgt = new THREE.Vector3(...toScene(cx, cy, 0));
-    this.flyTo(this.mode === 'top' ? new THREE.Vector3(tgt.x, dist * 1.1, tgt.z + 0.001) : new THREE.Vector3(tgt.x - dist * 0.3, dist * 0.85, tgt.z + dist * 0.65), tgt);
+    this.flyTo(this.mode === 'top' ? new THREE.Vector3(tgt.x, dist * 1.1 * this.kTarget, tgt.z + 0.001) : new THREE.Vector3(tgt.x - dist * 0.3, dist * 0.85, tgt.z + dist * 0.65), tgt);
   }
-  flyToSite(x: number, y: number) { const t = new THREE.Vector3(...toScene(x, y, 0)); const d = Math.max(30, this.camera.position.distanceTo(this.controls.target) * 0.6); this.flyTo(new THREE.Vector3(t.x - d * 0.3, d * 0.8, t.z + d * 0.55), t); }
+  flyToSite(x: number, y: number) { const t = new THREE.Vector3(...toScene(x, y, 0)); const d = Math.max(30, this.dist(this.controls.target) * 0.6); this.flyTo(this.mode === 'top' ? new THREE.Vector3(t.x, d * this.kTarget, t.z + 0.001) : new THREE.Vector3(t.x - d * 0.3, d * 0.8, t.z + d * 0.55), t); }
   focusStation(id: string) {
     const p = this.rules.stationPos.get(id); if (!p) return; const d = 16;
-    this.flyTo(this.mode === 'top' ? new THREE.Vector3(p.x, 30, p.z + 0.001) : new THREE.Vector3(p.x - d * 0.4, d * 0.9, p.z + d * 0.8), p.clone(), 0.9);
+    this.flyTo(this.mode === 'top' ? new THREE.Vector3(p.x, 30 * this.kTarget, p.z + 0.001) : new THREE.Vector3(p.x - d * 0.4, d * 0.9, p.z + d * 0.8), p.clone(), 0.9);
   }
   private updateIncoming() {
     const id = store.getState().selectedStationId; const sp = id ? this.rules.stationPos.get(id) : null; if (!id || !sp) { this.incoming.visible = false; return; }
@@ -254,7 +290,7 @@ export class Engine {
   }
   focusRobot(id: string) {
     const r = this.robots.get(id); if (!r) return; store.getState().select(id);
-    const p = r.group.position.clone(); this.flyTo(new THREE.Vector3(p.x - 14, 16, p.z + 14), p, 0.9);
+    const p = r.group.position.clone(); this.flyTo(this.mode === 'top' ? new THREE.Vector3(p.x, 22 * this.kTarget, p.z + 0.001) : new THREE.Vector3(p.x - 14, 16, p.z + 14), p, 0.9);
   }
 
   // ---------------------------------------------------------------- input
@@ -332,21 +368,22 @@ export class Engine {
       const g = r.group; const now = performance.now(); const p = this.shown(r, now); const [px, , pz] = toScene(p.x, p.y); g.position.set(px, 0, pz); g.rotation.y = p.th;
       if (r.trolley && r.trTgt) {
         const f = r.trFrom ?? r.trTgt; const k = Math.min(1, Math.max(0, (now - r.tArr) / r.dt)); const [qx, , qz] = toScene(f.x + (r.trTgt.x - f.x) * k, f.y + (r.trTgt.y - f.y) * k);
-        r.trolley.position.set(qx, 0, qz); r.trolley.rotation.y = lerpAngle(f.th, r.trTgt.th, k); r.trolley.visible = g.visible && dist400(this.camera, r.trolley);
+        r.trolley.position.set(qx, 0, qz); r.trolley.rotation.y = lerpAngle(f.th, r.trTgt.th, k); r.trolley.visible = g.visible && this.dist(r.trolley.position) < 400;
       }
       const st = r.t?.state ?? 'idle'; const pu = STATE_PULSE[st]; const s = pu ? 0.5 + 0.5 * Math.sin(time * pu * 6) : 0;
       r.ring.visible = st === 'blocked' || st === 'error' || !!r.t?.alerts?.some((a) => a.severity === 'critical'); if (r.ring.visible) { (r.ring.material as THREE.MeshBasicMaterial).opacity = 0.3 + 0.55 * s; r.ring.scale.setScalar(1 + 0.12 * s); }
       if (r.halo.visible) { (r.halo.material as THREE.MeshBasicMaterial).opacity = 0.55 + 0.35 * (0.5 + 0.5 * Math.sin(time * 3.2)); r.halo.scale.setScalar(1 + 0.1 * (0.5 + 0.5 * Math.sin(time * 3.2))); }
-      const dist = this.camera.position.distanceTo(g.position); const ds = THREE.MathUtils.clamp(dist * 0.014, 1.1, 9); r.dot.scale.set(ds, ds, 1); r.dot.position.y = ds * 0.55 + 1.2; r.dot.visible = dist > 25;
-      r.group.children[0].visible = dist < 400; r.lightMat.opacity = st === 'offline' ? 0.4 : 1; r.lightMat.transparent = true;
+      const dist = this.dist(g.position); const ds = THREE.MathUtils.clamp(dist * 0.014, 1.1, 9); r.dot.scale.set(ds, ds, 1); r.dot.position.y = ds * 0.55 + 1.2; r.dot.visible = dist > 25 && !this.plan;
+      r.group.children[0].visible = !this.plan && dist < 400; if (this.plan) { r.glyphMat.color.set(STATE_COLOR[st]); r.glyphMat.opacity = r.bodyMat.opacity = st === 'offline' ? 0.45 : 1; } r.lightMat.opacity = st === 'offline' ? 0.4 : 1; r.lightMat.transparent = true;
     });
     this.updateSelectedPath();
     // labels: zone labels fade when close, station labels when far
-    const cd = this.camera.position.distanceTo(this.controls.target);
+    const cd = this.dist(this.controls.target);
     this.zoneLabels.forEach((l) => { l.material.opacity = THREE.MathUtils.clamp((cd - 110) / 60, 0, 1); });
-    this.rules?.tick(time, this.camera); this.updateIncoming();
+    this.rules?.tick(time, this.camera, this.k); this.updateIncoming();
     // fly
     if (this.fly) { this.fly.t += dt / this.fly.dur; const k = this.fly.t >= 1 ? 1 : 1 - Math.pow(1 - this.fly.t, 3); this.camera.position.lerpVectors(this.fly.p0, this.fly.p1, k); this.controls.target.lerpVectors(this.fly.t0, this.fly.t1, k); if (this.fly.t >= 1) this.fly = null; }
+    this.stepLens();
     if (this.mode === 'walk') this.stepWalk(dt);
     else if (this.mode === 'follow') this.stepFollow(dt);
     else {
@@ -361,6 +398,15 @@ export class Engine {
     if (time - this.lastView > 0.15) { this.lastView = time; const p = this.mode === 'walk' ? this.camera.position : this.controls.target; const f = fromScene(this.camera.position.x, 0, this.camera.position.z); const v = fromScene(p.x, 0, p.z); const dir = new THREE.Vector3(); this.camera.getWorldDirection(dir);
       this.onView({ x: this.mode === 'walk' ? f.x : v.x, y: this.mode === 'walk' ? f.y : v.y, yaw: Math.atan2(-dir.z, dir.x), dist: cd, zoomPct: this.mode === 'walk' ? 100 : Math.round((100 * 120) / Math.max(cd, 1)) }); }
   };
+  /** Lens change between the 3D and the plan view: the camera sits at the distance that keeps the same picture size, so the view zooms out of perspective instead of jumping. */
+  private stepLens() {
+    const a = this.fovAnim; if (a) {
+      const done = !this.fly; const t = done ? 1 : Math.min(1, this.fly!.t); const k = 1 - Math.pow(1 - t, 3); const fov = a.f0 + (a.f1 - a.f0) * k;
+      const dir = this.camera.position.clone().sub(this.controls.target); if (dir.lengthSq() < 1e-9) dir.set(0, 1, 0); dir.normalize();
+      const F = a.F0 + (a.F1 - a.F0) * k; this.camera.fov = fov; this.camera.position.copy(this.controls.target).addScaledVector(dir, F / Math.tan(THREE.MathUtils.degToRad(fov / 2))); if (done) this.fovAnim = null;
+    }
+    const k = this.k; const c = this.controls; c.minDistance = 6 * k; c.maxDistance = 700 * k; this.camera.near = 0.3 * k; this.camera.far = 3000 * k; this.camera.updateProjectionMatrix();
+  }
   private stepWalk(dt: number) {
     const mag = Math.hypot(this.touchMove.f, this.touchMove.s); const sp = (this.keys.has('ShiftLeft') || this.keys.has('ShiftRight') || mag > 0.9 ? 6 : 2.6) * dt; const fw = Math.max(-1, Math.min(1, (this.keys.has('KeyW') || this.keys.has('ArrowUp') ? 1 : 0) - (this.keys.has('KeyS') || this.keys.has('ArrowDown') ? 1 : 0) + this.touchMove.f));
     const st = Math.max(-1, Math.min(1, (this.keys.has('KeyD') ? 1 : 0) - (this.keys.has('KeyA') ? 1 : 0) + this.touchMove.s)); this.walk.yaw -= ((this.keys.has('ArrowRight') ? 1 : 0) - (this.keys.has('ArrowLeft') ? 1 : 0)) * dt * 1.6;

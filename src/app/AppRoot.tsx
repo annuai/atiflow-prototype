@@ -13,6 +13,9 @@ import { KINDS } from '@/features/devices/model/kinds';
 import { MasterDataPage } from '@/features/master-data/MasterDataPage';
 import { WorkflowBuilderPage } from '@/features/workflow-builder/WorkflowBuilderPage';
 import { wfStore } from '@/features/workflow-builder/model/store';
+import { notificationApi } from '@/features/notifications';
+import { NotificationsProvider } from '@/features/notifications/NotificationsProvider';
+import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { AppToaster } from '@/ui/toast';
 import { RequireRole } from './guards';
 import { landingFor, rememberPage } from './lastPage';
@@ -40,6 +43,7 @@ function RootRedirect() { const user = useAuth((s) => s.user); return <Navigate 
 export function AppRoot() {
   return (
     <BrowserRouter>
+     <NotificationsProvider api={notificationApi}>
       <AppToaster />
       <PageMemory />
       <Routes>
@@ -47,6 +51,7 @@ export function AppRoot() {
         <Route path="/supervisor" element={<RequireRole role="supervisor"><RootRedirect /></RequireRole>} />
         <Route path="/supervisor/dashboard" element={<RequireRole role="supervisor"><DashboardPage /></RequireRole>} />
         <Route path="/supervisor/dashboard-new" element={<RequireRole role="supervisor"><DashboardNewPage /></RequireRole>} />
+        <Route path="/supervisor/notifications" element={<RequireRole role="supervisor"><NotificationsPage /></RequireRole>} />
         <Route path="/supervisor/livefloor" element={<RequireRole role="supervisor"><LiveFloorPage /></RequireRole>} />
         <Route path="/configurator" element={<RequireRole role="configurator"><NewWorkflow /></RequireRole>} />
         <Route path="/configurator/workflows/:id" element={<RequireRole role="configurator"><WorkflowBuilderPage /></RequireRole>} />
@@ -58,9 +63,11 @@ export function AppRoot() {
         ))}
         <Route path="/configurator/master-data/:tab?" element={<RequireRole role="configurator"><MasterDataPage /></RequireRole>} />
         <Route path="/configurator/fleets/:name/:tab?" element={<RequireRole role="configurator"><FleetPage /></RequireRole>} />
+        <Route path="/configurator/notifications" element={<RequireRole role="configurator"><NotificationsPage /></RequireRole>} />
         <Route path="/configurator/maps" element={<RequireRole role="configurator"><MapsPage /></RequireRole>} />
         <Route path="*" element={<RootRedirect />} />
       </Routes>
+     </NotificationsProvider>
     </BrowserRouter>
   );
 }

@@ -5,6 +5,7 @@ import { handle } from '@/ui/engineHandle';
 import master from '@/ui/icons/master-data.svg'; import fleetI from '@/ui/icons/fleet.svg'; 
 import bell from '@/ui/icons/bell.svg'; import gear from '@/ui/icons/settings.svg';
 import { notify } from '@/ui/toast';
+import { useUnreadCount } from '@/features/notifications/NotificationsProvider';
 import { useFleetDirectory } from '@/data/fleetDirectory';
 import type { NavModel, SearchHit } from '@/shell/types';
 
@@ -16,7 +17,7 @@ export const DASHBOARD_PATH = '/supervisor/dashboard', DASHBOARD_NEW_PATH = '/su
 export function useLiveNav(): NavModel {
   const fleets = useFleetDirectory().map((f) => ({ id: f.liveId ?? f.id, name: f.name })), navSel = useApp((s) => s.navSel), events = useApp((s) => s.events);
   const navigate = useNavigate(); const path = useLocation().pathname; const onLive = path === LIVE_FLOOR_PATH;
-  const st = store.getState(); const alerts = events.filter((e) => e.level !== 'info').length;
+  const st = store.getState(); const unread = useUnreadCount();
   const pick = (sel: string, fleet: string) => () => { st.setNav(sel); st.setFleet(fleet); if (!onLive) navigate(LIVE_FLOOR_PATH); };
   return {
     groups: [
@@ -30,7 +31,7 @@ export function useLiveNav(): NavModel {
         ...fleets.map((f) => ({ id: f.id, label: f.name, icon: fleetI, active: onLive && navSel === 'fleet:' + f.id, onSelect: pick('fleet:' + f.id, f.id) })),
       ] },
     ],
-    footerItems: [{ id: 'notif', label: 'Notifications', icon: bell, badge: alerts, onSelect: soon('Notifications') }, { id: 'settings', label: 'Settings', icon: gear, onSelect: soon('Settings') }],
+    footerItems: [{ id: 'notif', label: 'Notifications', icon: bell, badge: unread || undefined, active: path === '/supervisor/notifications', onSelect: () => navigate('/supervisor/notifications') }, { id: 'settings', label: 'Settings', icon: gear, onSelect: soon('Settings') }],
   };
 }
 
