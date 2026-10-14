@@ -1,12 +1,15 @@
-import type { ReactNode } from 'react';
-import type { Selection } from 'react-aria-components';
+import { useMemo, useState, type ReactNode } from 'react';
+import type { Selection, SortDescriptor } from 'react-aria-components';
 import { Table } from '@/components/application/table/table';
 import { cx } from '@/utils/cx';
+import { sortRows } from './sortRows';
 
 export interface Column<T> {
   id: string; header: string; cell(row: T): ReactNode;
   /** Tooltip on a help icon next to the heading. */
   hint?: string;
+  /** What to sort this column by. Give it and the heading becomes a sort button (click: ascending, again: descending); leave it out for columns that cannot be sorted (menus). */
+  sort?(row: T): string | number | null | undefined;
   /** Classes for the cell / the heading (width, alignment...). */
   className?: string; headClassName?: string;
 }
@@ -31,8 +34,11 @@ interface Props<T> {
 /**
  * Generic list table (Untitled UI Table): striped rows, optional row action, optional checkbox selection with locked rows.
  * Each row is a `group`, so cells can reveal controls on row hover with `opacity-0 group-hover:opacity-100`.
+ * Every column with a `sort` accessor sorts the rows when its heading is clicked (numbers numerically, text naturally, empty values last).
  */
-export function DataTable<T>({ label, rows, rowKey, columns, onRowAction, selection, stickyHeader, minWidth, plain }: Props<T>) {
+export function DataTable<T>({ label, rows: input, rowKey, columns, onRowAction, selection, stickyHeader, minWidth, plain }: Props<T>) {
+  const [sort, setSort] = useState<SortDescriptor | undefined>();
+  const rows = useMemo(() => sortRows(input, columns, sort?.column ? String(sort.column) : null, sort?.direction === 'descending' ? 'descending' : 'ascending'), [input, columns, sort]);
   const locked = selection?.locked ?? new Set<string>(); const disabled = new Set([...locked, ...(selection?.disabled ?? [])]);
   const selectedKeys = selection ? new Set([...selection.selected, ...locked]) : undefined;
   const onSelectionChange = (keys: Selection) => {
@@ -41,9 +47,9 @@ export function DataTable<T>({ label, rows, rowKey, columns, onRowAction, select
     selection.onChange(new Set(next.filter((k) => !disabled.has(k))));
   };
   return (
-    <Table aria-label={label} size="sm" style={minWidth ? { minWidth } : undefined} {...(selection ? { selectionMode: 'multiple' as const, selectedKeys, onSelectionChange, disabledKeys: disabled } : {})}>
+    <Table aria-label={label} size="sm" style={minWidth ? { minWidth } : undefined} sortDescriptor={sort} onSortChange={setSort} {...(selection ? { selectionMode: 'multiple' as const, selectedKeys, onSelectionChange, disabledKeys: disabled } : {})}>
       <Table.Header className={plain ? 'bg-primary' : undefined}>
-        {columns.map((c, i) => <Table.Head key={c.id} id={c.id} isRowHeader={i === 0} label={c.header} tooltip={c.hint} className={cx(stickyHeader && 'sticky top-0 z-10', (plain ? 'bg-primary' : stickyHeader && 'bg-secondary'), c.headClassName)} />)}
+        {columns.map((c, i) => <Table.Head key={c.id} id={c.id} isRowHeader={i === 0} allowsSorting={!!c.sort} label={c.header} tooltip={c.hint} className={cx(stickyHeader && 'sticky top-0 z-10', (plain ? 'bg-primary' : stickyHeader && 'bg-secondary'), c.headClassName)} />)}
       </Table.Header>
       <Table.Body>
         {rows.map((r) => (

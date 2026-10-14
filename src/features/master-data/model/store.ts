@@ -1,7 +1,7 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { toggleBlocked } from './areas';
-import { assignToFleet, ensureGroup, mergeMaterials, nextGroupId, unassignFromFleet } from './logic';
+import { assignToFleet, ensureGroup, mergeMaterials, unassignFromFleet } from './logic';
 import { seedAreas, seedGroups, seedMaterials } from './seed';
 import type { IncomingMaterial, Material, MaterialGroup, StagingArea } from './types';
 
@@ -16,9 +16,6 @@ export interface MasterDataState {
   /** The fleet was renamed: assigned materials follow it. */
   renameFleet(from: string, to: string): void;
   unassignMaterial(code: string, fleet: string): void;
-  createGroup(name: string, prefix: string): void;
-  updateGroup(id: string, patch: { name: string; prefix: string }): void;
-  deleteGroup(id: string): void;
   toggleCell(areaId: string, row: number, col: number): void;
 }
 
@@ -39,9 +36,6 @@ export const masterDataStore = createStore<MasterDataState>((set, get) => ({
   renameFleet: (from, to) => set({ materials: get().materials.map((m) => (m.fleets.includes(from) ? { ...m, fleets: m.fleets.map((f) => (f === from ? to : f)) } : m)) }),
   assignMaterials: (codes, fleet) => set({ materials: assignToFleet(get().materials, codes, fleet, Date.now()) }),
   unassignMaterial: (code, fleet) => set({ materials: unassignFromFleet(get().materials, code, fleet, Date.now()) }),
-  createGroup: (name, prefix) => set({ groups: [...get().groups, { id: nextGroupId(get().groups), name: name.trim(), prefix: prefix.trim(), updatedAt: Date.now() }] }),
-  updateGroup: (id, p) => set({ groups: get().groups.map((g) => (g.id === id ? { ...g, name: p.name.trim(), prefix: p.prefix.trim(), updatedAt: Date.now() } : g)) }),
-  deleteGroup: (id) => set({ groups: get().groups.filter((g) => g.id !== id) }),
   toggleCell: (areaId, row, col) => set({ areas: get().areas.map((a) => (a.id === areaId ? toggleBlocked(a, row, col) : a)) }),
 }));
 export const useMasterData = <T,>(sel: (s: MasterDataState) => T) => useStore(masterDataStore, sel);

@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'motion/react';
+import { Scrim } from '@/components/motion/Scrim';
 import { workspaceById, workspaceHome, workspaceOfPath, workspacesOf, type WorkspaceId } from '@/features/access';
 import { authStore, useAuth } from '@/features/auth/authStore';
 import { Sidebar } from './Sidebar';
@@ -24,7 +26,7 @@ export function AppShell({ useNavModel, searchPlaceholder, getHits, onAi, childr
     <div className="app">
       <Sidebar title={current ? workspaceById(current).title : 'ATI FLOW'} switcher={{ items, value: current, onChange: switchTo }} useNavModel={useNavModel} user={user} onLogout={logout} open={navOpen} onClose={() => setNavOpen(false)}
         collapsed={collapsed} onToggle={() => setCollapsed((c) => { localStorage.setItem('sb-collapsed', c ? '0' : '1'); return !c; })} />
-      {navOpen && <div className="scrim" onClick={() => setNavOpen(false)} />}
+      <AnimatePresence>{navOpen && <Scrim key="scrim" className="scrim" onClick={() => setNavOpen(false)} />}</AnimatePresence>
       <div className="main">
         <Topbar onMenu={() => setNavOpen(true)} searchPlaceholder={searchPlaceholder} getHits={getHits} onAi={onAi} />
         {children}

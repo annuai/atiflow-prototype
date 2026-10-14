@@ -11,6 +11,8 @@ export interface UserRecord {
   role: Role;
   /** Permissions added to / removed from the role's preset for this one user. */
   custom?: Custom;
+  /** Fleet ids this person sees (supervisors and operators; at least one). Configurators always see every fleet. */
+  fleets?: string[];
   /** Shown under the avatar; defaults to the role's name. */
   title: string;
   /** A picture chosen when the user was added (a small data URL). The starting users have theirs in `users.ts`. */

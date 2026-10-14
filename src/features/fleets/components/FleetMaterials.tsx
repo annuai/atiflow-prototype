@@ -26,8 +26,8 @@ export function FleetMaterials({ fleet, materials, total, onAssign, onGroup, too
     const u = copy.materials.unassigned(m.code, fleet); notify.success(u.title, u.body, 'material-unassigned');
   };
   const columns: Column<Material>[] = [
-    { id: 'material', header: copy.materials.columns.material, cell: (m) => <div className="min-w-0"><p className="truncate text-sm font-medium text-primary">{m.name}</p><p className="text-sm text-tertiary">{m.code}</p></div> },
-    { id: 'stations', header: copy.materials.columns.stations, cell: (m) => { const s = stationsOfMaterial(groups, m.code); return s.length ? <div className="flex flex-wrap gap-1">{s.map((id) => <Badge key={id} size="sm" type="pill-color" color="brand">{id}</Badge>)}</div> : <span className="text-tertiary">{copy.materials.notAssigned}</span>; } },
+    { id: 'material', sort: (m) => m.name, header: copy.materials.columns.material, cell: (m) => <div className="min-w-0"><p className="truncate text-sm font-medium text-primary">{m.name}</p><p className="text-sm text-tertiary">{m.code}</p></div> },
+    { id: 'stations', sort: (m) => stationsOfMaterial(groups, m.code).join(', '), header: copy.materials.columns.stations, cell: (m) => { const s = stationsOfMaterial(groups, m.code); return s.length ? <div className="flex flex-wrap gap-1">{s.map((id) => <Badge key={id} size="sm" type="pill-color" color="brand">{id}</Badge>)}</div> : <span className="text-tertiary">{copy.materials.notAssigned}</span>; } },
     { id: 'menu', header: '', headClassName: 'w-12', className: 'w-12 text-right', cell: (m) => <RowMenu label={copy.materials.rowMenu.label} onAction={() => unassign(m)} items={[{ id: 'unassign', label: copy.materials.rowMenu.unassign, icon: Trash01 }]} /> },
   ];
   return (

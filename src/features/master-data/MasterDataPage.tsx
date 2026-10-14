@@ -1,8 +1,6 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Rows01, Settings02 } from '@untitledui/icons';
 import { Tabs } from '@/components/application/tabs/tabs';
-import { configuratorHits, useConfiguratorNav } from '@/features/configurator/configuratorNav';
-import { AppShell } from '@/shell/AppShell';
 import { copy } from './copy';
 import { MaterialsPanel } from './components/MaterialsPanel';
 import { StagingAreaPanel } from './components/StagingAreaPanel';
@@ -21,7 +19,7 @@ export function MasterDataPage() {
   const { tab = '' } = useParams(); const navigate = useNavigate(); const active = TABS.find((t) => t.id === tab);
   if (!active) return <Navigate to={`${MASTER_DATA_BASE}/${TABS[0].id}`} replace />;
   return (
-    <AppShell useNavModel={useConfiguratorNav} getHits={configuratorHits} searchPlaceholder="Search live operations, fleets, trips, analytics...">
+    <>
       <div className="content">
         <div className="title-block"><div><h1>{copy.title}</h1><p>{copy.tabs[active.id].subtitle}</p></div></div>
         <div className="builder md-card">
@@ -31,6 +29,6 @@ export function MasterDataPage() {
           <div className="md-body"><active.Panel /></div>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

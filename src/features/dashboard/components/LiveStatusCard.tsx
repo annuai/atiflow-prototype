@@ -3,8 +3,8 @@ import { LinkExternal01, Minus, Plus } from '@untitledui/icons';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { Select } from '@/components/base/select/select';
 import type { RobotTelemetry, SiteLayout } from '@/core/types';
-import { MAP_COLORS, mapStateOf, type MapColor } from '../model';
-import { Card, CardHeader } from './Card';
+import { Card, CardTitle } from '@/components/data/Card';
+import { MAP_COLORS, mapStateOf, type MapColor } from '../data/mapState';
 
 const LEGEND: [MapColor, string][] = [['moving', 'Moving'], ['idle', 'Idle'], ['charging', 'Charging'], ['attention', 'Attention']];
 const bbox = (pts: [number, number][]) => { const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]); return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) }; };
@@ -21,17 +21,17 @@ export function LiveStatusCard({ site, robots, onLocate, onOpen, readOnly = fals
       {site.equipment.map((e, i) => <rect key={i} x={e.x - e.w / 2} y={e.y - e.d / 2} width={e.w} height={e.d} fill="#e2e5e9" />)}
       <path d={site.walls.map((w) => `M${w.a[0]} ${w.a[1]}L${w.b[0]} ${w.b[1]}`).join('')} stroke="#9ca3af" strokeWidth={1} vectorEffect="non-scaling-stroke" fill="none" />
     </g>), [site, zones]);
-  if (!site || !base) return <Card className="h-full"><CardHeader title="Live Status" /><div className="grid h-72 place-items-center rounded-xl bg-secondary text-sm text-tertiary">Loading the floor…</div></Card>;
+  if (!site || !base) return <Card className="h-full"><CardTitle title="Live Status" /><div className="grid h-72 place-items-center rounded-xl bg-secondary text-sm text-tertiary">Loading the floor…</div></Card>;
   // The plan is long and narrow, so it is turned a quarter turn to fill the wide card (screen x = plan y, screen y = -plan x).
   const pad = 4, w = (base.maxY - base.minY + pad * 2) / zoom, h = (base.maxX - base.minX + pad * 2) / zoom, cx = (base.minX + base.maxX) / 2, cy = (base.minY + base.maxY) / 2;
   const view = `${cy - w / 2} ${-(cx + h / 2)} ${w} ${h}`;
   const r = Math.max(w, h) / 120 * 1.6;
   return (
     <Card className={readOnly ? 'flex h-full min-h-0 flex-col' : 'h-full'}>
-      <CardHeader title={<span className="flex items-center gap-2">Live Status<span className="text-tertiary">-</span></span>}>
+      <CardTitle title={<span className="flex items-center gap-2">Live Status<span className="text-tertiary">-</span></span>}>
         {!readOnly && <Select size="sm" aria-label="Zone" className="w-44" selectedKey={zone} onSelectionChange={(k) => { setZone(String(k)); setZoom(1); }} items={[{ id: 'all', label: 'Whole floor' }, ...zones.map((z) => ({ id: z.id, label: z.name }))]}>{(item) => <Select.Item {...item} />}</Select>}
         {!readOnly && <ButtonUtility size="sm" color="secondary" icon={LinkExternal01} tooltip="Open Live Floor" aria-label="Open Live Floor" onPress={onOpen} />}
-      </CardHeader>
+      </CardTitle>
       <div className={'relative overflow-hidden rounded-xl border border-secondary bg-secondary' + (readOnly ? ' min-h-0 flex-1' : '')}>
         <svg viewBox={view} className={readOnly ? 'block h-full min-h-0 w-full' : 'block h-72 w-full sm:h-80'} role="img" aria-label="Floor plan with the robots on it" preserveAspectRatio="xMidYMid meet">
           <g transform="matrix(0 -1 1 0 0 0)">

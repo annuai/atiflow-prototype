@@ -8,8 +8,6 @@ import { DataTable, type Column } from '@/components/data/DataTable';
 import { roleById, USERS_PATH } from '@/features/access';
 import { toPublic, useUsers } from '@/features/auth/userDirectory';
 import type { PublicUser } from '@/features/auth/types';
-import { configuratorHits, useConfiguratorNav } from '@/features/configurator/configuratorNav';
-import { AppShell } from '@/shell/AppShell';
 import '@/features/devices/devices.css';
 import { AddUserModal } from './components/AddUserModal';
 import { RoleBadge } from './components/RoleBadge';
@@ -21,14 +19,14 @@ export function UsersPage() {
   const navigate = useNavigate(); const users = useUsers((s) => s.users).map(toPublic); const [adding, setAdding] = useState(false), [searching, setSearching] = useState(false), [q, setQ] = useState('');
   const ql = q.trim().toLowerCase(); const rows = ql ? users.filter((u) => [u.name, u.username, u.email, roleById(u.role).label].some((x) => x.toLowerCase().includes(ql))) : users;
   const columns: Column<PublicUser>[] = [
-    { id: 'name', header: copy.columns.name, cell: (u) => <div className="flex items-center gap-3 whitespace-nowrap"><UserAvatar user={u} /><span className="font-semibold text-primary">{u.name}</span></div> },
-    { id: 'username', header: copy.columns.username, cell: (u) => u.username },
-    { id: 'email', header: copy.columns.email, cell: (u) => u.email },
-    { id: 'role', header: copy.columns.role, cell: (u) => <RoleBadge role={u.role} /> },
+    { id: 'name', sort: (u) => u.name, header: copy.columns.name, cell: (u) => <div className="flex items-center gap-3 whitespace-nowrap"><UserAvatar user={u} /><span className="font-semibold text-primary">{u.name}</span></div> },
+    { id: 'username', sort: (u) => u.username, header: copy.columns.username, cell: (u) => u.username },
+    { id: 'email', sort: (u) => u.email, header: copy.columns.email, cell: (u) => u.email },
+    { id: 'role', sort: (u) => roleById(u.role).label, header: copy.columns.role, cell: (u) => <RoleBadge role={u.role} /> },
     { id: 'go', header: '', className: 'w-10', cell: () => <ChevronRight className="size-5 text-fg-brand-primary" aria-hidden /> },
   ];
   return (
-    <AppShell useNavModel={useConfiguratorNav} getHits={configuratorHits} searchPlaceholder="Search live operations, fleets, trips, analytics...">
+    <>
       <div className="content">
         <div className="title-block"><div><h1>{copy.title}</h1><p>{copy.subtitle}</p></div>
           <div className="actions">
@@ -41,6 +39,6 @@ export function UsersPage() {
         </div>
       </div>
       <AddUserModal isOpen={adding} onOpenChange={setAdding} />
-    </AppShell>
+    </>
   );
 }

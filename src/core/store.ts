@@ -11,9 +11,11 @@ export interface AppState {
   robots: Record<string, RobotTelemetry>; traffic: Record<string, TrafficZoneState>; violations: number;
   events: AppEvent[];
   selectedId: string | null; selectedStationId: string | null; activeZoneId: string | null;
+  /** The big robot window. Closing it only hides the window: the robot stays selected (and followed) and a small window remains to reopen it. */
+  robotPanelOpen: boolean;
   cameraMode: CameraMode; layers: Record<LayerKey, boolean>; query: string; paused: boolean;
   setSite(s: SiteLayout, n: NavGraph): void;
-  ingest(batch: RobotTelemetry[]): void; select(id: string | null): void; selectStation(id: string | null): void; setZone(id: string | null): void;
+  ingest(batch: RobotTelemetry[]): void; select(id: string | null): void; closeRobotPanel(): void; openRobotPanel(): void; selectStation(id: string | null): void; setZone(id: string | null): void;
   setCameraMode(m: CameraMode): void; toggleLayer(k: LayerKey): void; setFleet(id: string | 'all'): void;
   setQuery(q: string): void; setPaused(p: boolean): void; setNav(sel: string): void;
 }
@@ -21,7 +23,7 @@ export interface AppState {
 const activeRuleAlerts = new Set<string>();
 
 export const store = createStore<AppState>((set, get) => ({
-  site: null, nav: null, rules: null, fleets: [], fleetId: 'all', navSel: 'live', robots: {}, traffic: {}, violations: 0, events: [], selectedId: null, selectedStationId: null, activeZoneId: null,
+  site: null, nav: null, rules: null, fleets: [], fleetId: 'all', navSel: 'live', robots: {}, traffic: {}, violations: 0, events: [], selectedId: null, selectedStationId: null, activeZoneId: null, robotPanelOpen: true,
   cameraMode: 'orbit', query: '', paused: false,
   layers: { robots: true, routes: true, stations: true, zones: true, labels: true, equipment: true, alerts: true },
   setSite: (site, nav) => set({ site, nav, rules: new RulesIndex(nav, site), fleets: nav.fleets }),
@@ -39,7 +41,9 @@ export const store = createStore<AppState>((set, get) => ({
     activeRuleAlerts.clear(); nowKeys.forEach((k) => activeRuleAlerts.add(k));
     set({ robots, traffic, violations, events: [...added, ...get().events].slice(0, 40) });
   },
-  select: (selectedId) => set({ selectedId, selectedStationId: selectedId ? null : get().selectedStationId }),
+  select: (selectedId) => set({ selectedId, robotPanelOpen: true, selectedStationId: selectedId ? null : get().selectedStationId }),
+  closeRobotPanel: () => set({ robotPanelOpen: false }),
+  openRobotPanel: () => set({ robotPanelOpen: true }),
   selectStation: (selectedStationId) => set({ selectedStationId, selectedId: selectedStationId ? null : get().selectedId }),
   setZone: (activeZoneId) => set({ activeZoneId }),
   setCameraMode: (cameraMode) => set({ cameraMode }),

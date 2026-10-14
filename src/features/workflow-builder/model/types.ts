@@ -12,8 +12,8 @@ export type ListKey = 'main' | string;
 export type FieldKind = 'select' | 'multi' | 'check' | 'input' | 'cond';
 export interface FieldSpec {
   key: string; label: string | ((n: WfNode) => string); kind?: FieldKind; opts?: string[];
-  /** Options come from outside the registry. `fleetMaterials` = materials assigned to the open fleet in Master Data. */
-  optsFrom?: 'fleetMaterials';
+  /** Options come from outside the registry. `fleetMaterials` = materials assigned to the open fleet in Master Data; `fleetStations` = the work stations of the fleet's map. */
+  optsFrom?: 'fleetMaterials' | 'fleetStations';
   /** Render label and control on one row. */
   row?: boolean;
   /** Overrides applied when the node sits inside a branch (e.g. Station uses S-numbers there). */

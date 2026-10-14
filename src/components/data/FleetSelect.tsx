@@ -1,9 +1,10 @@
 import { Select } from '@/components/base/select/select';
-import { fleetDirectory, useFleetDirectory } from '@/data/fleetDirectory';
+import { fleetDirectory } from '@/data/fleetDirectory';
+import { useVisibleFleets } from '@/features/access/useFleetScope';
 
 export interface FleetOption { id: string; label: string }
 /** Fleets as options. A fleet's id is the id its map uses (`liveId`) when it has one, otherwise its own id. */
-export const useFleetOptions = (): FleetOption[] => useFleetDirectory().map((f) => ({ id: f.liveId ?? f.id, label: f.name }));
+export const useFleetOptions = (): FleetOption[] => useVisibleFleets().map((f) => ({ id: f.liveId ?? f.id, label: f.name }));
 
 /** Dropdown of the site's fleets (names from the shared fleet list), with an optional "All fleets" entry. Reusable on any page that filters by fleet. */
 export function FleetSelect({ value, onChange, includeAll = true, allLabel = 'All fleets', className, size = 'sm', ariaLabel = 'Fleet' }: { value: string; onChange(id: string): void; includeAll?: boolean; allLabel?: string; className?: string; size?: 'sm' | 'md'; ariaLabel?: string }) {

@@ -4,14 +4,14 @@ import { BadgeWithDot } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { StatusStrip } from '@/components/data/StatusStrip';
 import { feed } from '@/features/live-floor/liveFeed';
-import { liveHits, useLiveNav } from '@/features/live-floor/liveNav';
-import { AppShell } from '@/shell/AppShell';
 import { AllKpis } from './components/AllKpis';
 import { RangeBar } from './components/RangeBar';
 import { Scorecard } from './components/Scorecard';
 import { TrendPanel } from './components/TrendPanel';
 import { WhatChanged } from './components/WhatChanged';
 import { copy } from './copy';
+import { useLoadPhase } from '@/components/skeleton/Skeleton';
+import { ReportsSkeleton } from './components/ReportsSkeleton';
 import { reportSource } from './data/source';
 import { useReport } from './data/useReport';
 import { moves, summary } from './model/derive';
@@ -24,11 +24,11 @@ import type { MetricId, RangeSelection } from './model/types';
 export function ReportsPage() {
   const [range, setRange] = useState<RangeSelection>({ preset: 'today' }), [trend, setTrend] = useState<MetricId>('utilisation'), [all, setAll] = useState(false);
   useEffect(() => feed.acquire(), []);                                               // the fleet keeps running (and being measured) while this page is open
-  const { report, loading, error, refresh } = useReport(reportSource, range);
+  const { report, loading, error, refresh } = useReport(reportSource, range); const phase = useLoadPhase(!report && !error);
   const verdict = useMemo(() => (report ? summary(report) : null), [report]), changes = useMemo(() => (report ? moves(report) : []), [report]);
   const origin = report?.origin;
   return (
-    <AppShell useNavModel={useLiveNav} getHits={liveHits} searchPlaceholder="Search robots, stations, zones…">
+    <>
       <div className="content">
         <div className="title-block"><div><h1>{copy.title}</h1><p>{copy.subtitle}</p></div>
           <div className="actions items-center">
@@ -38,7 +38,7 @@ export function ReportsPage() {
         <div className="builder md-card"><div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
           <RangeBar value={range} onChange={setRange} generatedAt={report?.generatedAt ?? null} />
           {error ? <div className="grid h-56 place-items-center text-center"><div><p className="text-sm text-tertiary">{copy.error}</p><Button className="mt-3" size="sm" color="secondary" onPress={refresh}>{copy.retry}</Button></div></div>
-            : !report || !verdict ? <div className="grid h-56 place-items-center text-sm text-tertiary">Loading the report…</div>
+            : !report || !verdict || phase !== 'ready' ? (phase === 'skeleton' ? <ReportsSkeleton /> : null)
             : <div className={loading ? 'flex flex-col gap-5 opacity-60 transition-opacity' : 'flex flex-col gap-5'}>
               <StatusStrip status={verdict} />
               <Scorecard report={report} selected={trend} onPick={setTrend} />
@@ -51,6 +51,6 @@ export function ReportsPage() {
           <p className="text-center text-xs text-tertiary">{copy.sample}</p>
         </div></div>
       </div>
-    </AppShell>
+    </>
   );
 }

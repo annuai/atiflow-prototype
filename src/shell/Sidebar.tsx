@@ -1,4 +1,7 @@
 import { createContext, useContext, useState } from 'react';
+import { LayoutGroup } from 'motion/react';
+import { Pop } from '@/components/motion/Pop';
+import { SlidingHighlight } from '@/components/motion/SlidingHighlight';
 import { Button as AriaButton } from 'react-aria-components';
 import { Badge } from '@/components/base/badges/badges';
 import { Tooltip } from '@/components/base/tooltip/tooltip';
@@ -15,7 +18,8 @@ const Item = ({ item }: { item: NavItem }) => {
   return (
     <Tooltip title={item.label} placement="right" isDisabled={!collapsed}>
       <AriaButton className={'sb-item' + (item.active ? ' active' : '')} onPress={() => { item.onSelect?.(); afterSelect(); }}>
-        <span>{typeof item.icon === 'string' ? <img src={item.icon} alt="" /> : <item.icon className="size-4 shrink-0" />}<span className="t">{item.label}</span></span>{item.badge ? <Badge size="sm" color="brand" className="sb-badge">{item.badge}</Badge> : null}
+        {item.active && <SlidingHighlight id="sb-pill" className="sb-pill" />}
+        <span>{typeof item.icon === 'string' ? <img src={item.icon} alt="" /> : <item.icon className="size-4 shrink-0" />}<span className="t">{item.label}</span></span>{item.badge ? <Pop trigger={item.badge} className="sb-badge-pop"><Badge size="sm" color="brand" className="sb-badge">{item.badge}</Badge></Pop> : null}
       </AriaButton>
     </Tooltip>
   );
@@ -41,7 +45,7 @@ export function Sidebar({ title, switcher, useNavModel, user, onLogout, open, on
   const { groups, footerItems } = useNavModel();
   return (
     <CollapsedCtx.Provider value={collapsed}><SelectCtx.Provider value={onClose}>
-      <aside className={'sidebar' + (open ? ' open' : '') + (collapsed ? ' collapsed' : '')}>
+      <LayoutGroup id="sidebar"><aside className={'sidebar' + (open ? ' open' : '') + (collapsed ? ' collapsed' : '')}>
         <button className="sb-close" aria-label="Close menu" onClick={onClose}>×</button>
         <div className="sb-ws"><div className="sb-logo"><span className="mark"><img src={logo} alt="" /></span><span className="t">Flow</span></div><span className="sb-ver">v4.0</span>
           <button className="sb-collapse" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!collapsed} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={onToggle}>{collapsed ? '›' : '‹'}</button></div>
@@ -52,7 +56,7 @@ export function Sidebar({ title, switcher, useNavModel, user, onLogout, open, on
           {footerItems.map((it) => <Item key={it.id} item={it} />)}
           <UserMenu user={user} onLogout={onLogout} />
         </div>
-      </aside>
+      </aside></LayoutGroup>
     </SelectCtx.Provider></CollapsedCtx.Provider>
   );
 }

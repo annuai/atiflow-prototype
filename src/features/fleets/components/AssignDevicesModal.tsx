@@ -13,9 +13,9 @@ function Body({ kind, fleet, onOpenChange }: { kind: DeviceKind; fleet: string; 
   const free = useDevices((s) => s[kind.id]).filter((d) => !d.values.fleet); const [sel, setSel] = useState<Set<string>>(new Set());
   const t = copy.assignDevices;
   const columns: Column<Device>[] = [
-    { id: 'name', header: t.columns.name, cell: (d) => <div className="flex items-center gap-3 whitespace-nowrap">{kind.thumb(d)}<span className="font-semibold text-primary">{nameOf(d)}</span></div> },
-    { id: 'type', header: t.columns.type, cell: (d) => <Badge size="sm" type="pill-color" color="gray">{kind.typeOf(d)}</Badge> },
-    { id: 'status', header: t.columns.status, cell: (d) => <StatusBadge status={d.status} /> },
+    { id: 'name', sort: (d) => nameOf(d), header: t.columns.name, cell: (d) => <div className="flex items-center gap-3 whitespace-nowrap">{kind.thumb(d)}<span className="font-semibold text-primary">{nameOf(d)}</span></div> },
+    { id: 'type', sort: (d) => kind.typeOf(d), header: t.columns.type, cell: (d) => <Badge size="sm" type="pill-color" color="gray">{kind.typeOf(d)}</Badge> },
+    { id: 'status', sort: (d) => d.status, header: t.columns.status, cell: (d) => <StatusBadge status={d.status} /> },
   ];
   const save = () => { sel.forEach((n) => deviceStore.getState().update(kind.id, n, { fleet })); onOpenChange(false); const d = t.done(sel.size, fleet); notify.success(d.title, d.body, 'devices-assigned'); };
   return (

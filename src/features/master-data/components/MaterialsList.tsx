@@ -13,28 +13,26 @@ import { useMasterData } from '../model/store';
 import type { Material } from '../model/types';
 import { EditMaterialModal } from './EditMaterialModal';
 import { FleetsModal } from './FleetsModal';
-import { SubTabs, type SubTab } from './SubTabs';
 
 const ALL = '';
-interface Props { sub: SubTab; onSub(v: SubTab): void; onAddMore(): void; onAdd(): void }
+interface Props { onAddMore(): void; onAdd(): void }
 
-/** Materials sub-tab: note, search + group filter, table with hover ⋮ menu. Materials cannot be deleted (workflows may use them). */
-export function MaterialsList({ sub, onSub, onAddMore, onAdd }: Props) {
+/** The materials list: note, search + group filter, table with hover ⋮ menu. Materials cannot be deleted (workflows may use them). */
+export function MaterialsList({ onAddMore, onAdd }: Props) {
   const materials = useMasterData((s) => s.materials); const groups = useMasterData((s) => s.groups);
   const [text, setText] = useState(''); const [group, setGroup] = useState(ALL); const [editing, setEditing] = useState<Material | null>(null); const [fleetsOf, setFleetsOf] = useState<Material | null>(null);
   const rows = useMemo(() => filterMaterials(materials, groups, { text, group }), [materials, groups, text, group]);
   const groupName = (id: string) => groups.find((g) => g.id === id)?.name ?? copy.materials.noGroup;
   const columns: Column<Material>[] = [
-    { id: 'material', header: copy.materials.columns.material, cell: (m) => <div className="min-w-0"><p className="truncate text-sm font-medium text-primary">{m.name}</p><p className="text-sm text-tertiary">{m.code}</p></div> },
-    { id: 'group', header: copy.materials.columns.group, hint: copy.materials.groupHint, cell: (m) => groupName(m.group) },
-    { id: 'fleet', header: copy.materials.columns.fleet, hint: copy.materials.fleetHint, cell: (m) => m.fleets.length ? <div className="flex flex-wrap gap-1">{m.fleets.map((f) => <Badge key={f} size="sm" type="pill-color" color="indigo">{f}</Badge>)}</div> : <span className="text-quaternary">{copy.materials.unassigned}</span> },
+    { id: 'material', sort: (m) => m.name, header: copy.materials.columns.material, cell: (m) => <div className="min-w-0"><p className="truncate text-sm font-medium text-primary">{m.name}</p><p className="text-sm text-tertiary">{m.code}</p></div> },
+    { id: 'group', sort: (m) => groupName(m.group), header: copy.materials.columns.group, hint: copy.materials.groupHint, cell: (m) => groupName(m.group) },
+    { id: 'fleet', sort: (m) => m.fleets.join(', '), header: copy.materials.columns.fleet, hint: copy.materials.fleetHint, cell: (m) => m.fleets.length ? <div className="flex flex-wrap gap-1">{m.fleets.map((f) => <Badge key={f} size="sm" type="pill-color" color="indigo">{f}</Badge>)}</div> : <span className="text-quaternary">{copy.materials.unassigned}</span> },
     { id: 'menu', header: '', headClassName: 'w-12', className: 'w-12 text-right', cell: (m) => <RowMenu label={copy.materials.rowMenu.label} onAction={(id) => (id === 'edit' ? setEditing(m) : setFleetsOf(m))}
       items={[{ id: 'edit', label: copy.materials.rowMenu.edit, icon: Edit05 }, { id: 'fleets', label: copy.materials.rowMenu.fleets, icon: Flag01 }]} /> },
   ];
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <SubTabs value={sub} onChange={onSub} />
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <div className="flex gap-3"><Button size="sm" color="secondary" iconLeading={Database01} onPress={onAddMore}>{copy.materials.addMore}</Button><Button size="sm" color="primary" iconLeading={Plus} onPress={onAdd}>{copy.materials.add}</Button></div>
       </div>
       {materials.length === 0 ? (

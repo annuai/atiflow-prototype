@@ -5,8 +5,11 @@ import { MockSimulator } from '@/adapters/mock';
 import { datasetStore } from '@/data/dataset';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { robotRecords, robotsOnFloor } from '@/data/robots';
+import { scopeKey } from '@/features/access';
+import { visibleLiveIds } from '@/features/access/useFleetScope';
+import { authStore } from '@/features/auth/authStore';
 import type { RosterEntry } from '@/adapters/sim';
-import type { NavGraph, RobotTelemetry, SiteLayout, TelemetryAdapter } from '@/core/types';
+import type { FleetEvent, NavGraph, RobotTelemetry, SiteLayout, TelemetryAdapter } from '@/core/types';
 
 export const SITE = (typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('site')) ?? 'ecc';
 
@@ -25,7 +28,7 @@ function load() {
   return (loaded ??= Promise.all([fetch(`/sites/${SITE}/site.json`).then((r) => r.json() as Promise<SiteLayout>), fetch(`/sites/${SITE}/nav.json`).then((r) => r.json() as Promise<NavGraph>)])
     .then(([site, nav]) => {
       nav.fleets = nav.fleets.map((f) => { const r = fleetDirectory.byLiveId(f.id); return r ? { ...f, name: r.name, color: r.color } : f; });      // one name per fleet across the whole app
-      store.getState().setSite(site, nav); return { site, nav };
+      store.getState().setSite(site, nav); syncFleets(); return { site, nav };
     }));
 }
 /** The robots on the floor: the shared dataset's robots that `robotsOnFloor` lets through (assigned to a fleet with a map here, not offline). */
@@ -38,12 +41,29 @@ export function rosterFrom(nav: NavGraph): RosterEntry[] {
 }
 /** Same robots, types and fleets = same signature. */
 export const rosterSignature = (r: RosterEntry[]) => r.map((e) => `${e.id}|${e.model}|${e.fleetId}`).sort().join(',');
+/**
+ * Fleet scope: a supervisor or operator only receives the robots of the fleets they were given (see features/access/fleetScope.ts). The whole app reads the feed
+ * through the store, so filtering here is the one place that hides the other fleets from the Live Floor, Dashboard, Reports, alerts and the Action Center.
+ * (The simulation itself still runs every fleet, because robots of different fleets meet in shared areas.)
+ */
+const scoped = (b: RobotTelemetry[]): RobotTelemetry[] => { const ids = visibleLiveIds(); return ids ? b.filter((r) => ids.has(r.fleetId)) : b; };
+const fleetsOf = (e: FleetEvent): string[] => (e.type === 'deadlock' ? e.fleetIds : [e.fleetId]);
+const scopeNow = () => { const u = authStore.getState().user; return u ? scopeKey(u, datasetStore.getState().fleets.map((f) => f.id)) : ''; };
+let scopeSeen = scopeNow();
+/** The fleet list shown on the Live Floor (legend, fleet list) holds only the visible fleets. */
+function syncFleets() { const nav = store.getState().nav; if (!nav) return; const ids = visibleLiveIds(); store.setState({ fleets: ids ? nav.fleets.filter((f) => ids.has(f.id)) : nav.fleets }); }
+/** A different person or a changed fleet list: drop what the previous scope had collected so nothing from a fleet they no longer see stays on screen. */
+function onScopeChange() {
+  const k = scopeNow(); if (k === scopeSeen) return; scopeSeen = k;
+  store.setState({ robots: {}, traffic: {}, events: [], violations: 0 }); store.getState().setFleet('all'); store.getState().setNav('live'); liveStats.reset(); measurements.reset(); syncFleets(); resetListeners.forEach((cb) => cb());
+}
+authStore.subscribe(onScopeChange); datasetStore.subscribe(onScopeChange);
 async function start() {
   const { site, nav } = await load(); if (adapter || refs === 0) return;
   const roster = rosterFrom(nav); rosterKey = rosterSignature(roster);
   adapter = new MockSimulator(nav, site.siteId, 14, 7, roster);
-  adapter.onEvent?.((e) => measurements.event(e));
-  adapter.onTelemetry((b) => { store.getState().ingest(b); liveStats.ingest(b); measurements.ingest(b); listeners.forEach((cb) => cb(b)); });
+  adapter.onEvent?.((e) => { const ids = visibleLiveIds(); if (!ids || fleetsOf(e).some((f) => ids.has(f))) measurements.event(e); });
+  adapter.onTelemetry((all) => { const b = scoped(all); store.getState().ingest(b); liveStats.ingest(b); measurements.ingest(b); listeners.forEach((cb) => cb(b)); });
   adapter.connect(); if (import.meta.env.DEV) Object.assign(window, { __adapter: adapter, __measurements: measurements });  // dev-only: lets tests inject faults
 }
 /** The shared dataset changed what runs on the floor (a robot added, removed, moved to another fleet or type): restart the simulation with the new roster. */

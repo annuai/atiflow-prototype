@@ -1,28 +1,33 @@
-import { useEffect } from 'react';
+import { lazy, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth/authStore';
 import { LoginPage } from '@/features/auth/LoginPage';
-import { LiveFloorPage } from '@/features/live-floor/LiveFloorPage';
-import { DashboardPage } from '@/features/dashboard/DashboardPage';
-import { DashboardNewPage } from '@/features/dashboard-new/DashboardNewPage';
-import { ReportsPage } from '@/features/reports/ReportsPage';
-import { DeviceDetailPage } from '@/features/devices/DeviceDetailPage';
-import { DeviceListPage } from '@/features/devices/DeviceListPage';
-import { MapsPage } from '@/features/maps/MapsPage';
-import { FleetPage } from '@/features/fleets/FleetPage';
 import { KINDS } from '@/features/devices/model/kinds';
-import { MasterDataPage } from '@/features/master-data/MasterDataPage';
-import { WorkflowBuilderPage } from '@/features/workflow-builder/WorkflowBuilderPage';
 import { wfStore } from '@/features/workflow-builder/model/store';
 import { notificationApi } from '@/features/notifications';
 import { NotificationsProvider } from '@/features/notifications/NotificationsProvider';
-import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { AppToaster } from '@/ui/toast';
-import { UserDetailPage } from '@/features/users/UserDetailPage';
-import { UsersPage } from '@/features/users/UsersPage';
 import { NoAccessPage } from '@/features/access/NoAccessPage';
+import { ShellLayout } from '@/shell/ShellLayout';
 import { RequireAccess } from './guards';
 import { landingFor, rememberPage } from './lastPage';
+
+/** Every page is loaded the first time it is opened (the 3D Live Floor and its libraries only when someone goes there); `PageTransition` shows a skeleton meanwhile. */
+const LiveFloorPage = lazy(() => import('@/features/live-floor/LiveFloorPage').then((m) => ({ default: m.LiveFloorPage })));
+const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const ActionCenterPage = lazy(() => import('@/features/action-center/ActionCenterPage').then((m) => ({ default: m.ActionCenterPage })));
+const ReportsPage = lazy(() => import('@/features/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })));
+const DeviceDetailPage = lazy(() => import('@/features/devices/DeviceDetailPage').then((m) => ({ default: m.DeviceDetailPage })));
+const DeviceListPage = lazy(() => import('@/features/devices/DeviceListPage').then((m) => ({ default: m.DeviceListPage })));
+const MapsPage = lazy(() => import('@/features/maps/MapsPage').then((m) => ({ default: m.MapsPage })));
+const FleetPage = lazy(() => import('@/features/fleets/FleetPage').then((m) => ({ default: m.FleetPage })));
+const MasterDataPage = lazy(() => import('@/features/master-data/MasterDataPage').then((m) => ({ default: m.MasterDataPage })));
+const WorkflowBuilderPage = lazy(() => import('@/features/workflow-builder/WorkflowBuilderPage').then((m) => ({ default: m.WorkflowBuilderPage })));
+const NotificationsPage = lazy(() => import('@/features/notifications/NotificationsPage').then((m) => ({ default: m.NotificationsPage })));
+const UserDetailPage = lazy(() => import('@/features/users/UserDetailPage').then((m) => ({ default: m.UserDetailPage })));
+const UsersPage = lazy(() => import('@/features/users/UsersPage').then((m) => ({ default: m.UsersPage })));
+const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const PreferencesPage = lazy(() => import('@/features/preferences/PreferencesPage').then((m) => ({ default: m.PreferencesPage })));
 
 function LoginRoute() {
   const user = useAuth((s) => s.user); const navigate = useNavigate();
@@ -41,6 +46,8 @@ function PageMemory() {
   useEffect(() => { if (user) rememberPage(user, pathname); }, [user, pathname]);
   return null;
 }
+/** A page that moved: keeps the query (e.g. `?tv=1` of a wall display's bookmark). */
+function MovedTo({ to }: { to: string }) { const { search } = useLocation(); return <Navigate to={to + search} replace />; }
 function RootRedirect() { const user = useAuth((s) => s.user); return <Navigate to={user ? landingFor(user) : '/login'} replace />; }
 
 /** Route table: one public route (/login) and every other page behind one guard. What a user may open comes from the access catalog (features/access), not from the routes. */
@@ -53,26 +60,39 @@ export function AppRoot() {
       <Routes>
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/supervisor" element={<RootRedirect />} />
-        <Route path="/supervisor/dashboard" element={<RequireAccess><DashboardPage /></RequireAccess>} />
-        <Route path="/supervisor/reports" element={<RequireAccess><ReportsPage /></RequireAccess>} />
-        <Route path="/supervisor/dashboard-new" element={<RequireAccess><DashboardNewPage /></RequireAccess>} />
-        <Route path="/supervisor/notifications" element={<RequireAccess><NotificationsPage /></RequireAccess>} />
-        <Route path="/supervisor/livefloor" element={<RequireAccess><LiveFloorPage /></RequireAccess>} />
-        <Route path="/configurator" element={<RequireAccess><NewWorkflow /></RequireAccess>} />
-        <Route path="/configurator/workflows/:id" element={<RequireAccess><WorkflowBuilderPage /></RequireAccess>} />
-        {(['robot', 'hardware'] as const).map((k) => (
-          <Route key={k} path={`/configurator/${KINDS[k].route}`}>
-            <Route index element={<RequireAccess><DeviceListPage kind={KINDS[k]} /></RequireAccess>} />
-            <Route path=":name" element={<RequireAccess><DeviceDetailPage kind={KINDS[k]} /></RequireAccess>} />
-          </Route>
-        ))}
-        <Route path="/configurator/master-data/:tab?" element={<RequireAccess><MasterDataPage /></RequireAccess>} />
-        <Route path="/configurator/fleets/:name/:tab?" element={<RequireAccess><FleetPage /></RequireAccess>} />
-        <Route path="/configurator/notifications" element={<RequireAccess><NotificationsPage /></RequireAccess>} />
-        <Route path="/configurator/users" element={<RequireAccess><UsersPage /></RequireAccess>} />
-        <Route path="/configurator/users/:username" element={<RequireAccess><UserDetailPage /></RequireAccess>} />
+        <Route path="/operator" element={<RootRedirect />} />
+        <Route path="/supervisor/dashboard-new" element={<MovedTo to="/supervisor/dashboard" />} />
+        {/* one persistent frame (sidebar + top bar) per workspace; the pages below render inside its content area */}
+        <Route element={<RequireAccess><ShellLayout workspace="supervisor" /></RequireAccess>}>
+          <Route path="/supervisor/dashboard" element={<DashboardPage />} />
+          <Route path="/supervisor/reports" element={<ReportsPage />} />
+          <Route path="/supervisor/notifications" element={<NotificationsPage />} />
+          <Route path="/supervisor/action-center" element={<ActionCenterPage />} />
+          <Route path="/supervisor/livefloor" element={<LiveFloorPage />} />
+          <Route path="/supervisor/settings/:tab?" element={<PreferencesPage />} />
+        </Route>
+        <Route element={<RequireAccess><ShellLayout workspace="operator" /></RequireAccess>}>
+          <Route path="/operator/action-center" element={<ActionCenterPage />} />
+          <Route path="/operator/notifications" element={<NotificationsPage />} />
+        </Route>
+        <Route element={<RequireAccess><ShellLayout workspace="configurator" /></RequireAccess>}>
+          <Route path="/configurator" element={<NewWorkflow />} />
+          <Route path="/configurator/workflows/:id" element={<WorkflowBuilderPage />} />
+          {(['robot', 'hardware'] as const).map((k) => (
+            <Route key={k} path={`/configurator/${KINDS[k].route}`}>
+              <Route index element={<DeviceListPage kind={KINDS[k]} />} />
+              <Route path=":name" element={<DeviceDetailPage kind={KINDS[k]} />} />
+            </Route>
+          ))}
+          <Route path="/configurator/master-data/:tab?" element={<MasterDataPage />} />
+          <Route path="/configurator/fleets/:name/:tab?" element={<FleetPage />} />
+          <Route path="/configurator/notifications" element={<NotificationsPage />} />
+          <Route path="/configurator/users" element={<UsersPage />} />
+          <Route path="/configurator/users/:username" element={<UserDetailPage />} />
+          <Route path="/configurator/settings/:tab?" element={<SettingsPage />} />
+          <Route path="/configurator/maps" element={<MapsPage />} />
+        </Route>
         <Route path="/no-access" element={<NoAccessPage />} />
-        <Route path="/configurator/maps" element={<RequireAccess><MapsPage /></RequireAccess>} />
         <Route path="*" element={<RootRedirect />} />
       </Routes>
      </NotificationsProvider>

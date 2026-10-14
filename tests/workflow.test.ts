@@ -59,7 +59,7 @@ describe('Ati AI prompt parser', () => {
     const steps = parsePrompt('material 1003, if quantity greater than 10 go to S103, otherwise S102, confirm, drop at STA-104', ['DCP-1001', 'DCP-1003']);
     expect(steps.map((s) => s.t)).toEqual(['material', 'logic', 'confirm', 'station']);
     expect(steps[0].f.code).toBe('DCP-1003'); expect(steps[1].f.cond).toBe('Greater than'); expect(steps[1].f.qty).toBe('10');
-    expect(steps[1].br!.t[0].f.station).toEqual(['S103']); expect(steps[1].br!.o[0].f.station).toEqual(['S102']);
+    expect(steps[1].br!.t[0].f.station).toEqual(['STA-103']); expect(steps[1].br!.o[0].f.station).toEqual(['STA-102']);
     expect(steps[3].f).toMatchObject({ action: 'Drop Off', station: 'STA-104' });
   });
   it('parses wait times, scans, containers and ignores gibberish', () => {
@@ -113,4 +113,28 @@ describe('workflow names', () => {
     expect(defaultWorkflowName('A', ['Custom name'])).toBe('A_workflow_1');
   });
   it('an empty name is refused', () => { expect(workflowNameError('  ')).toBeTruthy(); expect(workflowNameError('x')).toBe(''); });
+});
+
+describe('stations come from the fleet\'s map', () => {
+  const nav = JSON.parse(require('node:fs').readFileSync('public/sites/ecc/nav.json', 'utf8'));
+  it('a fleet offers the work stations of its lane map (never parking or chargers); the Assembly fleet has its own area plus the shared east strip', async () => {
+    const { fleetStations } = await import('../src/features/workflow-builder/model/stations'); const map = { site: {} as never, nav };
+    const line = fleetStations('Line Side Fleet', map).map((s) => s.id), asm = fleetStations('Assembly Fleet', map).map((s) => s.id);
+    expect(line).toContain('STA-101'); expect(line).toContain('STA-124'); expect(line.some((id) => id.startsWith('PARK') || id.startsWith('CHARGE'))).toBe(false);
+    expect(asm).toContain('STA-113'); expect(asm).not.toContain('STA-101'); expect(asm).toContain('STA-116'); expect(fleetStations('Nope', map)).toEqual([]); expect(fleetStations(null, map)).toEqual([]);
+  });
+  it('clicking a station on the map sets a single station field, and adds or removes one in a branch', async () => {
+    const { wfStore } = await import('../src/features/workflow-builder/model/store'); const { stationField } = await import('../src/features/workflow-builder/model/stations');
+    const id = wfStore.getState().startWorkflow('Line Side Fleet'); wfStore.getState().openWorkflow(id); wfStore.getState().addNode('station'); const node = () => wfStore.getState().nodes().find((n) => n.t === 'station')!;
+    wfStore.getState().pickStation(node().id, 'STA-107'); expect(node().f.station).toBe('STA-107'); expect(stationField(node())).toEqual({ ids: ['STA-107'], multi: false });
+    wfStore.getState().addNode('logic'); const logic = wfStore.getState().nodes().find((n) => n.t === 'logic')!; const b = logic.br!.t[0];
+    wfStore.getState().pickStation(b.id, 'STA-110'); expect(wfStore.getState().nodes().find((n) => n.t === 'logic')!.br!.t[0].f.station).toEqual(expect.arrayContaining(['STA-110']));
+    wfStore.getState().pickStation(b.id, 'STA-110'); expect((wfStore.getState().nodes().find((n) => n.t === 'logic')!.br!.t[0].f.station as string[]).length).toBeGreaterThanOrEqual(1);   // the last one is never removed
+    wfStore.getState().pickStation(logic.id, 'STA-111'); expect(wfStore.getState().nodes().find((n) => n.t === 'logic')!.f.station).toBe('STA-111');
+  });
+  it('the seeds only use stations that exist on their fleet\'s map', async () => {
+    const { fleetStations } = await import('../src/features/workflow-builder/model/stations'); const map = { site: {} as never, nav };
+    const ids = (nodes: ReturnType<typeof seedOf>): string[] => nodes.flatMap((n) => [...(n.t === 'station' || n.t === 'logic' ? ([] as string[]).concat(n.f.station as string | string[]) : []), ...(n.br ? ids([...n.br.t, ...n.br.o]) : [])]).filter(Boolean);
+    for (const fleet of ['Line Side Fleet', 'Assembly Fleet']) { const ok = new Set(fleetStations(fleet, map).map((s) => s.id)); for (const id of ids(seedOf(fleet))) expect(ok.has(id), `${fleet} ${id}`).toBe(true); }
+  });
 });

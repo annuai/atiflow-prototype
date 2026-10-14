@@ -20,10 +20,10 @@ export function WorkflowsPanel({ fleet }: { fleet: string }) {
   const make = () => navigate(`/configurator/workflows/${wfStore.getState().startWorkflow(fleet)}`);
   const t = copy.workflows;
   const columns: Column<WorkflowRow>[] = [
-    { id: 'workflow', header: t.columns.workflow, cell: (r) => <div className="min-w-0"><p className="truncate text-sm font-medium text-primary">{r.name}</p><p className="text-sm text-tertiary">{t.nodes(r.nodes)}</p></div> },
-    { id: 'materials', header: t.columns.materials, cell: (r) => (r.materials.length ? r.materials.join(', ') : t.none) },
-    { id: 'trigger', header: t.columns.trigger, cell: (r) => <Badge size="sm" type="pill-color" color="gray">{r.trigger}</Badge> },
-    { id: 'status', header: t.columns.status, headClassName: 'w-28', className: 'w-28', cell: (r) => <span className="text-primary">{r.published ? t.active : t.draft}</span> },
+    { id: 'workflow', sort: (r) => r.name, header: t.columns.workflow, cell: (r) => <div className="min-w-0"><p className="truncate text-sm font-medium text-primary">{r.name}</p><p className="text-sm text-tertiary">{t.nodes(r.nodes)}</p></div> },
+    { id: 'materials', sort: (r) => r.materials.join(', '), header: t.columns.materials, cell: (r) => (r.materials.length ? r.materials.join(', ') : t.none) },
+    { id: 'trigger', sort: (r) => r.trigger, header: t.columns.trigger, cell: (r) => <Badge size="sm" type="pill-color" color="gray">{r.trigger}</Badge> },
+    { id: 'status', sort: (r) => (r.published ? 0 : 1), header: t.columns.status, headClassName: 'w-28', className: 'w-28', cell: (r) => <span className="text-primary">{r.published ? t.active : t.draft}</span> },
     { id: 'menu', header: '', headClassName: 'w-12', className: 'w-12 text-right', cell: (r) => <RowMenu label={t.rowMenu} onAction={() => open(r)} items={[{ id: 'open', label: t.open, icon: Edit05 }]} /> },
   ];
   return (

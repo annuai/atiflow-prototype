@@ -4,12 +4,10 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Dataflow03, LayoutGrid01, Package, Settings02 } from '@untitledui/icons';
 import { Tabs } from '@/components/application/tabs/tabs';
 import { Badge } from '@/components/base/badges/badges';
-import { configuratorHits, useConfiguratorNav } from '@/features/configurator/configuratorNav';
 import { useDevices } from '@/features/devices/model/store';
 import { useMasterData } from '@/features/master-data/model/store';
 import { isKept } from '@/features/workflow-builder/model/seed';
 import { useWorkflow, workflowsOfFleet } from '@/features/workflow-builder/model/store';
-import { AppShell } from '@/shell/AppShell';
 import { InlineNameEdit } from '@/components/form/InlineNameEdit';
 import { notify } from '@/ui/toast';
 import { copy } from './copy';
@@ -44,7 +42,7 @@ export function FleetPage() {
   const onRename = (to: string) => { renamedFrom.current = name; const e = renameFleet(name, to); if (e) renamedFrom.current = ''; if (!e && to.trim() !== name) { navigate(fleetPath(to.trim(), active.id), { replace: true }); notify.success(copy.rename.done.title, copy.rename.done.body(name, to.trim()), 'fleet-renamed'); } return e; };
   const counts: Partial<Record<TabId, number>> = { materials, workflows };
   return (
-    <AppShell useNavModel={useConfiguratorNav} getHits={configuratorHits} searchPlaceholder="Search live operations, fleets, trips, analytics...">
+    <>
       <div className="content">
         <div className="title-block"><div><InlineNameEdit value={name} label="Fleet name" tooltip={copy.rename.tooltip} display={<h1>{name}</h1>} onSave={onRename} /><p>{map ? copy.meta.map(map.name, map.version) : copy.meta.noMap}</p></div>
           <div className="actions hide-sm"><Badge size="sm" type="pill-color" color="gray">{copy.meta.robots(robots)}</Badge><Badge size="sm" type="pill-color" color="gray">{copy.meta.hardware(hardware)}</Badge></div></div>
@@ -55,6 +53,6 @@ export function FleetPage() {
           <div className="md-body" key={`${name}/${active.id}`}><active.Panel fleet={name} /></div>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

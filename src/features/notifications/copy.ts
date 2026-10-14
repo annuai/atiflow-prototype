@@ -1,9 +1,9 @@
 /** Every user-facing string of the notifications page. Titles and bodies of the notifications themselves come from their sources. */
 export const copy = {
   title: 'Notifications',
-  subtitle: { supervisor: 'Robots that need you, as they happen.', configurator: 'Updates from MES and your site setup.' },
+  subtitle: { supervisor: 'Robots that need you, as they happen.', configurator: 'Updates from MES and your site setup.', operator: 'Robots that need you, as they happen.' },
   all: 'All', unread: (n: number) => `Unread${n ? ` (${n})` : ''}`, markAll: 'Mark all as read', clear: 'Clear all',
-  emptyAll: 'You\'re all caught up', emptyAllHint: { supervisor: 'Blocked, stuck or low-battery robots will show up here.', configurator: 'New MES data and stock updates will show up here.' },
+  emptyAll: 'You\'re all caught up', emptyAllHint: { supervisor: 'Blocked, stuck or low-battery robots will show up here.', configurator: 'New MES data and stock updates will show up here.', operator: 'Blocked, stuck or low-battery robots will show up here.' },
   emptyUnread: 'No unread notifications',
   actions: { locate: 'Locate', liveFloor: 'Full view' },
   now: 'just now', ago: { min: (n: number) => `${n} min ago`, hour: (n: number) => `${n} h ago`, day: (n: number) => `${n} d ago` },
