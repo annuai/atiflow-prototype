@@ -1,17 +1,29 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LifeBuoy01 } from '@untitledui/icons';
+import { ClipboardCheck, LifeBuoy01, ShoppingCart01 } from '@untitledui/icons';
 import bell from '@/ui/icons/bell.svg';
+import { useAccess } from '@/features/access/useAccess';
 import { useUnreadCount } from '@/features/notifications/NotificationsProvider';
+import { canApprove } from '@/features/requests/model/rules';
+import { useRequestsRunning } from '@/features/requests/model/bridge';
+import { useRequests } from '@/features/requests/model/store';
+import { fleetIdOf, useOperator } from '@/features/requests/model/useOperator';
 import type { NavModel, SearchHit } from '@/shell/types';
 import { useActionCenterRunning } from './data/store';
 import { useCalls } from './data/useCalls';
 
-export const OPERATOR_ACTION_CENTER_PATH = '/operator/action-center', OPERATOR_NOTIFICATIONS_PATH = '/operator/notifications';
-/** Sidebar of the operator area: what an operator can open today (the Action Center; dispatch / request / confirm have no pages yet). */
+export const OPERATOR_ACTION_CENTER_PATH = '/operator/action-center', OPERATOR_NOTIFICATIONS_PATH = '/operator/notifications', OPERATOR_REQUEST_PATH = '/operator/request', OPERATOR_APPROVE_PATH = '/operator/approve';
+/** Sidebar of the operator area: Request, Approve and the Action Center (each only when the person may open it), and Notifications. */
 export function useOperatorNav(): NavModel {
-  const navigate = useNavigate(); const path = useLocation().pathname; const unread = useUnreadCount(); useActionCenterRunning(); const open = useCalls().open;
+  const navigate = useNavigate(); const path = useLocation().pathname; const unread = useUnreadCount(); const { can } = useAccess();
+  useActionCenterRunning(); useRequestsRunning(); const calls = useCalls().open; const me = useOperator();
+  const toApprove = useRequests((s) => s.requests).filter((r) => canApprove(r, me, fleetIdOf)).length;
+  const item = (id: string, label: string, icon: NavModel['groups'][number]['items'][number]['icon'], to: string, badge?: number) => ({ id, label, icon, badge: badge || undefined, active: path === to, onSelect: () => navigate(to) });
   return {
-    groups: [{ id: 'ops', label: 'Operations', items: [{ id: 'action-center', label: 'Action Center', icon: LifeBuoy01, badge: open || undefined, active: path === OPERATOR_ACTION_CENTER_PATH, onSelect: () => navigate(OPERATOR_ACTION_CENTER_PATH) }] }],
+    groups: [{ id: 'ops', label: 'Operations', items: [
+      ...(can('operator.request') ? [item('request', 'Request', ShoppingCart01, OPERATOR_REQUEST_PATH)] : []),
+      ...(can('operator.approve') ? [item('approve', 'Approve', ClipboardCheck, OPERATOR_APPROVE_PATH, toApprove)] : []),
+      ...(can('operator.action-center') ? [item('action-center', 'Action Center', LifeBuoy01, OPERATOR_ACTION_CENTER_PATH, calls)] : []),
+    ] }],
     footerItems: [{ id: 'notif', label: 'Notifications', icon: bell, badge: unread || undefined, active: path === OPERATOR_NOTIFICATIONS_PATH, onSelect: () => navigate(OPERATOR_NOTIFICATIONS_PATH) }],
   };
 }

@@ -26,6 +26,8 @@ const WorkflowBuilderPage = lazy(() => import('@/features/workflow-builder/Workf
 const NotificationsPage = lazy(() => import('@/features/notifications/NotificationsPage').then((m) => ({ default: m.NotificationsPage })));
 const UserDetailPage = lazy(() => import('@/features/users/UserDetailPage').then((m) => ({ default: m.UserDetailPage })));
 const UsersPage = lazy(() => import('@/features/users/UsersPage').then((m) => ({ default: m.UsersPage })));
+const RequestPage = lazy(() => import('@/features/requests/RequestPage').then((m) => ({ default: m.RequestPage })));
+const ApprovePage = lazy(() => import('@/features/requests/ApprovePage').then((m) => ({ default: m.ApprovePage })));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const PreferencesPage = lazy(() => import('@/features/preferences/PreferencesPage').then((m) => ({ default: m.PreferencesPage })));
 
@@ -72,6 +74,8 @@ export function AppRoot() {
           <Route path="/supervisor/settings/:tab?" element={<PreferencesPage />} />
         </Route>
         <Route element={<RequireAccess><ShellLayout workspace="operator" /></RequireAccess>}>
+          <Route path="/operator/request" element={<RequestPage />} />
+          <Route path="/operator/approve" element={<ApprovePage />} />
           <Route path="/operator/action-center" element={<ActionCenterPage />} />
           <Route path="/operator/notifications" element={<NotificationsPage />} />
         </Route>

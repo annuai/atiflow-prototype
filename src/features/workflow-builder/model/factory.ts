@@ -15,4 +15,4 @@ export function createNode(t: NodeTypeId, f?: Record<string, FieldValue>): WfNod
   if (t === 'logic') n.br = { t: [createNode('station', { action: 'Pick Up', station: ['STA-103'] })], o: [createNode('station', { action: 'Pick Up', station: ['STA-102'] })] };
   return n;
 }
-export const createStart = (f?: Record<string, FieldValue>) => createNode('start', { trigger: 'Manual', robot: 'Sherpa XT Lite', request: 'Request from Tablet', user: ['USER-001'], ...f });
+export const createStart = (f?: Record<string, FieldValue>) => createNode('start', { trigger: 'Manual', robot: 'Sherpa XT Lite', request: 'Tablet', user: [], ...f });

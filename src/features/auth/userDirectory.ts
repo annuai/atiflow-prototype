@@ -3,7 +3,7 @@ import { useStore } from 'zustand';
 import { createDocument, localBackend } from '@/data/storage';
 import { datasetStore } from '@/data/dataset';
 import { ALL_PERMISSIONS, isFleetScoped, presetOf, roleById } from '@/features/access';
-import { AVATARS, SEED_REVISION, SEED_USERS } from './users';
+import { AVATARS, SEED_REVISION, SEED_SINCE, SEED_USERS } from './users';
 import type { PublicUser, UserRecord } from './types';
 
 /**
@@ -15,7 +15,12 @@ const seed = (): UserRecord[] => structuredClone(SEED_USERS);
 const isDirectory = (v: unknown): v is UserRecord[] => Array.isArray(v) && v.every((u) => u && typeof u.username === 'string' && typeof u.password === 'string' && typeof u.role === 'string');
 export const usersDoc = createDocument<UserRecord[]>(localBackend(KEY), seed, isDirectory);
 /** A saved directory from before the superuser role was dropped: such a user is a configurator with every other module ticked. */
-export const migrate = (list: UserRecord[]): UserRecord[] => list.map((u) => {
+/** The operator permissions were renamed (Dispatch is now Approve) and Confirm was dropped: saved ticks follow. */
+const RENAMED: Record<string, string | null> = { 'operator.dispatch': 'operator.approve', 'operator.confirm': null };
+const renamePermissions = (u: UserRecord): UserRecord => !u.custom ? u : { ...u, custom: { add: [...new Set(u.custom.add.flatMap((p) => (p in RENAMED ? (RENAMED[p] ? [RENAMED[p]] : []) : [p])))] as typeof u.custom.add, remove: [...new Set(u.custom.remove.flatMap((p) => (p in RENAMED ? (RENAMED[p] ? [RENAMED[p]] : []) : [p])))] as typeof u.custom.remove } };
+export const migrate = (list: UserRecord[]): UserRecord[] => list.map((u0) => {
+  let u = u0; if ((u.role as string) === 'line-supervisor') u = { ...u, role: 'supervisor', custom: undefined };         // the Line Supervisor role was removed: those users are supervisors
+  u = renamePermissions(u);
   const v: UserRecord = (u.role as string) === 'superuser' ? { ...u, role: 'configurator', custom: { add: ALL_PERMISSIONS.filter((p) => !presetOf('configurator').includes(p)), remove: [] } } : u;
   // a person saved before fleet scope existed keeps seeing everything (they are given every fleet; a configurator can narrow it on the Users page)
   return isFleetScoped(v.role) && !v.fleets?.length ? { ...v, fleets: datasetStore.getState().fleets.map((f) => f.id) } : v;
@@ -27,7 +32,8 @@ export const migrate = (list: UserRecord[]): UserRecord[] => list.map((u) => {
  */
 export function applySeedRevision(list: UserRecord[], savedRevision: number): UserRecord[] {
   if (savedRevision >= SEED_REVISION) return list;
-  return list.map((u) => { const s = SEED_USERS.find((x) => x.username === u.username)?.custom; if (!s?.add.length) return u;
+  const added = SEED_USERS.filter((s) => (SEED_SINCE[s.username] ?? 0) > savedRevision && !list.some((u) => u.username === s.username));          // a starting user introduced after this list was saved
+  return [...list, ...structuredClone(added)].map((u) => { const s = SEED_USERS.find((x) => x.username === u.username)?.custom; if (!s?.add.length) return u;
     return { ...u, custom: { add: [...new Set([...(u.custom?.add ?? []), ...s.add])], remove: (u.custom?.remove ?? []).filter((p) => !s.add.includes(p)) } }; });
 }
 const REVISION_KEY = 'atiflow.users.seedRevision';

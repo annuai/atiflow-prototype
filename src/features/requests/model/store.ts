@@ -1,0 +1,74 @@
+import { createStore } from 'zustand/vanilla';
+import { useStore } from 'zustand';
+import type { OrderUpdate } from '@/core/types';
+import { createDocument, localBackend } from '@/data/storage';
+import { canApprove, canCancel, isAllowedNext, type Person } from './rules';
+import type { CartLine, RequestableItem, RequestStatus, TripRequest } from './types';
+
+/**
+ * All requests (history included), saved in this browser (`StorageBackend`: a server later = another backend). The store only keeps and changes requests following the rules in
+ * `rules.ts`; handing approved ones to the fleet and taking updates back is `bridge.ts`.
+ */
+interface Saved { requests: TripRequest[]; seq: number }
+const KEY = 'atiflow.requests.v1';
+const doc = createDocument<Saved>(localBackend(KEY), () => ({ requests: [], seq: 0 }), (v): v is Saved => !!v && Array.isArray((v as Saved).requests) && typeof (v as Saved).seq === 'number');
+
+export interface Requester { username: string; name: string; fleets: string[] }
+export interface RequestsState extends Saved {
+  /** Make the requests of a cart. Each becomes its own request (pending when its workflow has a Confirm step, otherwise approved). Returns the order id. */
+  submit(who: Requester, lines: { item: RequestableItem; qty: number }[], now?: number): string;
+  approve(id: string, who: Person & { name: string }, fleetIdOf: (n: string) => string | undefined, now?: number): boolean;
+  reject(id: string, who: Person & { name: string }, fleetIdOf: (n: string) => string | undefined, reason?: string, now?: number): boolean;
+  /** Cancel one request (never the others of its order). */
+  cancel(id: string, who: Person & { name: string }, now?: number): boolean;
+  /** The fleet reported something about the request. */
+  apply(u: OrderUpdate, now?: number): void;
+  /** The floor restarted (the simulator lives in the page): trips that were on their way start over, so they wait for a robot again. */
+  requeueOngoing(now?: number): void;
+  reset(): void;
+}
+const pad = (n: number, w = 4) => String(n).padStart(w, '0');
+const push = (r: TripRequest, status: RequestStatus, at: number, by?: string, note?: string): TripRequest => ({ ...r, status, history: [...r.history, { status, at, by, note }] });
+
+export const requestsStore = createStore<RequestsState>((set, get) => ({
+  ...doc.load(),
+  submit(who, lines, now = Date.now()) {
+    const seq = get().seq + 1; const groupId = `ORD-${pad(seq)}`;
+    const made: TripRequest[] = lines.map(({ item, qty }, i) => {
+      const base: TripRequest = { id: `${groupId}-${i + 1}`, groupId, workflowId: item.workflowId, workflowName: item.workflowName, fleet: item.fleet, fleetLive: item.fleetLive, code: item.code, name: item.name, group: item.group, qty,
+        legs: item.legs, loadFrom: item.loadFrom, needsApproval: item.needsApproval, status: 'pending', history: [], requestedBy: who.username, requestedByName: who.name, createdAt: now };
+      return item.needsApproval ? push(base, 'pending', now, who.name) : push(base, 'approved', now, 'No approval needed');
+    });
+    set({ seq, requests: [...get().requests, ...made] }); return groupId;
+  },
+  approve(id, who, fleetIdOf, now = Date.now()) {
+    const r = get().requests.find((x) => x.id === id); if (!r || !canApprove(r, who, fleetIdOf)) return false;
+    set({ requests: get().requests.map((x) => (x.id === id ? { ...push(x, 'approved', now, who.name), approvedBy: who.name } : x)) }); return true;
+  },
+  reject(id, who, fleetIdOf, reason, now = Date.now()) {
+    const r = get().requests.find((x) => x.id === id); if (!r || !canApprove(r, who, fleetIdOf)) return false;
+    set({ requests: get().requests.map((x) => (x.id === id ? { ...push(x, 'rejected', now, who.name, reason), note: reason } : x)) }); return true;
+  },
+  cancel(id, who, now = Date.now()) {
+    const r = get().requests.find((x) => x.id === id); if (!r || !canCancel(r, who)) return false;
+    set({ requests: get().requests.map((x) => (x.id === id ? push(x, 'cancelled', now, who.name) : x)) }); return true;
+  },
+  apply(u, now = Date.now()) {
+    const r = get().requests.find((x) => x.id === u.id); if (!r) return; const to: RequestStatus = u.status;
+    if (r.status === to && !(to === 'ongoing' && u.tripId && u.tripId !== r.tripId)) return;
+    if (!isAllowedNext(r.status, to) && !(r.status === 'ongoing' && to === 'ongoing')) return;          // e.g. a cancelled request ignores a late report
+    set({ requests: get().requests.map((x) => (x.id === u.id ? { ...push(x, to, now, 'Fleet', u.reason), tripId: u.tripId ?? x.tripId, robotId: u.robotId ?? x.robotId, note: u.reason ?? x.note } : x)) });
+  },
+  requeueOngoing(now = Date.now()) { if (!get().requests.some((r) => r.status === 'ongoing')) return; set({ requests: get().requests.map((r) => (r.status === 'ongoing' ? { ...push(r, 'approved', now, 'Fleet', 'The fleet restarted: waiting for a robot again'), tripId: undefined, robotId: undefined } : r)) }); },
+  reset() { doc.reset(); set({ requests: [], seq: 0 }); },
+}));
+export const useRequests = <T,>(sel: (s: RequestsState) => T) => useStore(requestsStore, sel);
+
+let saved = requestsStore.getState().requests; requestsStore.subscribe((s) => { if (s.requests !== saved) { saved = s.requests; doc.save({ requests: s.requests, seq: s.seq }); } });
+// another tab (another operator on the same browser) changed the requests: take them over
+if (typeof window !== 'undefined') window.addEventListener('storage', (e) => { if (e.key !== KEY || !e.newValue) return; const r = doc.parse(e.newValue); if ('value' in r) { saved = r.value.requests; requestsStore.setState(r.value); } });
+if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __requests: requestsStore });
+
+/** A cart helper (pure): add or change a line, drop a line, clear. The cart itself lives only in the page while a person chooses; it is never saved. */
+export const setLine = (cart: CartLine[], key: string, qty: number): CartLine[] => (cart.some((l) => l.key === key) ? cart.map((l) => (l.key === key ? { ...l, qty } : l)) : [...cart, { key, qty }]);
+export const dropLine = (cart: CartLine[], key: string): CartLine[] => cart.filter((l) => l.key !== key);

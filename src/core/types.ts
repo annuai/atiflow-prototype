@@ -60,11 +60,23 @@ export type FleetEvent =
   | { type: 'fault'; ts: number; robotId: string; fleetId: string; code: string; needsIntervention: boolean }
   | { type: 'fault-cleared'; ts: number; robotId: string; fleetId: string };
 
+/**
+ * A request for one transport trip, handed to the fleet (the simulator today, the fleet manager's API later): a robot of `fleetId` drives to each station of `legs`
+ * in order and carries `payload` from leg `loadFrom` on (earlier legs are empty). `id` is the request's own id; the trip gets its own id (TRP-xxx).
+ */
+export interface TransportOrder { id: string; fleetId: string; legs: string[]; loadFrom: number; payload: { kind: string; qty: number } }
+/** What happened to an order: a robot took it and is on its way, it finished, or it cannot be done. */
+export interface OrderUpdate { id: string; status: 'ongoing' | 'completed' | 'failed'; tripId?: string; robotId?: string; reason?: string }
+
 export interface TelemetryAdapter {
   connect(): void; disconnect(): void;
   onTelemetry(cb: (batch: RobotTelemetry[]) => void): void;
   /** Optional: moments reported by the fleet manager (trip completed, deadlock, fault). */
   onEvent?(cb: (e: FleetEvent) => void): void;
+  /** Optional: transport orders (requests from people). `submitOrder` returns false when the order cannot be accepted; `cancelOrder` is false once a robot is on its way. */
+  submitOrder?(o: TransportOrder): boolean;
+  cancelOrder?(id: string): boolean;
+  onOrderUpdate?(cb: (u: OrderUpdate) => void): void;
 }
 
 export type CameraMode = 'orbit' | 'top' | 'walk' | 'follow';

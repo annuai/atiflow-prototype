@@ -9,7 +9,7 @@ import { scopeKey } from '@/features/access';
 import { visibleLiveIds } from '@/features/access/useFleetScope';
 import { authStore } from '@/features/auth/authStore';
 import type { RosterEntry } from '@/adapters/sim';
-import type { FleetEvent, NavGraph, RobotTelemetry, SiteLayout, TelemetryAdapter } from '@/core/types';
+import type { FleetEvent, NavGraph, OrderUpdate, RobotTelemetry, SiteLayout, TelemetryAdapter, TransportOrder } from '@/core/types';
 
 export const SITE = (typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('site')) ?? 'ecc';
 
@@ -19,6 +19,7 @@ export const SITE = (typeof location === 'undefined' ? null : new URLSearchParam
  */
 let refs = 0, stopTimer: number | undefined, adapter: TelemetryAdapter | null = null, loaded: Promise<{ site: SiteLayout; nav: NavGraph }> | null = null;
 const listeners = new Set<(b: RobotTelemetry[]) => void>(), resetListeners = new Set<() => void>();
+const orderUpdateListeners = new Set<(u: OrderUpdate) => void>(), orderStartListeners = new Set<() => void>();
 let rosterKey = '';
 export const liveStats = new StatsTracker();
 /** KPI building blocks measured from the live telemetry and events (read by the Reports page). It keeps collecting while the feed runs. */
@@ -64,7 +65,9 @@ async function start() {
   adapter = new MockSimulator(nav, site.siteId, 14, 7, roster);
   adapter.onEvent?.((e) => { const ids = visibleLiveIds(); if (!ids || fleetsOf(e).some((f) => ids.has(f))) measurements.event(e); });
   adapter.onTelemetry((all) => { const b = scoped(all); store.getState().ingest(b); liveStats.ingest(b); measurements.ingest(b); listeners.forEach((cb) => cb(b)); });
-  adapter.connect(); if (import.meta.env.DEV) Object.assign(window, { __adapter: adapter, __measurements: measurements });  // dev-only: lets tests inject faults
+  adapter.onOrderUpdate?.((u) => orderUpdateListeners.forEach((cb) => cb(u)));
+  adapter.connect(); orderStartListeners.forEach((cb) => cb());          // (people's requests that were waiting for the floor are handed over now)
+  if (import.meta.env.DEV) Object.assign(window, { __adapter: adapter, __measurements: measurements });  // dev-only: lets tests inject faults
 }
 /** The shared dataset changed what runs on the floor (a robot added, removed, moved to another fleet or type): restart the simulation with the new roster. */
 datasetStore.subscribe(() => {
@@ -76,6 +79,17 @@ datasetStore.subscribe(() => {
 function stop() { adapter?.disconnect(); adapter = null; liveStats.reset(); store.setState({ robots: {}, traffic: {}, events: [], violations: 0 }); }
 
 export const feed = {
+  /** Requests for transport trips (see `TransportOrder`): handed to the running fleet; updates come back as robots take them and finish. */
+  orders: {
+    /** false when the floor is not running yet (it is handed over when it starts, see `onStart`) or the fleet refused the order. */
+    submit(o: TransportOrder): boolean { return adapter?.submitOrder?.(o) ?? false; },
+    /** true when the order was taken back; false once a robot is on its way with it (or the floor is not running). */
+    cancel(id: string): boolean { return adapter?.cancelOrder?.(id) ?? false; },
+    onUpdate(cb: (u: OrderUpdate) => void) { orderUpdateListeners.add(cb); return () => { orderUpdateListeners.delete(cb); }; },
+    /** The floor (re)started: orders that were not finished must be handed over again. */
+    onStart(cb: () => void) { orderStartListeners.add(cb); return () => { orderStartListeners.delete(cb); }; },
+    get running() { return adapter !== null; },
+  },
   /** Use the feed until the returned function is called. */
   acquire(): () => void { refs++; window.clearTimeout(stopTimer); void start(); let done = false; return () => { if (done) return; done = true; if (--refs === 0) stopTimer = window.setTimeout(stop, 1500); }; },
   /** The site and its navigation graph, once loaded. */

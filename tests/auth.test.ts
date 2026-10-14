@@ -10,7 +10,7 @@ describe('auth service (prototype directory)', () => {
     expect(authenticate('  Arjun ', '1234')?.username).toBe('arjun'); expect(authenticate('arjun', '12345')).toBeNull(); expect(authenticate('arjun', '')).toBeNull();
   });
   it('rejects unknown users', () => { expect(authenticate('nobody', '1234')).toBeNull(); expect(findUser('nobody')).toBeNull(); });
-  it('every user has an avatar, a name and a unique username', () => {
-    expect(new Set(SEED_USERS.map((u) => u.username)).size).toBe(SEED_USERS.length); for (const u of SEED_USERS) { expect(AVATARS[u.username]).toBeTruthy(); expect(findUser(u.username)?.name).toBeTruthy(); expect(u.email).toMatch(/@/); }
+  it('every user has a name, an e-mail and a unique username (the first three also have a picture; the operators show initials)', () => {
+    expect(new Set(SEED_USERS.map((u) => u.username)).size).toBe(SEED_USERS.length); for (const u of SEED_USERS) { if (['arjun', 'kavin', 'meera'].includes(u.username)) expect(AVATARS[u.username]).toBeTruthy(); expect(findUser(u.username)?.name).toBeTruthy(); expect(u.email).toMatch(/@/); }
   });
 });

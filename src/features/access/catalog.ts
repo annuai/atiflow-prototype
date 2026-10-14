@@ -3,7 +3,7 @@
  * Everything else (the Users matrix, the sidebar, route guards, the workspace switcher, landing pages) reads this one file. A new feature = one entry here
  * (+ its route rule); a new workspace = one entry in WORKSPACES.
  */
-export type WorkspaceId = 'configurator' | 'supervisor' | 'line-supervisor' | 'operator';
+export type WorkspaceId = 'configurator' | 'supervisor' | 'operator';
 export type PermissionId = `${WorkspaceId}.${string}`;
 
 export interface Feature {
@@ -42,12 +42,10 @@ export const WORKSPACES: Workspace[] = [
     { id: 'supervisor.action-center', label: 'Action Center', landing: '/supervisor/action-center', routes: ['/supervisor/action-center'] },
     { id: 'supervisor.settings', label: 'Settings', routes: ['/supervisor/settings'] },
   ] },
-  { id: 'line-supervisor', title: 'LINE SUPERVISOR', name: 'Line Supervisor', blurb: 'Not defined yet', built: false, shared: [], features: [] },
-  { id: 'operator', title: 'OPERATOR', name: 'Operator', blurb: 'Handle robot calls; send, request and confirm material moves', built: true, shared: ['/operator/notifications'], features: [
+  { id: 'operator', title: 'OPERATOR', name: 'Operator', blurb: 'Request materials, approve requests and handle robot calls', built: true, shared: ['/operator/notifications'], features: [
+    { id: 'operator.request', label: 'Request', landing: '/operator/request', routes: ['/operator/request'] },
+    { id: 'operator.approve', label: 'Approve', landing: '/operator/approve', routes: ['/operator/approve'] },
     { id: 'operator.action-center', label: 'Action Center', landing: '/operator/action-center', routes: ['/operator/action-center'] },
-    { id: 'operator.dispatch', label: 'Dispatch', routes: [] },
-    { id: 'operator.request', label: 'Request', routes: [] },
-    { id: 'operator.confirm', label: 'Confirm', routes: [] },
   ] },
 ];
 

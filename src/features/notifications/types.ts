@@ -5,12 +5,12 @@ export type Audience = 'supervisor' | 'configurator' | 'operator';
 
 export type NotificationLevel = 'critical' | 'warn' | 'info' | 'success';
 /** What a button on a notification does. Plain data (not a function) so notifications can be saved and sent by a backend. */
-export type NotificationAction = { kind: 'locate'; robotId: string } | { kind: 'live-floor' };
+export type NotificationAction = { kind: 'locate'; robotId: string } | { kind: 'live-floor' } | { kind: 'requests' } | { kind: 'approvals' };
 export interface AppNotification {
   /** Unique and stable: a source that emits the same id twice is not shown twice. */
   id: string;
   /** What it is about (a robot problem, new stock, an MES sync...): picks the icon. */
-  kind: 'blocked' | 'error' | 'stuck' | 'battery' | 'stock' | 'mes';
+  kind: 'blocked' | 'error' | 'stuck' | 'battery' | 'stock' | 'mes' | 'trip' | 'approval';
   level: NotificationLevel; title: string; body?: string;
   /** epoch ms */
   at: number; read: boolean;
@@ -23,7 +23,7 @@ export type NewNotification = Omit<AppNotification, 'read'>;
  * Where one kind of notification comes from. `start` begins delivering through `emit` and returns a stop function.
  * Today the sources are the live robot feed (supervisors) and a mock MES feed (configurators); a backend or websocket source replaces them without touching the page.
  */
-export interface NotificationSource { start(emit: (items: NewNotification[]) => void): () => void }
+export interface NotificationSource { start(emit: (items: NewNotification[]) => void, user: PublicUser): () => void }
 export type SourcesByAudience = Record<Audience, () => NotificationSource[]>;
 
 /**

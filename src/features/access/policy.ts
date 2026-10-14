@@ -66,7 +66,7 @@ export function setWorkspace(p: AccessProfile, id: WorkspaceId, on: boolean): Ac
 /** A new role starts from its preset again (custom ticks belong to the old role). */
 export const withRole = (role: RoleId): AccessProfile => ({ role });
 /** Every role can be given to anyone by a user manager. */
-export const assignableRoles = (): RoleId[] => ['configurator', 'supervisor', 'line-supervisor', 'operator'];
+export const assignableRoles = (): RoleId[] => ['configurator', 'supervisor', 'operator'];
 /** May the actor delete this user? Anyone who manages users can, except themselves (everything else, including their own role and permissions, they may change). */
 export const canDeleteUser = (actor: AccessProfile & { username: string }, target: { username: string }): boolean => canManageUsers(actor) && actor.username !== target.username;
 export const permissionsOfWorkspace = (p: AccessProfile, id: WorkspaceId) => workspaceById(id).features.filter((f) => effective(p).has(f.id));

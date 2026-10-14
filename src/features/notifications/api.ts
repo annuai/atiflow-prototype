@@ -10,7 +10,7 @@ export const audiencesOf = (user: Parameters<typeof enterableWorkspaces>[0]): Au
 
 /** Today's implementation: each audience's sources inside this app (live robot alerts, the mock MES feed). */
 export const localApi = (sources: SourcesByAudience = SOURCES): NotificationApi => ({
-  subscribe(user, emit) { const stops = audiencesOf(user).flatMap((a) => sources[a]().map((s) => s.start(emit))); return () => stops.forEach((stop) => stop()); },
+  subscribe(user, emit) { const stops = audiencesOf(user).flatMap((a) => sources[a]().map((s) => s.start(emit, user))); return () => stops.forEach((stop) => stop()); },
 });
 
 export interface RestApiOptions {

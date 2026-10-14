@@ -8,8 +8,8 @@ export const NODE_TYPES: Record<NodeTypeId, NodeTypeSpec> = {
   start: { label: 'Start Node', accent: '#e1f5ee', icon: 'play', w: 280, fixed: true, fields: [
     { key: 'trigger', label: 'Start Trigger', opts: ['Manual', 'Auto', 'Scheduled'] },
     { key: 'robot', label: 'Robot Type', opts: ['Sherpa XT Lite', 'Sherpa XT', 'Sherpa Hitch'] },
-    { key: 'request', label: 'Request Type', opts: ['Request from Tablet', 'MES', 'Tablet', 'Call Button'] },
-    { key: 'user', label: 'User ID', kind: 'multi', opts: ['USER-001', 'USER-002', 'USER-003', 'USER-004'] }] },
+    { key: 'request', label: 'Request Type', opts: ['Tablet', 'MES', 'Call Button'] },
+    { key: 'user', label: 'User ID', kind: 'multi', optsFrom: 'requestUsers' }] },
   material: { label: 'Material', accent: '#eedcef', icon: 'keyframes', w: 224, defaults: { type: 'Material', code: '', fromTablet: false, qty: '10' }, fields: [
     { key: 'type', label: 'Type', opts: ['Material', 'Kit', 'Spare Part'] },
     { key: 'code', label: 'Code', optsFrom: 'fleetMaterials' },

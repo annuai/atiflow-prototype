@@ -4,7 +4,7 @@ import { WORKSPACES, effective, setPermission, setWorkspace, type AccessProfile 
 import { copy } from '../copy';
 
 /**
- * One table, one column per workspace (Configurator, Supervisor, Line Supervisor, Operator), one tick per feature, straight from the access catalog:
+ * One table, one column per workspace (Configurator, Supervisor, Operator), one tick per feature, straight from the access catalog:
  * a new feature or workspace appears here by itself. Read-only until `editable`; a role's preset is only the starting point (see policy.ts).
  */
 export function PermissionMatrix({ profile, editable, onChange }: { profile: AccessProfile; editable: boolean; onChange(next: AccessProfile): void }) {

@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
 import { useFleetMaterialCodes } from '@/features/master-data/model/selectors';
+import { useRequestUsers } from '@/features/requests/model/people';
 import { selectFleet, useWorkflow, wfStore } from '../model/store';
 import { stationLabel, useFleetStations } from '../model/stations';
 import type { FieldSpec, WfNode } from '../model/types';
@@ -32,8 +33,9 @@ export function FieldControl({ node, spec, inBranch }: { node: WfNode; spec: Fie
   const label = typeof fd.label === 'function' ? fd.label(node) : fd.label; const value = node.f[fd.key]; const set = wfStore.getState().setField;
   const materialCodes = useFleetMaterialCodes(useWorkflow(selectFleet));
   const stations = useFleetStations(useWorkflow(selectFleet)); const names = Object.fromEntries(stations.map((s) => [s.id, stationLabel(s)]));
-  const opts = fd.optsFrom === 'fleetMaterials' ? materialCodes : fd.optsFrom === 'fleetStations' ? stations.map((s) => s.id) : (fd.opts ?? []);
-  const emptyHint = fd.optsFrom === 'fleetMaterials' && opts.length === 0 ? 'No materials assigned' : fd.optsFrom === 'fleetStations' && opts.length === 0 ? 'No stations on the map' : undefined;
+  const people = useRequestUsers(useWorkflow(selectFleet)); const personNames = Object.fromEntries(people.map((u) => [u.username, u.name]));
+  const opts = fd.optsFrom === 'fleetMaterials' ? materialCodes : fd.optsFrom === 'fleetStations' ? stations.map((s) => s.id) : fd.optsFrom === 'requestUsers' ? people.map((u) => u.username) : (fd.opts ?? []);
+  const emptyHint = fd.optsFrom === 'fleetMaterials' && opts.length === 0 ? 'No materials assigned' : fd.optsFrom === 'fleetStations' && opts.length === 0 ? 'No stations on the map' : fd.optsFrom === 'requestUsers' && opts.length === 0 ? 'No operators on this fleet' : undefined;
 
   if (fd.kind === 'check') return (
     <div className="wf-field row"><span className="wf-label">{label}</span>
@@ -45,14 +47,14 @@ export function FieldControl({ node, spec, inBranch }: { node: WfNode; spec: Fie
     return (
       <div className="wf-field"><span className="wf-label">{label}</span>
         <div className="wf-multi">
-          {vals.map((x, i) => <FieldSelect key={i} label={`${label} ${i + 1}`} names={names} value={x} opts={opts} onChange={(v) => set(node.id, fd.key, v, i)} className="min-w-[78px]" />)}
+          {vals.map((x, i) => <FieldSelect key={i} label={`${label} ${i + 1}`} names={fd.optsFrom === 'requestUsers' ? personNames : names} value={x} opts={opts} onChange={(v) => set(node.id, fd.key, v, i)} className="min-w-[78px]" />)}
           <ButtonUtility size="sm" icon={Plus} tooltip={`Add another ${label}`} onPress={() => wfStore.getState().addMulti(node.id, fd.key, opts)} />
         </div>
       </div>
     );
   }
   const cur = Array.isArray(value) ? value[0] : (value as string);
-  const control = <FieldSelect label={label} names={names} value={cur} opts={opts} placeholder={emptyHint ?? 'Select'} onChange={(v) => set(node.id, fd.key, v)} className={fd.row ? 'min-w-[84px]' : 'w-full'} />;
+  const control = <FieldSelect label={label} names={fd.optsFrom === 'requestUsers' ? personNames : names} value={cur} opts={opts} placeholder={emptyHint ?? 'Select'} onChange={(v) => set(node.id, fd.key, v)} className={fd.row ? 'min-w-[84px]' : 'w-full'} />;
   return fd.row
     ? <div className="wf-field row"><span className="wf-label">{label}</span>{control}</div>
     : <div className="wf-field">{fd.kind === 'cond' ? <span className="wf-clabel">{label}</span> : <span className="wf-label">{label}</span>}{control}</div>;

@@ -1,6 +1,6 @@
 import { LaneGraph, pointAt, type PathPlan } from '../core/lanes';
 import { angleDiff, pointInPoly } from '../core/geom';
-import type { FleetEvent, NavGraph, RobotState, RobotTelemetry, Vec2 } from '../core/types';
+import type { FleetEvent, NavGraph, OrderUpdate, RobotState, RobotTelemetry, TransportOrder, Vec2 } from '../core/types';
 
 const rng = (seed: number) => () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
 const HOLD = 2.4, V = 1.1, ACC = 1.2, DEC = 3, TD = 1.3;       // hold distance before an intersection / traffic zone, cruise speed, accel / brake (m/s^2), robot centre -> trolley centre
@@ -32,7 +32,8 @@ interface Bot {
   trip: Trip | null; task: RobotTelemetry['task']; payload: RobotTelemetry['payload']; dest: string | null; lane: string | null;
 }
 /** One piece of work for one robot: from where it stands, past the stops, to the destination (the last of `legs`). `leg` is the one it is driving now. */
-interface Trip { assignedAtS: number; startedAtS: number | null; deadlineS: number | null; id: string; kind: 'transport' | 'return' | 'charge' | 'park'; origin?: string; legs: string[]; leg: number; loaded: boolean; payload: RobotTelemetry['payload'] }
+interface Trip { assignedAtS: number; startedAtS: number | null; deadlineS: number | null; id: string; kind: 'transport' | 'return' | 'charge' | 'park'; origin?: string; legs: string[]; leg: number; loaded: boolean; payload: RobotTelemetry['payload'];
+  /** A requested trip: its order id, and the leg from which the load is carried (the legs before it are driven empty). Ordinary trips carry from the start. */ orderId?: string; loadFrom?: number }
 /** Stations that work is sent to (not parking spots or chargers). */
 const WORK = (s: NavGraph['stations'][number]) => s.type !== 'charge' && s.type !== 'park';
 const LEAVE_CLEAR = 3;                                         // m: until a robot has driven this far from its station the station still counts as taken by it
@@ -89,10 +90,12 @@ export class FleetSim {
       const lanes = spoken ? null : g.route(b.node, st.nodeId, b.fleetId, stationNodes) ?? g.route(b.node, st.nodeId, b.fleetId, avoid) ?? g.route(b.node, st.nodeId, b.fleetId);      // when the only way out leads past a parked robot, the robot goes anyway and waits for it to leave (it will: it is only parked between jobs)      // keep to roads without other stations on them when there is one: a parked robot must not block through traffic
       if (lanes && lanes.length) {
         const from = b.stationId ?? undefined; const plan = g.plan(lanes, b.pos);
-        Object.assign(b, { prio: this.time, plan, s: 0, entries: this.entriesOf(plan), entryIdx: 0, state: 'moving', dest: id, stationId: null, timer: 0, v: 0, loaded: t.loaded, payload: t.payload, attached: false, trailer: null, gateAt: -9, task: { id: t.id, type: t.kind, from } });
+        const carrying = t.loaded && t.leg >= (t.loadFrom ?? 0);
+        Object.assign(b, { prio: this.time, plan, s: 0, entries: this.entriesOf(plan), entryIdx: 0, state: 'moving', dest: id, stationId: null, timer: 0, v: 0, loaded: carrying, payload: carrying ? t.payload : null, attached: false, trailer: null, gateAt: -9, task: { id: t.id, type: t.kind, from } });
+        if (t.orderId && t.startedAtS === null) this.orderUpdates.push({ id: t.orderId, status: 'ongoing', tripId: t.id, robotId: b.id });
         t.startedAtS ??= this.time; this.syncTask(b); return true;
       }
-      if (t.leg === t.legs.length - 1) return false;          // the destination is never changed: the robot waits and asks again
+      if (t.leg === t.legs.length - 1 || t.orderId) return false;          // the destination is never changed: the robot waits and asks again (a requested trip never skips a station: it is the pick-up or drop-off the person asked for)
       t.legs.splice(t.leg, 1); this.syncTask(b);       // a stop that is taken or cannot be reached is skipped
     }
     return false;
@@ -113,6 +116,7 @@ export class FleetSim {
   }
   /** A new trip: loaded out, empty back, or to a charger when the battery is low. Destinations are far from where the robot starts, with stops on the way. */
   private startTrip(b: Bot): boolean {
+    if (this.takeOrder(b)) return true;
     const low = b.battery < 25; const g = this.graph.nav;
     const park = !low && b.nextLoaded && g.stations.some((q) => q.type === 'park' && q.fleets.includes(b.fleetId)) && this.rand() < 0.15;       // now and then a robot with no work goes to a parking spot and waits
     const kind: 'charge' | 'park' | null = low ? 'charge' : park ? 'park' : null; const loaded = !kind && b.nextLoaded; const avoid = this.occupiedNodes(b); const stationNodes = new Set(g.stations.map((q) => q.nodeId));
@@ -134,6 +138,27 @@ export class FleetSim {
       this.tripSeq--;
     }
     b.trip = null; return false;
+  }
+  // ---- requested trips (orders): people ask for a material to be moved; a free robot of the fleet takes the oldest order
+  /** Orders waiting for a robot (oldest first). */
+  orders: TransportOrder[] = []; private orderUpdates: OrderUpdate[] = [];
+  drainOrderUpdates(): OrderUpdate[] { const u = this.orderUpdates; this.orderUpdates = []; return u; }
+  /** Accept an order: false (and a `failed` update) when the fleet has no robot here or a station is not on the map. */
+  submitOrder(o: TransportOrder): boolean {
+    const known = o.legs.length > 0 && o.legs.every((id) => this.graph.station(id)?.fleets.includes(o.fleetId));
+    if (!known || !this.bots.some((b) => b.fleetId === o.fleetId)) { this.orderUpdates.push({ id: o.id, status: 'failed', reason: known ? 'No robot of this fleet is on the floor' : 'A station of the request is not on the fleet\'s map' }); return false; }
+    if (!this.orders.some((q) => q.id === o.id)) this.orders.push(o); return true;
+  }
+  /** Take the order back while no robot is on its way with it. */
+  cancelOrder(id: string): boolean { const n = this.orders.length; this.orders = this.orders.filter((o) => o.id !== id); return this.orders.length < n; }
+  /** A parked robot with enough battery takes the oldest order of its fleet: it drives to the first station empty and carries the load from the leg the order says. */
+  private takeOrder(b: Bot): boolean {
+    if (b.battery < 25 || !this.orders.length) return false;
+    const order = this.orders.find((o) => o.fleetId === b.fleetId); if (!order) return false;
+    let legs = [...order.legs], loadFrom = order.loadFrom; if (legs[0] === b.stationId && legs.length > 1) { legs = legs.slice(1); loadFrom = Math.max(0, loadFrom - 1); }       // already standing at the first station
+    b.trip = { assignedAtS: this.time, startedAtS: null, deadlineS: this.time + 600, id: `TRP-${String(++this.tripSeq).padStart(3, '0')}`, kind: 'transport', origin: b.stationId ?? undefined, legs, leg: 0, loaded: true, loadFrom, payload: order.payload, orderId: order.id };
+    if (!this.startLeg(b)) { b.trip = null; this.tripSeq--; return false; }          // cannot reach it from here: the order stays for another robot
+    this.orders = this.orders.filter((o) => o !== order); return true;
   }
   /** Every traffic zone and intersection a route passes through, grouped: permits closer than GROUP_GAP are requested together. */
   private entriesOf(plan: PathPlan): Entry[] {
@@ -351,6 +376,7 @@ export class FleetSim {
       b.attached = false; b.trailer = null; b.loaded = false; b.payload = null;                      // delivered: the trolley is unhitched and the load handed over
       const t = b.trip; if (t) t.leg++; const done = !t || t.leg >= t.legs.length;
       if (t && done) this.events.push({ type: 'trip-completed', ts: this.at(this.time), robotId: b.id, fleetId: b.fleetId, tripId: t.id, kind: t.kind, assignedAt: this.at(t.assignedAtS), startedAt: this.at(t.startedAtS ?? t.assignedAtS), deadlineAt: t.deadlineS === null ? null : this.at(t.deadlineS) });
+      if (t && done && t.orderId) this.orderUpdates.push({ id: t.orderId, status: 'completed', tripId: t.id, robotId: b.id });
       if (done) b.trip = null;                    // a stop on the way: a short call, then the next leg
       const charge = b.task?.type === 'charge', parking = b.task?.type === 'park'; b.state = charge ? 'charging' : parking ? 'idle' : 'working'; b.timer = charge ? 3 : parking ? 8 + this.rand() * 12 : done ? 3 + this.rand() * 4 : 1.5 + this.rand() * 2;
       if (b.task) { if (done) b.task.progress = 1; else this.syncTask(b); } return;

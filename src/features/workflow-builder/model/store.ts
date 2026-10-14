@@ -7,12 +7,12 @@ import { createNode, syncIds } from './factory';
 import { applySteps, parsePrompt } from './parsePrompt';
 import { defaultWorkflowName, workflowNameError } from './names';
 import { datasetStore, useDataset } from '@/data/dataset';
-import { blankWorkflow, isBlankDraft, isKept, seedWorkflows } from './seed';
+import { blankWorkflow, isBlankDraft, isKept, seedWorkflows, upgradeToV5 } from './seed';
 import { insertNode, locate, moveNode, removeNode, updateField, type Problem } from './tree';
 import { publishProblem } from './validate';
 import type { FieldValue, ListKey, NodeTypeId, WfNode, Workflow, Workflows } from './types';
 
-const KEY = 'atiflow.workflows.v4', KEY_V3 = 'atiflow.workflows.v3', KEY_V2 = 'atiflow.workflows.v2';
+const KEY = 'atiflow.workflows.v5', KEY_V4 = 'atiflow.workflows.v4', KEY_V3 = 'atiflow.workflows.v3', KEY_V2 = 'atiflow.workflows.v2';
 export interface SimState { status: 'idle' | 'running' | 'done'; step: string; progress: number; currentId: string | null; taken: Record<string, 't' | 'o'>; visited: string[]; hlStation: string | null }
 export const SIM_IDLE: SimState = { status: 'idle', step: '', progress: 0, currentId: null, taken: {}, visited: [], hlStation: null };
 interface History { undo: string[]; redo: string[] }
@@ -62,7 +62,9 @@ function load(): Saved {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null');
     const keep = (ws: Workflows): Workflows => Object.fromEntries(Object.entries(ws).filter(([, w]) => isKept(w)));       // unsaved workflows do not survive a reload
-    if (raw?.workflows && Array.isArray(raw.fleetNames)) { const workflows = keep(raw.workflows); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
+    if (raw?.workflows && typeof raw.workflows === 'object') { const workflows = keep(raw.workflows); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
+    const v4 = JSON.parse(localStorage.getItem(KEY_V4) ?? 'null');         // v4: placeholder User IDs and the "Request from Tablet" type
+    if (v4?.workflows && typeof v4.workflows === 'object') { const workflows = upgradeToV5(keep(v4.workflows)); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
     const v3 = JSON.parse(localStorage.getItem(KEY_V3) ?? 'null');         // v3: no saved flag; built workflows with a fleet count as saved
     if (v3?.workflows && Array.isArray(v3.fleetNames)) {
       const workflows = Object.fromEntries(Object.entries(v3.workflows as Workflows).filter(([, w]) => w.fleet && w.nodes.length > 2).map(([id, w]) => [id, { ...w, saved: true }]));

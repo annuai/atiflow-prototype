@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
-import { OPERATOR_ACTION_CENTER_PATH } from '@/features/action-center/operatorNav';
+import { OPERATOR_ACTION_CENTER_PATH, OPERATOR_APPROVE_PATH, OPERATOR_REQUEST_PATH } from '@/features/action-center/operatorNav';
 import { LIVE_FLOOR_PATH } from '@/features/live-floor/liveNav';
 import { NotificationItem } from './components/NotificationItem';
 import { copy } from './copy';
@@ -17,7 +17,7 @@ export function NotificationsPage() {
   const items = useNotifications((s) => s.items); const [tab, setTab] = useState<Tab>('all'); const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const t = window.setInterval(() => setNow(Date.now()), 20_000); return () => window.clearInterval(t); }, []);
   const unread = items.filter((n) => !n.read).length; const shown = tab === 'unread' ? items.filter((n) => !n.read) : items; const st = useNotificationStore().getState();
-  const run = (a: NotificationAction) => (role === 'operator' ? navigate(OPERATOR_ACTION_CENTER_PATH) : navigate(LIVE_FLOOR_PATH, a.kind === 'locate' ? { state: { locate: a.robotId } } : undefined));        // operators have no Live Floor: their alerts open the Action Center
+  const run = (a: NotificationAction) => (a.kind === 'requests' ? navigate(`${OPERATOR_REQUEST_PATH}?tab=history`) : a.kind === 'approvals' ? navigate(OPERATOR_APPROVE_PATH) : role === 'operator' ? navigate(OPERATOR_ACTION_CENTER_PATH) : navigate(LIVE_FLOOR_PATH, a.kind === 'locate' ? { state: { locate: a.robotId } } : undefined));        // operators have no Live Floor: their alerts open the Action Center
   return (
     <>
       <div className="content">
