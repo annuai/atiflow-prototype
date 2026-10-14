@@ -1,53 +1,67 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { store, useApp } from '@/core/store';
-import { summarise } from '@/core/stats';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Monitor01 } from '@untitledui/icons';
+import { BadgeWithDot } from '@/components/base/badges/badges';
+import { Button } from '@/components/base/buttons/button';
+import { useLoadPhase } from '@/components/skeleton/Skeleton';
+import { useApp } from '@/core/store';
 import { useAuth } from '@/features/auth/authStore';
-import { feed, liveStats } from '@/features/live-floor/liveFeed';
 import { LIVE_FLOOR_PATH, liveHits, useLiveNav } from '@/features/live-floor/liveNav';
-import { useMasterData } from '@/features/master-data/model/store';
-import { AppShell } from '@/shell/AppShell';
 import { notify } from '@/ui/toast';
-import { KeyInsightsCard } from './components/KeyInsightsCard';
+import { ActivityCard } from './components/ActivityCard';
+import { BatteryCard } from './components/BatteryCard';
+import { FleetStatesCard } from './components/FleetStatesCard';
+import { HotspotsCard } from './components/HotspotsCard';
+import { DashboardSkeleton } from './components/DashboardSkeleton';
+import { KpiRow } from './components/KpiRow';
 import { LiveStatusCard } from './components/LiveStatusCard';
-import { MetricCards } from './components/MetricCards';
-import { PerformanceCard } from './components/PerformanceCard';
-import { RobotAlertsCard } from './components/RobotAlertsCard';
-import { firstName, greeting, insights, metricCards, performance, robotAlerts, utilisationBars, type Compare } from './model';
+import { NeedsAttentionCard } from './components/NeedsAttentionCard';
+import { StatusStrip } from './components/StatusStrip';
+import { TripsCard } from './components/TripsCard';
+import { copy } from './copy';
+import { firstName, greeting } from './data/greeting';
+import { useDashboard } from './data/source';
+import { TvScreen } from './tv/TvScreen';
 
-const soon = () => notify.info('Reports aren\'t part of this prototype', 'The Live Floor shows the same robots in real time.', 'soon');
-
-/** Supervisor home: the fleet at a glance. Numbers come from the same live feed as the Live Floor. */
+/**
+ * The supervisor dashboard: "do I need to do anything?" first (status strip, needs attention), then the fleets, the floor and the activity. Every number comes from `useDashboard()`;
+ * to use real data, write another `DashboardSource` (data/source.ts).
+ */
 export function DashboardPage() {
-  const navigate = useNavigate(); const user = useAuth((s) => s.user); const site = useApp((s) => s.site);
-  const [robots, setRobots] = useState(() => Object.values(store.getState().robots));                // the feed ticks 10 times a second; the dashboard refreshes 2-3 times a second
-  useEffect(() => { const t = window.setInterval(() => setRobots(Object.values(store.getState().robots)), 400); return () => window.clearInterval(t); }, []);
-  const materials = useMasterData((s) => s.materials);
-  const [compare, setCompare] = useState<Compare>('yesterday'); const [period, setPeriod] = useState<'today' | 'yesterday'>('today');
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => { const release = feed.acquire(); void feed.ready(); const t = window.setInterval(() => setNow(new Date()), 15_000); return () => { release(); window.clearInterval(t); }; }, []);
-  const summary = useMemo(() => summarise(robots), [robots]);
-  const util = summary.utilisation;
-  const stats = performance(liveStats.utilisationAt(now.getHours()) ?? util, liveStats.tripsDone, liveStats.distanceM, liveStats.downtimeS, compare);
-  const bars = utilisationBars(now.getHours(), (h) => liveStats.utilisationAt(h));
+  const navigate = useNavigate(); const user = useAuth((s) => s.user); const site = useApp((s) => s.site); const snap = useDashboard(); const phase = useLoadPhase(!snap);
+  const [params, setParams] = useSearchParams(); const tv = params.get('tv') === '1';
+  const setTv = useCallback((on: boolean) => {
+    setParams(on ? { tv: '1' } : {}, { replace: true });
+    if (on) void document.documentElement.requestFullscreen?.().catch(() => {}); else if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});       // real full screen when the browser allows it
+  }, [setParams]);
+  const exitTv = useCallback(() => setTv(false), [setTv]);
+  const [hour, setHour] = useState(() => new Date().getHours()); useEffect(() => { const t = window.setInterval(() => setHour(new Date().getHours()), 60_000); return () => window.clearInterval(t); }, []);
   const locate = (id: string) => navigate(LIVE_FLOOR_PATH, { state: { locate: id } });
-  const openLive = () => navigate(LIVE_FLOOR_PATH);
+  const help = () => notify.info(copy.attention.helpToast, copy.attention.helpBody, 'call-help');           // placeholder until a notification service exists
   return (
-    <AppShell useNavModel={useLiveNav} getHits={liveHits} searchPlaceholder="Search robots, stations, zones…">
+    <>
       <div className="content">
-        <div className="title-block"><div><h1>{greeting(now.getHours())} {user ? firstName(user.name) : 'there'}</h1><p>Here&apos;s what&apos;s happening today</p></div><div className="actions" /></div>
+        <div className="title-block"><div><h1>{greeting(hour)} {user ? firstName(user.name) : 'there'}</h1><p>{copy.subtitle}</p></div>
+          <div className="actions items-center"><BadgeWithDot size="md" color="success">{copy.live}</BadgeWithDot><Button size="sm" color="secondary" iconLeading={Monitor01} onPress={() => setTv(true)}>{copy.tv}</Button></div></div>
         <div className="builder md-card"><div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
-          <MetricCards cards={metricCards(summary, compare)} />
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-            <PerformanceCard now={now} bars={bars} stats={stats} compare={compare} onCompare={setCompare} onOpen={soon} />
-            <KeyInsightsCard items={insights(robots, materials[0]?.code ?? null, now, period)} period={period} onPeriod={setPeriod} onOpen={soon} />
-          </div>
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-            <LiveStatusCard site={site} robots={robots} onLocate={locate} onOpen={openLive} />
-            <RobotAlertsCard alerts={robotAlerts(robots, now.getTime())} now={now.getTime()} onLocate={locate} onOpen={openLive} />
-          </div>
+          {!snap || phase !== 'ready' ? (phase === 'skeleton' ? <DashboardSkeleton /> : null) : <>
+            <StatusStrip status={snap.status} />
+            <KpiRow kpis={snap.kpis} />
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+              <NeedsAttentionCard items={snap.attention} onLocate={locate} onHelp={help} />
+              <FleetStatesCard fleets={snap.fleets} onSelect={() => navigate(LIVE_FLOOR_PATH)} />
+            </div>
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+              <LiveStatusCard site={snap.site ?? site} robots={snap.robots} onLocate={locate} onOpen={() => navigate(LIVE_FLOOR_PATH)} />
+              <TripsCard running={snap.trips.running} recent={snap.trips.recent} onLocate={locate} />
+            </div>
+            <ActivityCard history={snap.history} seconds={snap.historySeconds} robots={snap.robots.length} />
+            <div className="grid gap-4 lg:grid-cols-2"><BatteryCard battery={snap.battery} onLocate={locate} /><HotspotsCard hotspots={snap.hotspots} /></div>
+            <p className="text-center text-xs text-tertiary">{copy.sample}</p>
+          </>}
         </div></div>
       </div>
-    </AppShell>
+      {tv && snap && <TvScreen snap={snap} siteName={site?.name ?? 'Live floor'} onExit={exitTv} />}
+    </>
   );
 }

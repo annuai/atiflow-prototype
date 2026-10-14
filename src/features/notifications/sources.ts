@@ -6,4 +6,5 @@ import type { SourcesByAudience } from './types';
 export const SOURCES: SourcesByAudience = {
   supervisor: () => [liveAlertsSource()],
   configurator: () => [mesSource()],
+  operator: () => [liveAlertsSource()],         // the same robot alerts: operators handle stuck robots too
 };

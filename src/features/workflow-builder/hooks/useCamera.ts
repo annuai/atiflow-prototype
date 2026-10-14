@@ -57,13 +57,14 @@ export function useCamera(canvasRef: RefObject<HTMLDivElement | null>, innerRef:
     const dist = () => { const [a, b] = [...pts.values()]; return Math.hypot(a.x - b.x, a.y - b.y); }; const mid = () => { const [a, b] = [...pts.values()]; return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
     const down = (e: PointerEvent) => {
       if ((e.button !== 0 && e.pointerType === 'mouse') || (e.target as HTMLElement).closest('[data-no-pan]')) return;
-      pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); try { c.setPointerCapture(e.pointerId); } catch { /* synthetic */ }
+      if (e.pointerType !== 'touch' && (e.target as HTMLElement).closest('.wf-node')) return;           // a mouse press on a card selects it or drags it, it never pans the canvas
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });                                           // (the pointer is captured only once a pan really starts, so a plain click still reaches the card and its buttons)
       if (pts.size === 1) pan = { x: e.clientX, y: e.clientY, cx: cam.current.x, cy: cam.current.y, on: false }; else if (pts.size === 2) { pan = null; pinch = { d: dist(), z: cam.current.z }; }
     };
     const move = (e: PointerEvent) => {
       if (!pts.has(e.pointerId)) return; const prev = pts.size === 2 ? mid() : null; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pts.size === 2 && pinch) { const m = mid(), r = c.getBoundingClientRect(); const k = cam.current; if (prev) { k.x += m.x - prev.x; k.y += m.y - prev.y; } setZoomAt(pinch.z * (dist() / pinch.d), m.x - r.left, m.y - r.top); return; }
-      if (pan) { const dx = e.clientX - pan.x, dy = e.clientY - pan.y; if (!pan.on) { if (Math.hypot(dx, dy) < 3) return; pan.on = true; c.classList.add('panning'); } cam.current.x = pan.cx + dx; cam.current.y = pan.cy + dy; apply(); }
+      if (pan) { const dx = e.clientX - pan.x, dy = e.clientY - pan.y; if (!pan.on) { if (Math.hypot(dx, dy) < 3) return; pan.on = true; c.classList.add('panning'); try { c.setPointerCapture(e.pointerId); } catch { /* synthetic */ } } cam.current.x = pan.cx + dx; cam.current.y = pan.cy + dy; apply(); }
     };
     const up = (e: PointerEvent) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (!pts.size) { pan = null; c.classList.remove('panning'); } };
     const key = (e: KeyboardEvent) => {

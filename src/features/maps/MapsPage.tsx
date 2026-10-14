@@ -4,9 +4,7 @@ import { EmptyState } from '@/components/application/empty-state/empty-state';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
-import { configuratorHits, useConfiguratorNav } from '@/features/configurator/configuratorNav';
 import { useFleets } from '@/features/fleets/model/store';
-import { AppShell } from '@/shell/AppShell';
 import { copy } from './copy';
 import { GenerateMapModal } from './components/GenerateMapModal';
 import { ImportMapModal } from './components/ImportMapModal';
@@ -25,7 +23,7 @@ export function MapsPage() {
     <Button size="sm" color="primary" iconLeading={Plus} onPress={() => setGenerating(true)}>{copy.create}</Button>
   </>);
   return (
-    <AppShell useNavModel={useConfiguratorNav} getHits={configuratorHits} searchPlaceholder="Search live operations, fleets, trips, analytics...">
+    <>
       <div className="content">
         <div className="title-block"><div><h1>{copy.title}</h1><p>{copy.subtitle}</p></div><div className="actions">{actions()}</div></div>
         <div className="builder md-card">
@@ -50,6 +48,6 @@ export function MapsPage() {
       </div>
       <GenerateMapModal isOpen={generating} onOpenChange={setGenerating} />
       <ImportMapModal isOpen={importing} onOpenChange={setImporting} />
-    </AppShell>
+    </>
   );
 }

@@ -10,7 +10,7 @@ const isStation = (s: string) => /\b(pick ?up|pickup|collect|load|drop|deliver|u
 function stationFrom(s: string, inBranch: boolean): WfNode {
   const m = s.match(/sta[\s-]?(\d{3})|\bs[\s-]?(\d{3})\b|station\s+(\d{3})/); const num = m ? m[1] || m[2] || m[3] : null;
   const action = /\b(drop|deliver|unload)/.test(s) ? 'Drop Off' : 'Pick Up';
-  return inBranch ? createNode('station', { action, station: ['S' + (num || '101')] }) : createNode('station', { action, station: num ? 'STA-' + num : 'STA-101' });
+  return inBranch ? createNode('station', { action, station: ['STA-' + (num || '101')] }) : createNode('station', { action, station: num ? 'STA-' + num : 'STA-101' });
 }
 
 const canon = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');

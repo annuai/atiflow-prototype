@@ -9,14 +9,14 @@ export function seedWorkflows(): Workflows {
     { id: 'w-line-side-1', name: defaultWorkflowName(FLEET_NAME.lineSide), fleet: FLEET_NAME.lineSide, saved: true, nodes: [
       createStart(),
       createNode('material', { type: 'Material', code: 'DCP-1003', fromTablet: false, qty: '10' }),
-      createNode('logic', { material: 'DCP-1003', station: 'S102', cond: 'Greater than', qty: '10' }),
+      createNode('logic', { material: 'DCP-1003', station: 'STA-102', cond: 'Greater than', qty: '10' }),
       createNode('confirm', { op: 'Dispatch Button' }), createNode('station', { action: 'Drop Off', station: 'STA-102' }), createNode('station', { action: 'Pick Up', station: 'STA-103' }),
       createNode('container'), createNode('confirm', { op: 'Dispatch Button' }), createNode('station', { action: 'Drop Off', station: 'STA-104', lbl: 'Station' }),
       createNode('confirm', { op: 'Dispatch Button' }), createNode('end')] },
     { id: 'w-assembly-1', name: defaultWorkflowName(FLEET_NAME.assembly), fleet: FLEET_NAME.assembly, saved: true, nodes: [
       createStart({ trigger: 'Auto', request: 'MES' }),
-      createNode('material', { type: 'Material', code: 'DCP-1005', qty: '10' }), createNode('confirm', { op: 'Tablet' }), createNode('station', { action: 'Pick Up', station: 'STA-103' }),
-      createNode('confirm', { op: 'Dispatch Button' }), createNode('station', { action: 'Drop Off', station: 'SA-101' }), createNode('confirm', { op: 'Dispatch Button' }), createNode('end')] },
+      createNode('material', { type: 'Material', code: 'DCP-1005', qty: '10' }), createNode('confirm', { op: 'Tablet' }), createNode('station', { action: 'Pick Up', station: 'STA-116' }),
+      createNode('confirm', { op: 'Dispatch Button' }), createNode('station', { action: 'Drop Off', station: 'STA-113' }), createNode('confirm', { op: 'Dispatch Button' }), createNode('end')] },
   ];
   return Object.fromEntries(list.map((w) => [w.id, w]));
 }

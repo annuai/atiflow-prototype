@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ALL_PERMISSIONS, WORKSPACES, assignableRoles, canDeleteUser, canManageUsers, canOpen, can, effective, enterableWorkspaces, isCustomised, landingPath, presetOf, setPermission, setWorkspace, withRole, workspaceOfPath, workspacesOf } from '../src/features/access';
 import { authStore } from '../src/features/auth/authStore';
 import { findUser } from '../src/features/auth/authService';
-import { migrate, toPublic, userDirectory, usernameTaken } from '../src/features/auth/userDirectory';
+import { applySeedRevision, migrate, toPublic, userDirectory, usernameTaken } from '../src/features/auth/userDirectory';
 import { validateBasics, validateNew } from '../src/features/users/model/validate';
 
 const kavin = { username: 'kavin', role: 'configurator' as const }, arjun = { username: 'arjun', role: 'supervisor' as const };
@@ -12,24 +12,24 @@ const meera = { username: 'meera', role: 'configurator' as const, custom: { add:
 describe('the access catalog: what exists to be permitted', () => {
   it('has the four workspaces with the features of the brief, in order', () => {
     expect(WORKSPACES.map((w) => w.name)).toEqual(['Configurator', 'Supervisor', 'Line Supervisor', 'Operator']);
-    expect(WORKSPACES[0].features.map((f) => f.label)).toEqual(['Robots', 'Maps', 'Hardware', 'Master Data', 'Workflows', 'Fleets']); expect(WORKSPACES[1].features.map((f) => f.label)).toEqual(['Dashboard', 'Reports', 'Live Floor']);
-    expect(WORKSPACES[2].features).toEqual([]); expect(WORKSPACES[3].features.map((f) => f.label)).toEqual(['Dispatch', 'Request', 'Confirm']); expect(new Set(ALL_PERMISSIONS).size).toBe(ALL_PERMISSIONS.length);
+    expect(WORKSPACES[0].features.map((f) => f.label)).toEqual(['Robots', 'Maps', 'Hardware', 'Master Data', 'Workflows', 'Fleets', 'Settings']); expect(WORKSPACES[1].features.map((f) => f.label)).toEqual(['Dashboard', 'Reports', 'Live Floor', 'Action Center', 'Settings']);
+    expect(WORKSPACES[2].features).toEqual([]); expect(WORKSPACES[3].features.map((f) => f.label)).toEqual(['Action Center', 'Dispatch', 'Request', 'Confirm']); expect(new Set(ALL_PERMISSIONS).size).toBe(ALL_PERMISSIONS.length);
   });
-  it('the dashboard permission covers dashboard-new too; unbuilt workspaces cannot be entered', () => {
-    expect(canOpen(arjun, '/supervisor/dashboard')).toBe(true); expect(canOpen(arjun, '/supervisor/dashboard-new')).toBe(true); expect(enterableWorkspaces({ role: 'operator' })).toEqual([]);
+  it('a workspace without pages cannot be entered', () => {
+    expect(canOpen(arjun, '/supervisor/dashboard')).toBe(true); expect(enterableWorkspaces({ role: 'line-supervisor' })).toEqual([]); expect(enterableWorkspaces({ role: 'operator' }).map((w) => w.id)).toEqual(['operator']);
     expect(workspaceOfPath('/supervisor/reports')).toBe('supervisor'); expect(workspaceOfPath('/configurator')).toBe('configurator'); expect(workspaceOfPath('/login')).toBeNull();
   });
 });
 
 describe('roles are presets; a user can be customised on top', () => {
-  it('configurator = the six configurator features and nothing else; supervisor = the three; operator = the three; and Meera (a configurator with everything ticked) holds every permission', () => {
+  it('configurator = the seven configurator features and nothing else; supervisor = the four; operator = the four; and Meera (a configurator with everything ticked) holds every permission', () => {
     expect([...effective(kavin)].sort()).toEqual(WORKSPACES[0].features.map((f) => f.id).sort()); expect([...effective(arjun)].sort()).toEqual(WORKSPACES[1].features.map((f) => f.id).sort());
-    expect(presetOf('operator')).toHaveLength(3); expect(presetOf('line-supervisor')).toEqual([]); expect([...effective(meera)].sort()).toEqual([...ALL_PERMISSIONS].sort()); expect(isCustomised(meera)).toBe(true);
+    expect(presetOf('operator')).toHaveLength(4); expect(presetOf('line-supervisor')).toEqual([]); expect([...effective(meera)].sort()).toEqual([...ALL_PERMISSIONS].sort()); expect(isCustomised(meera)).toBe(true);
   });
   it('Kavin (configurator) opens configuration but not the supervisor pages; Arjun (supervisor) the opposite; both have notifications of their own workspace', () => {
     for (const p of ['/configurator', '/configurator/robots', '/configurator/maps', '/configurator/hardware/AMR-001', '/configurator/master-data/materials', '/configurator/workflows/abc', '/configurator/fleets/Line%20Side%20Fleet/overview', '/configurator/notifications']) expect(canOpen(kavin, p), p).toBe(true);
     for (const p of ['/supervisor/dashboard', '/supervisor/reports', '/supervisor/livefloor', '/supervisor/notifications']) expect(canOpen(kavin, p), p).toBe(false);
-    for (const p of ['/supervisor/dashboard', '/supervisor/dashboard-new', '/supervisor/reports', '/supervisor/livefloor', '/supervisor/notifications']) expect(canOpen(arjun, p), p).toBe(true);
+    for (const p of ['/supervisor/dashboard', '/supervisor/reports', '/supervisor/livefloor', '/supervisor/notifications']) expect(canOpen(arjun, p), p).toBe(true);
     for (const p of ['/configurator', '/configurator/robots', '/configurator/users', '/configurator/notifications']) expect(canOpen(arjun, p), p).toBe(false);
   });
   it('only configurators see the Users page', () => {
@@ -44,8 +44,8 @@ describe('roles are presets; a user can be customised on top', () => {
     expect(withRole('operator')).toEqual({ role: 'operator' });
     const all = setWorkspace(arjun, 'configurator', true); expect(WORKSPACES[0].features.every((f) => can(all, f.id))).toBe(true); expect(isCustomised(setWorkspace(all, 'configurator', false))).toBe(false);
   });
-  it('workspaces of a user: only those with a permission; Meera holds three, of which operator has no pages yet', () => {
-    expect(workspacesOf(kavin).map((w) => w.id)).toEqual(['configurator']); expect(workspacesOf(meera).map((w) => w.id)).toEqual(['configurator', 'supervisor', 'operator']); expect(enterableWorkspaces(meera).map((w) => w.id)).toEqual(['configurator', 'supervisor']);
+  it('workspaces of a user: only those with a permission; Meera holds three, all of which can be entered', () => {
+    expect(workspacesOf(kavin).map((w) => w.id)).toEqual(['configurator']); expect(workspacesOf(meera).map((w) => w.id)).toEqual(['configurator', 'supervisor', 'operator']); expect(enterableWorkspaces(meera).map((w) => w.id)).toEqual(['configurator', 'supervisor', 'operator']);
     expect(workspacesOf(setPermission(kavin, 'supervisor.reports', true)).map((w) => w.id)).toEqual(['configurator', 'supervisor']);
   });
 });
@@ -55,7 +55,7 @@ describe('where a user lands', () => {
     expect(landingPath(kavin)).toBe('/configurator'); expect(landingPath(arjun)).toBe('/supervisor/dashboard'); expect(landingPath(meera)).toBe('/configurator');
     expect(landingPath(arjun, '/supervisor/reports')).toBe('/supervisor/reports'); expect(landingPath(arjun, '/configurator/robots')).toBe('/supervisor/dashboard'); expect(landingPath(kavin, '/supervisor/livefloor')).toBe('/configurator');
     const onlyReports = { role: 'supervisor' as const, custom: { add: [], remove: ['supervisor.dashboard' as const, 'supervisor.live-floor' as const] } }; expect(landingPath(onlyReports)).toBe('/supervisor/reports');
-    expect(landingPath({ role: 'operator' })).toBe('/no-access'); expect(landingPath({ role: 'line-supervisor' })).toBe('/no-access');
+    expect(landingPath({ role: 'operator' })).toBe('/operator/action-center'); expect(landingPath({ role: 'line-supervisor' })).toBe('/no-access');
     const onlyFleets = { role: 'configurator' as const, custom: { add: [], remove: WORKSPACES[0].features.filter((f) => f.id !== 'configurator.fleets').map((f) => f.id) } }; expect(landingPath(onlyFleets)).toBe('/configurator/notifications');
   });
 });
@@ -84,7 +84,7 @@ describe('the user directory and the session', () => {
     userDirectory.getState().remove('arjun'); expect(authStore.getState().user).toBeNull();
   });
   it('validation: required names, a valid unique username, a valid email, a password of 4+, an assignable role', () => {
-    const ok = { firstName: 'A', lastName: '', username: 'new_user', email: 'a@b.co', password: 'abcd', role: 'operator' as const, title: '' }; const roles = assignableRoles();
+    const ok = { firstName: 'A', lastName: '', username: 'new_user', email: 'a@b.co', password: 'abcd', role: 'operator' as const, title: '', fleets: ['line-side'] }; const roles = assignableRoles();
     expect(validateNew(ok, () => false, roles)).toEqual({}); expect(validateNew({ ...ok, username: 'kavin' }, usernameTaken, roles).username).toMatch(/already exists/); expect(validateNew({ ...ok, username: 'a b' }, () => false, roles).username).toBeTruthy();
     expect(validateNew({ ...ok, email: 'nope' }, () => false, roles).email).toBeTruthy(); expect(validateNew({ ...ok, password: '123' }, () => false, roles).password).toBeTruthy(); expect(validateNew({ ...ok, firstName: ' ' }, () => false, roles).firstName).toBe('Required');
     expect(validateNew({ ...ok, role: 'nonsense' as never }, () => false, roles).role).toBeTruthy(); expect(validateBasics({ firstName: '', email: 'x@y.zz' })).toEqual({ firstName: 'Required' });
@@ -99,5 +99,12 @@ describe('profile pictures and old saved users', () => {
   it('a chosen picture is kept with the user and shown; a saved directory with the old superuser role becomes a configurator with every other module ticked', () => {
     const d = userDirectory.getState(); d.reset(); const u = d.add({ username: 'ann', password: 'abcd', firstName: 'Ann', lastName: '', email: 'ann@x.co', role: 'operator', avatar: 'data:image/jpeg;base64,AAAA' }); expect(toPublic(u).avatar).toBe('data:image/jpeg;base64,AAAA'); expect(toPublic(userDirectory.getState().users[0]).avatar).toBeTruthy();    // arjun keeps his own
     const old = migrate([{ username: 'x', password: 'p', firstName: 'X', lastName: '', email: 'x@y.zz', role: 'superuser' as never, title: 'T' }])[0]; expect(old.role).toBe('configurator'); expect(effective(old).size).toBe(ALL_PERMISSIONS.length);
+  });
+});
+
+describe('a saved directory gets a seed user\'s new starting access once', () => {
+  it('Meera, saved before supervisor Settings existed, receives it; other users and later changes are untouched', () => {
+    const saved = [{ username: 'meera', password: 'x', firstName: 'Meera', lastName: '', email: 'm@x.co', role: 'configurator' as const, title: 'T', custom: { add: ALL_PERMISSIONS.filter((p) => !p.startsWith('configurator.') && p !== 'supervisor.settings'), remove: [] } }, { username: 'kavin', password: 'x', firstName: 'K', lastName: '', email: 'k@x.co', role: 'configurator' as const, title: 'T' }];
+    const out = applySeedRevision(saved, 1); expect(effective(out[0]).has('supervisor.settings')).toBe(true); expect(out[1]).toBe(saved[1]); expect(applySeedRevision(saved, 3)).toBe(saved);
   });
 });

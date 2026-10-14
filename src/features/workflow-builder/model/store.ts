@@ -2,6 +2,7 @@ import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { notify } from '@/ui/toast';
 import { fleetMaterialCodes } from '@/features/master-data/model/selectors';
+import { fleetStations } from './stations';
 import { createNode, syncIds } from './factory';
 import { applySteps, parsePrompt } from './parsePrompt';
 import { defaultWorkflowName, workflowNameError } from './names';
@@ -42,6 +43,8 @@ export interface WfState {
   removeNode(id: string): void; moveNode(id: string, key: ListKey, at: number): void;
   setField(id: string, key: string, value: FieldValue, idx?: number): void;
   addMulti(id: string, key: string, options: string[]): void;
+  /** Clicked a station on the map while this node is selected: a single station field takes it, a branch (several stations) adds it, or removes it when it is already there. */
+  pickStation(id: string, stationId: string): void;
   undo(): void; redo(): void;
   buildFromPrompt(text: string): boolean; publish(): void;
   setSim(patch: Partial<SimState>): void;
@@ -75,7 +78,13 @@ function load(): Saved {
   } catch { /* fall through */ }
   return { workflows: seedWorkflows(), current: null };
 }
-const boot = load();
+/** Workflows saved before stations came from the map used S101-style names in branches and If Logic: they are the map's STA-101 stations. */
+function migrateStations(ws: Workflows): Workflows {
+  const fix = (v: FieldValue): FieldValue => (Array.isArray(v) ? v.map((x) => String(fix(x))) : typeof v === 'string' ? v.replace(/^S(\d{3})$/, 'STA-$1') : v);
+  const walk = (nodes: WfNode[]) => nodes.forEach((n) => { if ('station' in n.f) n.f.station = fix(n.f.station); if (n.br) { walk(n.br.t); walk(n.br.o); } });
+  Object.values(ws).forEach((w) => walk(w.nodes)); return ws;
+}
+const boot = (() => { const b = load(); migrateStations(b.workflows); return b; })();
 
 export const wfStore = createStore<WfState>((set, get) => {
   const problem = (p: Problem | undefined) => { if (p) notify.warning(p.title, p.body || undefined, 'wf-problem'); return !!p; };
@@ -125,8 +134,9 @@ export const wfStore = createStore<WfState>((set, get) => {
       if (!get().current) return;
       if (t === 'aiot') { problem({ title: 'AIoT has no node card in the Figma file yet', body: 'Only the palette tile is designed, so it can’t be added to the canvas.' }); return; }
       const first = fleetMaterialCodes(fleetOf())[0] ?? '';      // new Material / If Logic nodes start on the fleet's first assigned material
-      const node = createNode(t, t === 'station' && key !== 'main' ? { station: ['S101'] } : t === 'material' ? { code: first } : undefined);
-      if (t === 'logic') node.f.material = first;
+      const firstStation = fleetStations(fleetOf())[0]?.id ?? '';       // new Station / If Logic nodes start on the fleet's first station of the map
+      const node = createNode(t, t === 'station' ? { station: key !== 'main' ? [firstStation] : firstStation } : t === 'material' ? { code: first } : undefined);
+      if (t === 'logic') { const [a = '', b = a] = fleetStations(fleetOf()).map((s) => s.id); node.f.material = first; node.f.station = a; if (a) { node.br!.t[0].f.station = [a]; node.br!.o[0].f.station = [b]; } }
       const r = insertNode(get().nodes(), node, key, at); if (problem(r.problem)) return;
       commit(r.nodes); set({ selected: node.id, justAdded: node.id });
     },
@@ -137,6 +147,11 @@ export const wfStore = createStore<WfState>((set, get) => {
       const n = locate(get().nodes(), id)?.node; if (!n) return; const cur = n.f[key]; const vals = Array.isArray(cur) ? cur : [cur as string];
       const next = options.find((o) => !vals.includes(o)); if (!next) { notify.warning('Every option is already added.', '', 'wf-problem'); return; }
       commit(updateField(get().nodes(), id, key, [...vals, next]));
+    },
+    pickStation(id, stationId) {
+      const n = locate(get().nodes(), id)?.node; if (!n || (n.t !== 'station' && n.t !== 'logic')) return; const cur = n.f.station;
+      const next = Array.isArray(cur) ? (cur.includes(stationId) ? (cur.length > 1 ? cur.filter((x) => x !== stationId) : cur) : [...cur.filter(Boolean), stationId]) : stationId;
+      commit(updateField(get().nodes(), id, 'station', next)); set({ selected: id });
     },
     undo() { const { current, hist, workflows } = get(); if (!current) return; const h = hist[current]; const s = h?.undo.at(-1); if (!h || s === undefined) return;
       set({ workflows: { ...workflows, [current]: { ...workflows[current], nodes: JSON.parse(s) } }, hist: { ...hist, [current]: { undo: h.undo.slice(0, -1), redo: [...h.redo, JSON.stringify(workflows[current].nodes)] } }, selected: null }); },

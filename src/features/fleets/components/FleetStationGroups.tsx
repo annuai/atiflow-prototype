@@ -28,8 +28,8 @@ export function FleetStationGroups({ fleet, materials, masterGroups, toolbarLeft
   const inGroup = group ? materials.filter((m) => group.codes.includes(m.code)) : [];
   const addable: PickerRow[] = materials.filter((m) => group && !group.codes.includes(m.code)).map((m) => ({ code: m.code, name: m.name, group: masterGroups.find((g) => g.id === m.group)?.name ?? '', status: 'available' as const }));
   const columns: Column<Material>[] = [
-    { id: 'material', header: copy.materials.columns.material, cell: (m) => <div><p className="text-sm font-medium text-primary">{m.name}</p><p className="text-sm text-tertiary">{m.code}</p></div> },
-    { id: 'group', header: copy.materials.columns.group, cell: (m) => <Badge size="sm" type="pill-color" color="gray">{groupName(m)}</Badge> },
+    { id: 'material', sort: (m) => m.name, header: copy.materials.columns.material, cell: (m) => <div><p className="text-sm font-medium text-primary">{m.name}</p><p className="text-sm text-tertiary">{m.code}</p></div> },
+    { id: 'group', sort: (m) => groupName(m), header: copy.materials.columns.group, cell: (m) => <Badge size="sm" type="pill-color" color="gray">{groupName(m)}</Badge> },
     { id: 'menu', header: '', headClassName: 'w-12', className: 'w-12 text-right', cell: (m) => <RowMenu label={copy.groups.rowMenu.label} onAction={() => group && fleetsStore.getState().removeFromGroup(fleet, group.id, m.code)} items={[{ id: 'remove', label: copy.groups.rowMenu.remove, icon: Trash01 }]} /> },
   ];
   return (

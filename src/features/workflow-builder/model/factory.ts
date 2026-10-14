@@ -12,7 +12,7 @@ export function syncIds(nodes: WfNode[]) {
 /** Create a node with the registry defaults. If Logic always starts with one station in each branch. */
 export function createNode(t: NodeTypeId, f?: Record<string, FieldValue>): WfNode {
   const n: WfNode = { id: newId(), t, f: { ...(NODE_TYPES[t].defaults ?? {}), ...(f ?? {}) } };
-  if (t === 'logic') n.br = { t: [createNode('station', { action: 'Pick Up', station: ['S103'] })], o: [createNode('station', { action: 'Pick Up', station: ['S102'] })] };
+  if (t === 'logic') n.br = { t: [createNode('station', { action: 'Pick Up', station: ['STA-103'] })], o: [createNode('station', { action: 'Pick Up', station: ['STA-102'] })] };
   return n;
 }
 export const createStart = (f?: Record<string, FieldValue>) => createNode('start', { trigger: 'Manual', robot: 'Sherpa XT Lite', request: 'Request from Tablet', user: ['USER-001'], ...f });

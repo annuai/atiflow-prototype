@@ -3,7 +3,10 @@ import { enterableWorkspaces } from '@/features/access';
 import type { Audience, NewNotification, NotificationApi, SourcesByAudience } from './types';
 
 /** The audiences a user belongs to: the workspaces they can enter that have notifications. */
-export const audiencesOf = (user: Parameters<typeof enterableWorkspaces>[0]): Audience[] => enterableWorkspaces(user).map((w) => w.id).filter((id): id is Audience => id === 'supervisor' || id === 'configurator');
+export const audiencesOf = (user: Parameters<typeof enterableWorkspaces>[0]): Audience[] => {
+  const ids = enterableWorkspaces(user).map((w) => w.id).filter((id): id is Audience => id === 'supervisor' || id === 'configurator' || id === 'operator');
+  return ids.includes('supervisor') ? ids.filter((id) => id !== 'operator') : ids;          // operators and supervisors get the same robot alerts: once is enough
+};
 
 /** Today's implementation: each audience's sources inside this app (live robot alerts, the mock MES feed). */
 export const localApi = (sources: SourcesByAudience = SOURCES): NotificationApi => ({

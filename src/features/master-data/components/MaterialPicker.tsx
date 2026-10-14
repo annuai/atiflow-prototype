@@ -20,10 +20,10 @@ export function MaterialPicker({ rows, selected, onChange, showStatus }: Props) 
   const locked = new Set(rows.filter((r) => r.status === 'added').map((r) => r.code));
   const disabled = new Set(rows.filter((r) => r.status === 'invalid' || r.status === 'duplicate').map((r) => r.code));
   const columns: Column<PickerRow>[] = [
-    { id: 'material', header: copy.picker.material, className: 'px-2.5 whitespace-nowrap', cell: (r) => <span className="font-medium text-primary">{r.name || '—'}</span> },
-    { id: 'code', header: copy.picker.code, className: 'px-2.5', cell: (r) => <span className="text-primary">{r.code || '—'}</span> },
-    { id: 'group', header: copy.picker.group, className: 'px-2.5', cell: (r) => r.group || copy.materials.noGroup },
-    ...(showStatus ? [{ id: 'status', header: copy.picker.status, className: 'px-2.5', cell: (r: PickerRow) => <Badge size="sm" type="pill-color" color={TONE[r.status]}>{copy.picker[`status_${r.status}` as const]}</Badge> }] : []),
+    { id: 'material', sort: (r) => r.name, header: copy.picker.material, className: 'px-2.5 whitespace-nowrap', cell: (r) => <span className="font-medium text-primary">{r.name || '—'}</span> },
+    { id: 'code', sort: (r) => r.code, header: copy.picker.code, className: 'px-2.5', cell: (r) => <span className="text-primary">{r.code || '—'}</span> },
+    { id: 'group', sort: (r) => r.group, header: copy.picker.group, className: 'px-2.5', cell: (r) => r.group || copy.materials.noGroup },
+    ...(showStatus ? [{ id: 'status', sort: (r: PickerRow) => r.status, header: copy.picker.status, className: 'px-2.5', cell: (r: PickerRow) => <Badge size="sm" type="pill-color" color={TONE[r.status]}>{copy.picker[`status_${r.status}` as const]}</Badge> }] : []),
   ];
   return (
     <div className="max-h-[min(340px,38vh)] overflow-auto rounded-xl border border-secondary">

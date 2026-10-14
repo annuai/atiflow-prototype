@@ -89,10 +89,10 @@ describe('the data component: any API plugs in', () => {
   });
   it('the local implementation runs the sources of the audiences the user belongs to (a configurator with the supervisor pages ticked, both)', () => {
     const started: string[] = []; const src = (name: string) => ({ start: () => { started.push(name); return () => void started.push('stop ' + name); } });
-    const api = localApi({ supervisor: () => [src('live')], configurator: () => [src('mes'), src('other')] }); const stop = api.subscribe(user('kavin', 'configurator'), () => {}); expect(started).toEqual(['mes', 'other']); stop(); expect(started).toEqual(['mes', 'other', 'stop mes', 'stop other']);
+    const api = localApi({ supervisor: () => [src('live')], operator: () => [], configurator: () => [src('mes'), src('other')] }); const stop = api.subscribe(user('kavin', 'configurator'), () => {}); expect(started).toEqual(['mes', 'other']); stop(); expect(started).toEqual(['mes', 'other', 'stop mes', 'stop other']);
   });
   it('a configurator who also holds the supervisor pages receives the notifications of both workspaces', () => {
-    const started: string[] = []; const src = (name: string) => ({ start: () => { started.push(name); return () => {}; } }); const api = localApi({ supervisor: () => [src('live')], configurator: () => [src('mes')] });
+    const started: string[] = []; const src = (name: string) => ({ start: () => { started.push(name); return () => {}; } }); const api = localApi({ supervisor: () => [src('live')], operator: () => [], configurator: () => [src('mes')] });
     api.subscribe(user('meera', 'configurator', { add: ['supervisor.dashboard'], remove: [] }), () => {}); expect(started.sort()).toEqual(['live', 'mes']);
   });
 });

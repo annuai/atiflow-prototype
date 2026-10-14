@@ -4,8 +4,6 @@ import { Plus, SearchLg } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { Input } from '@/components/base/input/input';
-import { AppShell } from '@/shell/AppShell';
-import { configuratorHits, useConfiguratorNav } from '@/features/configurator/configuratorNav';
 import type { DeviceKind, FieldValue } from './model/types';
 import { useDevices } from './model/store';
 import { nameOf } from './model/validate';
@@ -21,7 +19,7 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
   const rows = q.trim() ? devices.filter((d) => (nameOf(d) + ' ' + kind.typeOf(d) + ' ' + d.values.fleet).toLowerCase().includes(q.trim().toLowerCase())) : devices;
   const add = (p?: Record<string, FieldValue>) => { setPreset(p); setAdding(true); };
   return (
-    <AppShell useNavModel={useConfiguratorNav} getHits={configuratorHits} searchPlaceholder="Search live operations, fleets, trips, analytics...">
+    <>
       <div className="content">
         <div className="title-block"><div><h1>{kind.plural}</h1><p>{kind.subtitle}</p></div>
           <div className="actions">
@@ -36,6 +34,6 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
         </div>
       </div>
       <AddDeviceModal kind={kind} isOpen={adding} onOpenChange={setAdding} preset={preset} />
-    </AppShell>
+    </>
   );
 }

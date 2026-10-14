@@ -14,7 +14,7 @@ import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 import { ZoomBar } from './ZoomBar';
 import { ProgressBar } from '@/components/base/progress-indicators/progress-indicators';
-import { ChevronDown, ChevronRight, Home01, Minus, Plus, Users01 } from '@untitledui/icons';
+import { ChevronDown, ChevronRight, Home01, Minus, Plus, Users01, ChevronUp, XClose } from '@untitledui/icons';
 import type { NavGraph, RobotTelemetry } from '../core/types';
 import { locateTarget } from '@/features/live-floor/locate';
 
@@ -72,10 +72,10 @@ function TripSection({ r, nav }: { r: RobotTelemetry; nav: NavGraph | null }) {
 }
 
 export function RobotPanel() {
-  const id = useApp((s) => s.selectedId); const r = useApp((s) => (id ? s.robots[id] : null)); const nav = useApp((s) => s.nav); const fleets = useApp((s) => s.fleets);
-  if (!r) return null; const fleet = fleets.find((f) => f.id === r.fleetId); const dest = nav?.stations.find((s) => s.id === (r.task?.next ?? r.task?.to));
+  const id = useApp((s) => s.selectedId); const r = useApp((s) => (id ? s.robots[id] : null)); const nav = useApp((s) => s.nav); const fleets = useApp((s) => s.fleets); const open = useApp((s) => s.robotPanelOpen);
+  if (!r || !open) return null; const fleet = fleets.find((f) => f.id === r.fleetId); const dest = nav?.stations.find((s) => s.id === (r.task?.next ?? r.task?.to));
   const trafficTxt = r.traffic ? (r.traffic.status === 'waiting' ? `Waiting for ${r.traffic.zoneId}` : `Inside ${r.traffic.zoneId}`) : 'Clear';
-  return <InfoPanel title={r.id} onClose={() => store.getState().select(null)}
+  return <InfoPanel title={r.id} onClose={() => store.getState().closeRobotPanel()}
     subtitle={`${robotTypeById(r.model).label} · ${fleet?.name ?? r.fleetId}`}
     pill={{ label: r.state, tone: STATE_TONE[r.state] }} chips={fleet ? [{ label: fleet.name, color: fleet.color }] : []}
     stats={[
@@ -90,6 +90,20 @@ export function RobotPanel() {
     <TripSection key={r.task?.id} r={r} nav={nav} />
     {r.task?.progress != null && <div className="progress"><small>Trip progress</small><ProgressBar className="mt-1 h-1.5" value={Math.round((r.task.progress ?? 0) * 100)} /></div>}
   </InfoPanel>;
+}
+
+/** The robot window shrunk to a small floating chip (the big one was closed): the robot stays selected and, in Follow mode, followed. Open it again, or stop (deselect, which also ends Follow). */
+export function RobotMini() {
+  const id = useApp((s) => s.selectedId); const r = useApp((s) => (id ? s.robots[id] : null)); const open = useApp((s) => s.robotPanelOpen); const following = useApp((s) => s.cameraMode === 'follow');
+  if (!r || open) return null;
+  return (
+    <div className="float rmini" role="group" aria-label={`${r.id} (window minimised)`}>
+      <i className="dot" style={{ background: STATE_COLOR[r.state], width: 10, height: 10 }} />
+      <button className="rmini-open" onClick={() => store.getState().openRobotPanel()} aria-label={`Open ${r.id}`}><b>{r.id}</b><small>{following ? 'Following · ' : ''}{r.state} · {r.battery}%</small></button>
+      <ButtonUtility size="xs" color="tertiary" icon={ChevronUp} tooltip="Open the robot window" aria-label="Open the robot window" onPress={() => store.getState().openRobotPanel()} />
+      <ButtonUtility size="xs" color="tertiary" icon={XClose} tooltip={following ? 'Stop following' : 'Deselect'} aria-label={following ? 'Stop following' : 'Deselect'} onPress={() => store.getState().select(null)} />
+    </div>
+  );
 }
 
 const STATION_KIND: Record<string, string> = { asrs: 'ASRS station', park: 'Parking spot', charge: 'Charging station' };

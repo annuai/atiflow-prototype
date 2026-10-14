@@ -1,5 +1,6 @@
 import { canOpen, landingPath } from '@/features/access';
 import type { PublicUser } from '@/features/auth/types';
+import { prefsOf } from '@/features/preferences/data/store';
 
 /** Remembers each user's last page so signing in again (or opening `/`) returns there. Stored per username; a page the user may no longer open is never restored. */
 const key = (username: string) => `atiflow.lastPage.${username}`;
@@ -11,6 +12,7 @@ export function rememberPage(user: PublicUser, path: string) {
   try { localStorage.setItem(key(user.username), normalize(path)); } catch { /* storage unavailable: nothing to remember */ }
 }
 export function landingFor(user: PublicUser): string {
-  let remembered: string | null = null; try { remembered = localStorage.getItem(key(user.username)); } catch { /* ignore */ }
+  const start = prefsOf(user.username).startPage;                            // "the page I used last" (default) or a page the user chose to open on
+  let remembered: string | null = start !== 'last' ? start : null; if (!remembered) { try { remembered = localStorage.getItem(key(user.username)); } catch { /* ignore */ } }
   return landingPath(user, remembered);
 }

@@ -7,14 +7,13 @@ import { Input } from '@/components/base/input/input';
 import { Label } from '@/components/base/input/label';
 import { FormField } from '@/components/form/FormField';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
-import { assignableRoles, canDeleteUser, isCustomised, roleById, ROLES, USERS_PATH, type AccessProfile, type RoleId } from '@/features/access';
+import { assignableRoles, canDeleteUser, isFleetScoped, isCustomised, roleById, ROLES, USERS_PATH, type AccessProfile, type RoleId } from '@/features/access';
 import { useAuth } from '@/features/auth/authStore';
 import { toPublic, userDirectory, useUsers } from '@/features/auth/userDirectory';
-import { configuratorHits, useConfiguratorNav } from '@/features/configurator/configuratorNav';
-import { AppShell } from '@/shell/AppShell';
 import { notify } from '@/ui/toast';
 import '@/features/devices/devices.css';
 import { PermissionMatrix } from './components/PermissionMatrix';
+import { FleetPicker } from './components/FleetPicker';
 import { ResetPasswordDialog } from './components/ResetPasswordDialog';
 import { RoleBadge } from './components/RoleBadge';
 import { UserAvatar } from './components/UserAvatar';
@@ -27,25 +26,25 @@ const roleByLabel = (label: string): RoleId => ROLES.find((r) => r.label === lab
 export function UserDetailPage() {
   const { username = '' } = useParams(); const navigate = useNavigate(); const actor = useAuth((s) => s.user)!;
   const record = useUsers((s) => s.users.find((u) => u.username === username)); const user = record ? toPublic(record) : null;
-  const [draft, setDraft] = useState({ firstName: '', lastName: '', email: '', title: '', role: 'supervisor' as RoleId }); const [errors, setErrors] = useState<Record<string, string>>({});
+  const [draft, setDraft] = useState({ firstName: '', lastName: '', email: '', title: '', role: 'supervisor' as RoleId, fleets: [] as string[] }); const [errors, setErrors] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState(false), [resetting, setResetting] = useState(false), [deleting, setDeleting] = useState(false);
-  useEffect(() => { if (user) { setDraft({ firstName: user.firstName, lastName: user.lastName, email: user.email, title: user.title, role: user.role }); setErrors({}); setEditing(false); } }, [user?.username]);       // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (user) { setDraft({ firstName: user.firstName, lastName: user.lastName, email: user.email, title: user.title, role: user.role, fleets: user.fleets ?? [] }); setErrors({}); setEditing(false); } }, [user?.username]);       // eslint-disable-line react-hooks/exhaustive-deps
   if (!user) return <Navigate to={USERS_PATH} replace />;
   const self = actor.username === user.username, canAccess = true, canBasics = true;                    // a configurator may change anyone's details, role and permissions, their own included
   const profile: AccessProfile = { role: user.role, custom: user.custom };
-  const dirty = draft.firstName !== user.firstName || draft.lastName !== user.lastName || draft.email !== user.email || draft.title !== user.title || draft.role !== user.role;
+  const dirty = draft.firstName !== user.firstName || draft.lastName !== user.lastName || draft.email !== user.email || draft.title !== user.title || draft.role !== user.role || JSON.stringify([...draft.fleets].sort()) !== JSON.stringify([...(user.fleets ?? [])].sort());
   const set = (k: keyof typeof draft) => (v: string | string[]) => { setDraft((d) => ({ ...d, [k]: k === 'role' ? roleByLabel(String(v)) : String(v) })); setErrors((e) => ({ ...e, [k]: '' })); };
   const save = () => {
     const p = validateBasics(draft); setErrors(p); if (Object.keys(p).length) return;
     const roleChanged = draft.role !== user.role && canAccess;
-    userDirectory.getState().update(user.username, { firstName: draft.firstName.trim(), lastName: draft.lastName.trim(), email: draft.email.trim(), title: draft.title.trim() || roleById(roleChanged ? draft.role : user.role).label, ...(roleChanged ? { role: draft.role, custom: undefined } : {}) });
+    userDirectory.getState().update(user.username, { firstName: draft.firstName.trim(), lastName: draft.lastName.trim(), email: draft.email.trim(), title: draft.title.trim() || roleById(roleChanged ? draft.role : user.role).label, ...(roleChanged ? { role: draft.role, custom: undefined } : {}), fleets: isFleetScoped(draft.role) ? draft.fleets : undefined });
     notify.success(copy.detail.updated, undefined, 'user-updated');
   };
   const note = self ? copy.detail.selfNote : null;
   const roles = assignableRoles().map((r) => roleById(r).label);
   const roleField = { key: 'role', label: 'Roles', control: 'select' as const, options: roles };
   return (
-    <AppShell useNavModel={useConfiguratorNav} getHits={configuratorHits} searchPlaceholder="Search live operations, fleets, trips, analytics...">
+    <>
       <div className="content">
         <div className="title-block"><div className="flex items-center gap-3">
           <UserAvatar user={user} size="lg" /><div className="min-w-0"><div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h1>{user.name}</h1><RoleBadge role={user.role} />{isCustomised(profile) && <Badge size="md" type="pill-color" color="warning">{copy.perms.customised}</Badge>}</div><p>{user.username}</p></div></div>
@@ -63,8 +62,9 @@ export function UserDetailPage() {
             <div className="flex flex-col gap-1.5"><Label>Password</Label>
               <div className="flex items-center gap-3"><Input aria-label="Password" value={copy.detail.passwordMask} isDisabled wrapperClassName="flex-1" /><Button size="md" color="secondary" isDisabled={!canBasics} onPress={() => setResetting(true)}>{copy.detail.resetPassword}</Button></div></div>
             <div><FormField def={roleField} value={roleById(draft.role).label} onChange={set('role')} disabled={!canAccess} fleets={[]} />{canAccess && draft.role !== user.role && <p className="mt-1 text-xs text-tertiary">{copy.detail.roleNote}</p>}</div>
+            {isFleetScoped(draft.role) && <FleetPicker value={draft.fleets} onChange={(fleets) => { setDraft((d) => ({ ...d, fleets })); setErrors((e) => ({ ...e, fleets: '' })); }} error={errors.fleets} />}
             {note && <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-tertiary">{note}</p>}
-            <div className="flex justify-end"><Button size="md" color="primary" isDisabled={!dirty || !canBasics} onPress={save}>{copy.detail.update}</Button></div>
+            <div className="flex justify-end gap-3"><Button size="md" color="secondary" onPress={() => navigate(USERS_PATH)}>{copy.detail.cancel}</Button><Button size="md" color="primary" isDisabled={!dirty || !canBasics} onPress={save}>{copy.detail.update}</Button></div>
           </section>
           <section className="min-w-0 lg:border-l lg:border-secondary lg:pl-8" aria-label={copy.perms.title}>
             <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -82,6 +82,6 @@ export function UserDetailPage() {
       <ResetPasswordDialog username={user.username} name={user.name} isOpen={resetting} onOpenChange={setResetting} />
       <ConfirmDialog isOpen={deleting} onOpenChange={setDeleting} title={copy.detail.deleteTitle(user.name)} description={copy.detail.deleteBody} confirmLabel={copy.detail.delete}
         onConfirm={() => { userDirectory.getState().remove(user.username); notify.success(copy.detail.deleted(user.name), undefined, 'user-deleted'); navigate(USERS_PATH, { replace: true }); }} />
-    </AppShell>
+    </>
   );
 }

@@ -7,13 +7,12 @@ import { Button } from '@/components/base/buttons/button';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { Select } from '@/components/base/select/select';
 import { notify } from '@/ui/toast';
-import { AppShell } from '@/shell/AppShell';
 import { Dataflow03 } from '@untitledui/icons';
 import { WorkflowName } from './components/WorkflowName';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { MapPreview } from './components/MapPreview';
-import { configuratorHits, useConfiguratorNav } from '@/features/configurator/configuratorNav';
 import { countNodes } from './model/tree';
+import { useShellAi } from '@/shell/shellExtras';
 import { selectFleet, selectNodes, useFleetNames, useWorkflow, wfStore } from './model/store';
 import { publishProblem } from './model/validate';
 import { runSimulation, stopSimulation } from './sim/runner';
@@ -35,7 +34,10 @@ function SelectFleetPrompt() {
 }
 
 /** Route element for `/configurator/workflows/:id`: opens that workflow, then renders the builder once the store points at it. */
+const focusAiBar = () => document.querySelector<HTMLInputElement>('[data-wf-ai] input')?.focus();       // the top bar's Ati AI button
+
 export function WorkflowBuilderPage() {
+  useShellAi(focusAiBar);
   const { id = '' } = useParams(); const exists = useWorkflow((s) => id in s.workflows); const current = useWorkflow((s) => s.current);
   useEffect(() => { if (exists) wfStore.getState().openWorkflow(id); return () => wfStore.getState().discardUnsaved(); }, [exists, id]);   // leaving a workflow that was neither saved nor published discards it
   if (!exists) return <Navigate to="/configurator" replace />;
@@ -58,7 +60,7 @@ function Builder() {
     setPublishing(true); setTimeout(() => { setPublishing(false); wfStore.getState().publish(); }, 700);
   };
   return (
-    <AppShell useNavModel={useConfiguratorNav} getHits={configuratorHits} searchPlaceholder="Search live operations, fleets, trips, analytics..." onAi={() => document.querySelector<HTMLInputElement>('[data-wf-ai] input')?.focus()}>
+    <>
       <div className="content">
         <div className="title-block wf-title"><div><h1>Workflow Builder</h1><p>Set new workflows and publish them</p></div>
           <div className="actions">
@@ -80,6 +82,6 @@ function Builder() {
           {docked && <MapPreview mode="docked" onClose={stopSimulation} />}
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

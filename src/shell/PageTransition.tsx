@@ -1,0 +1,27 @@
+import { Suspense, useContext, useRef, type ReactNode } from 'react';
+import { UNSAFE_LocationContext, useLocation, useOutlet } from 'react-router-dom';
+import { AnimatePresence, useIsPresent } from 'motion/react';
+import { PageMotion } from '@/components/motion/PageMotion';
+import { pageKey } from './pageKey';
+import { PageSkeleton } from './PageSkeleton';
+
+/**
+ * While a page animates out, React Router already points at the NEW location, so the old page would re-render with it. This keeps the old page on the
+ * location it was shown with until it is gone; a page that stays (a tab change inside it) keeps following the real location.
+ */
+function Frozen({ children }: { children: ReactNode }) {
+  const loc = useContext(UNSAFE_LocationContext); const present = useIsPresent(); const held = useRef(loc); if (present) held.current = loc;
+  return <UNSAFE_LocationContext.Provider value={held.current}>{children}</UNSAFE_LocationContext.Provider>;
+}
+
+/** Page changes: the old page fades out and lifts a little, the new one rises in. Only the content area moves; the sidebar and top bar stay (they live in the layout above). */
+export function PageTransition() {
+  const outlet = useOutlet(); const key = pageKey(useLocation().pathname);
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <PageMotion key={key} className="page-frame">
+        <Frozen><Suspense fallback={<PageSkeleton />}>{outlet}</Suspense></Frozen>
+      </PageMotion>
+    </AnimatePresence>
+  );
+}

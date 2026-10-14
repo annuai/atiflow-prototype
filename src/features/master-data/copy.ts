@@ -7,7 +7,6 @@ export const copy = {
     materials: { label: 'Materials', subtitle: 'Manage the materials and material groups your workflow builder uses.' },
     'staging-area': { label: 'Staging Area', subtitle: 'Manage the staging areas' },
   },
-  sub: { materials: 'All materials', groups: 'Station groups' },
   materials: {
     note: 'Only materials selected from the material list are shown here. Materials can’t be deleted once added, as they may be used in workflows.',
     searchPlaceholder: 'Search materials by material groups, code, name',
@@ -68,17 +67,6 @@ export const copy = {
     title: 'Add material', subtitle: 'Enter the details for a single material.', nameLabel: 'Material name', namePlaceholder: 'e.g. Steel Bracket 40mm', codeLabel: 'Material code', codePlaceholder: 'MAT001',
     groupLabel: 'Material group', cancel: 'Cancel', submit: 'Add material',
     done: { title: 'New Material Added', body: 'New Material was added successfully' },
-  },
-  groups: {
-    note: 'Station groups are materials available at particular stations',
-    searchPlaceholder: 'Search groups by name, ID, prefix', filter: (label: string) => `Filter: ${label}`,
-    scopes: { all: 'All groups', used: 'With materials', empty: 'Empty' },
-    create: 'Create Station Group', columns: { group: 'Material Group', materials: 'Materials', updated: 'Last Updated' },
-    noMatch: (q: string) => `No groups match “${q}”.`, empty: 'No groups yet.',
-    rowMenu: { label: 'Row actions', rename: 'Edit group', delete: 'Delete group', deleteBlocked: 'Only empty groups can be deleted' },
-    form: { createTitle: 'Create station group', createSubtitle: 'Group materials that are available at the same stations.', editTitle: 'Edit group', nameLabel: 'Group name', namePlaceholder: 'e.g. Fasteners & Fixings', prefixLabel: 'Code prefix (optional)', prefixPlaceholder: 'e.g. FST', create: 'Create group', save: 'Save changes', cancel: 'Cancel' },
-    created: (n: string) => ({ title: 'Group created', body: `${n} is ready to use.` }), updated: 'Group updated', deleted: (n: string) => `${n} deleted`,
-    delete: { title: (n: string) => `Delete ${n}?`, body: 'The group is empty, so no material is affected.', confirm: 'Delete' },
   },
   staging: {
     cardUtilisation: 'Utilised cells', layoutTitle: (name: string) => `${name} cell layout`, selected: 'Selected',

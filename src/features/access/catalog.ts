@@ -26,21 +26,25 @@ export interface Workspace {
 }
 
 export const WORKSPACES: Workspace[] = [
-  { id: 'configurator', title: 'CONFIGURATOR', name: 'Configurator', blurb: 'Set up robots, maps, hardware, master data, workflows and fleets', built: true, shared: ['/configurator/notifications'], features: [
+  { id: 'configurator', title: 'CONFIGURATOR', name: 'Configurator', blurb: 'Set up robots, maps, hardware, master data, workflows, fleets and settings', built: true, shared: ['/configurator/notifications'], features: [
     { id: 'configurator.robots', label: 'Robots', landing: '/configurator/robots', routes: ['/configurator/robots'] },
     { id: 'configurator.maps', label: 'Maps', landing: '/configurator/maps', routes: ['/configurator/maps'] },
     { id: 'configurator.hardware', label: 'Hardware', landing: '/configurator/hardware', routes: ['/configurator/hardware'] },
     { id: 'configurator.master-data', label: 'Master Data', landing: '/configurator/master-data', routes: ['/configurator/master-data'] },
     { id: 'configurator.workflows', label: 'Workflows', landing: '/configurator', routes: ['/configurator$', '/configurator/workflows'] },
     { id: 'configurator.fleets', label: 'Fleets', routes: ['/configurator/fleets'] },
+    { id: 'configurator.settings', label: 'Settings', routes: ['/configurator/settings'] },
   ] },
   { id: 'supervisor', title: 'SUPERVISOR', name: 'Supervisor', blurb: 'Watch the floor and read how the fleet is doing', built: true, shared: ['/supervisor/notifications'], features: [
-    { id: 'supervisor.dashboard', label: 'Dashboard', landing: '/supervisor/dashboard', routes: ['/supervisor/dashboard', '/supervisor/dashboard-new'] },     // dashboard-new merges into dashboard
+    { id: 'supervisor.dashboard', label: 'Dashboard', landing: '/supervisor/dashboard', routes: ['/supervisor/dashboard'] },
     { id: 'supervisor.reports', label: 'Reports', landing: '/supervisor/reports', routes: ['/supervisor/reports'] },
     { id: 'supervisor.live-floor', label: 'Live Floor', landing: '/supervisor/livefloor', routes: ['/supervisor/livefloor'] },
+    { id: 'supervisor.action-center', label: 'Action Center', landing: '/supervisor/action-center', routes: ['/supervisor/action-center'] },
+    { id: 'supervisor.settings', label: 'Settings', routes: ['/supervisor/settings'] },
   ] },
   { id: 'line-supervisor', title: 'LINE SUPERVISOR', name: 'Line Supervisor', blurb: 'Not defined yet', built: false, shared: [], features: [] },
-  { id: 'operator', title: 'OPERATOR', name: 'Operator', blurb: 'Send, request and confirm material moves', built: false, shared: [], features: [
+  { id: 'operator', title: 'OPERATOR', name: 'Operator', blurb: 'Handle robot calls; send, request and confirm material moves', built: true, shared: ['/operator/notifications'], features: [
+    { id: 'operator.action-center', label: 'Action Center', landing: '/operator/action-center', routes: ['/operator/action-center'] },
     { id: 'operator.dispatch', label: 'Dispatch', routes: [] },
     { id: 'operator.request', label: 'Request', routes: [] },
     { id: 'operator.confirm', label: 'Confirm', routes: [] },

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
-import { notify } from '@/ui/toast';
 import type { NavModel, SearchHit } from '@/shell/types';
 import robotsI from '@/ui/icons/robots.svg'; import mapsI from '@/ui/icons/maps.svg'; import hardwareI from '@/ui/icons/hardware.svg'; import usersI from '@/ui/icons/users.svg';
 import masterI from '@/ui/icons/master-data.svg'; import workflowsI from '@/ui/icons/workflows.svg'; import fleetI from '@/ui/icons/fleet.svg'; import plusI from '@/ui/icons/plus-square.svg';
@@ -18,8 +17,8 @@ import { useFleetNames, wfStore } from '@/features/workflow-builder/model/store'
 import { canNow, useAccess } from '@/features/access/useAccess';
 import { USERS_PATH } from '@/features/access';
 
+export const SETTINGS_PATH = '/configurator/settings';
 export const WORKFLOWS_PATH = '/configurator';          // "Workflows": opens a new workflow; /configurator/workflows/<id> shows one
-const soon = (name: string) => () => notify.info(`${name} isn't part of this prototype`, 'This prototype covers Workflows, Robots, Hardware, Maps and Master Data.', 'soon');
 
 /** "Create new fleet" row + inline name form (sidebar group extra). Creating a fleet opens its fleet page. */
 function NewFleet() {
@@ -54,7 +53,7 @@ export function useConfiguratorNav(): NavModel {
   ].map((g) => ({ ...g, items: g.items.filter(Boolean) as NavModel['groups'][number]['items'] })).filter((g) => g.items.length || g.extra);
   return {
     groups,
-    footerItems: [{ id: 'notif', label: 'Notifications', icon: bellI, badge: unread || undefined, active: pathname === '/configurator/notifications', onSelect: () => navigate('/configurator/notifications') }, { id: 'settings', label: 'Settings', icon: gearI, onSelect: soon('Settings') }],
+    footerItems: [{ id: 'notif', label: 'Notifications', icon: bellI, badge: unread || undefined, active: pathname === '/configurator/notifications', onSelect: () => navigate('/configurator/notifications') }, ...(can('configurator.settings') ? [{ id: 'settings', label: 'Settings', icon: gearI, active: pathname.startsWith(SETTINGS_PATH), onSelect: () => navigate(SETTINGS_PATH) }] : [])],
   };
 }
 

@@ -1,7 +1,7 @@
 import type { PublicUser } from '@/features/auth/types';
 
 /** Who a notification is for: the workspaces that have notifications. A user receives those of every workspace they can enter (a superuser both). */
-export type Audience = 'supervisor' | 'configurator';
+export type Audience = 'supervisor' | 'configurator' | 'operator';
 
 export type NotificationLevel = 'critical' | 'warn' | 'info' | 'success';
 /** What a button on a notification does. Plain data (not a function) so notifications can be saved and sent by a backend. */
