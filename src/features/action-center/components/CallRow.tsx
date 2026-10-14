@@ -23,17 +23,17 @@ export function CallRow({ call: c, now, me, expanded, onToggle, canLocate, onLoc
   const Icon = KIND_ICON[c.kind]; const mine = c.claimedBy === me, taken = c.status === 'acknowledged'; const waited = ageS(c, now);
   return (
     <li className={cx('rounded-xl border border-secondary bg-primary shadow-xs border-l-4', c.severity === 'critical' ? 'border-l-error-solid' : 'border-l-warning-solid')}>
-      <div className="flex flex-wrap items-center gap-3 px-4 py-3">
-        <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-expanded={expanded} onClick={onToggle}>
+      <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
+        <button type="button" className="flex min-w-0 flex-1 items-start gap-3 text-left sm:items-center" aria-expanded={expanded} onClick={onToggle}>
           <span className={cx('grid size-10 shrink-0 place-items-center rounded-full', c.severity === 'critical' ? 'bg-error-secondary text-fg-error-primary' : 'bg-warning-secondary text-fg-warning-primary')}><Icon className="size-5" /></span>
           <span className="min-w-0 flex-1">
             <span className="flex flex-wrap items-center gap-2"><b className="text-sm text-primary">{c.title}</b><Badge size="sm" color={c.severity === 'critical' ? 'error' : 'warning'}>{copy.kind[c.kind]}</Badge>{c.repeats > 0 && <Badge size="sm" color="gray">{copy.row.repeat(c.repeats)}</Badge>}</span>
-            <span className="block truncate text-xs text-tertiary">{c.reason}</span>
+            <span className="block text-xs text-tertiary sm:truncate">{c.reason}</span>
             <span className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-tertiary"><FleetName id={c.fleetId} />{c.place && <span>{c.place}</span>}<span className={cx(waited >= 120 && !taken && 'font-semibold text-error-primary')}>Open for {fmtDuration(waited)}</span>{taken && <span className="font-medium text-brand-secondary">{mine ? copy.row.you : copy.row.takenBy(c.claimedBy ?? '')}</span>}</span>
           </span>
           {expanded ? <ChevronUp className="size-4 shrink-0 text-fg-quaternary" /> : <ChevronDown className="size-4 shrink-0 text-fg-quaternary" />}
         </button>
-        <div className="flex shrink-0 flex-wrap gap-2">
+        <div className="flex w-full shrink-0 gap-2 *:flex-1 sm:w-auto sm:*:flex-none">
           {canLocate && <Button size="sm" color="secondary" onPress={onLocate}>{copy.row.locate}</Button>}
           {!taken && <Button size="sm" color="primary" onPress={onTake}>{copy.row.take}</Button>}
           {taken && mine && <Button size="sm" color="tertiary" onPress={onRelease}>{copy.row.release}</Button>}

@@ -4,7 +4,6 @@ import { Tabs } from '@/components/application/tabs/tabs';
 import { copy } from './copy';
 import { MaterialsPanel } from './components/MaterialsPanel';
 import { StagingAreaPanel } from './components/StagingAreaPanel';
-import './masterData.css';
 
 /** Top tabs of the page. Add a tab here (+ its panel) and the route, heading and tab bar follow. */
 export const MASTER_DATA_BASE = '/configurator/master-data';

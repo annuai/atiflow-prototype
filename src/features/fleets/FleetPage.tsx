@@ -19,7 +19,6 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { useMap } from './model/maps';
 import { fleetPath } from './paths';
 import { profileOf, useFleets } from './model/store';
-import '../master-data/masterData.css';
 
 /** Tabs of a fleet page. Add a tab (+ panel) here and the route, tab bar and count badge follow. */
 const TABS = [

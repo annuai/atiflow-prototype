@@ -14,7 +14,7 @@ export function KpiRow({ kpis, tv }: { kpis: Kpi[]; tv?: boolean }) {
       {kpis.map((k) => (
         <Card key={k.id} tv={tv} className="flex flex-col gap-1">
           <p className={cx('text-tertiary', tv ? 'text-base' : 'text-sm')}>{k.label}</p>
-          <div className="flex items-end justify-between gap-2">
+          <div className="flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
             <p className={cx('font-semibold tabular-nums', TONE[k.tone].text, tv ? 'text-5xl' : 'text-3xl')}>{k.value}{k.unit && <span className="text-[0.55em]">{k.unit}</span>}{k.of !== undefined && <span className="ml-1 text-[0.5em] font-normal text-tertiary">/ {k.of}</span>}</p>
             <Sparkline values={k.series} color={TONE[k.tone].line} width={tv ? 120 : 84} height={tv ? 40 : 28} className="shrink-0" />
           </div>

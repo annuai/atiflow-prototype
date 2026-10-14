@@ -10,7 +10,6 @@ import { useVisibleFleets } from '@/features/access/useFleetScope';
 import { WORKSPACES, can } from '@/features/access';
 import { useAuth } from '@/features/auth/authStore';
 import { liveHits, useLiveNav, SUPERVISOR_SETTINGS_PATH } from '@/features/live-floor/liveNav';
-import '@/features/master-data/masterData.css';
 import { notify } from '@/ui/toast';
 import { copy } from './copy';
 import { preferencesStore, useMyPreferences } from './data/store';

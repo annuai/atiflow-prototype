@@ -11,7 +11,6 @@ import { ImportMapModal } from './components/ImportMapModal';
 import { MapCard } from './components/MapCard';
 import { fleetsByMap, filterSortMaps, type MapSort } from './model/logic';
 import { useMaps } from './model/maps';
-import '../master-data/masterData.css';
 
 /** Maps: the maps that are part of the system (none invented), with search and sort. Create New Map / Import open their dialogs; an empty system asks to create the first map. */
 export function MapsPage() {
