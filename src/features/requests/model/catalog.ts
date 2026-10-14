@@ -7,8 +7,12 @@ export const TABLET_REQUEST = 'Tablet';
 
 /** Every node of a flow, branches included, in reading order. */
 export function flatten(nodes: WfNode[]): WfNode[] { return nodes.flatMap((n) => [n, ...(n.br ? [...flatten(n.br.t), ...flatten(n.br.o)] : [])]); }
+/** The stations of the workflow's Confirm steps, in order: each is an approval, done by an operator mapped to that station. */
+export const confirmStations = (nodes: WfNode[]): string[] => flatten(nodes).filter((n) => n.t === 'confirm').map((n) => (Array.isArray(n.f.station) ? n.f.station[0] : (n.f.station as string))).filter(Boolean);
 /** A workflow with a Confirm step makes a request wait for approval. */
-export const needsApproval = (nodes: WfNode[]): boolean => flatten(nodes).some((n) => n.t === 'confirm');
+export const needsApproval = (nodes: WfNode[]): boolean => confirmStations(nodes).length > 0;
+/** Where the material is delivered: the Drop Off stations of the main flow. Operators mapped to one of them are the requestors. */
+export const dropOffStations = (nodes: WfNode[]): string[] => nodes.filter((n) => n.t === 'station' && n.f.action === 'Drop Off').map((n) => (Array.isArray(n.f.station) ? n.f.station[0] : (n.f.station as string))).filter(Boolean);
 
 /**
  * The stations a trip of this workflow drives to (the Station steps of the main flow, in order) and the leg from which the load is carried:
@@ -24,21 +28,18 @@ export function workflowLegs(nodes: WfNode[]): { legs: string[]; loadFrom: numbe
   return { legs, loadFrom: loadFrom < 0 ? 0 : Math.min(loadFrom, Math.max(0, legs.length - 1)) };
 }
 
-/** Who a workflow is for: the Start step's User IDs and its request type. */
-export function startOf(nodes: WfNode[]): { users: string[]; request: string } {
-  const s = nodes.find((n) => n.t === 'start'); const u = s?.f.user;
-  return { users: (Array.isArray(u) ? u : [u as string]).filter(Boolean), request: (s?.f.request as string) ?? '' };
-}
+/** How a workflow is started (the Start step's Request Type). */
+export const requestType = (nodes: WfNode[]): string => (nodes.find((n) => n.t === 'start')?.f.request as string) ?? '';
 
-export interface Operator { username: string; /** fleet ids the person sees */ fleets: string[] }
+export interface Operator { username: string; /** fleet ids the person sees */ fleets: string[]; /** stations the person is responsible for */ stations: string[] }
 /**
- * Workflows an operator can request from: published, started from a Tablet, in a fleet assigned to the operator AND listing the operator's username.
+ * Workflows an operator can request from: published, started from a Tablet, in a fleet assigned to the operator, and delivering to a station the operator is responsible for.
  * `fleetIdOf` turns the workflow's fleet name into the fleet id the assignment uses.
  */
 export function visibleWorkflows(workflows: Workflow[], who: Operator, fleetIdOf: (fleetName: string) => string | undefined): Workflow[] {
   return workflows.filter((w) => {
     if (!w.published || !w.fleet) return false; const id = fleetIdOf(w.fleet); if (!id || !who.fleets.includes(id)) return false;
-    const s = startOf(w.nodes); return s.request === TABLET_REQUEST && s.users.includes(who.username);
+    return requestType(w.nodes) === TABLET_REQUEST && dropOffStations(w.nodes).some((s) => who.stations.includes(s));
   });
 }
 
@@ -47,11 +48,11 @@ export function requestableItems(workflows: Workflow[], who: Operator, fleetIdOf
   const out: RequestableItem[] = [];
   for (const w of visibleWorkflows(workflows, who, fleetIdOf)) {
     const { legs, loadFrom } = workflowLegs(w.nodes); if (!legs.length) continue;
-    const approval = needsApproval(w.nodes);
+    const approvalStations = confirmStations(w.nodes);
     for (const n of w.nodes) {
       if (n.t !== 'material') continue; const code = n.f.code as string; const m = materials.find((x) => x.code === code); if (!code || !m) continue;
       const qty = Math.max(1, parseInt(String(n.f.qty), 10) || 1);
-      out.push({ key: `${w.id}:${n.id}`, workflowId: w.id, workflowName: w.name, fleet: w.fleet!, fleetLive: fleetLiveOf(w.fleet!), code, name: m.name, group: groups.find((g) => g.id === m.group)?.name ?? '', qty, qtyEditable: !!n.f.fromTablet, needsApproval: approval, legs, loadFrom });
+      out.push({ key: `${w.id}:${n.id}`, workflowId: w.id, workflowName: w.name, fleet: w.fleet!, fleetLive: fleetLiveOf(w.fleet!), code, name: m.name, group: groups.find((g) => g.id === m.group)?.name ?? '', qty, qtyEditable: !!n.f.fromTablet, approvalStations, needsApproval: approvalStations.length > 0, legs, loadFrom });
     }
   }
   return out;

@@ -72,11 +72,11 @@ describe('the user directory and the session', () => {
   const memory = () => { const m = new Map<string, string>(); return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k) }; };
   beforeEach(() => { vi.stubGlobal('localStorage', memory()); vi.stubGlobal('sessionStorage', memory()); userDirectory.getState().reset(); authStore.getState().logout(); });
   it('starts with Arjun (supervisor), Kavin (configurator) and Meera (configurator with all modules); add / update / reset password / remove work; usernames are unique ignoring case', () => {
-    const d = userDirectory.getState(); expect(d.users.map((u) => `${u.username}:${u.role}`)).toEqual(['arjun:supervisor', 'kavin:configurator', 'meera:configurator', 'rohan:operator', 'sneha:operator']);
+    const d = userDirectory.getState(); expect(d.users.map((u) => `${u.username}:${u.role}`)).toEqual(['arjun:supervisor', 'kavin:configurator', 'meera:configurator', 'rohan:operator', 'sneha:operator', 'vikram:operator']);
     const u = d.add({ username: 'Jane_Doe', password: 'abcd', firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com', role: 'operator' }); expect(u.username).toBe('jane_doe'); expect(u.title).toBe('Operator'); expect(usernameTaken('JANE_DOE')).toBe(true);
     expect(toPublic(u)).not.toHaveProperty('password'); expect(toPublic(u).name).toBe('Jane Doe'); expect(toPublic(u).avatar).toBeUndefined();
     d.update('jane_doe', { email: 'p@x.com', role: 'supervisor', custom: undefined }); expect(findUser('jane_doe')).toMatchObject({ email: 'p@x.com', role: 'supervisor' });
-    d.resetPassword('jane_doe', 'newpass'); d.remove('jane_doe'); expect(findUser('jane_doe')).toBeNull(); expect(userDirectory.getState().users).toHaveLength(5);
+    d.resetPassword('jane_doe', 'newpass'); d.remove('jane_doe'); expect(findUser('jane_doe')).toBeNull(); expect(userDirectory.getState().users).toHaveLength(6);
   });
   it('the signed-in user follows the directory: a role or permission change applies at once, a deleted user is signed out', async () => {
     expect(await authStore.getState().login('arjun', '1234', false)).toBe('ok'); expect(canOpen(authStore.getState().user!, '/configurator/robots')).toBe(false);
@@ -105,7 +105,7 @@ describe('profile pictures and old saved users', () => {
 describe('a saved directory gets a seed user\'s new starting access once', () => {
   it('Meera, saved before supervisor Settings existed, receives it; other users and later changes are untouched', () => {
     const saved = [{ username: 'meera', password: 'x', firstName: 'Meera', lastName: '', email: 'm@x.co', role: 'configurator' as const, title: 'T', custom: { add: ALL_PERMISSIONS.filter((p) => !p.startsWith('configurator.') && p !== 'supervisor.settings'), remove: [] } }, { username: 'kavin', password: 'x', firstName: 'K', lastName: '', email: 'k@x.co', role: 'configurator' as const, title: 'T' }];
-    const out = applySeedRevision(saved, 1); expect(effective(out[0]).has('supervisor.settings')).toBe(true); expect(out[1]).toBe(saved[1]); expect(out.map((u) => u.username)).toEqual(['meera', 'kavin', 'rohan', 'sneha']); expect(applySeedRevision(saved, 4)).toBe(saved);
+    const out = applySeedRevision(saved, 1); expect(effective(out[0]).has('supervisor.settings')).toBe(true); expect(out[1]).toBe(saved[1]); expect(out.map((u) => u.username)).toEqual(['meera', 'kavin', 'rohan', 'sneha', 'vikram']); expect(applySeedRevision(saved, 5)).toBe(saved);
   });
 });
 

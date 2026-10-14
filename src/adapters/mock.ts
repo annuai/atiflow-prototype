@@ -1,10 +1,11 @@
 import type { FleetEvent, NavGraph, OrderUpdate, RobotTelemetry, TelemetryAdapter, TransportOrder } from '../core/types';
+import { tripIds } from '../core/tripIds';
 import { FleetSim, type RosterEntry } from './sim';
 
 /** Default adapter until a live feed exists: drives FleetSim in real time (with rare faults switched on, so reliability figures have something to show). */
 export class MockSimulator implements TelemetryAdapter {
   readonly sim: FleetSim; private cb: (b: RobotTelemetry[]) => void = () => {}; private ev: (e: FleetEvent) => void = () => {}; private ou: (u: OrderUpdate) => void = () => {}; private timer: number | undefined; private last = 0;
-  constructor(nav: NavGraph, siteId: string, count = 14, seed = 7, roster?: RosterEntry[]) { this.sim = new FleetSim(nav, siteId, count, seed, roster, { faults: true }); }
+  constructor(nav: NavGraph, siteId: string, count = 14, seed = 7, roster?: RosterEntry[]) { this.sim = new FleetSim(nav, siteId, count, seed, roster, { faults: true, tripIds }); }
   onTelemetry(cb: (b: RobotTelemetry[]) => void) { this.cb = cb; }
   onEvent(cb: (e: FleetEvent) => void) { this.ev = cb; }
   onOrderUpdate(cb: (u: OrderUpdate) => void) { this.ou = cb; }

@@ -3,7 +3,7 @@ import { useListData } from 'react-stately';
 import { TagSelect } from '@/components/base/select/tag-select';
 import type { SelectItemType } from '@/components/base/select/select-shared';
 
-export interface TagOption { id: string; label: string }
+export interface TagOption { id: string; label: string; /** shown on the tag instead of an avatar */ icon?: SelectItemType['icon'] }
 interface Props {
   label: string; options: TagOption[];
   /** The selected option ids (controlled). */
@@ -22,7 +22,8 @@ export function TagMultiSelect({ label, options, value, onChange, placeholder = 
     const have = selected.items.map((i) => String(i.id));
     have.filter((id) => !value.includes(id)).forEach((id) => selected.remove(id));
     options.filter((o) => value.includes(o.id) && !have.includes(o.id)).forEach((o) => selected.append(o));
-  }, [value.join('|'), options.map((o) => o.id).join('|')]);          // eslint-disable-line react-hooks/exhaustive-deps
+    options.forEach((o) => { const cur = selected.getItem(o.id); if (cur && (cur.label !== o.label || cur.icon !== o.icon)) selected.update(o.id, o); });          // names that arrive later (a map that was still loading)
+  }, [value.join('|'), options.map((o) => o.id + o.label).join('|')]);          // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <TagSelect label={label} size="md" placeholder={placeholder} items={options} selectedItems={selected} isRequired={required} isDisabled={disabled} isInvalid={!!error} hint={error ?? hint}
       onItemInserted={(key) => { const id = String(key); if (!value.includes(id)) onChange([...value, id]); }} onItemCleared={(key) => onChange(value.filter((v) => v !== String(key)))}>

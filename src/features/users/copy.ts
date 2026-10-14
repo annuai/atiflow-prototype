@@ -10,6 +10,7 @@ export const copy = {
     selfNote: 'You cannot delete yourself.', roleNote: 'Changing the role starts from that role’s permissions again.',
   },
   fleets: { label: 'Assigned fleets', placeholder: 'Search fleets to add', hint: 'They only see these fleets (robots, trips, alerts and reports). Configurators always see every fleet.', required: 'Select at least one fleet' },
+  stations: { label: 'Stations', placeholder: 'Search stations to add', hint: 'The stations this operator is responsible for: they request materials delivered to them and approve at the Confirm steps placed there.' },
   reset: { title: 'Reset password', subtitle: (n: string) => `Set a new password for ${n}.`, label: 'New password', action: 'Reset password', done: 'Password reset' },
   perms: {
     title: 'Permissions', overwrite: 'Overwrite permissions', done: 'Done', resetToRole: 'Reset to role', customised: 'Customised', saved: 'Permissions saved',

@@ -1,5 +1,6 @@
 import { LaneGraph, pointAt, type PathPlan } from '../core/lanes';
 import { angleDiff, pointInPoly } from '../core/geom';
+import type { TripIdSource } from '../core/tripIds';
 import type { FleetEvent, NavGraph, OrderUpdate, RobotState, RobotTelemetry, TransportOrder, Vec2 } from '../core/types';
 
 const rng = (seed: number) => () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
@@ -44,7 +45,7 @@ interface Permit { occ: Set<string>; waiters: Set<string>; lanes?: Map<string, S
  *  a permit ("visa") for every intersection and traffic zone (one robot in, the others wait at the hold point until it is clear), no touching, no forbidden zones (lanes avoid them). */
 /** A robot to put on the floor: its name, model and the lane-map fleet it belongs to (from the shared dataset). Without a roster the sim makes up `count` robots. */
 export interface RosterEntry { id: string; model: string; fleetId: string; /** Battery capacity, to turn battery % into energy (kWh). */ batteryKWh?: number }
-export interface SimOptions { /** Rare random faults that need manual help (off in the traffic benchmarks). */ faults?: boolean }
+export interface SimOptions { /** Rare random faults that need manual help (off in the traffic benchmarks). */ faults?: boolean; /** Where trip ids come from (shared with the requests); without it the simulation counts its own. */ tripIds?: TripIdSource }
 export class FleetSim {
   readonly graph: LaneGraph; bots: Bot[] = []; time = 0; private rand: () => number;
   tripSeq = 0; zones = new Map<string, Permit>(); private xings = new Map<string, Permit>();
@@ -70,6 +71,8 @@ export class FleetSim {
       this.bots.push(bot);
     }
   }
+  private newTripId(): string { return this.opts.tripIds?.next() ?? `TRP-${String(++this.tripSeq).padStart(3, '0')}`; }
+  private undoTripId() { if (this.opts.tripIds) this.opts.tripIds.undo(); else this.tripSeq--; }
   private incoming(id: string) { return this.bots.filter((b) => b.dest === id).length; }
   private parked(b: Bot) { return b.state === 'idle' || b.state === 'working' || b.state === 'charging'; }
   /** Nodes where a robot stands still: other robots are never routed through them. */
@@ -132,10 +135,10 @@ export class FleetSim {
       if (!lanes || !lanes.length) continue;
       const stops = kind ? [] : this.pickStops(b, st.id, this.graph.plan(lanes, b.pos), spoken, crowded);
       const work = !kind; const due = work ? this.time + SLA_BASE + (SLA_FACTOR * this.graph.plan(lanes, b.pos).total) / V + SLA_PER_STOP * stops.length : null;
-      b.trip = { assignedAtS: this.time, startedAtS: null, deadlineS: due, id: `TRP-${String(++this.tripSeq).padStart(3, '0')}`, kind: kind ?? (loaded ? 'transport' : 'return'), origin: b.stationId ?? undefined, legs: [...stops, st.id], leg: 0, loaded,
+      b.trip = { assignedAtS: this.time, startedAtS: null, deadlineS: due, id: this.newTripId(), kind: kind ?? (loaded ? 'transport' : 'return'), origin: b.stationId ?? undefined, legs: [...stops, st.id], leg: 0, loaded,
         payload: loaded ? { kind: ['PCBA tray', 'Reel box', 'Material'][Math.floor(this.rand() * 3)], qty: 1 + Math.floor(this.rand() * 9) } : null };
       if (this.startLeg(b)) { if (!kind) b.nextLoaded = !b.nextLoaded; return true; }          // loaded trip out, empty trip back
-      this.tripSeq--;
+      this.undoTripId();
     }
     b.trip = null; return false;
   }
@@ -156,8 +159,8 @@ export class FleetSim {
     if (b.battery < 25 || !this.orders.length) return false;
     const order = this.orders.find((o) => o.fleetId === b.fleetId); if (!order) return false;
     let legs = [...order.legs], loadFrom = order.loadFrom; if (legs[0] === b.stationId && legs.length > 1) { legs = legs.slice(1); loadFrom = Math.max(0, loadFrom - 1); }       // already standing at the first station
-    b.trip = { assignedAtS: this.time, startedAtS: null, deadlineS: this.time + 600, id: `TRP-${String(++this.tripSeq).padStart(3, '0')}`, kind: 'transport', origin: b.stationId ?? undefined, legs, leg: 0, loaded: true, loadFrom, payload: order.payload, orderId: order.id };
-    if (!this.startLeg(b)) { b.trip = null; this.tripSeq--; return false; }          // cannot reach it from here: the order stays for another robot
+    b.trip = { assignedAtS: this.time, startedAtS: null, deadlineS: this.time + 600, id: order.tripId ?? this.newTripId(), kind: 'transport', origin: b.stationId ?? undefined, legs, leg: 0, loaded: true, loadFrom, payload: order.payload, orderId: order.id };
+    if (!this.startLeg(b)) { b.trip = null; if (!order.tripId) this.undoTripId(); return false; }          // cannot reach it from here: the order stays for another robot
     this.orders = this.orders.filter((o) => o !== order); return true;
   }
   /** Every traffic zone and intersection a route passes through, grouped: permits closer than GROUP_GAP are requested together. */

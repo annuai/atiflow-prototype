@@ -3,6 +3,7 @@ import { UNSAFE_LocationContext, useLocation, useOutlet } from 'react-router-dom
 import { AnimatePresence, useIsPresent } from 'motion/react';
 import { PageMotion } from '@/components/motion/PageMotion';
 import { pageKey } from './pageKey';
+import { PageErrorBoundary } from './PageErrorBoundary';
 import { PageSkeleton } from './PageSkeleton';
 
 /**
@@ -20,7 +21,7 @@ export function PageTransition() {
   return (
     <AnimatePresence mode="wait" initial={false}>
       <PageMotion key={key} className="page-frame">
-        <Frozen><Suspense fallback={<PageSkeleton />}>{outlet}</Suspense></Frozen>
+        <Frozen><PageErrorBoundary><Suspense fallback={<PageSkeleton />}>{outlet}</Suspense></PageErrorBoundary></Frozen>
       </PageMotion>
     </AnimatePresence>
   );

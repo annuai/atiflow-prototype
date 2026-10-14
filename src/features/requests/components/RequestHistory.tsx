@@ -6,7 +6,8 @@ import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { timeAgo } from '@/utils/timeAgo';
 import { copy } from '../copy';
 import { cancelRequest } from '../model/actions';
-import { canCancel, groupRequests, type Person } from '../model/rules';
+import { canCancel, currentStep, groupRequests, type Person } from '../model/rules';
+import { useStationLabel } from '../model/useStationLabel';
 import { STATUS, isActive } from '../model/status';
 import type { TripRequest } from '../model/types';
 import { RequestStatusBadge } from './RequestStatusBadge';
@@ -16,13 +17,13 @@ const time = (t: number) => new Date(t).toLocaleTimeString([], { hour: '2-digit'
 
 /** One request: what, how many, its status (and trip / robot once there is one), a timeline on tap, and Cancel while a robot is not yet on its way. Cancel touches only this request. */
 function RequestRow({ r, who, now, onCancel }: { r: TripRequest; who: Person; now: number; onCancel(): void }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false); const stationLabel = useStationLabel(); const step = currentStep(r);
   return (
     <li className="rounded-xl bg-secondary">
       <div className="flex flex-wrap items-center gap-3 p-3">
         <button type="button" className="flex min-w-0 flex-1 basis-56 items-center gap-3 text-left" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
           <span className="min-w-0 flex-1"><span className="block font-semibold text-primary">{r.name} <span className="font-normal text-tertiary">×{r.qty}</span></span>
-            <span className="block text-sm text-tertiary">{r.code} · {r.workflowName}{r.tripId ? ` · ${copy.history.trip(r.tripId, r.robotId)}` : ''}</span></span>
+            <span className="block text-sm text-tertiary">{r.tripId && <><b className="font-semibold text-secondary">{r.tripId}</b> · </>}{r.code} · {r.workflowName}{r.robotId ? ` · ${r.robotId}` : ''}</span></span>
           {open ? <ChevronUp className="size-5 shrink-0 text-fg-quaternary" /> : <ChevronDown className="size-5 shrink-0 text-fg-quaternary" />}
         </button>
         <RequestStatusBadge status={r.status} size="lg" />
@@ -30,7 +31,7 @@ function RequestRow({ r, who, now, onCancel }: { r: TripRequest; who: Person; no
       </div>
       {open && (
         <div className="border-t border-secondary px-3 py-3 text-sm">
-          <p className="mb-2 text-tertiary">{STATUS[r.status].hint}{r.note ? ` · ${r.note}` : ''}</p>
+          <p className="mb-2 text-tertiary">{step ? copy.history.waitingAt(stationLabel(step.stationId), r.approvals.indexOf(step) + 1, r.approvals.length) : STATUS[r.status].hint}{r.note ? ` · ${r.note}` : ''}</p>
           <ol className="flex flex-col gap-1.5">{r.history.map((e, i) => <li key={i} className="flex gap-2 text-secondary"><span className="w-14 shrink-0 tabular-nums text-tertiary">{time(e.at)}</span><span>{STATUS[e.status].label}{e.by ? ` · ${copy.history.by(e.by)}` : ''}{e.note ? ` · ${e.note}` : ''}</span></li>)}</ol>
           <p className="mt-2 text-xs text-quaternary">{timeAgo(r.createdAt, now)}</p>
         </div>

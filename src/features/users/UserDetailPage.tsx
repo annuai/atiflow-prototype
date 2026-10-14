@@ -7,13 +7,14 @@ import { Input } from '@/components/base/input/input';
 import { Label } from '@/components/base/input/label';
 import { FormField } from '@/components/form/FormField';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
-import { assignableRoles, canDeleteUser, isFleetScoped, isCustomised, roleById, ROLES, USERS_PATH, type AccessProfile, type RoleId } from '@/features/access';
+import { assignableRoles, can, canDeleteUser, isFleetScoped, isCustomised, roleById, ROLES, USERS_PATH, type AccessProfile, type RoleId } from '@/features/access';
 import { useAuth } from '@/features/auth/authStore';
 import { toPublic, userDirectory, useUsers } from '@/features/auth/userDirectory';
 import { notify } from '@/ui/toast';
 import '@/features/devices/devices.css';
 import { PermissionMatrix } from './components/PermissionMatrix';
 import { FleetPicker } from './components/FleetPicker';
+import { StationPicker } from './components/StationPicker';
 import { ResetPasswordDialog } from './components/ResetPasswordDialog';
 import { RoleBadge } from './components/RoleBadge';
 import { UserAvatar } from './components/UserAvatar';
@@ -26,18 +27,18 @@ const roleByLabel = (label: string): RoleId => ROLES.find((r) => r.label === lab
 export function UserDetailPage() {
   const { username = '' } = useParams(); const navigate = useNavigate(); const actor = useAuth((s) => s.user)!;
   const record = useUsers((s) => s.users.find((u) => u.username === username)); const user = record ? toPublic(record) : null;
-  const [draft, setDraft] = useState({ firstName: '', lastName: '', email: '', title: '', role: 'supervisor' as RoleId, fleets: [] as string[] }); const [errors, setErrors] = useState<Record<string, string>>({});
+  const [draft, setDraft] = useState({ firstName: '', lastName: '', email: '', title: '', role: 'supervisor' as RoleId, fleets: [] as string[], stations: [] as string[] }); const [errors, setErrors] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState(false), [resetting, setResetting] = useState(false), [deleting, setDeleting] = useState(false);
-  useEffect(() => { if (user) { setDraft({ firstName: user.firstName, lastName: user.lastName, email: user.email, title: user.title, role: user.role, fleets: user.fleets ?? [] }); setErrors({}); setEditing(false); } }, [user?.username]);       // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (user) { setDraft({ firstName: user.firstName, lastName: user.lastName, email: user.email, title: user.title, role: user.role, fleets: user.fleets ?? [], stations: user.stations ?? [] }); setErrors({}); setEditing(false); } }, [user?.username]);       // eslint-disable-line react-hooks/exhaustive-deps
   if (!user) return <Navigate to={USERS_PATH} replace />;
   const self = actor.username === user.username, canAccess = true, canBasics = true;                    // a configurator may change anyone's details, role and permissions, their own included
   const profile: AccessProfile = { role: user.role, custom: user.custom };
-  const dirty = draft.firstName !== user.firstName || draft.lastName !== user.lastName || draft.email !== user.email || draft.title !== user.title || draft.role !== user.role || JSON.stringify([...draft.fleets].sort()) !== JSON.stringify([...(user.fleets ?? [])].sort());
+  const dirty = draft.firstName !== user.firstName || draft.lastName !== user.lastName || draft.email !== user.email || draft.title !== user.title || draft.role !== user.role || JSON.stringify([...draft.fleets].sort()) !== JSON.stringify([...(user.fleets ?? [])].sort()) || JSON.stringify([...draft.stations].sort()) !== JSON.stringify([...(user.stations ?? [])].sort());
   const set = (k: keyof typeof draft) => (v: string | string[]) => { setDraft((d) => ({ ...d, [k]: k === 'role' ? roleByLabel(String(v)) : String(v) })); setErrors((e) => ({ ...e, [k]: '' })); };
   const save = () => {
     const p = validateBasics(draft); setErrors(p); if (Object.keys(p).length) return;
     const roleChanged = draft.role !== user.role && canAccess;
-    userDirectory.getState().update(user.username, { firstName: draft.firstName.trim(), lastName: draft.lastName.trim(), email: draft.email.trim(), title: draft.title.trim() || roleById(roleChanged ? draft.role : user.role).label, ...(roleChanged ? { role: draft.role, custom: undefined } : {}), fleets: isFleetScoped(draft.role) ? draft.fleets : undefined });
+    userDirectory.getState().update(user.username, { firstName: draft.firstName.trim(), lastName: draft.lastName.trim(), email: draft.email.trim(), title: draft.title.trim() || roleById(roleChanged ? draft.role : user.role).label, ...(roleChanged ? { role: draft.role, custom: undefined } : {}), fleets: isFleetScoped(draft.role) ? draft.fleets : undefined, stations: draft.stations.length ? draft.stations : undefined });
     notify.success(copy.detail.updated, undefined, 'user-updated');
   };
   const note = self ? copy.detail.selfNote : null;
@@ -63,6 +64,7 @@ export function UserDetailPage() {
               <div className="flex items-center gap-3"><Input aria-label="Password" value={copy.detail.passwordMask} isDisabled wrapperClassName="flex-1" /><Button size="md" color="secondary" isDisabled={!canBasics} onPress={() => setResetting(true)}>{copy.detail.resetPassword}</Button></div></div>
             <div><FormField def={roleField} value={roleById(draft.role).label} onChange={set('role')} disabled={!canAccess} fleets={[]} />{canAccess && draft.role !== user.role && <p className="mt-1 text-xs text-tertiary">{copy.detail.roleNote}</p>}</div>
             {isFleetScoped(draft.role) && <FleetPicker value={draft.fleets} onChange={(fleets) => { setDraft((d) => ({ ...d, fleets })); setErrors((e) => ({ ...e, fleets: '' })); }} error={errors.fleets} />}
+            {(can(profile, 'operator.request') || can(profile, 'operator.approve')) && <StationPicker value={draft.stations} onChange={(stations) => setDraft((d) => ({ ...d, stations }))} fleetIds={isFleetScoped(draft.role) ? draft.fleets : []} />}
             {note && <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-tertiary">{note}</p>}
             <div className="flex justify-end gap-3"><Button size="md" color="secondary" onPress={() => navigate(USERS_PATH)}>{copy.detail.cancel}</Button><Button size="md" color="primary" isDisabled={!dirty || !canBasics} onPress={save}>{copy.detail.update}</Button></div>
           </section>

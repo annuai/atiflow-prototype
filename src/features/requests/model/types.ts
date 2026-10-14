@@ -3,6 +3,8 @@
  * from then on every request lives its own life: its own approval, its own trip, its own cancel.
  */
 export type RequestStatus = 'pending' | 'approved' | 'ongoing' | 'completed' | 'cancelled' | 'rejected' | 'failed';
+/** `by` is set once the step is approved. */
+export interface ApprovalStep { stationId: string; by?: string; at?: number }
 export interface StatusEvent { status: RequestStatus; at: number; /** name of the person (approver, requester) or 'Fleet' for the floor */ by?: string; note?: string }
 export interface TripRequest {
   id: string; groupId: string;
@@ -11,10 +13,12 @@ export interface TripRequest {
   code: string; name: string; group: string; qty: number;
   /** The stations of the workflow's flow and the leg from which the load is carried. */
   legs: string[]; loadFrom: number;
-  needsApproval: boolean;
+  /** One approval per Confirm step of the workflow, in order: each is done by an operator mapped to that step's station. The trip starts only after all are done. */
+  approvals: ApprovalStep[]; needsApproval: boolean;
   status: RequestStatus; history: StatusEvent[];
   requestedBy: string; requestedByName: string; createdAt: number;
-  tripId?: string; robotId?: string; approvedBy?: string; note?: string;
+  /** Given when the request is made (before approval), so it can be followed from the start; the robot is known once one takes it. */
+  tripId: string; robotId?: string; approvedBy?: string; note?: string;
 }
 /** What can be requested: one material of one workflow. */
 export interface RequestableItem {
@@ -22,7 +26,7 @@ export interface RequestableItem {
   code: string; name: string; group: string;
   /** Quantity of the workflow's Material step; `qtyEditable` = the person may change it ("Select quantity from Tablet"). */
   qty: number; qtyEditable: boolean;
-  needsApproval: boolean; legs: string[]; loadFrom: number;
+  /** Stations of the workflow's Confirm steps, in order (one approval each). */ approvalStations: string[]; needsApproval: boolean; legs: string[]; loadFrom: number;
 }
 /** A line of the cart (only exists while the person is choosing). */
 export interface CartLine { key: string; qty: number }

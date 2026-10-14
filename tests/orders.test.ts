@@ -20,6 +20,11 @@ describe('requested trips (orders) on the simulated floor', () => {
     expect(ongoing).toMatchObject({ id: 'REQ-1' }); expect(ongoing!.tripId).toMatch(/^TRP-\d+$/); expect(done).toMatchObject({ id: 'REQ-1', tripId: ongoing!.tripId, robotId: ongoing!.robotId });
     expect(carriedAtPickup).toBeNull(); expect(carriedOnLeg2).toBe(true);        // empty to the pick-up, loaded after it
   });
+  it('a robot drives the trip id the request was given (before approval) and does not make a new one; ids are shared with the simulation\'s own trips', () => {
+    const ids = { n: 100, next() { return `TRP-${++this.n}`; }, undo() { this.n--; } }; const sim = new FleetSim(nav, site.siteId, 14, 7, undefined, { tripIds: ids });
+    sim.submitOrder(order('REQ-T', { tripId: 'TRP-900' })); const updates: OrderUpdate[] = []; for (let t = 0; t < 120 && !updates.some((u) => u.status === 'ongoing'); t += 0.1) { sim.step(0.1); updates.push(...sim.drainOrderUpdates()); sim.drainEvents(); }
+    expect(updates.find((u) => u.status === 'ongoing')).toMatchObject({ id: 'REQ-T', tripId: 'TRP-900' }); expect(sim.bots.some((b) => b.trip?.id === 'TRP-900')).toBe(true); expect(ids.n).toBeGreaterThan(100);          // its own trips took ids from the shared counter
+  });
   it('an order still waiting for a robot can be taken back; one that a robot has started cannot', () => {
     const sim = new FleetSim(nav, site.siteId, 14, 7); sim.submitOrder(order('REQ-A')); sim.submitOrder(order('REQ-B', { legs: ['STA-117', 'STA-108'] }));
     expect(sim.cancelOrder('REQ-B')).toBe(true); expect(sim.orders.map((o) => o.id)).toEqual(['REQ-A']);

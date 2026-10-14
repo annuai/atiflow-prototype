@@ -1,6 +1,6 @@
 import { createNode, createStart } from './factory';
 import { defaultWorkflowName } from './names';
-import type { Workflow, Workflows } from './types';
+import type { WfNode, Workflow, Workflows } from './types';
 import { FLEET_NAME } from '@/data/fleets';
 
 /** Starting workflows: one per seed fleet. */
@@ -18,35 +18,48 @@ export function seedWorkflows(): Workflows {
       createNode('material', { type: 'Material', code: 'DCP-1005', qty: '10' }), createNode('confirm', { op: 'Tablet' }), createNode('station', { action: 'Pick Up', station: 'STA-116' }),
       createNode('confirm', { op: 'Dispatch Button' }), createNode('station', { action: 'Drop Off', station: 'STA-113' }), createNode('confirm', { op: 'Dispatch Button' }), createNode('end')] },
   ];
-  return Object.fromEntries([...list, ...sampleWorkflows()].map((w) => [w.id, w]));
+  return upgradeToV6(Object.fromEntries(list.map((w) => [w.id, w])));          // (Confirm steps get their station; the samples are added)
 }
 
 /**
- * Published sample workflows, one per material of Master Data, started from the operator Tablet (they show on the Request page of the operators listed in their Start step).
- * Some have a Confirm step, so their requests wait for approval; the others do not. Stations are real stations of the ECC map.
+ * Published sample workflows, one per material of Master Data, started from the operator Tablet. Who may request is decided by the operators mapped to the DROP-OFF station
+ * (Users page); a Confirm step is an approval by the operators mapped to ITS station. Some have a Confirm step (their requests wait for approval), the others do not.
+ * Stations are real stations of the ECC map.
  */
-const SAMPLES: { id: string; name: string; fleet: string; code: string; qty: string; fromTablet: boolean; pick: string; drop: string; confirm?: 'Dispatch Button' | 'Tablet'; users: string[] }[] = [
-  { id: 'w-sample-1001', name: 'Chain Pin to Workstation 1', fleet: FLEET_NAME.lineSide, code: 'DCP-1001', qty: '20', fromTablet: true, pick: 'STA-116', drop: 'STA-107', confirm: 'Dispatch Button', users: ['rohan', 'sneha'] },
-  { id: 'w-sample-1002', name: 'Chain Plate to Workstation 6', fleet: FLEET_NAME.lineSide, code: 'DCP-1002', qty: '10', fromTablet: false, pick: 'STA-117', drop: 'STA-108', users: ['rohan', 'sneha'] },
-  { id: 'w-sample-1003', name: 'Sprocket to Workstation 4', fleet: FLEET_NAME.lineSide, code: 'DCP-1003', qty: '5', fromTablet: true, pick: 'STA-119', drop: 'STA-110', confirm: 'Dispatch Button', users: ['rohan', 'sneha'] },
-  { id: 'w-sample-1004', name: 'Power Cable to Workstation 3', fleet: FLEET_NAME.lineSide, code: 'DCP-1004', qty: '15', fromTablet: true, pick: 'STA-121', drop: 'STA-105', users: ['rohan', 'sneha'] },
-  { id: 'w-sample-1005', name: 'Coupling Pad to Preparation 1', fleet: FLEET_NAME.assembly, code: 'DCP-1005', qty: '30', fromTablet: true, pick: 'STA-116', drop: 'STA-113', confirm: 'Tablet', users: ['sneha'] },
-  { id: 'w-sample-1006', name: 'Dust Cover to Preparation 2', fleet: FLEET_NAME.assembly, code: 'DCP-1006', qty: '8', fromTablet: false, pick: 'STA-117', drop: 'STA-114', users: ['sneha'] },
+const SAMPLES: { id: string; name: string; fleet: string; code: string; qty: string; fromTablet: boolean; pick: string; drop: string; confirm?: { op: 'Dispatch Button' | 'Tablet'; at: string } }[] = [
+  { id: 'w-sample-1001', name: 'Chain Pin to Workstation 1', fleet: FLEET_NAME.lineSide, code: 'DCP-1001', qty: '20', fromTablet: true, pick: 'STA-116', drop: 'STA-107', confirm: { op: 'Dispatch Button', at: 'STA-116' } },
+  { id: 'w-sample-1002', name: 'Chain Plate to Workstation 6', fleet: FLEET_NAME.lineSide, code: 'DCP-1002', qty: '10', fromTablet: false, pick: 'STA-117', drop: 'STA-108' },
+  { id: 'w-sample-1003', name: 'Sprocket to Workstation 4', fleet: FLEET_NAME.lineSide, code: 'DCP-1003', qty: '5', fromTablet: true, pick: 'STA-119', drop: 'STA-110', confirm: { op: 'Dispatch Button', at: 'STA-119' } },
+  { id: 'w-sample-1004', name: 'Power Cable to Workstation 3', fleet: FLEET_NAME.lineSide, code: 'DCP-1004', qty: '15', fromTablet: true, pick: 'STA-121', drop: 'STA-105' },
+  { id: 'w-sample-1005', name: 'Coupling Pad to Preparation 1', fleet: FLEET_NAME.assembly, code: 'DCP-1005', qty: '30', fromTablet: true, pick: 'STA-116', drop: 'STA-113', confirm: { op: 'Tablet', at: 'STA-116' } },
+  { id: 'w-sample-1006', name: 'Dust Cover to Preparation 2', fleet: FLEET_NAME.assembly, code: 'DCP-1006', qty: '8', fromTablet: false, pick: 'STA-117', drop: 'STA-114' },
 ];
 export function sampleWorkflows(): Workflow[] {
   return SAMPLES.map((s) => ({ id: s.id, name: s.name, fleet: s.fleet, published: true, saved: true, nodes: [
-    createStart({ trigger: 'Manual', request: 'Tablet', user: s.users }),
+    createStart({ trigger: 'Manual', request: 'Tablet' }),
     createNode('material', { type: 'Material', code: s.code, fromTablet: s.fromTablet, qty: s.qty }),
     createNode('station', { action: 'Pick Up', station: s.pick }),
-    ...(s.confirm ? [createNode('confirm', { op: s.confirm })] : []),
+    ...(s.confirm ? [createNode('confirm', { op: s.confirm.op, station: s.confirm.at })] : []),
     createNode('station', { action: 'Drop Off', station: s.drop }),
     createNode('end')] }));
 }
-/** Workflows saved before requests existed: "Request from Tablet" became "Tablet" and the placeholder User IDs (USER-001...) are gone. The sample workflows are added when missing. */
+/** Workflows saved before requests existed: "Request from Tablet" became "Tablet". The sample workflows are added when missing. */
 export function upgradeToV5(workflows: Workflows): Workflows {
   const out: Workflows = {};
-  for (const [id, w] of Object.entries(workflows)) out[id] = { ...w, nodes: w.nodes.map((n) => n.t !== 'start' ? n : { ...n, f: { ...n.f, request: n.f.request === 'Request from Tablet' ? 'Tablet' : n.f.request, user: (Array.isArray(n.f.user) ? n.f.user : [n.f.user as string]).filter((u) => u && !/^USER-\d+$/.test(u)) } }) };
+  for (const [id, w] of Object.entries(workflows)) out[id] = { ...w, nodes: w.nodes.map((n) => n.t !== 'start' ? n : { ...n, f: { ...n.f, request: n.f.request === 'Request from Tablet' ? 'Tablet' : n.f.request } }) };
   for (const s of sampleWorkflows()) if (!out[s.id]) out[s.id] = s;
+  return out;
+}
+/** The Start step no longer lists User IDs (the operators mapped to the drop-off station request) and every Confirm step has a station (the one just before it). The sample workflows are replaced by the current ones. */
+export function upgradeToV6(workflows: Workflows): Workflows {
+  const stationOf = (n: WfNode) => (Array.isArray(n.f.station) ? n.f.station[0] : (n.f.station as string)) ?? '';
+  const fix = (list: WfNode[]): WfNode[] => { let last = ''; return list.map((n, i) => {
+    if (n.t === 'station') last = stationOf(n);
+    const next = list.slice(i + 1).find((x) => x.t === 'station'); const at = last || (next ? stationOf(next) : '');          // the station before it, else the one after it
+    const base = n.t === 'start' ? { ...n, f: Object.fromEntries(Object.entries(n.f).filter(([k]) => k !== 'user')) } : n.t === 'confirm' && !n.f.station ? { ...n, f: { ...n.f, station: at } } : n;
+    return base.br ? { ...base, br: { t: fix(base.br.t), o: fix(base.br.o) } } : base; }); };
+  const out: Workflows = {}; for (const [id, w] of Object.entries(workflows)) out[id] = { ...w, nodes: fix(w.nodes) };
+  for (const s of sampleWorkflows()) out[s.id] = s;
   return out;
 }
 

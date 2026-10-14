@@ -1,12 +1,17 @@
 import { STATUS } from './status';
-import type { RequestStatus, TripRequest } from './types';
+import type { ApprovalStep, RequestStatus, TripRequest } from './types';
 
 /** The rules of who may do what with a request (pure). */
-export interface Person { username: string; /** fleet ids the person sees */ fleets: string[] }
-/** A request is approved by another operator who works on its fleet: never by the person who asked. */
-export const canApprove = (r: TripRequest, who: Person, fleetIdOf: (fleetName: string) => string | undefined): boolean => {
-  const id = fleetIdOf(r.fleet); return r.status === 'pending' && r.requestedBy !== who.username && !!id && who.fleets.includes(id);
-};
+export interface Person { username: string }
+/** Usernames of the operators who may approve at a station (mapped to it, with the Approve permission). */
+export type ApproversAt = (stationId: string) => string[];
+/** The approval the request waits for now: the first Confirm step not yet approved (they are done in turn). */
+export const currentStep = (r: TripRequest): ApprovalStep | undefined => (r.status === 'pending' ? r.approvals.find((a) => !a.by) : undefined);
+/** An operator mapped to the current step's station approves; never the person who asked, unless they are the only one mapped to that station (a one-person line). */
+export function canApprove(r: TripRequest, who: Person, approversAt: ApproversAt): boolean {
+  const step = currentStep(r); if (!step) return false; const at = approversAt(step.stationId);
+  return at.includes(who.username) && (r.requestedBy !== who.username || at.every((u) => u === who.username));
+}
 /** The requester may cancel their own request until a robot is on its way. */
 export const canCancel = (r: TripRequest, who: Person): boolean => r.requestedBy === who.username && STATUS[r.status].cancellable;
 export const isAllowedNext = (from: RequestStatus, to: RequestStatus): boolean => {

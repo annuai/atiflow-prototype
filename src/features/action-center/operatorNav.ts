@@ -6,7 +6,8 @@ import { useUnreadCount } from '@/features/notifications/NotificationsProvider';
 import { canApprove } from '@/features/requests/model/rules';
 import { useRequestsRunning } from '@/features/requests/model/bridge';
 import { useRequests } from '@/features/requests/model/store';
-import { fleetIdOf, useOperator } from '@/features/requests/model/useOperator';
+import { useApproversAt } from '@/features/requests/model/mapping';
+import { useOperator } from '@/features/requests/model/useOperator';
 import type { NavModel, SearchHit } from '@/shell/types';
 import { useActionCenterRunning } from './data/store';
 import { useCalls } from './data/useCalls';
@@ -15,8 +16,8 @@ export const OPERATOR_ACTION_CENTER_PATH = '/operator/action-center', OPERATOR_N
 /** Sidebar of the operator area: Request, Approve and the Action Center (each only when the person may open it), and Notifications. */
 export function useOperatorNav(): NavModel {
   const navigate = useNavigate(); const path = useLocation().pathname; const unread = useUnreadCount(); const { can } = useAccess();
-  useActionCenterRunning(); useRequestsRunning(); const calls = useCalls().open; const me = useOperator();
-  const toApprove = useRequests((s) => s.requests).filter((r) => canApprove(r, me, fleetIdOf)).length;
+  useActionCenterRunning(); useRequestsRunning(); const calls = useCalls().open; const me = useOperator(); const approversAt = useApproversAt();
+  const toApprove = useRequests((s) => s.requests).filter((r) => canApprove(r, me, approversAt)).length;
   const item = (id: string, label: string, icon: NavModel['groups'][number]['items'][number]['icon'], to: string, badge?: number) => ({ id, label, icon, badge: badge || undefined, active: path === to, onSelect: () => navigate(to) });
   return {
     groups: [{ id: 'ops', label: 'Operations', items: [

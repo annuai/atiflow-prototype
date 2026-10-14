@@ -8,8 +8,7 @@ export const NODE_TYPES: Record<NodeTypeId, NodeTypeSpec> = {
   start: { label: 'Start Node', accent: '#e1f5ee', icon: 'play', w: 280, fixed: true, fields: [
     { key: 'trigger', label: 'Start Trigger', opts: ['Manual', 'Auto', 'Scheduled'] },
     { key: 'robot', label: 'Robot Type', opts: ['Sherpa XT Lite', 'Sherpa XT', 'Sherpa Hitch'] },
-    { key: 'request', label: 'Request Type', opts: ['Tablet', 'MES', 'Call Button'] },
-    { key: 'user', label: 'User ID', kind: 'multi', optsFrom: 'requestUsers' }] },
+    { key: 'request', label: 'Request Type', opts: ['Tablet', 'MES', 'Call Button'] }] },
   material: { label: 'Material', accent: '#eedcef', icon: 'keyframes', w: 224, defaults: { type: 'Material', code: '', fromTablet: false, qty: '10' }, fields: [
     { key: 'type', label: 'Type', opts: ['Material', 'Kit', 'Spare Part'] },
     { key: 'code', label: 'Code', optsFrom: 'fleetMaterials' },
@@ -26,8 +25,9 @@ export const NODE_TYPES: Record<NodeTypeId, NodeTypeSpec> = {
   station: { label: 'Station', accent: '#fdf4df', icon: 'pin', w: 155, bw: 170, defaults: { action: 'Pick Up', station: '' }, fields: [
     { key: 'action', label: 'Type', opts: ['Pick Up', 'Drop Off'] },
     { key: 'station', label: (n) => (n.f.lbl as string) || 'Station/ Staging Area', optsFrom: 'fleetStations', branch: { label: 'Station', kind: 'multi' } }] },
-  confirm: { label: 'Confirm', accent: '#dcfce7', icon: 'badge', w: 173, defaults: { op: 'Dispatch Button' }, fields: [
-    { key: 'op', label: 'Operation', opts: ['Dispatch Button', 'Tablet', 'Barcode Scan', 'Weight Sensor'] }] },
+  confirm: { label: 'Confirm', accent: '#dcfce7', icon: 'badge', w: 173, defaults: { op: 'Dispatch Button', station: '' }, fields: [
+    { key: 'op', label: 'Operation', opts: ['Dispatch Button', 'Tablet', 'Barcode Scan', 'Weight Sensor'] },
+    { key: 'station', label: 'Approval station', optsFrom: 'fleetStations' }] },
   end: { label: 'End Node', accent: '#f7e4e4', icon: 'square', w: 140, fixed: true, fields: [], note: 'Stops the workflow' },
 };
 

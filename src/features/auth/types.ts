@@ -13,6 +13,8 @@ export interface UserRecord {
   custom?: Custom;
   /** Fleet ids this person sees (supervisors and operators; at least one). Configurators always see every fleet. */
   fleets?: string[];
+  /** Stations this person is responsible for (ids like STA-107): they request materials for workflows that deliver there, and approve at the Confirm steps placed there. */
+  stations?: string[];
   /** Shown under the avatar; defaults to the role's name. */
   title: string;
   /** A picture chosen when the user was added (a small data URL). The starting users have theirs in `users.ts`. */

@@ -1,8 +1,9 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
+import { tripIds, tripNumber } from '@/core/tripIds';
 import { createDocument, localBackend } from '@/data/storage';
-import { canApprove, canCancel, isAllowedNext, type Person } from './rules';
+import { canApprove, canCancel, currentStep, isAllowedNext, type ApproversAt, type Person } from './rules';
 import type { CartLine, RequestableItem, RequestStatus, TripRequest } from './types';
 
 /**
@@ -13,12 +14,13 @@ interface Saved { requests: TripRequest[]; seq: number }
 const KEY = 'atiflow.requests.v1';
 const doc = createDocument<Saved>(localBackend(KEY), () => ({ requests: [], seq: 0 }), (v): v is Saved => !!v && Array.isArray((v as Saved).requests) && typeof (v as Saved).seq === 'number');
 
-export interface Requester { username: string; name: string; fleets: string[] }
+export interface Requester { username: string; name: string }
 export interface RequestsState extends Saved {
   /** Make the requests of a cart. Each becomes its own request (pending when its workflow has a Confirm step, otherwise approved). Returns the order id. */
   submit(who: Requester, lines: { item: RequestableItem; qty: number }[], now?: number): string;
-  approve(id: string, who: Person & { name: string }, fleetIdOf: (n: string) => string | undefined, now?: number): boolean;
-  reject(id: string, who: Person & { name: string }, fleetIdOf: (n: string) => string | undefined, reason?: string, now?: number): boolean;
+  /** Approve the step the request waits for (the next Confirm station, in turn); the request is approved when the last step is. */
+  approve(id: string, who: Person & { name: string }, approversAt: ApproversAt, now?: number): boolean;
+  reject(id: string, who: Person & { name: string }, approversAt: ApproversAt, reason?: string, now?: number): boolean;
   /** Cancel one request (never the others of its order). */
   cancel(id: string, who: Person & { name: string }, now?: number): boolean;
   /** The fleet reported something about the request. */
@@ -30,23 +32,33 @@ export interface RequestsState extends Saved {
 const pad = (n: number, w = 4) => String(n).padStart(w, '0');
 const push = (r: TripRequest, status: RequestStatus, at: number, by?: string, note?: string): TripRequest => ({ ...r, status, history: [...r.history, { status, at, by, note }] });
 
+/**
+ * Requests saved by an older version are brought up to date: they get the trip id they never had, and the approval steps they never had (a request that was still pending waits for approval at its
+ * pick-up station, so it can still be decided). Without this a saved request would break the pages that read `approvals`.
+ */
+export function normalise(list: TripRequest[]): TripRequest[] {
+  return list.map((r) => { const withTrip = r.tripId ? r : { ...r, tripId: tripIds.next() }; return Array.isArray(withTrip.approvals) ? withTrip : { ...withTrip, approvals: withTrip.status === 'pending' && withTrip.legs?.length ? [{ stationId: withTrip.legs[0] }] : [] }; });
+}
+const boot = doc.load(); boot.requests = normalise(boot.requests); tripIds.ensureAtLeast(Math.max(0, ...boot.requests.map((r) => tripNumber(r.tripId))));        // saved requests keep their ids: new ones count on from them
 export const requestsStore = createStore<RequestsState>((set, get) => ({
-  ...doc.load(),
+  ...boot,
   submit(who, lines, now = Date.now()) {
     const seq = get().seq + 1; const groupId = `ORD-${pad(seq)}`;
     const made: TripRequest[] = lines.map(({ item, qty }, i) => {
       const base: TripRequest = { id: `${groupId}-${i + 1}`, groupId, workflowId: item.workflowId, workflowName: item.workflowName, fleet: item.fleet, fleetLive: item.fleetLive, code: item.code, name: item.name, group: item.group, qty,
-        legs: item.legs, loadFrom: item.loadFrom, needsApproval: item.needsApproval, status: 'pending', history: [], requestedBy: who.username, requestedByName: who.name, createdAt: now };
+        legs: item.legs, loadFrom: item.loadFrom, approvals: item.approvalStations.map((stationId) => ({ stationId })), needsApproval: item.needsApproval, status: 'pending', history: [], requestedBy: who.username, requestedByName: who.name, createdAt: now, tripId: tripIds.next() };
       return item.needsApproval ? push(base, 'pending', now, who.name) : push(base, 'approved', now, 'No approval needed');
     });
     set({ seq, requests: [...get().requests, ...made] }); return groupId;
   },
-  approve(id, who, fleetIdOf, now = Date.now()) {
-    const r = get().requests.find((x) => x.id === id); if (!r || !canApprove(r, who, fleetIdOf)) return false;
-    set({ requests: get().requests.map((x) => (x.id === id ? { ...push(x, 'approved', now, who.name), approvedBy: who.name } : x)) }); return true;
+  approve(id, who, approversAt, now = Date.now()) {
+    const r = get().requests.find((x) => x.id === id); if (!r || !canApprove(r, who, approversAt)) return false;
+    const step = currentStep(r)!; const approvals = r.approvals.map((a) => (a === step ? { ...a, by: who.name, at: now } : a)); const left = approvals.filter((a) => !a.by).length; const total = approvals.length;
+    const next = left ? { ...r, approvals, history: [...r.history, { status: 'pending' as const, at: now, by: who.name, note: `Approved at ${step.stationId} (${total - left} of ${total})` }] } : { ...push(r, 'approved', now, who.name, `${total} of ${total} approvals`), approvals, approvedBy: who.name };
+    set({ requests: get().requests.map((x) => (x.id === id ? next : x)) }); return true;
   },
-  reject(id, who, fleetIdOf, reason, now = Date.now()) {
-    const r = get().requests.find((x) => x.id === id); if (!r || !canApprove(r, who, fleetIdOf)) return false;
+  reject(id, who, approversAt, reason, now = Date.now()) {
+    const r = get().requests.find((x) => x.id === id); if (!r || !canApprove(r, who, approversAt)) return false;
     set({ requests: get().requests.map((x) => (x.id === id ? { ...push(x, 'rejected', now, who.name, reason), note: reason } : x)) }); return true;
   },
   cancel(id, who, now = Date.now()) {
@@ -59,14 +71,14 @@ export const requestsStore = createStore<RequestsState>((set, get) => ({
     if (!isAllowedNext(r.status, to) && !(r.status === 'ongoing' && to === 'ongoing')) return;          // e.g. a cancelled request ignores a late report
     set({ requests: get().requests.map((x) => (x.id === u.id ? { ...push(x, to, now, 'Fleet', u.reason), tripId: u.tripId ?? x.tripId, robotId: u.robotId ?? x.robotId, note: u.reason ?? x.note } : x)) });
   },
-  requeueOngoing(now = Date.now()) { if (!get().requests.some((r) => r.status === 'ongoing')) return; set({ requests: get().requests.map((r) => (r.status === 'ongoing' ? { ...push(r, 'approved', now, 'Fleet', 'The fleet restarted: waiting for a robot again'), tripId: undefined, robotId: undefined } : r)) }); },
-  reset() { doc.reset(); set({ requests: [], seq: 0 }); },
+  requeueOngoing(now = Date.now()) { if (!get().requests.some((r) => r.status === 'ongoing')) return; set({ requests: get().requests.map((r) => (r.status === 'ongoing' ? { ...push(r, 'approved', now, 'Fleet', 'The fleet restarted: waiting for a robot again'), robotId: undefined } : r)) }); },
+  reset() { doc.reset(); tripIds.reset(); set({ requests: [], seq: 0 }); },
 }));
 export const useRequests = <T,>(sel: (s: RequestsState) => T) => useStore(requestsStore, sel);
 
 let saved = requestsStore.getState().requests; requestsStore.subscribe((s) => { if (s.requests !== saved) { saved = s.requests; doc.save({ requests: s.requests, seq: s.seq }); } });
 // another tab (another operator on the same browser) changed the requests: take them over
-if (typeof window !== 'undefined') window.addEventListener('storage', (e) => { if (e.key !== KEY || !e.newValue) return; const r = doc.parse(e.newValue); if ('value' in r) { saved = r.value.requests; requestsStore.setState(r.value); } });
+if (typeof window !== 'undefined') window.addEventListener('storage', (e) => { if (e.key !== KEY || !e.newValue) return; const r = doc.parse(e.newValue); if ('value' in r) { saved = normalise(r.value.requests); requestsStore.setState({ ...r.value, requests: saved }); } });
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __requests: requestsStore });
 
 /** A cart helper (pure): add or change a line, drop a line, clear. The cart itself lives only in the page while a person chooses; it is never saved. */
