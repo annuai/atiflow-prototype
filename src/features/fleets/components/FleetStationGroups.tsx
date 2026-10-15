@@ -1,5 +1,6 @@
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useState } from 'react';
-import { Edit05, SearchLg, Trash01 } from '@untitledui/icons';
+import { Edit05, SearchLg, Trash01, Package, LayersThree01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
@@ -41,11 +42,11 @@ export function FleetStationGroups({ fleet, materials, masterGroups, toolbarLeft
           <Button size="sm" color="primary" onPress={onAdd}>{copy.materials.addGroup}</Button>
         </div>
       </div>
-      {groups.length === 0 ? <p className="rounded-xl border border-dashed border-primary p-10 text-center text-sm text-tertiary">{copy.groups.empty}</p> : (
+      {groups.length === 0 ? <EmptyState framed icon={LayersThree01} title={copy.emptyTitle.groups} subtext={copy.groups.empty} size="lg" /> : (
         <div className="grid min-h-0 flex-1 items-stretch gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
           <div className="overflow-hidden rounded-xl border border-secondary bg-primary" role="listbox" aria-label={copy.groups.list(groups.length)}>
             <p className="border-b border-secondary px-5 py-2 text-xs font-medium text-quaternary">{copy.groups.list(groups.length)}</p>
-            {shownGroups.length === 0 && <p className="px-5 py-6 text-sm text-tertiary">{copy.groups.noMatch(text)}</p>}
+            {shownGroups.length === 0 && <NoResults size="sm" subtext={copy.groups.noMatch(text)} />}
             {shownGroups.map((g) => (
               <button key={g.id} type="button" role="option" aria-selected={g.id === group?.id} onClick={() => setSelected(g.id)}
                 className={cx('relative flex w-full cursor-pointer flex-col items-start gap-1.5 border-b border-secondary px-5 py-4 text-left outline-focus-ring last:border-b-0 focus-visible:outline-2', g.id === group?.id ? 'bg-brand-primary' : 'hover:bg-primary_hover')}>
@@ -61,7 +62,7 @@ export function FleetStationGroups({ fleet, materials, masterGroups, toolbarLeft
                 <ButtonUtility size="xs" color="tertiary" icon={Trash01} tooltip={copy.groups.deleteGroup} onPress={() => setDeleting(group)} /></div>
               <Button size="sm" color="secondary" onPress={() => setAdding(group)}>{copy.groups.addMaterials}</Button>
             </header>
-            {inGroup.length === 0 ? <p className="p-10 text-center text-sm text-tertiary">{copy.groups.noMaterials}</p>
+            {inGroup.length === 0 ? <EmptyState icon={Package} title={copy.emptyTitle.groupMaterials} subtext={copy.groups.noMaterials} />
               : <div className="overflow-auto"><DataTable plain label={group.name} rows={inGroup} rowKey={(m) => m.code} columns={columns} minWidth={420} /></div>}
           </section>}
         </div>)}

@@ -19,7 +19,7 @@ const laneGraph = () => { const m = mapNow(); if (!m) return null; if (graph?.na
 export function stopSimulation() { token++; S().setSim({ ...SIM_IDLE }); legsDone = []; prevStation = null; simBus.emit({ type: 'reset' }); }
 
 /** The point `d` metres along a path and the direction there (radians, site frame). */
-function pointAlong(pts: Vec2[], d: number): { p: Vec2; heading: number } {
+export function pointAlong(pts: Vec2[], d: number): { p: Vec2; heading: number } {
   let rem = d;
   for (let i = 1; i < pts.length; i++) {
     const a = pts[i - 1], b = pts[i], L = Math.hypot(b.x - a.x, b.y - a.y);

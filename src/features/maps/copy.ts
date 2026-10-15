@@ -3,7 +3,7 @@ export const copy = {
   title: 'Maps', subtitle: 'Manage and configure deployment maps for your robot fleets.',
   import: 'Import', create: 'Create New Map', search: 'Search maps by name or fleet…', sortBy: (label: string) => `Sort By: ${label}`,
   sorts: { name: 'Name', version: 'Version' },
-  card: { fleet: 'Fleet', stations: 'Stations', unassigned: 'Unassigned', version: (v: number) => `v${v}`, stationCount: (c: number) => `${c}` },
+  card: { fleet: 'Fleet', updated: 'Last updated', unassigned: 'Unassigned', version: (v: number) => `v${v}` },
   noMatch: (q: string) => `No maps match “${q}”.`,
   empty: { title: 'Create a new map to get started', description: 'Maps tell your robots where they can drive. Generate one from a robot’s run data, or import an existing map file.' },
   generate: {

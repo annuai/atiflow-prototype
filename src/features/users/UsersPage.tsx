@@ -1,3 +1,4 @@
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Plus, SearchLg } from '@untitledui/icons';
@@ -35,7 +36,7 @@ export function UsersPage() {
             <Button size="sm" color="primary" iconLeading={Plus} onPress={() => setAdding(true)}>{copy.add}</Button>
           </div></div>
         <div className="builder dv-card">
-          {rows.length === 0 ? <p className="dv-none">{copy.none(q)}</p> : <div className="dv-scroll"><DataTable label={copy.title} rows={rows} rowKey={(u) => u.username} columns={columns} onRowAction={(u) => navigate(`${USERS_PATH}/${encodeURIComponent(u.username)}`)} /></div>}
+          {rows.length === 0 ? <NoResults subtext={copy.none(q)} className="m-auto" /> : <div className="dv-scroll"><DataTable label={copy.title} rows={rows} rowKey={(u) => u.username} columns={columns} onRowAction={(u) => navigate(`${USERS_PATH}/${encodeURIComponent(u.username)}`)} /></div>}
         </div>
       </div>
       <AddUserModal isOpen={adding} onOpenChange={setAdding} />

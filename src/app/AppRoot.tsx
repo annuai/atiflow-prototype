@@ -28,6 +28,7 @@ const UserDetailPage = lazy(() => import('@/features/users/UserDetailPage').then
 const UsersPage = lazy(() => import('@/features/users/UsersPage').then((m) => ({ default: m.UsersPage })));
 const RequestPage = lazy(() => import('@/features/requests/RequestPage').then((m) => ({ default: m.RequestPage })));
 const ApprovePage = lazy(() => import('@/features/requests/ApprovePage').then((m) => ({ default: m.ApprovePage })));
+const MapEditorPage = lazy(() => import('@/features/map-editor/MapEditorPage').then((m) => ({ default: m.MapEditorPage })));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const PreferencesPage = lazy(() => import('@/features/preferences/PreferencesPage').then((m) => ({ default: m.PreferencesPage })));
 
@@ -95,6 +96,7 @@ export function AppRoot() {
           <Route path="/configurator/users/:username" element={<UserDetailPage />} />
           <Route path="/configurator/settings/:tab?" element={<SettingsPage />} />
           <Route path="/configurator/maps" element={<MapsPage />} />
+          <Route path="/configurator/maps/:id" element={<MapEditorPage />} />
         </Route>
         <Route path="/no-access" element={<NoAccessPage />} />
         <Route path="*" element={<RootRedirect />} />

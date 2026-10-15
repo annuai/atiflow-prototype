@@ -1,3 +1,4 @@
+import { laneArrowPath } from '@/components/map/laneArrows';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Minus, Plus, Home01 } from '@untitledui/icons';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
@@ -51,6 +52,7 @@ export function StationMap({ site, nav, usable, highlighted, pickable, onPick, d
   const reset = () => { setZ(1); setC({ x: W / 2, y: H / 2 }); };
 
   const u = vw / size.w;                                                      // metres per screen pixel: pins, labels and the robot keep their pixel size when zooming (like sections in Figma), so a cluster opens up as you zoom in
+  const arrows = useMemo(() => laneArrowPath(nav.lanes, (x, y) => [x - minX, maxY - y], u), [nav, u, minX, maxY]);
   const pin = (s: NavGraph['stations'][number]) => {
     const n = nav.nodes.find((q) => q.id === s.nodeId)!; const ok = usable.has(s.id), hl = highlighted.includes(s.id), click = pickable && ok; const col = TYPE_COLOR[s.type] ?? '#64748b'; const x = n.x - minX, y = maxY - n.y;
     return (
@@ -72,6 +74,7 @@ export function StationMap({ site, nav, usable, highlighted, pickable, onPick, d
         {site.zones.filter((q) => q.active).map((q) => <path key={q.id} d={'M' + q.polygon.map(([x, y]) => P(x, y)).join('L') + 'Z'} fill={q.color} fillOpacity={0.08} stroke={q.color} strokeOpacity={0.25} strokeWidth={1} vectorEffect="non-scaling-stroke" />)}
         <path d={layers.machines} fill="#cbd5d1" fillOpacity={0.7} />
         <path d={layers.lanes} fill="none" stroke="#14b8a6" strokeOpacity={0.35} strokeWidth={0.8} vectorEffect="non-scaling-stroke" />
+        <path d={arrows} fill="#0f766e" fillOpacity={0.8} pointerEvents="none" />
         <path d={layers.walls} fill="none" stroke="#475569" strokeWidth={1.2} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
         {done.map((d, i) => <path key={i} d={line(d)} fill="none" stroke="#14b8a6" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" opacity={0.8} vectorEffect="non-scaling-stroke" />)}
         {route && <path d={line(route)} fill="none" stroke="#0d9488" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="7 5" vectorEffect="non-scaling-stroke" />}

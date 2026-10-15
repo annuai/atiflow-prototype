@@ -5,6 +5,7 @@ import { publishProblem } from '../src/features/workflow-builder/model/validate'
 import { confirmStations, dropOffStations, needsApproval, requestableItems, visibleWorkflows, workflowLegs } from '../src/features/requests/model/catalog';
 import { canApprove, canCancel, currentStep, groupRequests, isAllowedNext } from '../src/features/requests/model/rules';
 import { approversFrom } from '../src/features/requests/model/mapping';
+import { decisions } from '../src/features/requests/model/decisions';
 import { normalise, requestsStore } from '../src/features/requests/model/store';
 import { requestNotifications } from '../src/features/requests/notifications';
 import { seedGroups, seedMaterials } from '../src/features/master-data/model/seed';
@@ -111,5 +112,11 @@ describe('requests: statuses, approvals in turn and cancel', () => {
     const legacy = { id: 'ORD-0007-1', status: 'pending', legs: ['STA-116', 'STA-107'], history: [], requestedBy: 'rohan' } as never; const done = { id: 'ORD-0007-2', status: 'completed', legs: ['STA-1'], history: [], tripId: 'TRP-040' } as never;
     const out = normalise([legacy, done]); expect(out[0].tripId).toMatch(/^TRP-\d+$/); expect(out[0].approvals).toEqual([{ stationId: 'STA-116' }]); expect(out[1]).toMatchObject({ tripId: 'TRP-040', approvals: [] });
     expect(canApprove(out[0], vikram, approversAt)).toBe(true);
+  });
+  it('the approval history lists every approval and rejection at my stations or by me, newest first, with where the request stands now', () => {
+    submit(); requestsStore.getState().approve('ORD-0001-1', vikram, approversAt, 2000); requestsStore.getState().reject('ORD-0001-3', vikram, approversAt, 'Out of stock', 3000);
+    const mine = decisions(rs(), { stations: vikram.stations, name: vikram.name }); expect(mine.map((d) => [d.requestId, d.outcome, d.stationId, d.by, d.status])).toEqual([['ORD-0001-3', 'rejected', 'STA-119', 'Vikram Nair', 'rejected'], ['ORD-0001-1', 'approved', 'STA-116', 'Vikram Nair', 'approved']]);
+    expect(mine[0].note).toBe('Out of stock'); expect(decisions(rs(), { stations: [], name: 'Nobody' })).toEqual([]); expect(decisions(rs(), { stations: ['STA-116'], name: 'Nobody' }).map((d) => d.requestId)).toEqual(['ORD-0001-1']);
+    const two = { ...items(rohan)[0], approvalStations: ['STA-116', 'STA-119'] }; submit(rohan, [two], [5]); const id = rs().at(-1)!.id; requestsStore.getState().approve(id, vikram, approversAt, 4000); expect(decisions(rs(), vikram).find((d) => d.requestId === id)?.step).toBe('1 of 2');
   });
 });

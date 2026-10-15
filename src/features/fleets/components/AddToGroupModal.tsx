@@ -1,3 +1,5 @@
+import { Package } from '@untitledui/icons';
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { PackagePlus } from '@untitledui/icons';
 import { ModalShell } from '@/components/modal/ModalShell';
@@ -12,7 +14,7 @@ function Body({ fleet, groupId, groupName, rows, onOpenChange }: { fleet: string
       primary={{ label: t.addConfirm(sel.size), isDisabled: sel.size === 0, onPress: () => { fleetsStore.getState().addToGroup(fleet, groupId, [...sel]); onOpenChange(false); } }}>
       <div className="flex flex-col gap-3 pt-2">
         <p className="text-right text-sm font-semibold text-secondary">{copy.materials.selected(sel.size)}</p>
-        {rows.length === 0 ? <p className="rounded-xl border border-secondary p-8 text-center text-sm text-tertiary">{copy.materials.empty}</p> : <MaterialPicker rows={rows} selected={sel} onChange={setSel} />}
+        {rows.length === 0 ? <EmptyState icon={Package} title={copy.emptyTitle.toAdd} subtext={copy.materials.empty} size="sm" /> : <MaterialPicker rows={rows} selected={sel} onChange={setSel} />}
       </div>
     </ModalShell>
   );

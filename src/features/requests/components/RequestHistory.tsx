@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp } from '@untitledui/icons';
+import { ChevronDown, ChevronUp, ClipboardCheck } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
+import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { timeAgo } from '@/utils/timeAgo';
@@ -40,14 +41,14 @@ function RequestRow({ r, who, now, onCancel }: { r: TripRequest; who: Person; no
   );
 }
 
-/** My requests, grouped by the order they were made in. */
+/** Request history, grouped by the order they were made in. */
 export function RequestHistory({ requests, who, now }: { requests: TripRequest[]; who: Person & { name: string }; now: number }) {
   const [filter, setFilter] = useState<Filter>('active'); const [cancelling, setCancelling] = useState<TripRequest | null>(null);
   const shown = requests.filter((r) => (filter === 'all' ? true : filter === 'active' ? isActive(r.status) : !isActive(r.status))); const groups = groupRequests(shown);
   return (
     <div className="flex flex-col gap-4">
       <div className="shrink-0"><SegmentedTabs<Filter> size="lg" value={filter} onChange={setFilter} label="Show" items={[{ id: 'active', label: copy.history.filters.active }, { id: 'past', label: copy.history.filters.past }, { id: 'all', label: copy.history.filters.all }]} /></div>
-      {!groups.length ? <div className="grid place-items-center py-16 text-center"><div><p className="text-lg font-medium text-primary">{requests.length ? copy.history.empty[filter === 'active' ? 'active' : 'past'] : copy.history.empty.title}</p><p className="text-sm text-tertiary">{copy.history.empty.hint}</p></div></div>
+      {!groups.length ? <EmptyState icon={ClipboardCheck} title={requests.length ? copy.history.empty[filter === 'active' ? 'active' : 'past'] : copy.history.empty.title} subtext={requests.length ? undefined : copy.history.empty.hint} size="lg" />
         : groups.map((g) => (
           <section key={g.groupId} className="rounded-2xl border border-secondary bg-primary p-4 shadow-xs">
             <header className="mb-3 flex flex-wrap items-baseline justify-between gap-2"><h3 className="text-md font-semibold text-primary">{g.groupId}</h3><p className="text-sm text-tertiary">{copy.history.order(g.requests.length)} · {time(g.createdAt)} · {timeAgo(g.createdAt, now)}</p></header>

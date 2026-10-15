@@ -1,3 +1,5 @@
+import { Clock } from '@untitledui/icons';
+import { EmptyState } from '@/components/data/EmptyState';
 import { fmtDuration } from '../data/derive';
 import type { Hotspot } from '../data/types';
 import { copy } from '../copy';
@@ -9,7 +11,7 @@ export function HotspotsCard({ hotspots, tv }: { hotspots: Hotspot[]; tv?: boole
   return (
     <Card tv={tv}>
       <CardTitle title={copy.hotspots.title} hint={copy.hotspots.hint} />
-      {!hotspots.length ? <p className="py-6 text-center text-sm text-tertiary">{copy.hotspots.empty}</p> : (
+      {!hotspots.length ? <EmptyState icon={Clock} tone="positive" title={copy.hotspots.empty} subtext={copy.hotspots.emptyHint} size="sm" /> : (
         <ul className="flex flex-col gap-2.5">
           {hotspots.map((h) => (
             <li key={h.place}><div className="mb-1 flex items-center justify-between text-sm"><span className="font-medium text-primary">{h.label}</span><span className="text-xs text-tertiary">{h.waitingNow ? <b className="mr-2 text-fg-warning-primary">{copy.hotspots.now(h.waitingNow)}</b> : null}{fmtDuration(h.seconds)}</span></div>

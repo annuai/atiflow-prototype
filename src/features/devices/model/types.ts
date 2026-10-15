@@ -25,6 +25,6 @@ export interface DeviceKind {
   thumb(d: Device): ReactNode;                      // list-row picture
   illustration(d: Device): ReactNode;               // detail header picture
   preview(values: Record<string, FieldValue>): { heading?: string; image: ReactNode; caption: string };
-  empty: EmptyStateDef; emptyIllustration: ReactNode;
+  empty: EmptyStateDef;
   seed: Device[];
 }

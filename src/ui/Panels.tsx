@@ -9,6 +9,8 @@ import { InfoPanel } from './InfoPanel';
 import { STATE_TONE } from './tones';
 import { notify } from './toast';
 import { Badge, BadgeWithDot } from '@/components/base/badges/badges';
+import { Truck01 } from '@untitledui/icons';
+import { EmptyState } from '@/components/data/EmptyState';
 import { Button } from '@/components/base/buttons/button';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
@@ -123,7 +125,7 @@ export function StationPanel() {
     <div className="info-list">
       {incoming.map((r) => { const d = pathLen(r); const eta = Math.round(d / 1.1); const f = fleets.find((q) => q.id === r.fleetId);
         return <button key={r.id} onClick={() => handle.engine?.focusRobot(r.id)}><i className="dot" style={{ background: STATE_COLOR[r.state] }} /><b>{r.id}</b><span style={{ color: f?.color }}>{f?.name.split(' ')[0]}</span><em>{r.state === 'waiting' ? `waiting · ${eta}s` : `~${eta}s · ${d.toFixed(0)} m`}</em></button>; })}
-      {!incoming.length && <div className="empty">No robots are heading here</div>}
+      {!incoming.length && <EmptyState icon={Truck01} title="No robots are heading here" subtext="Robots on their way will show here." size="sm" />}
     </div>
   </InfoPanel>;
 }

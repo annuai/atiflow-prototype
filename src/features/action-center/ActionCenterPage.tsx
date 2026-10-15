@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Download01, LifeBuoy01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
+import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { StatusStrip, type StatusSummary } from '@/components/data/StatusStrip';
 import { fleetDirectory } from '@/data/fleetDirectory';
@@ -58,6 +59,4 @@ export function ActionCenterPage() {
     </>
   );
 }
-const Empty = ({ title, hint }: { title: string; hint: string }) => (
-  <div className="grid flex-1 place-items-center py-16 text-center"><div><span className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-secondary text-fg-quaternary"><LifeBuoy01 className="size-6" /></span><p className="font-medium text-primary">{title}</p><p className="text-sm text-tertiary">{hint}</p></div></div>
-);
+const Empty = ({ title, hint }: { title: string; hint: string }) => <EmptyState icon={LifeBuoy01} title={title} subtext={hint} size="lg" />;

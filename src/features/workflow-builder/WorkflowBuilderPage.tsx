@@ -1,3 +1,4 @@
+import { EmptyState } from '@/components/data/EmptyState';
 import { useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { FeaturedIcon } from '@/components/foundations/featured-icon/featured-icon';
@@ -25,10 +26,10 @@ function SelectFleetPrompt() {
   const fleets = useFleetNames();
   return (
     <div className="canvas wf-canvas wf-nofleet">
-      <FeaturedIcon icon={Dataflow03} color="gray" theme="modern" size="xl" />
-      <p className="wf-nofleet-t">{NO_FLEET.title}</p><p className="wf-nofleet-b">{NO_FLEET.body}</p>
-      <Select size="md" aria-label="Fleet for this workflow" className="mt-4 w-64" selectedKey={null} placeholder={fleets.length ? NO_FLEET.placeholder : NO_FLEET.none} isDisabled={!fleets.length}
-        onSelectionChange={(k) => wfStore.getState().assignFleet(String(k))} items={fleets.map((n) => ({ id: n, label: n }))}>{(item) => <Select.Item {...item} />}</Select>
+      <EmptyState icon={Dataflow03} size="lg" title={NO_FLEET.title} subtext={NO_FLEET.body}>
+        <Select size="md" aria-label="Fleet for this workflow" className="mt-4 w-64" selectedKey={null} placeholder={fleets.length ? NO_FLEET.placeholder : NO_FLEET.none} isDisabled={!fleets.length}
+          onSelectionChange={(k) => wfStore.getState().assignFleet(String(k))} items={fleets.map((n) => ({ id: n, label: n }))}>{(item) => <Select.Item {...item} />}</Select>
+      </EmptyState>
     </div>
   );
 }

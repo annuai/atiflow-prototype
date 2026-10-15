@@ -10,3 +10,11 @@ export function timeAgo(then: number, now: number, justNow = 'Just now'): string
   }
   return justNow;
 }
+
+const DATE = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+/** For "last updated": "Just now", "12 min ago", "1 hour ago", "3 days ago", then the date ("28 Sep 2026"). */
+export function lastUpdated(then: number, now: number): string {
+  const s = Math.max(0, Math.floor((now - then) / 1000)); if (s < 60) return 'Just now';
+  const m = Math.floor(s / 60); if (m < 60) return `${m} min ago`; const h = Math.floor(m / 60); if (h < 24) return `${h} ${h === 1 ? 'hour' : 'hours'} ago`;
+  const d = Math.floor(h / 24); return d < 7 ? `${d} ${d === 1 ? 'day' : 'days'} ago` : DATE.format(then);
+}

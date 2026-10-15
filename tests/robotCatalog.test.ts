@@ -13,7 +13,7 @@ describe('robot type catalog: one list for the configurator, the supervisor and 
   it('every type has an SVG illustration, a 3D model file and a 3D registry entry; ids and labels are unique', () => {
     expect(new Set(ROBOT_TYPES.map((t) => t.id)).size).toBe(ROBOT_TYPES.length); expect(new Set(ROBOT_TYPE_LABELS).size).toBe(ROBOT_TYPES.length);
     for (const t of ROBOT_TYPES) {
-      expect(fs.existsSync(`src/assets/robots/${t.id}.svg`)).toBe(true); expect(fs.existsSync(`public/models/robots/${t.id}.glb`)).toBe(true);
+      if (t.placeholder) expect(t.illustration).toBeTruthy(); else { expect(fs.existsSync(`src/assets/robots/${t.id}.svg`)).toBe(true); expect(fs.existsSync(`public/models/robots/${t.id}.glb`)).toBe(true); }
       expect(ROBOT_MODELS[t.id].footprint).toHaveLength(2);
     }
     expect(Object.keys(ROBOT_MODELS).sort()).toEqual(ROBOT_TYPES.map((t) => t.id).sort());

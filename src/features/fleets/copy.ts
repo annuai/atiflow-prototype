@@ -55,4 +55,6 @@ export const copy = {
     showing: (a: number, b: number) => `Showing ${a} of ${b} ${b === 1 ? 'workflow' : 'workflows'}`, active: 'Active', draft: 'Draft', open: 'Open in builder', rowMenu: 'Workflow actions',
   },
   notFound: 'This fleet does not exist.',
+  /** Titles of the empty states (the subtext is the explanation next to each list). */
+  emptyTitle: { workflows: 'No workflows yet', robots: 'No robots assigned', hardware: 'No hardware assigned', materials: 'No materials assigned', groups: 'No station groups yet', groupMaterials: 'No materials in this group', toAdd: 'No materials to add', devices: 'Nothing to assign', maps: 'No maps yet' },
 } as const;

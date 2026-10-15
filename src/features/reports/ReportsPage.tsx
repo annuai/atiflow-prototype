@@ -1,5 +1,6 @@
+import { EmptyState } from '@/components/data/EmptyState';
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, RefreshCcw01 } from '@untitledui/icons';
+import { AlertCircle, ChevronDown, ChevronUp, RefreshCcw01 } from '@untitledui/icons';
 import { BadgeWithDot } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { StatusStrip } from '@/components/data/StatusStrip';
@@ -37,7 +38,7 @@ export function ReportsPage() {
           </div></div>
         <div className="builder md-card"><div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
           <RangeBar value={range} onChange={setRange} generatedAt={report?.generatedAt ?? null} />
-          {error ? <div className="grid h-56 place-items-center text-center"><div><p className="text-sm text-tertiary">{copy.error}</p><Button className="mt-3" size="sm" color="secondary" onPress={refresh}>{copy.retry}</Button></div></div>
+          {error ? <EmptyState icon={AlertCircle} size="lg" title={copy.error} subtext={copy.errorHint} action={<Button size="sm" color="secondary" onPress={refresh}>{copy.retry}</Button>} />
             : !report || !verdict || phase !== 'ready' ? (phase === 'skeleton' ? <ReportsSkeleton /> : null)
             : <div className={loading ? 'flex flex-col gap-5 opacity-60 transition-opacity' : 'flex flex-col gap-5'}>
               <StatusStrip status={verdict} />

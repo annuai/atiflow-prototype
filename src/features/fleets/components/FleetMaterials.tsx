@@ -1,3 +1,5 @@
+import { Package } from '@untitledui/icons';
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useMemo, useState } from 'react';
 import { Plus, SearchLg, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
@@ -40,8 +42,8 @@ export function FleetMaterials({ fleet, materials, total, onAssign, onGroup, too
           <Button size="sm" color="primary" iconTrailing={Plus} onPress={onAssign}>{copy.materials.assign}</Button>
         </div>
       </div>
-      {materials.length === 0 ? <p className="rounded-xl border border-dashed border-primary p-10 text-center text-sm text-tertiary">{copy.materials.empty}</p>
-        : rows.length === 0 ? <p className="p-10 text-center text-sm text-tertiary">{copy.materials.noMatch(text)}</p>
+      {materials.length === 0 ? <EmptyState framed icon={Package} title={copy.emptyTitle.materials} subtext={copy.materials.empty} size="lg" />
+        : rows.length === 0 ? <NoResults subtext={copy.materials.noMatch(text)} />
         : (<div className="min-h-0 overflow-auto rounded-xl border border-secondary"><DataTable plain label={copy.tabs.materials} rows={rows} rowKey={(m) => m.code} columns={columns} selection={{ selected: sel, onChange: setSel }} minWidth={520} stickyHeader />
             <p className="border-t border-secondary px-5 py-3 text-sm text-tertiary">{copy.materials.showing(rows.length, total)}</p></div>)}
     </>

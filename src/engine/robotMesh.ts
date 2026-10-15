@@ -89,7 +89,7 @@ const RED_LIGHT = new THREE.MeshBasicMaterial({ color: 0xff3b30 });
 /** Fetches the model files once. Models that fail to load keep the procedural body. */
 export function loadRobotModels(): Promise<void> {
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-  return Promise.all(ROBOT_TYPES.map(async ({ id: key }) => { const file = `${key}.glb`;
+  return Promise.all(ROBOT_TYPES.filter((t) => !t.placeholder).map(async ({ id: key }) => { const file = `${key}.glb`;
     try {
       const { scene } = await loader.loadAsync(`${import.meta.env.BASE_URL}models/robots/${file}`);
       scene.traverse((o) => {
@@ -112,6 +112,8 @@ function fromGlb(key: string) {
 
 /** 3D side of each robot type of the catalog (`data/robotTypes.ts`): footprint and body. */
 export const ROBOT_MODELS: Record<RobotTypeId, RobotModelDef> = {
+  // types without a model of their own yet (placeholders) get the generic Sherpa body
+  ...(Object.fromEntries(ROBOT_TYPES.filter((t) => t.placeholder).map((t) => [t.id, { footprint: [1.2, 0.85], build: () => sherpa(1.2, 0.85) } as RobotModelDef])) as Record<RobotTypeId, RobotModelDef>),
   'sherpa-xt-lite': { footprint: [1.2, 0.85], build: () => loaded['sherpa-xt-lite'] ? fromGlb('sherpa-xt-lite') : sherpa(1.2, 0.85) },
   'pallet-mover': { footprint: [1.45, 0.9], build: () => loaded['pallet-mover'] ? fromGlb('pallet-mover') : sherpa(1.45, 0.9, { tug: true }) },
 };

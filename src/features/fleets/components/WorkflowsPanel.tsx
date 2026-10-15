@@ -1,3 +1,5 @@
+import { GitBranch01 } from '@untitledui/icons';
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchLg, Edit05 } from '@untitledui/icons';
@@ -32,8 +34,8 @@ export function WorkflowsPanel({ fleet }: { fleet: string }) {
         <h2 className="text-lg font-semibold text-primary">{t.title}</h2>
         <div className="flex flex-wrap gap-3"><Input className="w-60" size="sm" icon={SearchLg} aria-label={t.search} placeholder={t.search} value={text} onChange={setText} /><Button size="sm" color="primary" onPress={make}>{t.make}</Button></div>
       </div>
-      {rows.length === 0 ? <p className="rounded-xl border border-dashed border-primary p-10 text-center text-sm text-tertiary">{t.empty}</p>
-        : shown.length === 0 ? <p className="p-10 text-center text-sm text-tertiary">{t.noMatch(text)}</p>
+      {rows.length === 0 ? <EmptyState framed icon={GitBranch01} title={copy.emptyTitle.workflows} subtext={t.empty} size="lg" />
+        : shown.length === 0 ? <NoResults subtext={t.noMatch(text)} />
         : <div className="overflow-auto rounded-xl border border-secondary"><DataTable plain label={t.title} rows={shown} rowKey={(r) => r.id} columns={columns} onRowAction={open} selection={{ selected: sel, onChange: setSel }} minWidth={560} /><p className="border-t border-secondary px-5 py-3 text-sm text-tertiary">{t.showing(shown.length, rows.length)}</p></div>}
     </div>
   );

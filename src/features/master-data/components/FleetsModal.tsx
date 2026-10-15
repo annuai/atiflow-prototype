@@ -1,3 +1,5 @@
+import { Server01 } from '@untitledui/icons';
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { Flag01 } from '@untitledui/icons';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
@@ -19,7 +21,7 @@ function Body({ material, onOpenChange }: { material: Material; onOpenChange(o: 
     <ModalShell isOpen onOpenChange={onOpenChange} icon={Flag01} title={copy.fleets.title(material.code)} subtitle={copy.fleets.subtitle}
       secondary={{ label: copy.method.cancel, onPress: () => onOpenChange(false) }} primary={{ label: copy.fleets.save, onPress: save }}>
       <div className="flex flex-col gap-3 pt-2">
-        {fleets.length === 0 && <p className="text-sm text-tertiary">{copy.fleets.none}</p>}
+        {fleets.length === 0 && <EmptyState icon={Server01} title={copy.emptyTitles.fleets} subtext={copy.fleets.none} size="sm" />}
         {fleets.map((f) => <Checkbox key={f} size="sm" label={f} isSelected={sel.includes(f)} onChange={(on) => setSel(on ? [...sel, f] : sel.filter((x) => x !== f))} />)}
       </div>
     </ModalShell>

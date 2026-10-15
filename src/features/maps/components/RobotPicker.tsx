@@ -1,5 +1,6 @@
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useState } from 'react';
-import { SearchLg } from '@untitledui/icons';
+import { SearchLg, Cube01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
@@ -27,9 +28,9 @@ export function RobotPicker({ value, onChange, error }: { value: string; onChang
         </div>
       ) : (<>
         <Input aria-label={t.robotSearch} icon={SearchLg} placeholder={t.robotSearch} value={q} onChange={setQ} isInvalid={!!error} />
-        {robots.length === 0 ? <p className="text-sm text-tertiary">{t.noRobots}</p> : (
+        {robots.length === 0 ? <EmptyState icon={Cube01} title="No robots yet" subtext={t.noRobots} size="sm" /> : (
           <ul className="max-h-40 overflow-auto rounded-xl border border-secondary" aria-label={t.robot}>
-            {matches.length === 0 && <li className="p-3 text-sm text-tertiary">{t.robotNone}</li>}
+            {matches.length === 0 && <li><NoResults size="sm" subtext={t.robotNone} /></li>}
             {matches.map((r) => (
               <li key={nameOf(r)}><button type="button" onClick={() => onChange(nameOf(r))} className="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left outline-focus-ring hover:bg-primary_hover focus-visible:outline-2">
                 <span className="text-sm font-semibold text-primary">{nameOf(r)}</span><Badge size="sm" type="pill-color" color={r.status === 'online' ? 'success' : 'gray'}>{r.status === 'online' ? t.connected : t.disconnected}</Badge></button></li>))}

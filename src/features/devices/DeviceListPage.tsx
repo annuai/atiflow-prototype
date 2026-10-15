@@ -1,3 +1,4 @@
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, SearchLg } from '@untitledui/icons';
@@ -28,8 +29,8 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
             <Button size="sm" color="primary" iconLeading={Plus} onPress={() => add()}>{kind.addLabel}</Button>
           </div></div>
         <div className="builder dv-card">
-          {devices.length === 0 ? <div className="dv-scroll dv-center"><DeviceEmptyState kind={kind} onAdd={add} /></div>
-            : rows.length === 0 ? <p className="dv-none">No {kind.plural.toLowerCase()} match “{q}”.</p>
+          {devices.length === 0 ? <div className="dv-scroll flex flex-col"><DeviceEmptyState kind={kind} onAdd={add} /></div>
+            : rows.length === 0 ? <NoResults subtext={`No ${kind.plural.toLowerCase()} match “${q}”.`} className="m-auto" />
             : <div className="dv-scroll"><DeviceTable kind={kind} rows={rows} onOpen={(d) => navigate(`/configurator/${kind.route}/${encodeURIComponent(nameOf(d))}`)} /></div>}
         </div>
       </div>

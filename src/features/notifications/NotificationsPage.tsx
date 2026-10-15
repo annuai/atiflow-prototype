@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
+import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { OPERATOR_ACTION_CENTER_PATH, OPERATOR_APPROVE_PATH, OPERATOR_REQUEST_PATH } from '@/features/action-center/operatorNav';
 import { LIVE_FLOOR_PATH } from '@/features/live-floor/liveNav';
@@ -26,8 +27,7 @@ export function NotificationsPage() {
             <Button size="sm" color="secondary" isDisabled={!unread} onPress={() => st.markAllRead()}>{copy.markAll}</Button></div></div>
         <div className="builder md-card"><div className="md-body flex flex-col gap-3 !px-5 !py-5 sm:!px-6">
           {!shown.length ? (
-            <div className="grid flex-1 place-items-center py-16 text-center"><div><span className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-secondary text-fg-quaternary"><Bell01 className="size-6" /></span>
-              <p className="font-medium text-primary">{tab === 'unread' && items.length ? copy.emptyUnread : copy.emptyAll}</p><p className="text-sm text-tertiary">{copy.emptyAllHint[role]}</p></div></div>
+            <EmptyState icon={Bell01} title={tab === 'unread' && items.length ? copy.emptyUnread : copy.emptyAll} subtext={copy.emptyAllHint[role]} size="lg" />
           ) : <ul className="flex flex-col gap-3">{shown.map((n) => <NotificationItem key={n.id} n={n} now={now} onOpen={() => st.markRead(n.id)} onAction={(a) => { st.markRead(n.id); run(a); }} />)}</ul>}
         </div></div>
       </div>

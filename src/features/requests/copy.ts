@@ -2,7 +2,7 @@
 export const copy = {
   request: {
     title: 'Request', subtitle: 'Choose what you need. Add several materials to the cart and send them together.',
-    tabs: { new: 'New request', history: (n: number) => (n ? `My requests (${n})` : 'My requests') },
+    tabs: { new: 'New request', history: (n: number) => (n ? `Request history (${n})` : 'Request history') },
     search: 'Search by name or code', allGroups: 'All groups',
     empty: { title: 'Nothing to request yet', hint: 'Materials appear here when a published workflow of your fleet lists you and starts from the Tablet.', noMatch: 'No material matches your search' },
     card: { add: 'Add', update: 'Update', remove: 'Remove', inCart: (n: number) => `In cart · ${n}`, qty: (n: number) => `Quantity ${n}`, fixed: 'Fixed quantity', approval: 'Needs approval', workflow: 'Workflow' },
@@ -17,9 +17,10 @@ export const copy = {
   },
   approve: {
     title: 'Approve', subtitle: 'Requests that wait for approval at your stations.',
-    tabs: { waiting: (n: number) => `Waiting (${n})`, activity: 'Activity' },
+    tabs: { waiting: (n: number) => `Waiting (${n})`, history: 'History' },
     approve: 'Approve', reject: 'Reject', step: (i: number, n: number, station: string) => (n > 1 ? `Approval ${i} of ${n} · ${station}` : `Approval at ${station}`), requestedBy: (n: string, ago: string) => `${n} · ${ago}`,
-    empty: { title: 'Nothing waits for you', hint: 'When another operator asks for a material that needs approval, it shows here.', activity: 'No activity yet' },
+    empty: { title: 'Nothing waits for you', hint: 'When another operator asks for a material that needs approval at one of your stations, it shows here.', history: 'No approvals yet', historyHint: 'Every approval and rejection at your stations is kept here.' },
+    decision: { approved: 'Approved', rejected: 'Rejected', line: (o: string, station: string, by: string, step?: string) => `${o} at ${station}${step ? ` (${step})` : ''} by ${by}`, requested: (n: string) => `requested by ${n}`, now: (s: string) => `now ${s}` },
     approved: (n: string) => `${n} approved`, rejected: (n: string) => `${n} rejected`,
     reject_: { title: 'Reject request', subtitle: (n: string) => n, reasons: ['Not needed', 'Wrong material', 'Out of stock', 'Line is stopped', 'Other'], note: 'Add a note (optional)', action: 'Reject request' },
   },

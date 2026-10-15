@@ -69,14 +69,14 @@ body.wf-dragging, body.wf-dragging * { user-select: none; cursor: grabbing !impo
 .wf-map.float { position: absolute; top: 16px; right: 16px; z-index: 5; width: 380px; max-width: calc(100% - 32px); height: min(600px, calc(100% - 32px)); }
 .wf-map.docked { position: relative; flex: none; align-self: stretch; box-shadow: none; }
 .wf-map-floor { position: absolute; inset: 0; opacity: .8; background-position: center; background-size: cover; background-repeat: no-repeat; pointer-events: none; }
-.wf-map-head { position: absolute; left: 0; right: 0; top: 0; height: 51px; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-secondary); z-index: 2; font-weight: 500; font-size: 14px; color: var(--text-primary); white-space: nowrap; touch-action: none; }
+.wf-map-head { position: absolute; left: 0; right: 0; top: 0; height: 51px; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 16px; background: var(--color-bg-secondary); border-bottom: 1px solid var(--border-secondary); z-index: 2; font-weight: 500; font-size: 14px; color: var(--text-primary); white-space: nowrap; touch-action: none; }
 .wf-map.float .wf-map-head { cursor: grab; } .wf-map.moving .wf-map-head { cursor: grabbing; }
 .wf-map-body { position: absolute; left: 0; right: 0; overflow: hidden; background: #f4f7f6; }
 .wf-map-foot { position: absolute; left: 0; right: 0; bottom: 0; height: 36px; display: flex; align-items: center; padding: 0 10px; line-height: 13px; background: #fff; border-top: 1px solid var(--border-secondary); font-size: 11px; font-weight: 500; color: var(--text-secondary); overflow: hidden; z-index: 2; }
 .wf-map-foot:empty::before { content: 'Simulate draws the route of this workflow on the map'; color: var(--text-placeholder); font-weight: 400; }
 .wf-mini { position: absolute; top: 16px; right: 16px; z-index: 5; width: 196px; height: 136px; padding: 0; border: 1px solid var(--border-secondary); border-radius: 12px; overflow: hidden; background: var(--bg-tertiary); box-shadow: 0 12px 16px -4px rgba(10,13,18,.08); text-align: left; cursor: pointer; transition: transform .12s, box-shadow .12s; }
 .wf-mini:hover { transform: translateY(-1px); box-shadow: 0 12px 16px -4px rgba(10,13,18,.08), 0 0 0 3px #cceeeb; }
-.wf-mini .head { position: absolute; left: 0; right: 0; top: 0; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-secondary); font-weight: 500; font-size: 14px; color: var(--text-primary); }
+.wf-mini .head { position: absolute; left: 0; right: 0; top: 0; height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--color-bg-secondary); border-bottom: 1px solid var(--border-secondary); font-weight: 500; font-size: 14px; color: var(--text-primary); }
 
 /* page layout: builder card + docked map column while simulating */
 .work { flex: 1; min-height: 0; display: flex; gap: 16px; margin: 12px 0; }
@@ -89,9 +89,7 @@ body.wf-dragging, body.wf-dragging * { user-select: none; cursor: grabbing !impo
 .bh h2 { white-space: nowrap; }
 @media (max-width: 720px) { .wf-title { flex-wrap: wrap; gap: 8px; } .wf-title .actions { width: 100%; } .wf-title .actions > * { flex: 1; } }
 .wf-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: min(360px, 40vw); }
-.wf-nofleet { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: default; text-align: center; padding: 24px; }
-.wf-nofleet-t { margin: 12px 0 0; font-size: 16px; font-weight: 600; color: var(--text-secondary); }
-.wf-nofleet-b { margin: 0; max-width: 360px; font-size: 13px; color: var(--text-placeholder); }
+.wf-nofleet { display: flex; align-items: center; justify-content: center; cursor: default; }
 
 /* the builder is a canvas, not a document: no text selection on cards, palette, map and canvas (typing fields keep theirs) */
 .work, .work * { user-select: none; -webkit-user-select: none; }

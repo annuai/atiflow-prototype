@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { FilterLines, Map01, Plus, SearchLg, Upload01 } from '@untitledui/icons';
-import { EmptyState } from '@/components/application/empty-state/empty-state';
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
@@ -28,9 +28,8 @@ export function MapsPage() {
         <div className="builder md-card">
           {maps.length === 0 ? (
             <div className="md-body grid place-items-center">
-              <EmptyState size="md"><EmptyState.Header><EmptyState.FeaturedIcon icon={Map01} color="gray" theme="modern" /></EmptyState.Header>
-                <EmptyState.Content><EmptyState.Title>{copy.empty.title}</EmptyState.Title><EmptyState.Description>{copy.empty.description}</EmptyState.Description></EmptyState.Content>
-                <EmptyState.Footer><Button size="md" color="secondary" iconLeading={Upload01} onPress={() => setImporting(true)}>{copy.import}</Button><Button size="md" color="primary" iconLeading={Plus} onPress={() => setGenerating(true)}>{copy.create}</Button></EmptyState.Footer></EmptyState>
+              <EmptyState icon={Map01} size="lg" title={copy.empty.title} subtext={copy.empty.description}
+                action={<><Button size="md" color="secondary" iconLeading={Upload01} onPress={() => setImporting(true)}>{copy.import}</Button><Button size="md" color="primary" iconLeading={Plus} onPress={() => setGenerating(true)}>{copy.create}</Button></>} />
             </div>
           ) : (
             <div className="md-body">
@@ -39,7 +38,7 @@ export function MapsPage() {
                 <Select size="sm" aria-label="Sort" className="w-[200px]" icon={FilterLines} selectedKey={sort} onSelectionChange={(k) => setSort(k as MapSort)}
                   items={(Object.keys(copy.sorts) as MapSort[]).map((id) => ({ id, label: copy.sortBy(copy.sorts[id]) }))}>{(item) => <Select.Item {...item} />}</Select>
               </div>
-              {rows.length === 0 ? <p className="p-10 text-center text-sm text-tertiary">{copy.noMatch(text)}</p>
+              {rows.length === 0 ? <NoResults subtext={copy.noMatch(text)} />
                 : <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{rows.map((m) => <MapCard key={m.id} map={m} fleets={byMap[m.id] ?? []} />)}</div>}
             </div>
           )}

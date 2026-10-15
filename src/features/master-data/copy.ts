@@ -71,7 +71,9 @@ export const copy = {
   staging: {
     cardUtilisation: 'Utilised cells', layoutTitle: (name: string) => `${name} cell layout`, selected: 'Selected',
     modes: { view: 'View', manage: 'Manage' }, manageHint: 'Click an available or blocked cell to block or release it. Reserved and filled cells are controlled by workflows.',
-    cellLabel: (row: number, col: number, state: string) => `Row ${row}, column ${col}: ${state}`, empty: 'No staging areas yet.',
+    cellLabel: (row: number, col: number, state: string) => `Row ${row}, column ${col}: ${state}`, empty: 'Staging areas appear here once they are set up.',
   },
   time: { justNow: 'Just now' },
+  /** Titles of the empty states (the subtext is the explanation next to each list). */
+  emptyTitles: { fleets: 'No fleets yet', staging: 'No staging areas yet' },
 } as const;

@@ -1,3 +1,5 @@
+import { Package } from '@untitledui/icons';
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useMemo, useState } from 'react';
 import { PackagePlus } from '@untitledui/icons';
 import { SearchPrefixFilter } from '@/components/data/SearchPrefixFilter';
@@ -21,7 +23,7 @@ function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean)
       <div className="flex flex-col gap-3 pt-2">
         <SearchPrefixFilter labels={t} text={text} onText={setText} prefix={prefix} onPrefix={setPrefix} />
         <div className="flex items-baseline justify-between text-sm text-tertiary"><span>{t.showing(rows.length)}</span><span className="font-semibold text-secondary">{t.selected(sel.size)}</span></div>
-        {rows.length === 0 ? <p className="rounded-xl border border-secondary p-8 text-center text-sm text-tertiary">{t.none}</p>
+        {rows.length === 0 ? <EmptyState icon={Package} title={copy.emptyTitle.toAdd} subtext={t.none} size="sm" />
           : <MaterialPicker rows={rows} selected={sel} onChange={setSel} />}
       </div>
     </ModalShell>

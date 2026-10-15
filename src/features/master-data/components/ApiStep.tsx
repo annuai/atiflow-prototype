@@ -1,3 +1,4 @@
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useEffect, useMemo, useState } from 'react';
 import { SearchPrefixFilter } from '@/components/data/SearchPrefixFilter';
 import { copy } from '../copy';
@@ -36,7 +37,7 @@ export function ApiStep({ source, showStatus, selected, onSelect, picked }: Prop
         <span>{loading ? copy.api.loading : prefix.trim() ? copy.api.withPrefix(total, prefix.trim()) : copy.api.showing(total)}</span>
         <span className="font-semibold text-secondary">{copy.api.selected(selected.size)}</span>
       </div>
-      {!loading && rows.length === 0 ? <p className="rounded-xl border border-secondary p-8 text-center text-sm text-tertiary">{copy.api.none}</p>
+      {!loading && rows.length === 0 ? <NoResults size="sm" subtext={copy.api.none} />
         : <MaterialPicker rows={rows} selected={visibleSelected} onChange={change} showStatus={showStatus} />}
       {!loading && total > RESULT_LIMIT && <p className="text-xs text-tertiary">{copy.api.capped(RESULT_LIMIT)}</p>}
     </div>

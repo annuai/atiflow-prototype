@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { CheckCircle, Truck01 } from '@untitledui/icons';
+import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { ProgressBar } from '@/components/base/progress-indicators/progress-indicators';
 import { cx } from '@/utils/cx';
@@ -25,7 +27,7 @@ export function TripsCard({ running, recent, tv, limit, onLocate }: { running: T
   return (
     <Card tv={tv} className="flex h-full min-h-0 flex-col">
       <CardTitle title={copy.trips.title}>{!tv && <SegmentedTabs<Tab> value={tab} onChange={setTab} label="Trips" items={[{ id: 'running', label: `${copy.trips.running} (${running.length})` }, { id: 'recent', label: copy.trips.recent }]} />}</CardTitle>
-      {!list.length ? <p className="py-8 text-center text-sm text-tertiary">{tab === 'running' || tv ? copy.trips.empty : copy.trips.emptyRecent}</p>
+      {!list.length ? (tab === 'running' || tv ? <EmptyState icon={Truck01} title={copy.trips.empty} subtext={copy.trips.emptyHint} size="sm" /> : <EmptyState icon={CheckCircle} title={copy.trips.emptyRecent} subtext={copy.trips.emptyRecentHint} size="sm" />)
         : <ul className={cx('flex min-h-0 flex-col gap-2 overflow-y-auto', !tv && 'max-h-[24rem]')}>{list.map((t) => <li key={t.id + (t.done ? 'd' : '')}><Row t={t} tv={tv} onLocate={onLocate} /></li>)}</ul>}
     </Card>
   );

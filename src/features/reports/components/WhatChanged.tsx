@@ -1,3 +1,5 @@
+import { BarChartSquare02 } from '@untitledui/icons';
+import { EmptyState } from '@/components/data/EmptyState';
 import { ArrowDown, ArrowUp } from '@untitledui/icons';
 import { Card, CardTitle } from '@/components/data/Card';
 import { cx } from '@/utils/cx';
@@ -11,7 +13,7 @@ export function WhatChanged({ moves, vs }: { moves: Move[]; vs: string }) {
   return (
     <Card>
       <CardTitle title={copy.changed.title} hint={moves.length ? copy.changed.hint(vs) : undefined} />
-      {!moves.length ? <p className="py-6 text-center text-sm text-tertiary">{copy.changed.none}</p> : (
+      {!moves.length ? <EmptyState icon={BarChartSquare02} title={copy.changed.noneTitle} subtext={copy.changed.none} size="sm" /> : (
         <div className="flex flex-col gap-4">
           {([[copy.changed.slipped, worse], [copy.changed.improved, better]] as const).map(([title, rows]) => rows.length > 0 && (
             <div key={title}>

@@ -1,3 +1,5 @@
+import { Tool01 } from '@untitledui/icons';
+import { EmptyState } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GamingPad01, RefreshCcw03, Rows01, Settings02, Trash01 } from '@untitledui/icons';
@@ -65,7 +67,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
                 return <FormField key={f.key} def={f} label={d.label ?? f.label} display={d.display} value={value(f.key)} disabled={!editable} fleets={fleets} onChange={(v) => setDraft((o) => ({ ...o, [f.key]: v }))} />; })}
             </div>
           </>
-        ) : <p className="rounded-xl border border-dashed border-primary p-8 text-center text-sm text-tertiary">{tab} isn’t part of this prototype yet.</p>}
+        ) : <EmptyState framed icon={Tool01} title={tab} subtext="This tab isn’t part of this prototype yet." />}
         <div className="mt-auto flex flex-wrap items-center justify-end gap-3 pt-2">
           {!editing && <Button color="tertiary-destructive" size="md" iconLeading={Trash01} className="mr-auto" onPress={() => setConfirm(true)}>Remove {kind.singular.toLowerCase()}</Button>}
           {editing ? (

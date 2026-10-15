@@ -1,3 +1,5 @@
+import { Server01 } from '@untitledui/icons';
+import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { Badge } from '@/components/base/badges/badges';
 import { DataTable, type Column } from '@/components/data/DataTable';
@@ -22,7 +24,7 @@ function Body({ kind, fleet, onOpenChange }: { kind: DeviceKind; fleet: string; 
     <ModalShell isOpen onOpenChange={onOpenChange} icon={kind.icon} title={t.title(kind.singular, fleet)} subtitle={t.subtitle(kind.plural)} size="lg"
       secondary={{ label: t.cancel, onPress: () => onOpenChange(false) }} primary={{ label: t.confirm(sel.size, kind.singular), isDisabled: sel.size === 0, onPress: save }}>
       <div className="flex flex-col gap-3 pt-2">
-        {free.length === 0 ? <p className="rounded-xl border border-secondary p-8 text-center text-sm text-tertiary">{t.none(kind.plural)}</p> : (<>
+        {free.length === 0 ? <EmptyState icon={Server01} title={copy.emptyTitle.devices} subtext={t.none(kind.plural)} size="sm" /> : (<>
           <p className="text-right text-sm font-semibold text-secondary">{t.selected(sel.size)}</p>
           <div className="max-h-[min(340px,40vh)] overflow-auto rounded-xl border border-secondary"><DataTable label={kind.plural} rows={free} rowKey={nameOf} columns={columns} selection={{ selected: sel, onChange: setSel }} stickyHeader /></div></>)}
       </div>

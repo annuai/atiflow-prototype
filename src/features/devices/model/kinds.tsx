@@ -1,4 +1,4 @@
-import { Camera01, Cube01, CpuChip01, Package, StopSquare, Truck01, VolumeMax } from '@untitledui/icons';
+import { Camera01, StopSquare, Truck01, VolumeMax } from '@untitledui/icons';
 import type { Device, DeviceKind, FieldDef } from './types';
 import DATASET from '@/data/dataset.json';
 import { ROBOT_TYPE_LABELS, robotTypeByLabel } from '@/data/robotTypes';
@@ -49,7 +49,6 @@ export const KINDS: Record<'robot' | 'hardware', DeviceKind> = {
     illustration: (d) => robotPicture('h-full max-h-[134px] w-[240px] object-contain', d.values.sherpaType),
     preview: (v) => ({ image: robotPicture('h-[137px] w-[160px] object-contain', v.sherpaType), caption: robotTypeByLabel(v.sherpaType).label }),
     empty: { headline: 'Let’s add your first robot!', description: 'Register your AMRs to start assigning them to fleets, maps and workflows.', hint: 'Keep the Hardware ID and API key from the robot’s label handy.' },
-    emptyIllustration: robotPicture('h-[111px] w-[200px] object-contain'),
     seed: DATASET.robot as Device[],
   },
   hardware: {
@@ -66,7 +65,6 @@ export const KINDS: Record<'robot' | 'hardware', DeviceKind> = {
       headline: 'Let’s connect your hardware!', description: 'Add hardware devices like Summon Buttons, Hooters, Ati Eye etc. here.', prompt: 'What device do you want to start with?',
       quickPicks: HARDWARE_TYPES.map((t) => ({ label: t, value: t, icon: HARDWARE_ICONS[t as keyof typeof HARDWARE_ICONS] })),
     },
-    emptyIllustration: <span className="flex flex-col items-center gap-1 text-secondary"><Cube01 className="size-20 stroke-1" /><CpuChip01 className="-my-3 size-16 stroke-1" /><Package className="size-20 stroke-1" /></span>,
     seed: DATASET.hardware as Device[],
   },
 };

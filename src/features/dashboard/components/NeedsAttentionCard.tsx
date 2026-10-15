@@ -1,6 +1,7 @@
 import { CheckCircle } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
+import { EmptyState } from '@/components/data/EmptyState';
 import { cx } from '@/utils/cx';
 import { fmtDuration } from '../data/derive';
 import type { AttentionItem } from '../data/types';
@@ -14,7 +15,7 @@ export function NeedsAttentionCard({ items, tv, limit, onLocate, onHelp }: { ite
     <Card tv={tv} className="flex h-full flex-col">
       <CardTitle title={copy.attention.title}>{items.length > 0 && <Badge size="sm" color={items.some((i) => i.level === 'critical') ? 'error' : 'warning'}>{items.length}</Badge>}</CardTitle>
       {!shown.length ? (
-        <div className="grid flex-1 place-items-center py-8 text-center"><div><CheckCircle className="mx-auto mb-2 size-8 text-fg-success-primary" /><p className="font-medium text-primary">{copy.attention.empty}</p><p className="text-sm text-tertiary">{copy.attention.emptyHint}</p></div></div>
+        <EmptyState icon={CheckCircle} tone="positive" title={copy.attention.empty} subtext={copy.attention.emptyHint} size="sm" className="my-auto" />
       ) : (
         <ul className="flex flex-col gap-2 overflow-y-auto">
           {shown.map((a) => (
