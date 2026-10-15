@@ -19,6 +19,7 @@ import { useMap } from './model/maps';
 import { fleetPath } from './paths';
 import { profileOf, useFleets } from './model/store';
 import { t } from './text';
+import { PageTitleName } from '@/shell/PageTitle';
 
 /** Tabs of a fleet page. Add a tab (+ panel) here and the route, tab bar and count badge follow. */
 const TABS = [
@@ -57,6 +58,7 @@ export function FleetPage() {
   const counts: Partial<Record<TabId, number>> = { materials, workflows };
   return (
     <>
+      <PageTitleName name={name} />
       <div className="content">
         <div className="title-block">
           <div>

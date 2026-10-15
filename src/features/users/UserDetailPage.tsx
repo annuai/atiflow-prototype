@@ -29,6 +29,7 @@ import { UserAvatar } from './components/UserAvatar';
 import { copy } from './copy';
 import { validateBasics } from './model/validate';
 import { localized } from '@/i18n';
+import { PageTitleName } from '@/shell/PageTitle';
 
 const misc = localized('misc');
 
@@ -104,6 +105,7 @@ export function UserDetailPage() {
   const roleField = { key: 'role', label: misc.userForm.roles, control: 'select' as const, options: roles };
   return (
     <>
+      <PageTitleName name={user.name} />
       <div className="content">
         <div className="title-block">
           <div className="flex items-center gap-3">

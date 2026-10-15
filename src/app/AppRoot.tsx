@@ -11,6 +11,7 @@ import { NotificationsProvider } from '@/features/notifications/NotificationsPro
 import { PersistenceNotice } from '@/shell/PersistenceNotice';
 import { LocaleBoundary } from '@/i18n';
 import { LocaleSync } from './LocaleSync';
+import { PageTitle } from '@/shell/PageTitle';
 import { AppToaster } from '@/ui/toast';
 import { NoAccessPage } from '@/features/access/NoAccessPage';
 import { ShellLayout } from '@/shell/ShellLayout';
@@ -118,6 +119,7 @@ export function AppRoot() {
           <PersistenceNotice />
           <PageMemory />
           <PageViews />
+          <PageTitle />
           <Routes>
             <Route path="/login" element={<LoginRoute />} />
             <Route path="/supervisor" element={<RootRedirect />} />

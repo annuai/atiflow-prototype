@@ -37,6 +37,7 @@ import { deleteZone } from './model/zones';
 import { zoneType } from './model/zoneTypes';
 import { seedMapData } from './model/seed';
 import { useSimulationPanel } from './sim/useSimulationPanel';
+import { PageTitleName } from '@/shell/PageTitle';
 
 /**
  * The Map Editor (`/configurator/maps/:id`). A published version can only be looked at; "Edit as draft" makes the one draft, saved as you edit and turned into the next version by Publish.
@@ -219,6 +220,7 @@ export function MapEditorPage() {
   const editable = !!isDraft && mode === 'design';
   return (
     <div className="content">
+      <PageTitleName name={map.name} />
       <div className="builder md-card">
         <EditorHeader
           canUndo={editable && editor.canUndo}

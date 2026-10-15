@@ -18,6 +18,7 @@ import { publishProblem } from './model/validate';
 import { runSimulation, stopSimulation } from './sim/runner';
 import './workflow.css';
 import { copy } from './copy';
+import { PageTitleName } from '@/shell/PageTitle';
 
 /** Canvas stand-in shown until the user picks a fleet for the new workflow. */
 function SelectFleetPrompt() {
@@ -101,6 +102,7 @@ function Builder() {
   };
   return (
     <>
+      <PageTitleName name={hasFleet ? title : null} />
       <div className="content">
         <div className="title-block wf-title">
           <div>

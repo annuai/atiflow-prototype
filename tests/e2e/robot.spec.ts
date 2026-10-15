@@ -8,6 +8,12 @@ test.describe('a robot in the configurator', () => {
     await expect(page.getByRole('heading', { name: 'AMR-004' })).toBeVisible();
   });
 
+  test('the browser tab is titled with the robot, the page and the product', async ({ page }) => {
+    await expect(page).toHaveTitle('AMR-004 · Robots · Ati Flow');
+    await page.goBack();
+    await expect(page).toHaveTitle(/^(Robots|Workflows|.*) · Ati Flow$/);
+  });
+
   test('the page card keeps its bottom padding when its content scrolls, on every tab', async ({ page }) => {
     const card = page.getByTestId('device-detail');
     for (const tab of await page.getByRole('tab').all()) {
