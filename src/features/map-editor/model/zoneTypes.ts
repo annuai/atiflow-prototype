@@ -12,7 +12,7 @@ const COLORS = ['#3b82f6', '#8b5cf6', '#f97316', '#06b6d4', '#ec4899', '#84cc16'
 const generic = (code: string, label: string, i: number): ZoneType => ({ id: code.replace(/_ZONES?$/, '').toLowerCase().replace(/_/g, '-'), code, label, description: '', color: COLORS[i % COLORS.length], module: 'zones', fields: VALUE });
 
 export const ZONE_TYPES: ZoneType[] = [
-  { id: 'exclusive', code: 'EXCLUSIVE_ZONES', label: 'Exclusive zone', description: 'A robot enters only when there is room; the others wait at the hold point.', color: '#f59e0b', module: 'exclusive', fields: [{ key: 'capacity', label: 'Robots allowed inside', kind: 'number', default: 1 }] },
+  { id: 'exclusive', code: 'EXCLUSIVE_ZONES', label: 'Traffic gate', description: 'A robot enters only when there is room; the others wait at the hold point.', color: '#f59e0b', module: 'exclusive', fields: [{ key: 'capacity', label: 'Robots allowed inside', kind: 'number', default: 1 }] },
   { id: 'area', code: 'WORK_AREAS', label: 'Work area', description: 'A named part of the floor a fleet works in.', color: '#14b8a6', module: 'zones', fields: [] },
   { id: 'no-go', code: 'NO_GO_ZONES', label: 'No-go', description: 'Robots never enter.', color: '#ef4444', module: 'zones', fields: [{ key: 'reason', label: 'Reason', kind: 'text', default: '' }] },
   ...([['LOW_SPEED_ZONES', 'Low speed'], ['SPECIAL_CAMERA_ZONES', 'Special camera'], ['RAMP_ZONES', 'Ramp'], ['VARIABLE_PADDING_ZONES', 'Variable padding'], ['OBSTACLE_AVOIDANCE_ZONES', 'Obstacle avoidance'], ['TRAFFIC_INTERSECTION_ZONES', 'Traffic intersection'],

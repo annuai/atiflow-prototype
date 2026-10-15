@@ -27,6 +27,8 @@ const NotificationsPage = lazy(() => import('@/features/notifications/Notificati
 const UserDetailPage = lazy(() => import('@/features/users/UserDetailPage').then((m) => ({ default: m.UserDetailPage })));
 const UsersPage = lazy(() => import('@/features/users/UsersPage').then((m) => ({ default: m.UsersPage })));
 const RequestPage = lazy(() => import('@/features/requests/RequestPage').then((m) => ({ default: m.RequestPage })));
+const BookTripPage = lazy(() => import('@/features/bookings/BookTripPage').then((m) => ({ default: m.BookTripPage })));
+const OperatorHistoryPage = lazy(() => import('@/features/operator-history/OperatorHistoryPage').then((m) => ({ default: m.OperatorHistoryPage })));
 const ApprovePage = lazy(() => import('@/features/requests/ApprovePage').then((m) => ({ default: m.ApprovePage })));
 const MapEditorPage = lazy(() => import('@/features/map-editor/MapEditorPage').then((m) => ({ default: m.MapEditorPage })));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })));
@@ -76,7 +78,9 @@ export function AppRoot() {
         </Route>
         <Route element={<RequireAccess><ShellLayout workspace="operator" /></RequireAccess>}>
           <Route path="/operator/request" element={<RequestPage />} />
+          <Route path="/operator/book" element={<BookTripPage />} />
           <Route path="/operator/approve" element={<ApprovePage />} />
+          <Route path="/operator/history" element={<OperatorHistoryPage />} />
           <Route path="/operator/action-center" element={<ActionCenterPage />} />
           <Route path="/operator/notifications" element={<NotificationsPage />} />
         </Route>

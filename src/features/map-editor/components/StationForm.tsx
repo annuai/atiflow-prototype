@@ -13,9 +13,10 @@ import { help } from '../help';
 import { nameProblem, plainType, STATION_TYPES } from '../model/stations';
 import type { MapData, MapStation } from '../model/types';
 import { NumberInput } from './NumberInput';
+import { LocateButton } from './LocateButton';
 
 /** One station (Figma "Add v5 Station"): name, id, type, position, angle, on / off lane, the tag; delete. Read-only when the map is a published version. */
-export function StationForm({ station, data, at, usedBy, editable, onBack, onPatch, onMove, onDelete }: {
+export function StationForm({ onLocate, station, data, at, usedBy, editable, onBack, onPatch, onMove, onDelete }: { onLocate(): void;
   station: MapStation; data: MapData; at: { x: number; y: number }; usedBy: string[]; editable: boolean;
   onBack(): void; onPatch(p: Partial<Pick<MapStation, 'name' | 'type' | 'angle' | 'onLane'>>): void; onMove(to: { x: number; y: number }): void; onDelete(): void;
 }) {
@@ -34,7 +35,7 @@ export function StationForm({ station, data, at, usedBy, editable, onBack, onPat
       <div className="grid grid-cols-2 gap-3"><NumberInput {...help('station.x')} label={f.x} value={at.x} disabled={!editable} onCommit={(x) => onMove({ x, y: at.y })} /><NumberInput {...help('station.y')} label={f.y} value={at.y} disabled={!editable} onCommit={(y) => onMove({ x: at.x, y })} /></div>
       <NumberInput {...help('station.angle')} label={f.angle} value={station.angle ?? 0} disabled={!editable} onCommit={(angle) => onPatch({ angle })} />
       {usedBy.length > 0 && <p className="rounded-lg bg-warning-secondary px-3 py-2 text-xs text-secondary">{f.usedBy(usedBy.length, usedBy.join(', '))}</p>}
-      {!editable ? <p className="text-xs text-tertiary">{copy.stations.readOnly}</p> : <Button size="md" color="secondary-destructive" iconLeading={Trash01} className="mt-auto" onPress={onDelete}>{f.delete}</Button>}
+      <div className="mt-auto flex flex-col gap-2"><LocateButton onPress={onLocate} />{!editable ? <p className="text-xs text-tertiary">{copy.stations.readOnly}</p> : <Button size="md" color="secondary-destructive" iconLeading={Trash01} onPress={onDelete}>{f.delete}</Button>}</div>
     </div>
   );
 }

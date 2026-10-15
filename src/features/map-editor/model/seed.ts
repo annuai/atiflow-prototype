@@ -13,14 +13,14 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
 };
 /**
  * The first version of a map, from the real site and lane map: ITS fleet's lanes, stations and zones (each map owns its full network). The nodes kept are the ones its lanes and
- * stations use. Traffic zones become exclusive zones, no-go zones stay no-go, the fleet's active areas become work areas.
+ * stations use. Traffic zones become traffic gates, no-go zones stay no-go, the fleet's active areas become work areas.
  */
 export function seedMapData(map: Pick<FleetMap, 'fleetLive'>, site: SiteLayout, nav: NavGraph): MapData {
   const f = map.fleetLive; const lanes = nav.lanes.filter((l) => l.fleets.includes(f)).map((l) => structuredClone(l)); const stations = nav.stations.filter((s) => s.fleets.includes(f)).map((s) => structuredClone(s));
   const used = new Set([...lanes.flatMap((l) => [l.from, l.to]), ...stations.map((s) => s.nodeId)]); const nodes = nav.nodes.filter((n) => used.has(n.id)).map((n) => ({ ...n }));
   const fleet = nav.fleets.find((q) => q.id === f);
   const zones: MapZone[] = [
-    ...nav.trafficZones.filter((z) => z.fleets.includes(f)).map((z): MapZone => ({ id: z.id, type: 'exclusive', name: z.name, polygon: z.polygon.map((p) => [...p] as [number, number]), props: { capacity: z.capacity } })),
+    ...nav.trafficZones.filter((z) => z.fleets.includes(f)).map((z): MapZone => ({ id: z.id, type: 'exclusive', name: z.name.replace(/^Traffic Zone/i, 'Traffic Gate'), polygon: z.polygon.map((p) => [...p] as [number, number]), props: { capacity: z.capacity } })),
     ...nav.forbiddenZones.map((z): MapZone => ({ id: z.id, type: 'no-go', name: z.name, polygon: z.polygon.map((p) => [...p] as [number, number]), props: { reason: z.reason } })),
     ...site.zones.filter((z) => z.active && (fleet?.areas ?? []).includes(z.id)).map((z): MapZone => ({ id: z.id, type: 'area', name: z.name, polygon: z.polygon.map((p) => [...p] as [number, number]), props: {} })),
   ];

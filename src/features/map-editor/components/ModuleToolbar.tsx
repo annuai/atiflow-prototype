@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { ChevronDown, Cursor01, LayoutGrid01, MarkerPin02, Route, Settings01 } from '@untitledui/icons';
+import { ChevronDown, Cursor01, LayoutGrid01, MarkerPin02, Route, Hand } from '@untitledui/icons';
 import { Button as AriaButton } from 'react-aria-components';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
 import { Tooltip } from '@/components/base/tooltip/tooltip';
@@ -10,7 +10,7 @@ import { helpText } from '../help';
 import { zoneType } from '../model/zoneTypes';
 
 export type { Module };
-const ICON: Record<Module, FC<{ className?: string }>> = { stations: MarkerPin02, routes: Route, exclusive: Settings01, zones: LayoutGrid01 };
+const ICON: Record<Module, FC<{ className?: string }>> = { stations: MarkerPin02, routes: Route, exclusive: Hand, zones: LayoutGrid01 };
 const MODULES: Module[] = ['stations', 'routes', 'exclusive', 'zones'];
 /** What a choice is called in the arrow menu. */
 export const choiceLabel = (m: Module, id: string): string => (m === 'stations' ? (id === 'staging' ? copy.stations.createStaging : copy.stations.createStation) : m === 'routes' ? (id === 'one-way' ? copy.routes.oneWayRoad : copy.routes.twoWayRoad) : m === 'exclusive' ? (id === 'box' ? copy.zones.gateBox : copy.zones.gateLine) : zoneType(id).label);
@@ -18,7 +18,7 @@ export const choiceLabel = (m: Module, id: string): string => (m === 'stations' 
 const tile = (on: boolean) => cx('grid size-10 cursor-pointer place-items-center rounded-lg outline-focus-ring transition focus-visible:outline-2', on ? 'bg-brand-solid text-white' : 'text-secondary hover:bg-primary_hover');
 
 /**
- * The drawing tools as a floating bar at the bottom centre of the map (like Figma's): Select, then Stations, Routes, Exclusive zones and Zones, each with an arrow that lists what it can draw.
+ * The drawing tools as a floating bar at the bottom centre of the map (like Figma's): Select, then Stations, Routes, Traffic Gates and Zones, each with an arrow that lists what it can draw.
  * Clicking a tool makes the next click on the map draw it (with its last choice); the arrow picks another thing to draw. Esc or Select goes back to selecting.
  */
 export function ModuleToolbar({ tool, choices, onSelect, onTool }: { tool: Tool; choices: Record<Module, string>; onSelect(): void; onTool(m: Module, choice: string): void }) {

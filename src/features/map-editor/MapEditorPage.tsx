@@ -24,6 +24,7 @@ import { StationsPanel, type StationsSub } from './components/StationsPanel';
 import { SimulationPanel, type SimChoice } from './components/SimulationPanel';
 import { VersionHistory } from './components/VersionHistory';
 import { SimLayer } from './canvas/SimLayer';
+import { locateTarget } from './model/locate';
 import { planTrip } from './model/simulate';
 import { useTripSimulation } from './sim/tripSim';
 import { ROBOT_TYPES } from '@/data/robotTypes';
@@ -45,7 +46,7 @@ import { zoneType } from './model/zoneTypes';
 type P = [number, number];
 /**
  * The Map Editor (`/configurator/maps/:id`). A published version can only be looked at; "Edit as draft" makes the one draft, saved as you edit and turned into the next version by Publish.
- * The four modules float at the bottom of the map (Stations with staging areas, Routes, Exclusive zones, Zones): opening one puts its tool on the map and its panel on the right at once.
+ * The four modules float at the bottom of the map (Stations with staging areas, Routes, Traffic Gates, Zones): opening one puts its tool on the map and its panel on the right at once.
  */
 export function MapEditorPage() {
   const { id = '' } = useParams(); const map = useMap(id); const user = useAuth((s) => s.user)!; const base = useMapData();
@@ -63,6 +64,7 @@ export function MapEditorPage() {
   const taken = useMemo(() => base?.nav.stations.map((s) => s.id) ?? [], [base]);
   const takenAreas = useMemo(() => Object.values(allMaps).flatMap((h) => h.versions.flatMap((v) => v.data.stagingAreas.map((a) => a.id))), [allMaps]);          // an area id means one area in every map
   const usedBy = (sid: string) => workflowsUsing(Object.values(workflows), fleetName, sid);
+  const [locateAt, setLocateAt] = useState<{ x: number; y: number; span: number; n: number } | null>(null);
   const hist = useRef<History<MapData>>(emptyHistory()); const [, bump] = useState(0);
   const liveDraft = () => draftOf(mapVersionsStore.getState().byMap[id])?.data;
   /** Change the draft; every change is an undo step (changes with the same `key` in quick succession, such as dragging, are one step). */
@@ -133,6 +135,8 @@ export function MapEditorPage() {
     setSimError(''); void trip.run(p, simChoice.type, a.name, b.name);
   };
   const simMarks = (['start', 'end'] as const).flatMap((k) => { const st = data.stations.find((x) => x.id === simChoice[k]); const n = st && nodeOf(data, st); return n ? [{ kind: k, p: { x: n.x, y: n.y } }] : []; });
+  /** Show a thing on the map: centre and zoom on it and pulse it. */
+  const locate = (kind: NonNullable<Selection>['kind'], sid: string) => { const t = locateTarget(data, { kind, id: sid }); if (t) setLocateAt({ ...t, n: Date.now() }); };
   const addTo = (choice: string) => { if (module) arm(module, choice); };
   const hintText = tool.kind === 'station' ? copy.hint.station : tool.kind === 'staging' ? copy.hint.staging : tool.kind === 'gate' ? (tool.shape === 'box' ? copy.hint.gateBox : copy.hint.gateLine) : tool.kind === 'road' ? (drawing.length ? copy.hint.roadMany(drawing.length) : copy.hint.road) : tool.kind === 'zone' ? (drawing.length ? copy.hint.roadMany(drawing.length) : copy.hint.zone(zoneType(tool.type).label)) : '';
   const deletingName = deleting?.kind === 'station' ? data.stations.find((s) => s.id === deleting.id)?.name : deleting?.kind === 'staging' ? data.stagingAreas.find((s) => s.id === deleting.id)?.name : deleting?.kind === 'road' ? data.roads.find((s) => s.id === deleting.id)?.name : data.zones.find((s) => s.id === deleting?.id)?.name;
@@ -152,7 +156,7 @@ export function MapEditorPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-secondary bg-brand-primary px-4 py-2.5 text-sm text-secondary"><span>{copy.banner.draftOld(current.basedOn, latest.number!)}</span><Button size="sm" color="secondary" onPress={() => setUpdating(true)}>{copy.banner.update(latest.number!)}</Button></div>)}
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <div className="relative min-h-[360px] min-w-0 flex-1">
-            <MapCanvas site={base.site} data={data} tool={tool} editable={!!isDraft && mode === 'design'} selection={selection} canSelect={(s) => mode === 'design' || s.kind === 'station'} onSelect={mode === 'simulation' ? simPick : pick} overlay={mode === 'simulation' ? (vp) => <SimLayer vp={vp} marks={simMarks} /> : undefined} drawing={drawing} onPoint={onPoint} onFinish={finish}
+            <MapCanvas site={base.site} data={data} tool={tool} editable={!!isDraft && mode === 'design'} locate={locateAt} selection={selection} canSelect={(s) => mode === 'design' || s.kind === 'station'} onSelect={mode === 'simulation' ? simPick : pick} overlay={mode === 'simulation' ? (vp) => <SimLayer vp={vp} marks={simMarks} /> : undefined} drawing={drawing} onPoint={onPoint} onFinish={finish}
               onMove={(kind, sid, to) => edit((m) => (kind === 'station' ? moveStation(m, sid, to) : updateStagingArea(m, sid, { x: Math.round(to.x * 100) / 100, y: Math.round(to.y * 100) / 100 })), `move:${kind}:${sid}`)} />
             {mode === 'design' && tool.kind !== 'select' && <DrawHint text={hintText} showFinish={drawMode(tool) === 'many'} canFinish={drawing.length >= minPoints(tool)} onFinish={finish} onCancel={cancel} cancelLabel={drawing.length ? copy.hint.cancel : copy.hint.done} />}
             {mode === 'design' && <ModuleToolbar tool={tool} choices={choices} onSelect={selectTool} onTool={arm} />}
@@ -162,15 +166,15 @@ export function MapEditorPage() {
             {mode === 'simulation' && <SimulationPanel data={data} choice={simChoice} onChoice={(c) => { setSimChoice(c); setSimError(''); }} state={trip.state} error={simError} onRun={runSim} onStop={trip.stop} />}
             {mode === 'design' && !module && <EmptyState icon={Cursor01} title={copy.noTool.title} subtext={copy.noTool.subtext} size="sm" className="mt-8" />}
             {mode === 'design' && module === 'stations' && (station && stationAt
-              ? <StationForm station={station} data={data} at={{ x: stationAt.x, y: stationAt.y }} usedBy={usedBy(station.id)} editable={!!isDraft} onBack={() => setSelection(null)} onPatch={(p) => edit((m) => updateStation(m, station.id, p))} onMove={(to) => edit((m) => moveStation(m, station.id, to))} onDelete={() => setDeleting({ kind: 'station', id: station.id })} />
-              : area ? <StagingForm area={area} data={data} editable={!!isDraft} onBack={() => setSelection(null)} onPatch={(p) => edit((m) => updateStagingArea(m, area.id, p))} onDelete={() => setDeleting({ kind: 'staging', id: area.id })} />
+              ? <StationForm onLocate={() => locate('station', station.id)} station={station} data={data} at={{ x: stationAt.x, y: stationAt.y }} usedBy={usedBy(station.id)} editable={!!isDraft} onBack={() => setSelection(null)} onPatch={(p) => edit((m) => updateStation(m, station.id, p))} onMove={(to) => edit((m) => moveStation(m, station.id, to))} onDelete={() => setDeleting({ kind: 'station', id: station.id })} />
+              : area ? <StagingForm onLocate={() => locate('staging', area.id)} area={area} data={data} editable={!!isDraft} onBack={() => setSelection(null)} onPatch={(p) => edit((m) => updateStagingArea(m, area.id, p))} onDelete={() => setDeleting({ kind: 'staging', id: area.id })} />
               : <StationsPanel data={data} editable={!!isDraft} adding={tool.kind === 'station' || tool.kind === 'staging'} sub={sub} onSub={(s) => { setSub(s); setSelection(null); if (tool.kind === 'station' || tool.kind === 'staging') arm('stations', s === 'staging' ? 'staging' : 'station'); }} selectedId={selection?.id ?? null}
                   onSelect={(sid) => pick({ kind: sub === 'stations' ? 'station' : 'staging', id: sid })} onAdd={() => arm('stations', sub === 'staging' ? 'staging' : 'station')} onCancelAdd={() => { setTool(SELECT); setDrawing([]); }} />)}
             {mode === 'design' && module === 'routes' && (road
-              ? <RoadForm road={road} data={data} editable={!!isDraft} onBack={() => setSelection(null)} onRename={(name) => edit((m) => renameRoad(m, road.id, name))} onPatch={(p) => edit((m) => updateRoad(m, road.id, p))} onDelete={() => setDeleting({ kind: 'road', id: road.id })} />
+              ? <RoadForm onLocate={() => locate('road', road.id)} road={road} data={data} editable={!!isDraft} onBack={() => setSelection(null)} onRename={(name) => edit((m) => renameRoad(m, road.id, name))} onPatch={(p) => edit((m) => updateRoad(m, road.id, p))} onDelete={() => setDeleting({ kind: 'road', id: road.id })} />
               : <RoutesPanel data={data} editable={!!isDraft} drawing={tool.kind === 'road'} onDraw={() => arm('routes')} onStop={() => { setDrawing([]); setTool(SELECT); }} selectedId={selection?.id ?? null} onSelect={(rid) => pick({ kind: 'road', id: rid })} />)}
             {mode === 'design' && (module === 'exclusive' || module === 'zones') && (zone && zoneType(zone.type).module === module
-              ? <ZoneForm zone={zone} data={data} module={module} editable={!!isDraft} onBack={() => setSelection(null)} onPatch={(p) => edit((m) => updateZone(m, zone.id, p))} onDelete={() => setDeleting({ kind: 'zone', id: zone.id })} />
+              ? <ZoneForm onLocate={() => locate('zone', zone.id)} zone={zone} data={data} module={module} editable={!!isDraft} onBack={() => setSelection(null)} onPatch={(p) => edit((m) => updateZone(m, zone.id, p))} onDelete={() => setDeleting({ kind: 'zone', id: zone.id })} />
               : <ZonesPanel module={module} data={data} editable={!!isDraft} onAdd={addTo} selectedId={selection?.id ?? null} onSelect={(zid) => pick({ kind: 'zone', id: zid })} />)}
           </aside>
         </div>

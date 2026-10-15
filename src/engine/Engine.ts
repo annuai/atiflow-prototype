@@ -247,6 +247,8 @@ export class Engine {
     const wantFov = m === 'top' ? FOV_PLAN : FOV_3D; this.fovAnim = null;
     if (this.camera.fov !== wantFov) { if (m === 'top' || (m === 'orbit' && prev === 'top')) this.fovAnim = (() => { const F = this.camera.position.distanceTo(this.controls.target) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)); return { f0: this.camera.fov, f1: wantFov, F0: F, F1: F }; })(); else { this.camera.fov = wantFov; this.camera.updateProjectionMatrix(); } }
     const c = this.controls; c.enabled = m === 'orbit' || m === 'top';
+    // in the 2D plan a drag (mouse or one finger) pans; it never spins the view (3D orbits)
+    c.mouseButtons.LEFT = m === 'top' ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE; c.touches.ONE = m === 'top' ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
     c.maxPolarAngle = m === 'top' ? 0.0001 : Math.PI / 2.05; c.minPolarAngle = m === 'top' ? 0 : 0.05;
     if (m === 'top') { const t = c.target.clone(); this.flyTo(new THREE.Vector3(t.x, Math.max(this.dist(t), 60) * this.kTarget, t.z + 0.001), t); }
     if (m === 'walk') this.enterWalk();

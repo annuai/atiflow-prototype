@@ -1,17 +1,17 @@
 /** Every user-facing string of the Map Editor. */
 export const copy = {
   title: 'Map Editor', draft: 'Draft', published: (n: number) => `Published v${n}`, viewing: (n: number) => `Viewing v${n}`,
-  undo: 'Undo (Ctrl+Z)', redo: 'Redo (Ctrl+Shift+Z)', design: 'Design', simulation: 'Simulation', history: 'Version history', publish: 'Publish map', editAsDraft: 'Edit as draft', discard: 'Discard draft',
-  tabs: { stations: 'Stations', routes: 'Routes', exclusive: 'Exclusive zones', zones: 'Zones' },
+  locate: 'Locate on Map', undo: 'Undo (Ctrl+Z)', redo: 'Redo (Ctrl+Shift+Z)', design: 'Design', simulation: 'Simulation', history: 'Version history', publish: 'Publish map', editAsDraft: 'Edit as draft', discard: 'Discard draft',
+  tabs: { stations: 'Stations', routes: 'Routes', exclusive: 'Traffic Gates', zones: 'Zones' },
   renameMap: { label: 'Map name', tooltip: 'Rename map' },
   sim: {
     title: 'Simulation', intro: 'Pick a robot type, then where it starts and where it goes: choose stations here or click them on the map. It drives the roads of this map, like a workflow does.', robot: 'Robot type', start: 'Start station', swap: 'Swap start and end', end: 'End station', pick: 'Select a station',
     run: 'Simulate route', again: 'Simulate again', stop: 'Stop', done: 'Completed: the robot reached the end station.', noStations: 'No stations to simulate', noStationsHint: 'Add stations and connect them with roads in Design, then come back.',
     sameStation: 'Choose two different stations.', noRoute: (a: string, b: string) => `No route from ${a} to ${b} on this map. Check that roads connect them and that one-way roads point the right way.`, missing: 'One of these stations is no longer on the map.',
   },
-  noTool: { heading: 'Map tools', title: 'Select a tool to start', subtext: 'Choose Stations, Routes, Exclusive zones or Zones from the bar at the bottom of the map, then click the map to draw. Click an item on the map to edit it.' },
+  noTool: { heading: 'Map tools', title: 'Select a tool to start', subtext: 'Choose Stations, Routes, Traffic Gates or Zones from the bar at the bottom of the map, then click the map to draw. Click an item on the map to edit it.' },
   tools: { select: 'Select', choose: 'choose what to draw' },
-  panelTitle: { stations: 'Stations', routes: 'Routes', exclusive: 'Exclusive zones', zones: 'Zones' },
+  panelTitle: { stations: 'Stations', routes: 'Routes', exclusive: 'Traffic Gates', zones: 'Zones' },
   banner: { published: (n: number) => `This is published version v${n}. A published map may be at work, so it cannot be edited.`, edit: 'Edit as draft', draftOld: (n: number, latest: number) => `Your draft is based on v${n}; v${latest} has been published since.`, update: (n: number) => `Update draft to v${n}` },
   hint: {
     station: 'Click the map to place a station. Esc when done.', staging: 'Click the map to place the A1 cell of a staging area. Esc when done.', road: 'Click points along the road. Double-click or Enter to finish, Esc when done.', roadMany: (n: number) => `${n} point${n === 1 ? '' : 's'} · double-click or Enter to finish`,
@@ -34,7 +34,7 @@ export const copy = {
     added: (n: string) => `${n} added`, tooShort: 'A road needs at least two points and one metre.',
   },
   zones: {
-    added: (n: string) => `${n} added`, addGate: 'Add new gate', gateLine: 'Line gate', gateBox: 'Box gate', addZone: 'Add new zone', search: 'Search…', noneExclusive: 'No exclusive zones yet', noneExclusiveHint: 'Add a gate across a road or a box where one robot at a time may enter.', noneZones: 'No zones yet', noneZonesHint: 'Add a zone from the menu: choose its type, then click its corners on the map.', noMatch: (q: string) => `Nothing matches “${q}”.`,
+    added: (n: string) => `${n} added`, addGate: 'Add new gate', gateLine: 'Line gate', gateBox: 'Box gate', addZone: 'Add new zone', search: 'Search…', noneExclusive: 'No traffic gates yet', noneExclusiveHint: 'Add a gate across a road or a box where one robot at a time may enter.', noneZones: 'No zones yet', noneZonesHint: 'Add a zone from the menu: choose its type, then click its corners on the map.', noMatch: (q: string) => `Nothing matches “${q}”.`,
     form: { back: 'All', name: 'Name', type: 'Type', shape: 'Shape', line: 'Line gate', box: 'Box gate', capacity: 'Robots allowed inside', value: 'Value', corners: 'Corners', delete: 'Delete', deleteTitle: (n: string) => `Delete ${n}?`, deleteBody: 'The zone is removed from the draft.' },
   },
   historyPanel: { title: 'Version history', subtitle: 'A published map cannot be edited. Edit a draft, then publish it as the next version.', draft: 'Draft', basedOn: (n: number | null) => (n ? `based on v${n}` : 'new'), by: (n: string, ago: string) => `${ago} by ${n}`, latest: 'Latest', view: 'View', open: 'Open', restore: 'Restore to draft', restoreTitle: (n: number) => `Restore v${n} into the draft?`, restoreBody: 'The draft is replaced by this version. Your unpublished changes are lost.', restored: (n: number) => `Draft restored from v${n}`, discardTitle: 'Discard the draft?', discardBody: 'The draft and its changes are deleted. Published versions are not affected.', discarded: 'Draft discarded', none: 'No versions yet' },

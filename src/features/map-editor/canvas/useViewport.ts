@@ -19,11 +19,15 @@ export function useViewport(b: Bounds) {
     setZ(nz); setC(clamp(wx - nvw * (fx - 0.5), wy - nvh * (fy - 0.5)));
   }, [z, vx, vy, vw, size, fit, clamp]);
   const panBy = useCallback((dxPx: number, dyPx: number) => setC((o) => clamp(o.x - dxPx * u, o.y - dyPx * u)), [clamp, u]);
+  /** Centre on a point and zoom so something `span` metres wide fills about 40% of the view (a point gets a close-up). */
+  const focusOn = useCallback((x: number, y: number, span: number) => {
+    setZ(Math.min(MAX_ZOOM, Math.max(1, Math.min(size.w * fit, size.h * fit) / Math.max(12, span * 2.5)))); setC(clamp(x - b.minX, b.maxY - y));
+  }, [size, fit, clamp, b.minX, b.maxY]);
   const reset = useCallback(() => { setZ(1); setC({ x: W / 2, y: H / 2 }); }, [W, H]);
   const toSite = useCallback((clientX: number, clientY: number) => {
     const r = box.current!.getBoundingClientRect(); return { x: b.minX + vx + vw * ((clientX - r.left) / r.width), y: b.maxY - (vy + vh * ((clientY - r.top) / r.height)) };
   }, [b.minX, b.maxY, vx, vy, vw, vh]);
   // the page must not scroll or zoom while the pointer is over the map
   useEffect(() => { const el = box.current; if (!el) return; const stop = (e: WheelEvent) => e.preventDefault(); el.addEventListener('wheel', stop, { passive: false }); return () => el.removeEventListener('wheel', stop); }, []);
-  return useMemo(() => ({ box, size, zoom: z, u, viewBox: `${vx} ${vy} ${vw} ${vh}`, zoomAt, panBy, reset, toSite, P: (x: number, y: number) => `${(x - b.minX).toFixed(2)} ${(b.maxY - y).toFixed(2)}`, X: (x: number) => x - b.minX, Y: (y: number) => b.maxY - y }), [size, z, u, vx, vy, vw, vh, zoomAt, panBy, reset, toSite, b.minX, b.maxY]);
+  return useMemo(() => ({ box, size, zoom: z, u, viewBox: `${vx} ${vy} ${vw} ${vh}`, zoomAt, panBy, reset, focusOn, toSite, P: (x: number, y: number) => `${(x - b.minX).toFixed(2)} ${(b.maxY - y).toFixed(2)}`, X: (x: number) => x - b.minX, Y: (y: number) => b.maxY - y }), [size, z, u, vx, vy, vw, vh, zoomAt, panBy, reset, focusOn, toSite, b.minX, b.maxY]);
 }

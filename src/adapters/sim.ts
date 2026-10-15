@@ -149,7 +149,8 @@ export class FleetSim {
   /** Accept an order: false (and a `failed` update) when the fleet has no robot here or a station is not on the map. */
   submitOrder(o: TransportOrder): boolean {
     const known = o.legs.length > 0 && o.legs.every((id) => this.graph.station(id)?.fleets.includes(o.fleetId));
-    if (!known || !this.bots.some((b) => b.fleetId === o.fleetId)) { this.orderUpdates.push({ id: o.id, status: 'failed', reason: known ? 'No robot of this fleet is on the floor' : 'A station of the request is not on the fleet\'s map' }); return false; }
+    const robots = this.bots.filter((b) => b.fleetId === o.fleetId && (!o.robotModel || b.model === o.robotModel));
+    if (!known || !robots.length) { this.orderUpdates.push({ id: o.id, status: 'failed', reason: !known ? 'A station of the request is not on the fleet\'s map' : o.robotModel ? 'No robot of this type is on the floor' : 'No robot of this fleet is on the floor' }); return false; }
     if (!this.orders.some((q) => q.id === o.id)) this.orders.push(o); return true;
   }
   /** Take the order back while no robot is on its way with it. */
@@ -157,7 +158,7 @@ export class FleetSim {
   /** A parked robot with enough battery takes the oldest order of its fleet: it drives to the first station empty and carries the load from the leg the order says. */
   private takeOrder(b: Bot): boolean {
     if (b.battery < 25 || !this.orders.length) return false;
-    const order = this.orders.find((o) => o.fleetId === b.fleetId); if (!order) return false;
+    const order = this.orders.find((o) => o.fleetId === b.fleetId && (!o.robotModel || o.robotModel === b.model)); if (!order) return false;
     let legs = [...order.legs], loadFrom = order.loadFrom; if (legs[0] === b.stationId && legs.length > 1) { legs = legs.slice(1); loadFrom = Math.max(0, loadFrom - 1); }       // already standing at the first station
     b.trip = { assignedAtS: this.time, startedAtS: null, deadlineS: this.time + 600, id: order.tripId ?? this.newTripId(), kind: 'transport', origin: b.stationId ?? undefined, legs, leg: 0, loaded: true, loadFrom, payload: order.payload, orderId: order.id };
     if (!this.startLeg(b)) { b.trip = null; if (!order.tripId) this.undoTripId(); return false; }          // cannot reach it from here: the order stays for another robot

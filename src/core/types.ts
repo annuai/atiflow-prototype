@@ -64,7 +64,8 @@ export type FleetEvent =
  * A request for one transport trip, handed to the fleet (the simulator today, the fleet manager's API later): a robot of `fleetId` drives to each station of `legs`
  * in order and carries `payload` from leg `loadFrom` on (earlier legs are empty). `id` is the request's own id; the trip gets its own id (TRP-xxx).
  */
-export interface TransportOrder { id: string; /** the trip's id, given when the request was made (before approval) */ tripId?: string; fleetId: string; legs: string[]; loadFrom: number; payload: { kind: string; qty: number } }
+export interface TransportOrder { id: string; /** the trip's id, given when the request was made (before approval) */ tripId?: string; fleetId: string; legs: string[]; loadFrom: number; payload: { kind: string; qty: number };
+  /** Only a robot of this type (the telemetry `model`, e.g. 'sherpa-xt-lite') may take the order; any robot of the fleet when not set. */ robotModel?: string }
 /** What happened to an order: a robot took it and is on its way, it finished, or it cannot be done. */
 export interface OrderUpdate { id: string; status: 'ongoing' | 'completed' | 'failed'; tripId?: string; robotId?: string; reason?: string }
 

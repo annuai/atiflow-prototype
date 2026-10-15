@@ -42,9 +42,11 @@ export const WORKSPACES: Workspace[] = [
     { id: 'supervisor.action-center', label: 'Action Center', landing: '/supervisor/action-center', routes: ['/supervisor/action-center'] },
     { id: 'supervisor.settings', label: 'Settings', routes: ['/supervisor/settings'] },
   ] },
-  { id: 'operator', title: 'OPERATOR', name: 'Operator', blurb: 'Request materials, approve requests and handle robot calls', built: true, shared: ['/operator/notifications'], features: [
+  { id: 'operator', title: 'OPERATOR', name: 'Operator', blurb: 'Request materials, book trips, approve requests and handle robot calls', built: true, shared: ['/operator/notifications'], features: [
     { id: 'operator.request', label: 'Request', landing: '/operator/request', routes: ['/operator/request'] },
     { id: 'operator.approve', label: 'Approve', landing: '/operator/approve', routes: ['/operator/approve'] },
+    { id: 'operator.book-trip', label: 'Book trip', landing: '/operator/book', routes: ['/operator/book'] },
+    { id: 'operator.history', label: 'History', landing: '/operator/history', routes: ['/operator/history'] },
     { id: 'operator.action-center', label: 'Action Center', landing: '/operator/action-center', routes: ['/operator/action-center'] },
   ] },
 ];

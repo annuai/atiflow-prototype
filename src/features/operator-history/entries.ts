@@ -1,0 +1,20 @@
+import { decisions } from '@/features/requests/model/decisions';
+import type { RequestStatus, TripRequest } from '@/features/requests/model/types';
+import type { BookedTrip } from '@/features/bookings/model/types';
+
+export type HistoryKind = 'request' | 'approval' | 'trip';
+export interface HistoryEntry {
+  key: string; kind: HistoryKind; /** when it last changed (epoch ms) */ at: number; title: string; subtitle: string; tripId: string;
+  /** where the request / trip stands now */ status: RequestStatus; /** only for approvals: what the person decided */ outcome?: 'approved' | 'rejected'; /** a booked trip of the person, with the id to cancel it by */ bookingId?: string;
+}
+/**
+ * The consolidated history of one person (pure): the requests they made, the approvals and rejections they made (or could have made), and the trips they booked, newest first.
+ * Everything is read from the stores' own records, so it is as complete as they are. The individual pages (Request history, Approve history) keep their own lists.
+ */
+export function historyEntries(requests: TripRequest[], bookings: BookedTrip[], me: { username: string; name: string }): HistoryEntry[] {
+  const out: HistoryEntry[] = [];
+  for (const r of requests) if (r.requestedBy === me.username) out.push({ key: `req:${r.id}`, kind: 'request', at: r.history.at(-1)?.at ?? r.createdAt, title: `${r.name} ×${r.qty}`, subtitle: `${r.tripId} · ${r.code} · ${r.workflowName}`, tripId: r.tripId, status: r.status });
+  for (const d of decisions(requests, me)) out.push({ key: `dec:${d.key}`, kind: 'approval', at: d.at, title: `${d.outcome === 'approved' ? 'Approved' : 'Rejected'} · ${d.name} ×${d.qty}`, subtitle: `${d.tripId} · requested by ${d.requestedByName}${d.step ? ` · approval ${d.step}` : ''}${d.note ? ` · ${d.note}` : ''}`, tripId: d.tripId, status: d.status, outcome: d.outcome });
+  for (const t of bookings) if (t.bookedBy === me.username) out.push({ key: `trip:${t.id}`, kind: 'trip', at: t.history.at(-1)?.at ?? t.createdAt, title: `${t.fromName} → ${t.toName}`, subtitle: `${t.tripId} · ${t.robotLabel}${t.robotId ? ` · ${t.robotId}` : ''}`, tripId: t.tripId, status: t.status, bookingId: t.id });
+  return out.sort((a, b) => b.at - a.at || a.key.localeCompare(b.key));
+}

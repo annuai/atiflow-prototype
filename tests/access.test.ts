@@ -13,7 +13,7 @@ describe('the access catalog: what exists to be permitted', () => {
   it('has the three workspaces with the features of the brief, in order', () => {
     expect(WORKSPACES.map((w) => w.name)).toEqual(['Configurator', 'Supervisor', 'Operator']);
     expect(WORKSPACES[0].features.map((f) => f.label)).toEqual(['Robots', 'Maps', 'Hardware', 'Master Data', 'Workflows', 'Fleets', 'Settings']); expect(WORKSPACES[1].features.map((f) => f.label)).toEqual(['Dashboard', 'Reports', 'Live Floor', 'Action Center', 'Settings']);
-    expect(WORKSPACES[2].features.map((f) => f.label)).toEqual(['Request', 'Approve', 'Action Center']); expect(new Set(ALL_PERMISSIONS).size).toBe(ALL_PERMISSIONS.length);
+    expect(WORKSPACES[2].features.map((f) => f.label)).toEqual(['Request', 'Approve', 'Book trip', 'History', 'Action Center']); expect(new Set(ALL_PERMISSIONS).size).toBe(ALL_PERMISSIONS.length);
   });
   it('a workspace without pages cannot be entered', () => {
     expect(canOpen(arjun, '/supervisor/dashboard')).toBe(true); expect(enterableWorkspaces({ role: 'operator' }).map((w) => w.id)).toEqual(['operator']);
@@ -22,9 +22,9 @@ describe('the access catalog: what exists to be permitted', () => {
 });
 
 describe('roles are presets; a user can be customised on top', () => {
-  it('configurator = the seven configurator features and nothing else; supervisor = the four; operator = the three; and Meera (a configurator with everything ticked) holds every permission', () => {
+  it('configurator = the seven configurator features and nothing else; supervisor = the four; operator = the five; and Meera (a configurator with everything ticked) holds every permission', () => {
     expect([...effective(kavin)].sort()).toEqual(WORKSPACES[0].features.map((f) => f.id).sort()); expect([...effective(arjun)].sort()).toEqual(WORKSPACES[1].features.map((f) => f.id).sort());
-    expect(presetOf('operator')).toHaveLength(3); expect([...effective(meera)].sort()).toEqual([...ALL_PERMISSIONS].sort()); expect(isCustomised(meera)).toBe(true);
+    expect(presetOf('operator')).toHaveLength(5); expect([...effective(meera)].sort()).toEqual([...ALL_PERMISSIONS].sort()); expect(isCustomised(meera)).toBe(true);
   });
   it('Kavin (configurator) opens configuration but not the supervisor pages; Arjun (supervisor) the opposite; both have notifications of their own workspace', () => {
     for (const p of ['/configurator', '/configurator/robots', '/configurator/maps', '/configurator/hardware/AMR-001', '/configurator/master-data/materials', '/configurator/workflows/abc', '/configurator/fleets/Line%20Side%20Fleet/overview', '/configurator/notifications']) expect(canOpen(kavin, p), p).toBe(true);
@@ -105,7 +105,7 @@ describe('profile pictures and old saved users', () => {
 describe('a saved directory gets a seed user\'s new starting access once', () => {
   it('Meera, saved before supervisor Settings existed, receives it; other users and later changes are untouched', () => {
     const saved = [{ username: 'meera', password: 'x', firstName: 'Meera', lastName: '', email: 'm@x.co', role: 'configurator' as const, title: 'T', custom: { add: ALL_PERMISSIONS.filter((p) => !p.startsWith('configurator.') && p !== 'supervisor.settings'), remove: [] } }, { username: 'kavin', password: 'x', firstName: 'K', lastName: '', email: 'k@x.co', role: 'configurator' as const, title: 'T' }];
-    const out = applySeedRevision(saved, 1); expect(effective(out[0]).has('supervisor.settings')).toBe(true); expect(out[1]).toBe(saved[1]); expect(out.map((u) => u.username)).toEqual(['meera', 'kavin', 'rohan', 'sneha', 'vikram']); expect(applySeedRevision(saved, 5)).toBe(saved);
+    const out = applySeedRevision(saved, 1); expect(effective(out[0]).has('supervisor.settings')).toBe(true); expect(out[1]).toBe(saved[1]); expect(out.map((u) => u.username)).toEqual(['meera', 'kavin', 'rohan', 'sneha', 'vikram']); expect(applySeedRevision(saved, 6)).toBe(saved);
   });
 });
 

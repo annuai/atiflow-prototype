@@ -11,6 +11,7 @@ import { copy } from '../copy';
 import { help, helpText } from '../help';
 import { nameProblem, roadAngle, roadLength, type RoadPatch } from '../model/roads';
 import type { MapData, MapRoad, RoadHeading } from '../model/types';
+import { LocateButton } from './LocateButton';
 import { Hint } from './Hint';
 import { ModuleList } from './ModuleList';
 import { NumberInput } from './NumberInput';
@@ -31,7 +32,7 @@ export function RoutesPanel({ data, editable, drawing, onDraw, onStop, selectedI
 }
 
 /** One road: name, where it starts and ends, its direction (swap), one lane or two, the heading setting; length and lanes; delete. (No lane weight yet: it will set a lane's priority once priorities exist.) */
-export function RoadForm({ road, data, editable, onBack, onRename, onPatch, onDelete }: { road: MapRoad; data: MapData; editable: boolean; onBack(): void; onRename(name: string): void; onPatch(p: RoadPatch): void; onDelete(): void }) {
+export function RoadForm({ onLocate, road, data, editable, onBack, onRename, onPatch, onDelete }: { onLocate(): void; road: MapRoad; data: MapData; editable: boolean; onBack(): void; onRename(name: string): void; onPatch(p: RoadPatch): void; onDelete(): void }) {
   const f = copy.routes.form; const [name, setName] = useState(road.name); useEffect(() => setName(road.name), [road.id, road.name]); const problem = nameProblem(data, road.id, name);
   const a = road.points[0], b = road.points[road.points.length - 1]; const move = (end: 'a' | 'b', i: 0 | 1, v: number) => { const pts = road.points.map((p) => [...p] as [number, number]); const k = end === 'a' ? 0 : pts.length - 1; pts[k][i] = v; onPatch({ points: pts }); };
   return (
@@ -49,7 +50,7 @@ export function RoadForm({ road, data, editable, onBack, onRename, onPatch, onDe
       <div className="flex flex-col gap-3 border-t border-secondary pt-4"><h3 className="text-sm font-semibold text-primary">{f.properties}</h3>
         <Select label={f.heading} {...help('route.heading')} size="sm" isDisabled={!editable} selectedKey={road.heading ?? 'both'} onSelectionChange={(k) => onPatch({ heading: String(k) as RoadHeading })} items={HEADINGS.map((h) => ({ id: h, label: f.headings[h] }))}>{(item) => <Select.Item {...item} />}</Select></div>
       <Input label={f.length} {...help('route.length')} size="sm" value={`${roadLength(road)} m`} isDisabled /><Input label={f.lanes} {...help('route.lanes')} size="sm" value={road.laneIds.join(', ')} isDisabled />
-      {!editable ? <p className="text-xs text-tertiary">{copy.stations.readOnly}</p> : <Button size="md" color="secondary-destructive" iconLeading={Trash01} className="mt-auto" onPress={onDelete}>{f.delete}</Button>}
+      <div className="mt-auto flex flex-col gap-2"><LocateButton onPress={onLocate} />{!editable ? <p className="text-xs text-tertiary">{copy.stations.readOnly}</p> : <Button size="md" color="secondary-destructive" iconLeading={Trash01} onPress={onDelete}>{f.delete}</Button>}</div>
     </div>
   );
 }

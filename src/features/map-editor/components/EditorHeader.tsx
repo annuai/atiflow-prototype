@@ -1,6 +1,7 @@
 import { ClockRewind, Map01, ReverseLeft, ReverseRight, Rocket01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
+import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { InlineNameEdit } from '@/components/form/InlineNameEdit';
 import { renameMap } from '@/features/maps/model/maps';
@@ -17,13 +18,13 @@ export function EditorHeader({ canUndo, canRedo, showHistory, onUndo, onRedo, ma
         <Badge size="sm" type="pill-color" color={state.color}>{state.label}</Badge>
       </div>
       <div className="flex items-center gap-2">
-        <div className="flex rounded-lg border border-secondary bg-secondary p-0.5 text-xs font-medium" role="group" aria-label="Mode">
-          {(['design', 'simulation'] as const).map((m) => <button key={m} type="button" aria-pressed={mode === m} onClick={() => onMode(m)} className={`cursor-pointer rounded-md px-3 py-1 outline-focus-ring focus-visible:outline-2 ${mode === m ? 'bg-primary text-brand-secondary shadow-xs' : 'text-tertiary hover:text-secondary'}`}>{copy[m]}</button>)}
-        </div>
         {showHistory && <>
           <ButtonUtility size="sm" color="secondary" icon={ReverseLeft} tooltip={copy.undo} aria-label={copy.undo} isDisabled={!canUndo} onPress={onUndo} />
           <ButtonUtility size="sm" color="secondary" icon={ReverseRight} tooltip={copy.redo} aria-label={copy.redo} isDisabled={!canRedo} onPress={onRedo} />
         </>}
+        <ButtonGroup size="sm" aria-label="Mode" selectedKeys={[mode]} onSelectionChange={(k) => { const v = [...k][0]; if (v) onMode(v as 'design' | 'simulation'); }}>
+          <ButtonGroupItem id="design">{copy.design}</ButtonGroupItem><ButtonGroupItem id="simulation">{copy.simulation}</ButtonGroupItem>
+        </ButtonGroup>
         <ButtonUtility size="sm" color="secondary" icon={ClockRewind} tooltip={copy.history} aria-label={copy.history} onPress={onHistory} />
         {isDraft ? <Button size="sm" color="primary" iconLeading={Rocket01} onPress={onPublish}>{copy.publish}</Button> : <Button size="sm" color="primary" isDisabled={!canEdit} onPress={onEdit}>{copy.editAsDraft}</Button>}
       </div>

@@ -3,7 +3,7 @@ import type { ZoneTypeId } from '../model/types';
 
 export type Module = 'stations' | 'routes' | 'exclusive' | 'zones';
 
-/** What a click on the map does. The module (Stations, Routes, Exclusive zones, Zones) decides which tools it offers. */
+/** What a click on the map does. The module (Stations, Routes, Traffic Gates, Zones) decides which tools it offers. */
 export type Tool =
   | { kind: 'select' }
   | { kind: 'station' } | { kind: 'staging' }

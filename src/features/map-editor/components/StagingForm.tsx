@@ -10,11 +10,12 @@ import { copy } from '../copy';
 import { help } from '../help';
 import { stagingProblems, totalCells } from '../model/staging';
 import type { MapData, StagingAreaDef } from '../model/types';
+import { LocateButton } from './LocateButton';
 import { Hint } from './Hint';
 import { NumberInput } from './NumberInput';
 
 /** One staging area (the old tool's "Add staging area"): name, robot type, rotation, where the A1 cell is, how many rows and columns, the size of a cell. */
-export function StagingForm({ area, data, editable, onBack, onPatch, onDelete }: { area: StagingAreaDef; data: MapData; editable: boolean; onBack(): void; onPatch(p: Partial<Omit<StagingAreaDef, 'id'>>): void; onDelete(): void }) {
+export function StagingForm({ onLocate, area, data, editable, onBack, onPatch, onDelete }: { onLocate(): void; area: StagingAreaDef; data: MapData; editable: boolean; onBack(): void; onPatch(p: Partial<Omit<StagingAreaDef, 'id'>>): void; onDelete(): void }) {
   const f = copy.staging.form; const [name, setName] = useState(area.name); useEffect(() => setName(area.name), [area.id, area.name]);
   const problems = stagingProblems(data, { ...area, name });
   return (
@@ -32,7 +33,7 @@ export function StagingForm({ area, data, editable, onBack, onPatch, onDelete }:
       <fieldset className="flex flex-col gap-3"><legend className="mb-1 text-sm font-semibold text-primary">{f.cellProps}</legend>
         <div className="grid grid-cols-2 gap-3"><NumberInput {...help('staging.cellLength')} label={f.cellLength} value={area.cellLength} disabled={!editable} error={problems.cellLength} onCommit={(cellLength) => onPatch({ cellLength })} /><NumberInput {...help('staging.cellWidth')} label={f.cellWidth} value={area.cellWidth} disabled={!editable} error={problems.cellWidth} onCommit={(cellWidth) => onPatch({ cellWidth })} /></div></fieldset>
       <p className="text-xs text-tertiary">{f.master}</p>
-      {!editable ? <p className="text-xs text-tertiary">{copy.stations.readOnly}</p> : <Button size="md" color="secondary-destructive" iconLeading={Trash01} className="mt-auto" onPress={onDelete}>{f.delete}</Button>}
+      <div className="mt-auto flex flex-col gap-2"><LocateButton onPress={onLocate} />{!editable ? <p className="text-xs text-tertiary">{copy.stations.readOnly}</p> : <Button size="md" color="secondary-destructive" iconLeading={Trash01} onPress={onDelete}>{f.delete}</Button>}</div>
     </div>
   );
 }

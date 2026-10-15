@@ -12,6 +12,7 @@ import { addStagingArea, cellCenter, cellRef, deleteStagingArea, totalCells, upd
 import { addZone, boxPolygon, deleteZone, gatePolygon } from '../src/features/map-editor/model/zones';
 import { normaliseData } from '../src/features/map-editor/model/seed';
 import { emptyHistory, record, redo, undo } from '../src/features/map-editor/model/history';
+import { locateTarget } from '../src/features/map-editor/model/locate';
 import { planTrip } from '../src/features/map-editor/model/simulate';
 import { ZONE_TYPES, zoneType, zoneTypesOf } from '../src/features/map-editor/model/zoneTypes';
 import { sampleWorkflows } from '../src/features/workflow-builder/model/seed';
@@ -108,7 +109,7 @@ describe('roads, zones and staging areas', () => {
     expect(updateRoad(r.data, id, { heading: 'forward' }).roads.find((x) => x.id === id)!.heading).toBe('forward'); expect(updateRoad(r.data, id, { heading: 'forward' }).lanes).toBe(r.data.lanes);
     expect(d0.nodes.every((n) => moved.nodes.some((m) => m.id === n.id))).toBe(true);                                                                    // nothing that was there is lost
   });
-  it('zones: a box and a gate are exclusive zones; unnamed types get default props', () => {
+  it('zones: a box and a gate are traffic gates; unnamed types get default props', () => {
     const d0 = lineSide(); const z = addZone(d0, 'exclusive', boxPolygon([1, 1], [3, 4])); expect(z.data.zones.find((q) => q.id === z.id)).toMatchObject({ type: 'exclusive', props: { capacity: 1 } });
     expect(gatePolygon([0, 0], [4, 0])).toHaveLength(4); expect(deleteZone(z.data, z.id).zones).toHaveLength(d0.zones.length);
   });
@@ -163,5 +164,14 @@ describe('undo and redo of the draft', () => {
     let d = emptyHistory<number>(); d = record(d, 10, 'move:A', 0); d = record(d, 11, 'move:A', 100); d = record(d, 12, 'move:A', 200); expect(d.past).toEqual([10]);               // one drag, one step
     d = record(d, 13, 'move:A', 5000); expect(d.past).toEqual([10, 13]); d = record(d, 14, 'move:B', 5100); expect(d.past).toEqual([10, 13, 14]);                               // later or another thing: a new step
     let big = emptyHistory<number>(); for (let i = 0; i < 150; i++) big = record(big, i, undefined, i); expect(big.past).toHaveLength(100);
+  });
+});
+
+describe('locate on the map', () => {
+  it('finds the centre and size of a station, staging area, road and zone; nothing for a thing that is not in this version', () => {
+    const d = lineSide(); const st = d.stations[0]; const t = locateTarget(d, { kind: 'station', id: st.id })!; expect(t.span).toBe(0); expect(Number.isFinite(t.x) && Number.isFinite(t.y)).toBe(true);
+    const a = locateTarget(d, { kind: 'staging', id: d.stagingAreas[0].id })!; expect(a.span).toBeGreaterThan(5); const r = locateTarget(d, { kind: 'road', id: d.roads[0].id })!; expect(r.span).toBeGreaterThan(0);
+    const z = d.zones.find((q) => q.type === 'exclusive')!; const zt = locateTarget(d, { kind: 'zone', id: z.id })!; const xs = z.polygon.map((p) => p[0]); expect(zt.x).toBeCloseTo((Math.min(...xs) + Math.max(...xs)) / 2);
+    expect(locateTarget(d, { kind: 'station', id: 'NOPE' })).toBeNull(); expect(locateTarget(d, { kind: 'zone', id: 'NOPE' })).toBeNull();
   });
 });

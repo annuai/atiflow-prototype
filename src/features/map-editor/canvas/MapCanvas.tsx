@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Home01, Minus, Plus } from '@untitledui/icons';
 import { laneArrowPath } from '@/components/map/laneArrows';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
@@ -18,6 +18,7 @@ interface Props {
   /** Which things the module can select (a click on anything else selects nothing). */ canSelect(sel: NonNullable<Selection>): boolean;
   onSelect(sel: Selection): void;
   /** The points of the shape being drawn so far, and a click while a drawing tool is active. */ drawing: P[]; onPoint(p: P): void; onFinish(): void;
+  /** Centre the view on a place and pulse it (a new `n` each time, so the same place can be shown again). */ locate?: { x: number; y: number; span: number; n: number } | null;
   /** Drawn on top of the map inside its SVG (the simulation). */ overlay?: (vp: ReturnType<typeof useViewport>) => ReactNode;
   /** A station or staging area is dragged (called while dragging, with the new position). */ onMove(kind: 'station' | 'staging', id: string, to: { x: number; y: number }): void;
 }
@@ -26,7 +27,7 @@ interface Props {
  * The map in the editor: the real floor, the map's own roads, zones, staging areas and stations, with the tools of the open module. Drag the floor to pan, wheel to zoom. Markers and labels keep
  * their pixel size when zooming. A click does what the tool says (select, place, add a point); a double-click finishes a road or zone; stations and staging areas of a draft can be dragged.
  */
-export function MapCanvas({ site, data, tool, editable, selection, canSelect, onSelect, drawing, onPoint, onFinish, onMove, overlay }: Props) {
+export function MapCanvas({ site, data, tool, editable, selection, canSelect, onSelect, drawing, onPoint, onFinish, onMove, overlay, locate }: Props) {
   const vp = useViewport(site.bounds); const { P } = vp; const [hover, setHover] = useState<string | null>(null); const [cursor, setCursor] = useState<P | null>(null);
   const layers = useMemo(() => ({
     walls: site.walls.map((w) => `M${P(w.a[0], w.a[1])}L${P(w.b[0], w.b[1])}`).join(''),
@@ -35,6 +36,7 @@ export function MapCanvas({ site, data, tool, editable, selection, canSelect, on
     grid: (() => { const { minX, maxX, minY, maxY } = site.bounds; const g: string[] = []; for (let x = Math.ceil(minX / 10) * 10; x <= maxX; x += 10) g.push(`M${P(x, minY)}L${P(x, maxY)}`); for (let y = Math.ceil(minY / 10) * 10; y <= maxY; y += 10) g.push(`M${P(minX, y)}L${P(maxX, y)}`); return g.join(''); })(),
   }), [site]);                                                                                           // eslint-disable-line react-hooks/exhaustive-deps
   const lanes = useMemo(() => data.lanes.map((l) => 'M' + l.geom.map(([x, y]) => P(x, y)).join('L')).join(''), [data.lanes]);              // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (locate) vp.focusOn(locate.x, locate.y, locate.span); }, [locate?.n]);          // eslint-disable-line react-hooks/exhaustive-deps
   const arrows = useMemo(() => laneArrowPath(data.lanes, (x, y) => [vp.X(x), vp.Y(y)], vp.u), [data.lanes, vp.u, vp.X, vp.Y]);
   const roadLines = useMemo(() => data.roads.map((r) => ({ id: r.id, pts: r.points.map(([x, y]) => `${vp.X(x).toFixed(2)},${vp.Y(y).toFixed(2)}`).join(' ') })), [data.roads, vp.X, vp.Y]);
   const nodes = useMemo(() => new Map(data.nodes.map((n) => [n.id, n])), [data.nodes]);
@@ -110,6 +112,8 @@ export function MapCanvas({ site, data, tool, editable, selection, canSelect, on
             </g>
           );
         })}
+        {locate && <circle key={locate.n} cx={vp.X(locate.x)} cy={vp.Y(locate.y)} r={14 * vp.u} fill="none" stroke="#0d9488" strokeWidth={3} vectorEffect="non-scaling-stroke" pointerEvents="none">
+          <animate attributeName="r" from={10 * vp.u} to={Math.max(40 * vp.u, locate.span * 0.7)} dur="0.9s" repeatCount="3" /><animate attributeName="opacity" from="1" to="0" dur="0.9s" repeatCount="3" /></circle>}
         {overlay?.(vp)}
       </svg>
       {cursor && <span className="pointer-events-none absolute bottom-3 left-3 rounded-md bg-primary/90 px-2 py-1 text-xs tabular-nums text-secondary shadow-xs ring-1 ring-secondary" aria-live="off">X: {cursor[0].toFixed(2)} &nbsp; Y: {cursor[1].toFixed(2)}</span>}
