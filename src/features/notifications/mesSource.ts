@@ -1,6 +1,8 @@
 import { masterDataStore } from '@/features/master-data';
+import { localized } from '@/i18n';
 import type { NewNotification, NotificationSource } from './types';
 
+const L = localized('insights');
 const MIN = 60_000;
 /** The notifications a configurator saw before this session (placeholder for the MES history). */
 export function mesBackfill(now: number): NewNotification[] {
@@ -10,24 +12,24 @@ export function mesBackfill(now: number): NewNotification[] {
       id: 'mes-seed-1',
       kind: 'mes',
       level: 'success',
-      title: 'New data from MES',
-      body: '128 production orders were imported.',
+      title: L.notifications.mes.newData,
+      body: L.notifications.mes.orders(128),
       at: now - 14 * MIN,
     },
     {
       id: 'mes-seed-2',
       kind: 'stock',
       level: 'info',
-      title: 'New stock has been added',
-      body: stock ? `${stock.code} · ${stock.name}: +240 units` : '+240 units',
+      title: L.notifications.mes.newStock,
+      body: stock ? `${stock.code} · ${stock.name}: ${L.notifications.mes.units(240)}` : L.notifications.mes.units(240),
       at: now - 55 * MIN,
     },
     {
       id: 'mes-seed-3',
       kind: 'mes',
       level: 'info',
-      title: 'MES material master refreshed',
-      body: 'No changes since the last sync.',
+      title: L.notifications.mes.refreshed,
+      body: L.notifications.mes.noChanges,
       at: now - 3 * 60 * MIN,
     },
   ];
@@ -45,8 +47,8 @@ export function mesNext(
       id: `mes-stock-${now}`,
       kind: 'stock',
       level: 'info',
-      title: 'New stock has been added',
-      body: `${m.code} · ${m.name}: +${(1 + pick(9)) * 40} units`,
+      title: L.notifications.mes.newStock,
+      body: `${m.code} · ${m.name}: ${L.notifications.mes.units((1 + pick(9)) * 40)}`,
       at: now,
     };
   }
@@ -54,8 +56,8 @@ export function mesNext(
     id: `mes-data-${now}`,
     kind: 'mes',
     level: 'success',
-    title: 'New data from MES',
-    body: `${20 + pick(120)} production orders were imported.`,
+    title: L.notifications.mes.newData,
+    body: L.notifications.mes.orders(20 + pick(120)),
     at: now,
   };
 }

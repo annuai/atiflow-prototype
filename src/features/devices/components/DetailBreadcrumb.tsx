@@ -1,4 +1,5 @@
 import { ChevronRight } from '@untitledui/icons';
+import { t } from '../text';
 
 export interface Crumb {
   label: string;
@@ -7,7 +8,7 @@ export interface Crumb {
 /** Breadcrumb trail; the last crumb is the current page. (Untitled UI's Breadcrumbs is PRO, so this is a plain nav.) */
 export function DetailBreadcrumb({ trail }: { trail: Crumb[] }) {
   return (
-    <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-sm font-semibold">
+    <nav aria-label={t.detail.breadcrumb} className="flex flex-wrap items-center gap-1 text-sm font-semibold">
       {trail.map((c, i) => {
         const last = i === trail.length - 1;
         return (

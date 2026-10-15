@@ -1,5 +1,6 @@
 import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ChartTooltipContent } from '@/components/application/charts/charts-base';
+import { insights } from '../insightsCopy';
 import { withUnit, type MetricDef } from '../model/metrics';
 import type { SeriesPoint } from '../model/types';
 
@@ -70,7 +71,12 @@ export function TrendChart({
               y={target}
               stroke="#737373"
               strokeDasharray="4 3"
-              label={{ value: `target ${target}%`, position: 'insideTopRight', fontSize: 11, fill: '#737373' }}
+              label={{
+                value: insights.reports.target(target),
+                position: 'insideTopRight',
+                fontSize: 11,
+                fill: '#737373',
+              }}
             />
           )}
           <Area

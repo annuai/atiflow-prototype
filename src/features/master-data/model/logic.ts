@@ -1,4 +1,5 @@
 import type { IncomingMaterial, Material, MaterialGroup } from './types';
+import { t } from '../text';
 
 const norm = (s: string) => s.trim().toLowerCase();
 export const sameCode = (a: string, b: string) => norm(a) === norm(b);
@@ -51,9 +52,9 @@ export function validateMaterial(
   editing?: string,
 ): Record<string, string> {
   const e: Record<string, string> = {};
-  if (!values.name.trim()) e.name = 'Material name is required';
-  if (!values.code.trim()) e.code = 'Material code is required';
-  else if (!editing && hasCode(existing, values.code)) e.code = `Material code "${values.code.trim()}" already exists`;
+  if (!values.name.trim()) e.name = t.masterData.errors.materialName;
+  if (!values.code.trim()) e.code = t.masterData.errors.materialCode;
+  else if (!editing && hasCode(existing, values.code)) e.code = t.masterData.errors.codeExists(values.code.trim());
   return e;
 }
 
@@ -63,10 +64,10 @@ export function validateGroup(
   editing?: string,
 ): Record<string, string> {
   const e: Record<string, string> = {};
-  if (!values.name.trim()) e.name = 'Group name is required';
+  if (!values.name.trim()) e.name = t.masterData.errors.groupName;
   else if (groups.some((g) => g.id !== editing && norm(g.name) === norm(values.name)))
-    e.name = `A group named "${values.name.trim()}" already exists`;
-  if (values.prefix && /\s/.test(values.prefix.trim())) e.prefix = 'A prefix has no spaces';
+    e.name = t.masterData.errors.groupExists(values.name.trim());
+  if (values.prefix && /\s/.test(values.prefix.trim())) e.prefix = t.masterData.errors.prefixSpaces;
   return e;
 }
 

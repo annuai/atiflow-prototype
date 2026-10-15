@@ -1,6 +1,7 @@
 import { store } from '@/core/store';
 import type { RobotTelemetry, Station } from '@/core/types';
 import { handle } from '@/ui/engineHandle';
+import { copy } from './copy';
 
 export interface LocateHit {
   kind: 'robot' | 'station';
@@ -26,7 +27,7 @@ export function findTargets(
         kind: 'robot',
         id: r.id,
         title: r.id,
-        sub: `Robot · ${r.state}`,
+        sub: copy.locate.robotSub(copy.states[r.state] ?? r.state),
         rank: r.id.toLowerCase() === q ? 0 : 2 + i,
       });
   }
@@ -37,7 +38,7 @@ export function findTargets(
         kind: 'robot',
         id: r.id,
         title: id,
-        sub: `Trip · ${r.id} → ${r.task!.to}`,
+        sub: copy.locate.tripSub(r.id, r.task!.to ?? ''),
         rank: id.toLowerCase() === q ? 0 : 2,
       });
   }
@@ -48,7 +49,7 @@ export function findTargets(
         kind: 'station',
         id: s.id,
         title: s.id,
-        sub: `Station · ${s.name}`,
+        sub: copy.locate.stationSub(s.name),
         rank: s.id.toLowerCase() === q ? 0 : 100 + i,
       });
   }

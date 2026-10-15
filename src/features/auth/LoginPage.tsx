@@ -6,6 +6,8 @@ import { Input } from '@/components/base/input/input';
 import { authStore } from './authStore';
 import type { PublicUser } from './types';
 import { notify } from '@/ui/toast';
+import { LanguageSelect } from '@/components/data/LanguageSelect';
+import { copy } from './copy';
 import bg from './assets/login-bg.jpg';
 import logo from '@/ui/icons/ati-logo.svg'; // the light-on-dark logo (same one as the sidebar)
 import robot from '@/assets/robots/sherpa-xt-lite.svg';
@@ -28,7 +30,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
     e.preventDefault();
     if (busy) return;
     if (!username.trim() || !password) {
-      setError('Enter your username and password.');
+      setError(copy.errorEmpty);
       setShake((n) => n + 1);
       return;
     }
@@ -38,7 +40,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
     setBusy(false);
     if (res === 'ok') onAuthenticated(authStore.getState().user!);
     else {
-      setError('Incorrect username or password. Please try again.');
+      setError(copy.errorWrong);
       setShake((n) => n + 1);
     }
   }
@@ -59,14 +61,13 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
       />
       <div className="absolute inset-0 bg-white/40" />
 
+      <div className="absolute right-4 top-4 z-20 w-40 sm:right-8 sm:top-6">
+        <LanguageSelect size="sm" aria-label={copy.languageLabel} />
+      </div>
       <main className="relative z-10 flex flex-1 items-center justify-center gap-24 px-5 py-10 lg:px-24">
         <section className="hidden max-w-[360px] flex-1 flex-col items-center gap-3 text-center lg:flex">
-          <h1 className="w-[342px] text-display-sm font-semibold text-primary">
-            Unified Material Orchestration Platform
-          </h1>
-          <p className="w-[320px] text-sm text-secondary">
-            Real-time automation, dispatch tracking, and staging analytics simplified.
-          </p>
+          <h1 className="w-[342px] text-display-sm font-semibold text-primary">{copy.heroTitle}</h1>
+          <p className="w-[320px] text-sm text-secondary">{copy.heroText}</p>
         </section>
 
         <section className="w-full max-w-[480px]">
@@ -81,9 +82,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
                 />
               </div>
               <div className="flex shrink-0 items-center py-2">
-                <div className="bg-[#33bab1] px-3 text-xs whitespace-nowrap text-white">
-                  Ati’s bots run 70+ factories
-                </div>
+                <div className="bg-[#33bab1] px-3 text-xs whitespace-nowrap text-white">{copy.ribbon}</div>
                 <img src={ribbonTip} alt="" className="h-[18px] w-[12px] shrink-0" />
               </div>
             </div>
@@ -107,18 +106,18 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
-                <h2 className="text-display-xs font-semibold sm:text-display-sm">Welcome back!</h2>
-                <p className="text-sm text-slate-300">Enter your operational credentials to continue</p>
+                <h2 className="text-display-xs font-semibold sm:text-display-sm">{copy.welcome}</h2>
+                <p className="text-sm text-slate-300">{copy.welcomeText}</p>
               </div>
             </div>
 
             <div className="flex flex-col gap-6 px-8 py-8 sm:px-12">
               <div className="flex flex-col gap-4">
                 <Input
-                  label="Username or Email"
+                  label={copy.username}
                   size="md"
                   icon={Mail01}
-                  placeholder="e.g. arjun"
+                  placeholder={copy.usernamePlaceholder}
                   value={username}
                   onChange={setUsername}
                   name="username"
@@ -128,7 +127,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
                 />
                 <div>
                   <Input
-                    label="Password"
+                    label={copy.password}
                     size="md"
                     icon={Lock03}
                     type="password"
@@ -152,25 +151,19 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
                   </div>
                 )}
                 <div className="flex items-center justify-between gap-3">
-                  <Checkbox size="sm" label="Keep me signed in" isSelected={keep} onChange={setKeep} />
+                  <Checkbox size="sm" label={copy.keepSignedIn} isSelected={keep} onChange={setKeep} />
                   <Button
                     type="button"
                     color="link-color"
                     size="sm"
-                    onPress={() =>
-                      notify.info(
-                        'Password recovery',
-                        'Please contact your administrator to reset your password.',
-                        'recover',
-                      )
-                    }
+                    onPress={() => notify.info(copy.recoverTitle, copy.recoverText, 'recover')}
                   >
-                    Recover Password
+                    {copy.recover}
                   </Button>
                 </div>
               </div>
               <Button type="submit" size="lg" color="primary" className="w-full" isLoading={busy}>
-                Log in
+                {copy.logIn}
               </Button>
             </div>
           </form>
@@ -179,10 +172,10 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
 
       {/* sidebar-theme footer */}
       <footer className="relative z-10 flex items-center justify-between gap-4 bg-[image:var(--surface-sidebar)] px-6 py-4 text-xs text-slate-300 sm:px-20">
-        <span>© 2026 ATI Motors · AtiMotors/AtiFlow v4.0.0</span>
+        <span>{copy.footer}</span>
         <span className="flex items-center gap-2">
           <i className="size-2 rounded-full bg-[#22c55e] ring-2 ring-[#22c55e]/30" />
-          All Systems Operational
+          {copy.status}
         </span>
       </footer>
     </div>

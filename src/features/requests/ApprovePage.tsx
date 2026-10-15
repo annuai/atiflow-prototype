@@ -8,6 +8,7 @@ import { ApprovalCard } from './components/ApprovalCard';
 import { DecisionRow } from './components/DecisionRow';
 import { RejectSheet } from './components/RejectSheet';
 import { copy } from './copy';
+import { t } from './text';
 import { useRequestsRunning } from './model/bridge';
 import { decisions } from './model/decisions';
 import { canApprove } from './model/rules';
@@ -54,7 +55,7 @@ export function ApprovePage() {
               size="lg"
               value={tab}
               onChange={setTab}
-              label="Approve"
+              label={t.requests.tabsLabel.approve}
               items={[
                 { id: 'waiting', label: copy.approve.tabs.waiting(waiting.length) },
                 { id: 'history', label: copy.approve.tabs.history },

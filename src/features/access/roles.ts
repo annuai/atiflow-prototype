@@ -1,3 +1,4 @@
+import { localized } from '@/i18n';
 import { workspaceById, type PermissionId, type WorkspaceId } from './catalog';
 
 /**
@@ -20,11 +21,12 @@ export interface RoleDef {
 }
 const ofWorkspace = (w: WorkspaceId) => workspaceById(w).features.map((f) => f.id);
 
-export const ROLES: RoleDef[] = [
+type RawRole = Omit<RoleDef, 'label' | 'blurb'>;
+const text = localized('nav');
+/** Role names and descriptions come from the language in use (the nav catalogs in src/i18n/locales). */
+const RAW_ROLES: RawRole[] = [
   {
     id: 'configurator',
-    label: 'Configurator',
-    blurb: 'Full access to configuration, and manages users',
     permissions: ofWorkspace('configurator'),
     workspace: 'configurator',
     home: '/configurator',
@@ -32,8 +34,6 @@ export const ROLES: RoleDef[] = [
   },
   {
     id: 'supervisor',
-    label: 'Supervisor',
-    blurb: 'Dashboard, reports, the live floor and the Action Center',
     permissions: ofWorkspace('supervisor'),
     workspace: 'supervisor',
     home: '/supervisor/dashboard',
@@ -41,13 +41,21 @@ export const ROLES: RoleDef[] = [
   },
   {
     id: 'operator',
-    label: 'Operator',
-    blurb: 'Request, book trips, approve, history and the Action Center',
     permissions: ofWorkspace('operator'),
     workspace: 'operator',
     home: '/operator/request',
     manageUsers: false,
   },
 ];
+export const ROLES: RoleDef[] = RAW_ROLES.map(
+  (r) =>
+    Object.defineProperties(
+      { ...r },
+      {
+        label: { enumerable: true, get: () => text.roles[r.id].label },
+        blurb: { enumerable: true, get: () => text.roles[r.id].blurb },
+      },
+    ) as RoleDef,
+);
 export const roleById = (id: RoleId): RoleDef => ROLES.find((r) => r.id === id) ?? ROLES[1];
 export const presetOf = (role: RoleId): PermissionId[] => roleById(role).permissions;

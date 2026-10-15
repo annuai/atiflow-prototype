@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/data/EmptyState';
 import { Skeleton } from '@/components/skeleton/Skeleton';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
+import { categoryLabel, groupLabel, ins } from '../labels';
 import { useRobotConfig } from '../data/useRobotConfig';
 import { customised, groupParams } from '../model/config';
 import type { RobotRef } from '../model/types';
@@ -74,10 +75,7 @@ export function ConfigurationTab({ robot, renderFooter }: { robot: RobotRef; ren
         />
         {ready && current && (
           <div className="flex min-h-0 flex-1 flex-col gap-4 md:flex-row">
-            <nav
-              aria-label="Configuration sections"
-              className="flex shrink-0 gap-1 overflow-x-auto md:w-52 md:flex-col"
-            >
+            <nav aria-label={ins.sectionsAria} className="flex shrink-0 gap-1 overflow-x-auto md:w-52 md:flex-col">
               {schema.categories.map((c) => {
                 const Icon = ICONS[c.id] ?? Sliders04;
                 const n = customised(c, values, schema.defaults);
@@ -94,7 +92,7 @@ export function ConfigurationTab({ robot, renderFooter }: { robot: RobotRef; ren
                     )}
                   >
                     <Icon className="size-4 shrink-0" />
-                    <span className="flex-1 whitespace-nowrap">{c.label}</span>
+                    <span className="flex-1 whitespace-nowrap">{categoryLabel(c)}</span>
                     {n > 0 && (
                       <span
                         className="size-1.5 rounded-full bg-brand-solid"
@@ -107,7 +105,7 @@ export function ConfigurationTab({ robot, renderFooter }: { robot: RobotRef; ren
               })}
             </nav>
             <section
-              aria-label={current.label}
+              aria-label={categoryLabel(current)}
               className="min-h-72 flex-1 rounded-xl border border-secondary bg-secondary_subtle p-4 sm:p-5"
             >
               {current.params.length === 0 && current.id !== ADVANCED ? (
@@ -121,7 +119,7 @@ export function ConfigurationTab({ robot, renderFooter }: { robot: RobotRef; ren
                 <div className="flex flex-col gap-6">
                   {groupParams(current).map((g) => (
                     <div key={g.heading ?? ''} className="flex flex-col gap-4">
-                      {g.heading && <h3 className="text-sm font-semibold text-primary">{g.heading}</h3>}
+                      {g.heading && <h3 className="text-sm font-semibold text-primary">{groupLabel(g.heading)}</h3>}
                       {g.params.map((p) => (
                         <ConfigParamField
                           key={p.key}

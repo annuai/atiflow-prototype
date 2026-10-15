@@ -6,6 +6,7 @@ import { Button } from '@/components/base/buttons/button';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { ProgressBar } from '@/components/base/progress-indicators/progress-indicators';
 import { BAR_CLASS, type BarTone } from './tones';
+import { copy } from './copy';
 
 export interface InfoStat {
   label: string;
@@ -71,7 +72,7 @@ export function InfoPanel({ title, subtitle, pill, chips, stats, alerts, actions
       <SheetHandle onClose={onClose} />
       <h3>
         {title}
-        <ButtonUtility size="xs" color="tertiary" icon={XClose} tooltip="Close" onPress={onClose} />
+        <ButtonUtility size="xs" color="tertiary" icon={XClose} tooltip={copy.toast.close} onPress={onClose} />
       </h3>
       {subtitle && <div className="sub">{subtitle}</div>}
       <div className="pills">

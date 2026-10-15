@@ -18,6 +18,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { useMap } from './model/maps';
 import { fleetPath } from './paths';
 import { profileOf, useFleets } from './model/store';
+import { t } from './text';
 
 /** Tabs of a fleet page. Add a tab (+ panel) here and the route, tab bar and count badge follow. */
 const TABS = [
@@ -61,7 +62,7 @@ export function FleetPage() {
           <div>
             <InlineNameEdit
               value={name}
-              label="Fleet name"
+              label={t.fleets.fleetName}
               tooltip={copy.rename.tooltip}
               display={<h1>{name}</h1>}
               onSave={onRename}

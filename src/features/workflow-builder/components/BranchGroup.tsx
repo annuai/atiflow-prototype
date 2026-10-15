@@ -5,6 +5,7 @@ import type { WfNode } from '../model/types';
 import { Connector } from './Connector';
 import { FlowCtx } from './FlowContext';
 import { NodeCard } from './NodeCard';
+import { copy } from '../copy';
 
 function Branch({ node, b }: { node: WfNode; b: 't' | 'o' }) {
   const list = node.br![b];
@@ -12,22 +13,16 @@ function Branch({ node, b }: { node: WfNode; b: 't' | 'o' }) {
   const taken = useWorkflow((s) => s.sim.taken[node.id]);
   return (
     <div className={`wf-lbranch ${b} ${taken ? (taken === b ? 'take' : 'skip') : ''}`}>
-      <span className={`wf-pill ${b}`}>{b === 't' ? 'TRUE' : 'OTHERWISE'}</span>
+      <span className={`wf-pill ${b}`}>{b === 't' ? copy.branch.t : copy.branch.o}</span>
       <div className="wf-brow">
         {list.length === 0 ? (
           <button
             className="wf-empty"
             data-gap-list={key}
             data-gap-index={0}
-            onClick={() =>
-              notify.info(
-                'Drag a node from the palette into this branch.',
-                'Or drop one here from elsewhere on the canvas.',
-                'wf-branch',
-              )
-            }
+            onClick={() => notify.info(copy.branch.hintTitle, copy.branch.hintBody, 'wf-branch')}
           >
-            Drop a node here
+            {copy.branch.drop}
           </button>
         ) : (
           <>

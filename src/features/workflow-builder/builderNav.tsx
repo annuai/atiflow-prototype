@@ -2,6 +2,7 @@ import { NODE_TYPES } from './model/registry';
 import { wfStore } from './model/store';
 import type { SearchHit } from '@/shell/types';
 import type { WfNode } from './model/types';
+import { copy } from './copy';
 
 const flat = (nodes: WfNode[]): WfNode[] =>
   nodes.flatMap((n) => [n, ...(n.br ? [...flat(n.br.t), ...flat(n.br.o)] : [])]);
@@ -19,7 +20,7 @@ export function builderNodeHits(q: string): SearchHit[] {
     .filter((n) => (NODE_TYPES[n.t].label + ' ' + summary(n)).toLowerCase().includes(ql))
     .slice(0, 6)
     .map((n) => ({
-      kind: 'Node',
+      kind: copy.nodeKind,
       title: NODE_TYPES[n.t].label,
       sub: summary(n),
       go: () => window.dispatchEvent(new CustomEvent('wf:reveal', { detail: n.id })),

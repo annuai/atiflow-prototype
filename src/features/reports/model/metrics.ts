@@ -1,3 +1,4 @@
+import { insights } from '../insightsCopy';
 import type { GroupId, MetricId } from './types';
 
 /**
@@ -25,199 +26,74 @@ export interface MetricDef {
   why: string;
 }
 
-export const GROUPS: { id: GroupId; label: string; blurb: string }[] = [
-  { id: 'utilisation', label: 'Utilisation', blurb: 'How much of the time the robots do useful work' },
-  { id: 'throughput', label: 'Throughput', blurb: 'How much gets moved, and how fast' },
-  { id: 'reliability', label: 'Reliability', blurb: 'How dependable the fleet and its traffic are' },
-  { id: 'efficiency', label: 'Efficiency', blurb: 'How little distance and energy the work takes' },
-  { id: 'activity', label: 'Activity', blurb: 'Raw totals' },
-];
-
+const tr = () => insights.reports;
+const group = (id: GroupId) => ({
+  id,
+  get label() {
+    return tr().groups[id].label;
+  },
+  get blurb() {
+    return tr().groups[id].blurb;
+  },
+});
+export const GROUPS: { id: GroupId; label: string; blurb: string }[] = (
+  ['utilisation', 'throughput', 'reliability', 'efficiency', 'activity'] as GroupId[]
+).map(group);
+/** The text of a metric is read through getters, so it follows the language in use (never copy it into a constant). */
+const metric = (id: MetricId, o: Pick<MetricDef, 'group' | 'tier' | 'unit' | 'decimals' | 'better'>): MetricDef => ({
+  id,
+  ...o,
+  get label() {
+    return tr().metrics[id].label;
+  },
+  get short() {
+    return tr().metrics[id].short;
+  },
+  get chartTitle() {
+    return tr().metrics[id].chartTitle;
+  },
+  get definition() {
+    return tr().metrics[id].definition;
+  },
+  get measuredBy() {
+    return tr().metrics[id].measuredBy;
+  },
+  get why() {
+    return tr().metrics[id].why;
+  },
+});
 export const METRICS: Record<MetricId, MetricDef> = {
-  utilisation: {
-    id: 'utilisation',
+  utilisation: metric('utilisation', {
     group: 'utilisation',
-    label: 'Fleet utilisation',
-    short: 'Utilisation',
     tier: 'headline',
-    chartTitle: 'Fleet utilisation over time',
     unit: '%',
     decimals: 0,
     better: 'higher',
-    definition: 'Share of the time robots are executing tasks, not idle, charging or in error.',
-    measuredBy: 'Task state timestamps from the fleet manager',
-    why: 'More of the day spent on real work',
-  },
-  idleTime: {
-    id: 'idleTime',
-    group: 'utilisation',
-    label: 'Robot idle time',
-    short: 'Idle',
-    tier: 'more',
-    chartTitle: 'Robot idle time over time',
-    unit: 'min/h',
-    decimals: 1,
-    better: 'lower',
-    definition: 'Average minutes per hour a robot spends waiting for an assignment.',
-    measuredBy: 'State telemetry (idle duration)',
-    why: 'Less waiting for work',
-  },
-  throughput: {
-    id: 'throughput',
+  }),
+  idleTime: metric('idleTime', { group: 'utilisation', tier: 'more', unit: 'min/h', decimals: 1, better: 'lower' }),
+  throughput: metric('throughput', {
     group: 'throughput',
-    label: 'Throughput',
-    short: 'Throughput',
     tier: 'headline',
-    chartTitle: 'Throughput over time',
     unit: 'tasks/h',
     decimals: 1,
     better: 'higher',
-    definition:
-      'Tasks completed per hour. For the fleet: across all robots; per robot: per hour that robot was in service.',
-    measuredBy: 'Task completion events, aggregated hourly',
-    why: 'More tasks finished per hour',
-  },
-  cycleTime: {
-    id: 'cycleTime',
-    group: 'throughput',
-    label: 'Task cycle time',
-    short: 'Cycle',
-    tier: 'more',
-    chartTitle: 'Task cycle time over time',
-    unit: 'min',
-    decimals: 1,
-    better: 'lower',
-    definition: 'Average time from a task being assigned to it being completed.',
-    measuredBy: 'Assignment timestamp to completion timestamp',
-    why: 'Tasks done faster',
-  },
-  deadlocks: {
-    id: 'deadlocks',
+  }),
+  cycleTime: metric('cycleTime', { group: 'throughput', tier: 'more', unit: 'min', decimals: 1, better: 'lower' }),
+  deadlocks: metric('deadlocks', { group: 'reliability', tier: 'headline', unit: '/h', decimals: 2, better: 'lower' }),
+  mtbf: metric('mtbf', { group: 'reliability', tier: 'more', unit: 'h', decimals: 1, better: 'higher' }),
+  sla: metric('sla', { group: 'reliability', tier: 'headline', unit: '%', decimals: 0, better: 'higher' }),
+  chargingAvailability: metric('chargingAvailability', {
     group: 'reliability',
-    label: 'Deadlock frequency',
-    short: 'Deadlocks',
     tier: 'headline',
-    chartTitle: 'Deadlocks per hour',
-    unit: '/h',
-    decimals: 2,
-    better: 'lower',
-    definition: 'Deadlocks (robots waiting for each other in a ring) per fleet-hour.',
-    measuredBy: 'Traffic controller deadlock detection logs',
-    why: 'Fewer traffic jams to untangle',
-  },
-  mtbf: {
-    id: 'mtbf',
-    group: 'reliability',
-    label: 'Mean time between failures',
-    short: 'MTBF',
-    tier: 'more',
-    chartTitle: 'Operating hours between failures',
-    unit: 'h',
-    decimals: 1,
-    better: 'higher',
-    definition:
-      'Average operating hours between faults that needed someone on site. A robot without a fault shows its operating hours so far.',
-    measuredBy: 'Error event logs with manual-intervention flags',
-    why: 'Longer between breakdowns',
-  },
-  sla: {
-    id: 'sla',
-    group: 'reliability',
-    label: 'SLA compliance',
-    short: 'SLA',
-    tier: 'headline',
-    chartTitle: 'SLA compliance over time',
     unit: '%',
     decimals: 0,
     better: 'higher',
-    definition: 'Share of tasks completed within their SLA deadline (service level agreement).',
-    measuredBy: 'Task deadline compared with completion timestamp',
-    why: 'More tasks on time',
-  },
-  chargingAvailability: {
-    id: 'chargingAvailability',
-    group: 'reliability',
-    label: 'Charging availability',
-    short: 'Availability',
-    tier: 'headline',
-    chartTitle: 'Fleet availability over time',
-    unit: '%',
-    decimals: 0,
-    better: 'higher',
-    definition: 'Share of the time at least 85% of the fleet is available (not charging, faulted or offline).',
-    measuredBy: 'Fleet state aggregation every 60 seconds',
-    why: 'Enough robots ready at any time',
-  },
-  emptyTravel: {
-    id: 'emptyTravel',
-    group: 'efficiency',
-    label: 'Empty travel',
-    short: 'Empty',
-    tier: 'more',
-    chartTitle: 'Empty travel over time',
-    unit: '%',
-    decimals: 0,
-    better: 'lower',
-    definition: 'Share of the distance driven without a load (the travel/work ratio).',
-    measuredBy: 'Odometry with load sensor correlation',
-    why: 'More of the driving carries a load',
-  },
-  energy: {
-    id: 'energy',
-    group: 'efficiency',
-    label: 'Energy per task',
-    short: 'kWh/task',
-    tier: 'more',
-    chartTitle: 'Energy per task over time',
-    unit: 'kWh',
-    decimals: 3,
-    better: 'lower',
-    definition: 'Energy used for driving per completed task.',
-    measuredBy: 'Battery telemetry correlated with task counts',
-    why: 'Less energy for the same work',
-  },
-  trips: {
-    id: 'trips',
-    group: 'activity',
-    label: 'Total trips',
-    short: 'Trips',
-    tier: 'more',
-    chartTitle: 'Trips over time',
-    unit: '',
-    decimals: 0,
-    better: 'higher',
-    definition: 'Trips a robot finished in the period (origin to destination, including stops).',
-    measuredBy: 'Task completion events',
-    why: 'More trips = more material moved',
-  },
-  distance: {
-    id: 'distance',
-    group: 'activity',
-    label: 'Total distance',
-    short: 'Distance',
-    tier: 'more',
-    chartTitle: 'Distance over time',
-    unit: 'km',
-    decimals: 2,
-    better: 'higher',
-    definition: 'Distance a robot drove in the period, empty and loaded.',
-    measuredBy: 'Odometry',
-    why: 'More distance = more work done',
-  },
-  obstacle: {
-    id: 'obstacle',
-    group: 'activity',
-    label: 'Obstacle time',
-    short: 'Blocked',
-    tier: 'more',
-    chartTitle: 'Obstacle time over time',
-    unit: 'min/h',
-    decimals: 1,
-    better: 'lower',
-    definition: 'Average minutes per hour a robot stood still because something blocked its path.',
-    measuredBy: 'State telemetry (blocked)',
-    why: 'Less blocked time = smoother routes',
-  },
+  }),
+  emptyTravel: metric('emptyTravel', { group: 'efficiency', tier: 'more', unit: '%', decimals: 0, better: 'lower' }),
+  energy: metric('energy', { group: 'efficiency', tier: 'more', unit: 'kWh', decimals: 3, better: 'lower' }),
+  trips: metric('trips', { group: 'activity', tier: 'more', unit: '', decimals: 0, better: 'higher' }),
+  distance: metric('distance', { group: 'activity', tier: 'more', unit: 'km', decimals: 2, better: 'higher' }),
+  obstacle: metric('obstacle', { group: 'activity', tier: 'more', unit: 'min/h', decimals: 1, better: 'lower' }),
 };
 /** Order of the cards: the four headings of the KPI board first, then the raw activity totals. */
 export const METRIC_ORDER: MetricId[] = [

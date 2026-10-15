@@ -6,6 +6,7 @@ import { copy } from '../copy';
 import { MapThumbnail } from './MapThumbnail';
 import { routingName } from '../model/routing';
 import type { FleetMap } from '../model/types';
+import { t } from '../text';
 
 /** One map: preview, version + routing chip, name, the fleets that run on it and its station count. */
 export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
@@ -24,7 +25,7 @@ export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
       <Link
         to={`/configurator/maps/${map.id}`}
         className="absolute inset-0 z-10 outline-hidden"
-        aria-label={`Open ${map.name} in the map editor`}
+        aria-label={t.maps.openInEditor(map.name)}
       />
       <div className="relative h-44 bg-[#f4f7f6]">
         <MapThumbnail fleetLive={map.fleetLive} className="size-full" />

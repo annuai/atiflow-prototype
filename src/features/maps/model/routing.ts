@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { LayersThree01, Zap } from '@untitledui/icons';
+import { t } from '../text';
 
 export interface RoutingVersion {
   id: string;
@@ -16,17 +17,38 @@ export const ROUTING_VERSIONS: RoutingVersion[] = [
     id: 'v2',
     version: 2,
     label: 'v2',
-    name: 'Point to point routing',
-    note: 'Still in use but not as easy to implement as v5',
+    get name() {
+      return t.maps.routing.v2.name;
+    },
+    get note() {
+      return t.maps.routing.v2.note;
+    },
     icon: LayersThree01,
   },
-  { id: 'v4', version: 4, label: 'v4', name: 'Dynamic Routing', note: 'Now deprecated', icon: LayersThree01 },
+  {
+    id: 'v4',
+    version: 4,
+    label: 'v4',
+    get name() {
+      return t.maps.routing.v4.name;
+    },
+    get note() {
+      return t.maps.routing.v4.note;
+    },
+    icon: LayersThree01,
+  },
   {
     id: 'v5',
     version: 5,
-    label: 'v5 (Recommended)',
-    name: 'Dynamic Routing',
-    note: 'This option is recommended.',
+    get label() {
+      return t.maps.routing.v5.label;
+    },
+    get name() {
+      return t.maps.routing.v5.name;
+    },
+    get note() {
+      return t.maps.routing.v5.note;
+    },
     recommended: true,
     icon: Zap,
   },

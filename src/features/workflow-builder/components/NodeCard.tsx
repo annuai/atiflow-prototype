@@ -8,6 +8,7 @@ import { NodeIcon } from './icons';
 import { XmarkIcon } from '../assets/nodeIcons';
 import { FieldControl } from './FieldControl';
 import { FlowCtx } from './FlowContext';
+import { copy } from '../copy';
 
 /** A workflow node card. Everything (fields, colours, width, note) comes from the registry entry of its type. */
 export const NodeCard = memo(function NodeCard({ node, branch }: { node: WfNode; branch?: 't' | 'o' }) {
@@ -51,24 +52,19 @@ export const NodeCard = memo(function NodeCard({ node, branch }: { node: WfNode;
           <button
             data-drag-handle
             disabled={T.fixed}
-            aria-label="Drag to reorder"
-            title={T.fixed ? undefined : 'Drag the card to reorder'}
+            aria-label={copy.card.drag}
+            title={T.fixed ? undefined : copy.card.dragTip}
           >
             <MenuIcon_ />
           </button>
           <button
             className="rm"
-            aria-label={`Remove ${T.label}`}
+            aria-label={copy.card.remove(T.label)}
             aria-disabled={T.fixed || undefined}
-            title={T.fixed ? 'Every workflow needs this node' : 'Remove'}
+            title={T.fixed ? copy.card.fixedTip : copy.card.removeTip}
             onClick={(e) => {
               e.stopPropagation();
-              if (T.fixed)
-                notify.warning(
-                  `The ${T.label} can't be removed.`,
-                  'Every workflow starts with a Start node and stops at an End node.',
-                  'wf-problem',
-                );
+              if (T.fixed) notify.warning(copy.problems.fixedTitle(T.label), copy.problems.fixedBody, 'wf-problem');
               else wfStore.getState().removeNode(node.id);
             }}
           >

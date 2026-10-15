@@ -1,3 +1,5 @@
+import { t } from '../text';
+
 /** Recorded drive sessions of a robot that a map can be generated from. */
 export interface RunData {
   id: string;
@@ -19,7 +21,11 @@ export const mockRunData: RunDataSource = {
           resolve(
             [0, 1, 2].map((k) => ({
               id: `${robot}-run-${k + 1}`,
-              label: `${robot} · ${new Date(Date.now() - (k + 1) * DAY).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · session ${3 - k}`,
+              label: t.maps.session(
+                robot,
+                new Date(Date.now() - (k + 1) * DAY).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+                3 - k,
+              ),
             })),
           ),
         LATENCY_MS,

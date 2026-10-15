@@ -1,0 +1,21 @@
+/** The sign-in screen. */
+export const auth = {
+  heroTitle: 'Unified Material Orchestration Platform',
+  heroText: 'Real-time automation, dispatch tracking, and staging analytics simplified.',
+  ribbon: 'Ati’s bots run 70+ factories',
+  welcome: 'Welcome back!',
+  welcomeText: 'Enter your operational credentials to continue',
+  username: 'Username or Email',
+  usernamePlaceholder: 'e.g. arjun',
+  password: 'Password',
+  keepSignedIn: 'Keep me signed in',
+  recover: 'Recover Password',
+  recoverTitle: 'Password recovery',
+  recoverText: 'Please contact your administrator to reset your password.',
+  logIn: 'Log in',
+  errorEmpty: 'Enter your username and password.',
+  errorWrong: 'Incorrect username or password. Please try again.',
+  footer: '© 2026 ATI Motors · AtiMotors/AtiFlow v4.0.0',
+  status: 'All Systems Operational',
+  languageLabel: 'Language',
+} as const;

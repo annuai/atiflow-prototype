@@ -1,6 +1,7 @@
 import { Button as AriaButton } from 'react-aria-components';
 import { ChevronDown } from '@untitledui/icons';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
+import { copy as floor } from '@/ui/copy';
 
 export interface SwitcherItem {
   id: string;
@@ -27,7 +28,7 @@ export function HeaderSwitcher({
   if (items.length < 2) return <div className="sb-head">{title}</div>;
   return (
     <Dropdown.Root>
-      <AriaButton className="sb-head sb-switch" aria-label={`${title}: switch`}>
+      <AriaButton className="sb-head sb-switch" aria-label={floor.frame.switchLabel(title)}>
         {title}
         <ChevronDown className="size-4 shrink-0 opacity-70" aria-hidden />
       </AriaButton>

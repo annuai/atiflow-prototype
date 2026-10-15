@@ -8,6 +8,7 @@ import { Select } from '@/components/base/select/select';
 import { Input } from '@/components/base/input/input';
 import { EmptyState } from '@/components/data/EmptyState';
 import { copy } from '../copy';
+import { text } from '../text';
 import { help, helpText } from '../help';
 import { nameProblem, roadAngle, roadLength, type RoadPatch } from '../model/roads';
 import type { MapData, MapRoad, RoadHeading } from '../model/types';
@@ -44,7 +45,7 @@ export function RoutesPanel({
         .map((r) => ({
           id: r.id,
           title: r.name,
-          subtitle: `${r.oneWay ? 'One-way' : 'Two lanes'} · ${roadLength(r)} m`,
+          subtitle: `${r.oneWay ? text.roadKind.oneWay : text.roadKind.twoLanes} · ${roadLength(r)} m`,
           icon: <Route className="size-4 shrink-0 text-fg-brand-primary" />,
         }))}
       selectedId={selectedId}

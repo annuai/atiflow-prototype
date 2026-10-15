@@ -15,6 +15,7 @@ import { blankWorkflow, isBlankDraft, isKept } from './seed';
 import { insertNode, locate, moveNode, removeNode, updateField, type Problem } from './tree';
 import { publishProblem } from './validate';
 import type { FieldValue, ListKey, NodeTypeId, WfNode, Workflow, Workflows } from './types';
+import { copy } from '../copy';
 
 export interface SimState {
   status: 'idle' | 'running' | 'done';
@@ -149,7 +150,7 @@ export const wfStore = createStore<WfState>((set, get) => {
       const { current } = get();
       if (!current || !get().workflows[current].fleet) return;
       patch(current, { saved: true });
-      notify.success('Draft saved', 'Find it under the fleet’s Workflows tab.', 'wf-saved');
+      notify.success(copy.toasts.draftSavedTitle, copy.toasts.draftSavedBody, 'wf-saved');
     },
     discardUnsaved() {
       const { current, workflows } = get();
@@ -178,29 +179,22 @@ export const wfStore = createStore<WfState>((set, get) => {
     createFleet(name) {
       let n = name.trim();
       if (!n) {
-        notify.warning('Give the fleet a name first.', 'For example: Warehouse Fleet', 'fleet-name');
+        notify.warning(copy.toasts.fleetNameFirstTitle, copy.toasts.fleetNameFirstBody, 'fleet-name');
         return false;
       }
       if (!/fleet$/i.test(n)) n += ' Fleet';
       if (datasetStore.getState().fleets.some((k) => k.name.toLowerCase() === n.toLowerCase())) {
-        notify.warning(`${n} already exists.`, 'Pick a different name.', 'fleet-name');
+        notify.warning(copy.toasts.fleetExistsTitle(n), copy.toasts.fleetExistsBody, 'fleet-name');
         return false;
       }
       datasetStore.getState().addFleet(n);
-      notify.success(
-        `${n} created`,
-        'Assign robots, hardware and materials, then build its workflows.',
-        'fleet-created',
-      );
+      notify.success(copy.toasts.fleetCreatedTitle(n), copy.toasts.fleetCreatedBody, 'fleet-created');
       return true;
     },
     addNode(t, key = 'main', at) {
       if (!get().current) return;
       if (t === 'aiot') {
-        problem({
-          title: 'AIoT has no node card in the Figma file yet',
-          body: 'Only the palette tile is designed, so it can’t be added to the canvas.',
-        });
+        problem({ title: copy.problems.aiotTitle, body: copy.problems.aiotBody });
         return;
       }
       const first = fleetMaterialCodes(fleetOf())[0] ?? ''; // new Material / If Logic nodes start on the fleet's first assigned material
@@ -249,7 +243,7 @@ export const wfStore = createStore<WfState>((set, get) => {
       const vals = Array.isArray(cur) ? cur : [cur as string];
       const next = options.find((o) => !vals.includes(o));
       if (!next) {
-        notify.warning('Every option is already added.', '', 'wf-problem');
+        notify.warning(copy.toasts.allOptionsAdded, '', 'wf-problem');
         return;
       }
       commit(updateField(get().nodes(), id, key, [...vals, next]));
@@ -301,20 +295,12 @@ export const wfStore = createStore<WfState>((set, get) => {
     buildFromPrompt(text) {
       const steps = parsePrompt(text, fleetMaterialCodes(fleetOf()));
       if (!steps.length) {
-        notify.error(
-          'Ati AI couldn’t find any steps',
-          `Try: “material ${fleetMaterialCodes(fleetOf())[0] ?? 'code'}, if quantity greater than 10 go to S103, otherwise S102, confirm, drop at STA-104”`,
-          'ai',
-        );
+        notify.error(copy.toasts.aiNoneTitle, copy.toasts.aiNoneBody(fleetMaterialCodes(fleetOf())[0] ?? 'code'), 'ai');
         return false;
       }
       commit(applySteps(get().nodes(), steps));
       set({ justAdded: steps[0].id });
-      notify.success(
-        `Built ${steps.length} step${steps.length > 1 ? 's' : ''} from your description`,
-        'Use the back arrow at the top to undo.',
-        'ai',
-      );
+      notify.success(copy.toasts.aiBuiltTitle(steps.length), copy.toasts.aiBuiltBody, 'ai');
       return true;
     },
     publish() {
@@ -326,11 +312,7 @@ export const wfStore = createStore<WfState>((set, get) => {
         return;
       }
       patch(current, { published: true, saved: true });
-      notify.success(
-        `Workflow published to ${fleetOf()}`,
-        `${get().nodes().length} nodes are live. Use Simulate to watch a test run on the map.`,
-        'publish',
-      );
+      notify.success(copy.toasts.publishedTitle(fleetOf()), copy.toasts.publishedBody(get().nodes().length), 'publish');
     },
     setSim: (patch) => set({ sim: { ...get().sim, ...patch } }),
   };

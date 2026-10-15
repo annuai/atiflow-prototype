@@ -5,6 +5,7 @@ import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { QuantityStepper } from '@/components/form/QuantityStepper';
 import { BottomSheet } from '@/components/modal/BottomSheet';
 import { copy } from '../copy';
+import { t } from '../text';
 import type { CartLine, RequestableItem } from '../model/types';
 
 /** The cart: lives only while a person chooses (nothing is saved). Quantities can still be changed here; sending turns every line into its own request. */
@@ -81,8 +82,8 @@ export function CartSheet({
               className="!size-12"
               color="tertiary"
               icon={Trash01}
-              tooltip="Remove"
-              aria-label={`Remove ${item.name}`}
+              tooltip={t.requests.remove}
+              aria-label={t.requests.removeItem(item.name)}
               onPress={() => onRemove(item.key)}
             />
           </li>

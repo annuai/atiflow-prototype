@@ -1,5 +1,8 @@
 import { Minus, Plus } from '@untitledui/icons';
 import { cx } from '@/utils/cx';
+import { localized } from '@/i18n';
+
+const misc = localized('misc');
 
 /** − / value / + with 48 px touch targets (tablet convention: no typing needed). Hold-free: one tap, one step. */
 export function QuantityStepper({
@@ -8,7 +11,7 @@ export function QuantityStepper({
   min = 1,
   max = 999,
   step = 1,
-  label = 'Quantity',
+  label = misc.ui.quantity,
   className,
 }: {
   value: number;
@@ -27,7 +30,7 @@ export function QuantityStepper({
       <button
         type="button"
         className={btn}
-        aria-label={`Decrease ${label.toLowerCase()}`}
+        aria-label={misc.ui.decrease(label)}
         disabled={value <= min}
         onClick={() => set(value - step)}
       >
@@ -39,7 +42,7 @@ export function QuantityStepper({
       <button
         type="button"
         className={btn}
-        aria-label={`Increase ${label.toLowerCase()}`}
+        aria-label={misc.ui.increase(label)}
         disabled={value >= max}
         onClick={() => set(value + step)}
       >

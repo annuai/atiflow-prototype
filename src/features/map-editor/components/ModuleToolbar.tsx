@@ -6,6 +6,7 @@ import { Tooltip } from '@/components/base/tooltip/tooltip';
 import { cx } from '@/utils/cx';
 import { choicesOf, moduleOfTool, type Module, type Tool } from '../canvas/tools';
 import { copy } from '../copy';
+import { text } from '../text';
 import { helpText } from '../help';
 import { zoneType } from '../model/zoneTypes';
 
@@ -58,7 +59,7 @@ export function ModuleToolbar({
   return (
     <nav
       className="map-tools absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl bg-primary p-2 shadow-lg ring-1 ring-secondary"
-      aria-label="Tools"
+      aria-label={text.aria.tools}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <Tooltip title={copy.tools.select} description={helpText('tool.select')} placement="top" delay={500}>

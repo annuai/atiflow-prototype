@@ -3,6 +3,7 @@ import { Skeleton } from '@/components/skeleton/Skeleton';
 import type { NavGraph, SiteLayout } from '@/core/types';
 import { useMapData } from '@/features/workflow-builder';
 import { cx } from '@/utils/cx';
+import { t } from '../text';
 
 const pts = (p: [number, number][]) => p.map((q) => q.join(',')).join(' ');
 /** The floor of the site, the same for every fleet: floor, equipment and walls. Built once per site. */
@@ -60,7 +61,7 @@ export function MapThumbnail({ fleetLive, className }: { fleetLive: string; clas
   return (
     <svg
       role="img"
-      aria-label="Map"
+      aria-label={t.maps.map}
       viewBox={`${cy0 - w / 2} ${-(cx0 + h / 2)} ${w} ${h}`}
       preserveAspectRatio="xMidYMid meet"
       className={cx('block bg-[#f4f7f6]', className)}

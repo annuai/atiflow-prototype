@@ -22,6 +22,7 @@ import {
 import { robotTypeByLabel } from '@/data/robotTypes';
 import { DetailBreadcrumb, type Crumb } from './DetailBreadcrumb';
 import { StatusBadge } from './StatusBadge';
+import { t } from '../text';
 
 const TAB_ICONS = [Rows01, Settings02, GamingPad01, RefreshCcw03];
 const detailOf = (f: { detail?: unknown }) =>
@@ -45,7 +46,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
   const back = viaFleet ? fleetPath(fleet) : `/configurator/${kind.route}`;
   const trail: Crumb[] = viaFleet
     ? [
-        { label: 'Fleets', onPress: () => navigate(FLEETS_PATH) },
+        { label: t.detail.fleets, onPress: () => navigate(FLEETS_PATH) },
         { label: fleet, onPress: () => navigate(back) },
         { label: name },
       ]
@@ -60,16 +61,17 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
     deviceStore.getState().update(kind.id, name, draft);
     setEditing(false);
     setDraft({});
-    notify.success('Details saved', undefined, 'device-saved');
+    notify.success(t.detail.saved, undefined, 'device-saved');
   };
   const unassign = () => {
     deviceStore.getState().update(kind.id, name, { fleet: '' });
-    notify.success(`${name} unassigned`, `Removed from ${fleet}.`, 'device-unassigned');
+    const done = t.detail.unassigned(name, fleet);
+    notify.success(done.title, done.body, 'device-unassigned');
   };
   const remove = () => {
     deviceStore.getState().remove(kind.id, name);
     navigate(back, { replace: true });
-    notify.success(`${name} removed`, undefined, 'device-removed');
+    notify.success(t.detail.removed(name), undefined, 'device-removed');
   };
   const tabs = kind.detail.tabs;
   const robot: RobotRef = {
@@ -89,23 +91,23 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
           className="mr-auto"
           onPress={() => setConfirm(true)}
         >
-          Remove {kind.singular.toLowerCase()}
+          {t.detail.remove(kind.singular)}
         </Button>
       )}
       {f.editing ? (
         <>
           <Button color="secondary" size="md" isDisabled={f.busy} onPress={f.onCancel}>
-            Cancel
+            {t.detail.cancel}
           </Button>
           <Button color="primary" size="md" isLoading={f.busy} onPress={f.onSave}>
-            Save Changes
+            {t.detail.saveChanges}
           </Button>
         </>
       ) : (
         <>
           {fleet && (
             <Button color="secondary" size="md" onPress={unassign}>
-              Unassign from {fleet}
+              {t.detail.unassign(fleet)}
             </Button>
           )}
           <Button color="primary" size="md" isDisabled={f.disabled} onPress={f.onEdit}>
@@ -145,7 +147,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
             editing,
             busy: false,
             disabled: false,
-            editLabel: 'Edit Details',
+            editLabel: t.detail.edit,
             onEdit: () => setEditing(true),
             onSave: save,
             onCancel: () => {
@@ -169,8 +171,8 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
   );
   return (
     <>
-      <div className="flex shrink-0 flex-wrap items-end justify-between gap-4 px-1 sm:min-h-[140px] sm:flex-nowrap">
-        <div className="flex h-full min-w-0 flex-1 flex-col justify-between gap-6">
+      <div className="flex shrink-0 flex-wrap items-end justify-between gap-4 px-1 sm:min-h-[96px] sm:flex-nowrap">
+        <div className="flex h-full min-w-0 flex-1 flex-col justify-between gap-2">
           <DetailBreadcrumb trail={trail} />
           <div className="flex flex-wrap items-end gap-x-4 gap-y-2 sm:px-3">
             <h1 className="min-w-0 truncate text-4xl font-bold tracking-tight text-primary sm:text-5xl sm:leading-[60px]">
@@ -191,7 +193,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
             </div>
           </div>
         </div>
-        <div className="hidden h-[134px] w-[290px] shrink-0 items-center justify-center lg:flex">
+        <div className="hidden h-[96px] w-[200px] shrink-0 items-center justify-center lg:flex">
           {kind.illustration(device)}
         </div>
       </div>
@@ -201,11 +203,16 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
       >
         {tabs ? (
           <TabbedPanel
-            tabs={tabs.map((t, i) => ({ id: t, label: t, icon: TAB_ICONS[i] }))}
+            tabs={tabs.map((id, i) => ({
+              id,
+              label: t.tabs[id as keyof typeof t.tabs] ?? id,
+              icon: TAB_ICONS[i],
+            }))}
             selected={tab}
             onSelect={setTab}
-            label="Sections"
-            barClassName="mt-6 min-w-0"
+            label={t.detail.sections}
+            rootClassName="flex-1"
+            barClassName="min-w-0"
             listClassName="overflow-x-auto"
             panelClassName="flex flex-1 flex-col pt-6"
             contentClassName="flex flex-1 flex-col gap-6 sm:gap-8"
@@ -214,7 +221,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
           </TabbedPanel>
         ) : (
           <>
-            <div className="mt-6 h-px w-full bg-border-secondary" />
+            <div className="h-px w-full bg-border-secondary" />
             <div className="flex flex-1 flex-col pt-6">
               <div className="flex flex-1 flex-col gap-6 sm:gap-8">{content}</div>
             </div>
@@ -223,9 +230,9 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
         <ConfirmDialog
           isOpen={confirm}
           onOpenChange={setConfirm}
-          title={`Remove ${name}?`}
-          description={`This ${kind.singular.toLowerCase()} will be deleted from the configurator. You can register it again later.`}
-          confirmLabel="Remove"
+          title={t.detail.confirm.title(name)}
+          description={t.detail.confirm.description(kind.singular)}
+          confirmLabel={t.detail.confirm.action}
           onConfirm={remove}
         />
       </div>

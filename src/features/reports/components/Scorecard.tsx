@@ -1,6 +1,7 @@
 import { Card } from '@/components/data/Card';
 import { cx } from '@/utils/cx';
 import { METRICS, HEADLINE, formatMetric } from '../model/metrics';
+import { insights } from '../insightsCopy';
 import type { MetricId, Report } from '../model/types';
 import { BetterHint, MetricHint } from './DirectionBadge';
 import { Delta } from './Delta';
@@ -32,7 +33,7 @@ export function Scorecard({
               className="flex w-full min-w-0 flex-col gap-1 text-left outline-focus-ring focus-visible:outline-2"
               onClick={() => onPick(id)}
               aria-pressed={selected === id}
-              aria-label={`${m.label}: show the trend`}
+              aria-label={insights.reports.showTrend(m.label)}
             >
               <span className="flex items-center gap-0.5 text-sm text-tertiary">
                 {m.label}

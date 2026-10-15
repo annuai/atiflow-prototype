@@ -2,6 +2,7 @@ import { cx } from '@/utils/cx';
 import { Sparkline } from '../charts/Sparkline';
 import type { Kpi } from '../data/types';
 import { Card } from './Cards';
+import { t } from '../text';
 
 const TONE: Record<Kpi['tone'], { text: string; line: string }> = {
   neutral: { text: 'text-primary', line: '#14b8a6' },
@@ -35,8 +36,8 @@ export function KpiRow({ kpis, tv }: { kpis: Kpi[]; tv?: boolean }) {
             {k.trend === null
               ? ''
               : k.trend === 0
-                ? 'No change in 5 min'
-                : `${k.trend > 0 ? '▲' : '▼'} ${Math.abs(k.trend)}${k.unit ?? ''} in 5 min`}
+                ? t.kpi.noChange
+                : t.kpi.change(k.trend > 0, `${Math.abs(k.trend)}${k.unit ?? ''}`)}
           </p>
         </Card>
       ))}

@@ -6,6 +6,7 @@ import { userDirectory } from '@/features/auth';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { passwordError } from '../model/validate';
+import { localized } from '@/i18n';
 
 function Form({
   username,
@@ -35,7 +36,7 @@ function Form({
       icon={Key01}
       title={copy.reset.title}
       subtitle={copy.reset.subtitle(name)}
-      secondary={{ label: 'Cancel', onPress: () => onOpenChange(false) }}
+      secondary={{ label: localized('common').cancel, onPress: () => onOpenChange(false) }}
       primary={{ label: copy.reset.action }}
       onSubmit={submit}
     >
@@ -46,7 +47,7 @@ function Form({
             label: copy.reset.label,
             control: 'secret',
             required: true,
-            placeholder: 'At least 4 characters',
+            placeholder: localized('misc').userForm.passwordPh,
           }}
           value={pw}
           onChange={(v) => {

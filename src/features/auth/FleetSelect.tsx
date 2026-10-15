@@ -1,6 +1,9 @@
 import { Select } from '@/components/base/select/select';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { useVisibleFleets } from './useFleetScope';
+import { localized } from '@/i18n';
+
+const misc = localized('misc');
 
 export interface FleetOption {
   id: string;
@@ -15,10 +18,10 @@ export function FleetSelect({
   value,
   onChange,
   includeAll = true,
-  allLabel = 'All fleets',
+  allLabel = misc.fleetSelect.all,
   className,
   size = 'sm',
-  ariaLabel = 'Fleet',
+  ariaLabel = misc.fleetSelect.fleet,
 }: {
   value: string;
   onChange(id: string): void;

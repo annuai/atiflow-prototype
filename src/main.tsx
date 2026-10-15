@@ -4,6 +4,7 @@ import './ui/tokens.css';
 import './ui/app.css';
 import { BootFailure } from './shell/BootFailure';
 import { installGlobalErrorHandlers, loadConfig, log, observeWebVitals } from './platform';
+import { chooseLocale, setLocale } from './i18n';
 import { createServices, hydrateServices, setServices } from './services';
 
 /**
@@ -25,6 +26,8 @@ async function start() {
   observeWebVitals();
   const services = setServices(createServices(config));
   const { failed } = await hydrateServices(services);
+  // the language before anything is drawn: this device's choice, else the site default, else the browser's
+  setLocale(chooseLocale({ device: services.device.get('locale'), site: services.settings.read().general.language }));
   if (failed.length) {
     root.render(<BootFailure failed={failed} onRetry={() => void start()} />);
     return;

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { persistence, retryAll } from '@/data/persist';
 import { notify } from '@/ui/toast';
+import { copy } from './copy';
 
 /**
  * Tells the person when something they changed could not be saved (the persisters in `data/persist` gave up after their retries), and tries again when they come back to the tab.
@@ -13,11 +14,7 @@ export function PersistenceNotice() {
       for (const [name, why] of Object.entries(failed))
         if (!seen.has(name)) {
           seen.add(name);
-          notify.error(
-            `Your changes to ${name} were not saved`,
-            `${why} They stay on screen and will be saved when it works again.`,
-            `persist-${name}`,
-          );
+          notify.error(copy.notSavedTitle(name), copy.notSavedText(why), `persist-${name}`);
         }
       for (const name of [...seen]) if (!(name in failed)) seen.delete(name);
     });

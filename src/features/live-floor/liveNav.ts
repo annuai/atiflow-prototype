@@ -12,6 +12,10 @@ import { useActionCenterRunning, useCalls } from '@/features/action-center';
 import type { NavModel, SearchHit } from '@/shell/types';
 
 import { ACTION_CENTER_PATH, DASHBOARD_PATH, LIVE_FLOOR_PATH, REPORTS_PATH, SUPERVISOR_SETTINGS_PATH } from './paths';
+import { localized } from '@/i18n';
+import { copy as names2 } from '@/ui/copy';
+
+const names = localized('nav');
 export { ACTION_CENTER_PATH, DASHBOARD_PATH, LIVE_FLOOR_PATH, REPORTS_PATH, SUPERVISOR_SETTINGS_PATH };
 
 /** Sidebar content of the supervisor area: Dashboard and Live Floor are pages (the URL decides which one is highlighted); the fleet items filter the Live Floor. */
@@ -36,25 +40,25 @@ export function useLiveNav(): NavModel {
   const groups = [
     {
       id: 'ops',
-      label: 'Operations',
+      label: names.groups.operations,
       items: [
         dash && {
           id: 'dashboard',
-          label: 'Dashboard',
+          label: names.features['supervisor.dashboard'],
           icon: BarChartSquare02,
           active: path === DASHBOARD_PATH,
           onSelect: () => navigate(DASHBOARD_PATH),
         },
         can('supervisor.reports') && {
           id: 'reports',
-          label: 'Reports',
+          label: names.features['supervisor.reports'],
           icon: File05,
           active: path === REPORTS_PATH,
           onSelect: () => navigate(REPORTS_PATH),
         },
         can('supervisor.action-center') && {
           id: 'action-center',
-          label: 'Action Center',
+          label: names.features['supervisor.action-center'],
           icon: LifeBuoy01,
           badge: openCalls || undefined,
           active: path === ACTION_CENTER_PATH,
@@ -62,7 +66,7 @@ export function useLiveNav(): NavModel {
         },
         live && {
           id: 'live',
-          label: 'Live Floor',
+          label: names.features['supervisor.live-floor'],
           icon: master,
           active: onLive && navSel === 'live',
           onSelect: pick('live', 'all'),
@@ -73,11 +77,11 @@ export function useLiveNav(): NavModel {
       ? [
           {
             id: 'fleets',
-            label: 'Fleets',
+            label: names.groups.fleets,
             items: [
               {
                 id: 'all',
-                label: 'All fleets',
+                label: names.items.allFleets,
                 icon: fleetI,
                 active: onLive && navSel === 'fleet:all',
                 onSelect: pick('fleet:all', 'all'),
@@ -101,7 +105,7 @@ export function useLiveNav(): NavModel {
     footerItems: [
       {
         id: 'notif',
-        label: 'Notifications',
+        label: names.items.notifications,
         icon: bell,
         badge: unread || undefined,
         active: path === '/supervisor/notifications',
@@ -111,7 +115,7 @@ export function useLiveNav(): NavModel {
         ? [
             {
               id: 'settings',
-              label: 'Settings',
+              label: names.features['supervisor.settings'],
               icon: gear,
               active: path.startsWith(SUPERVISOR_SETTINGS_PATH),
               onSelect: () => navigate(SUPERVISOR_SETTINGS_PATH),
@@ -131,9 +135,9 @@ export function liveHits(q: string): SearchHit[] {
       .filter((r) => r.id.toLowerCase().includes(ql))
       .slice(0, 5)
       .map((r) => ({
-        kind: 'Robot',
+        kind: names.hits.robot,
         title: r.id,
-        sub: r.state,
+        sub: names2.states[r.state],
         ...(handle.engine
           ? { go: () => handle.engine?.focusRobot(r.id) }
           : { to: LIVE_FLOOR_PATH, state: { locate: r.id } }),
@@ -142,7 +146,7 @@ export function liveHits(q: string): SearchHit[] {
       .filter((r) => r.task && r.task.id.toLowerCase().includes(ql))
       .slice(0, 4)
       .map((r) => ({
-        kind: 'Trip',
+        kind: names.hits.trip,
         title: r.task!.id,
         sub: `${r.id} → ${r.task!.to}`,
         ...(handle.engine
@@ -152,18 +156,18 @@ export function liveHits(q: string): SearchHit[] {
     ...(site?.zones
       .filter((z) => z.active && z.name.toLowerCase().includes(ql))
       .map((z) => ({
-        kind: 'Zone',
+        kind: names.hits.zone,
         title: z.name,
-        sub: z.kind,
+        sub: names2.zoneKinds[z.kind as keyof typeof names2.zoneKinds] ?? z.kind,
         ...(handle.engine ? { go: () => handle.engine?.focusZone(z.id) } : { to: LIVE_FLOOR_PATH }),
       })) ?? []),
     ...(nav?.stations
       .filter((s) => (s.id + ' ' + s.name).toLowerCase().includes(ql))
       .slice(0, 6)
       .map((s) => ({
-        kind: 'Station',
+        kind: names.hits.station,
         title: `${s.id} · ${s.name}`,
-        sub: s.type,
+        sub: names2.stationTypes[s.type],
         ...(handle.engine
           ? { go: () => store.getState().selectStation(s.id) }
           : { to: LIVE_FLOOR_PATH, state: { locate: s.id } }),

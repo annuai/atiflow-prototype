@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { TabbedPanel } from '@/components/data/TabbedPanel';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { Bell01, Home02 } from '@untitledui/icons';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Bell01, Globe01, Home02 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
+import { LanguageSelect } from '@/components/data/LanguageSelect';
 import { Select } from '@/components/base/select/select';
 import { Toggle } from '@/components/base/toggle/toggle';
 import { SettingsRow } from '@/components/data/SettingsRow';
@@ -10,6 +11,7 @@ import { WORKSPACES, can } from '@/features/access';
 import { useVisibleFleets } from '@/features/auth';
 import { useAuth } from '@/features/auth';
 import { SUPERVISOR_SETTINGS_PATH } from '@/features/live-floor';
+import { OPERATOR_SETTINGS_PATH } from '@/features/action-center';
 import { notify } from '@/ui/toast';
 import { copy } from './copy';
 import { preferencesStore, useMyPreferences } from './data/store';
@@ -22,11 +24,17 @@ import {
 } from './model/defaults';
 import type { Preferences } from './model/types';
 
-const TABS = [
+const ALL_TABS = [
   { id: 'alerts', icon: Bell01 },
   { id: 'start', icon: Home02 },
+  { id: 'language', icon: Globe01 },
 ] as const;
-type TabId = (typeof TABS)[number]['id'];
+type TabId = (typeof ALL_TABS)[number]['id'];
+/** Supervisors set alerts, start page and language; operators have only the language. */
+const TABS_OF: Record<'supervisor' | 'operator', TabId[]> = {
+  supervisor: ['alerts', 'start', 'language'],
+  operator: ['language'],
+};
 const opts = (values: number[], label: (n: number) => string) =>
   values.map((v) => ({ id: String(v), label: label(v) }));
 
@@ -36,6 +44,9 @@ const opts = (values: number[], label: (n: number) => string) =>
  */
 export function PreferencesPage() {
   const { tab = '' } = useParams();
+  const workspace = useLocation().pathname.startsWith('/operator') ? 'operator' : 'supervisor';
+  const base = workspace === 'operator' ? OPERATOR_SETTINGS_PATH : SUPERVISOR_SETTINGS_PATH;
+  const TABS = ALL_TABS.filter((t) => TABS_OF[workspace].includes(t.id));
   const navigate = useNavigate();
   const user = useAuth((s) => s.user)!;
   const saved = useMyPreferences();
@@ -48,7 +59,7 @@ export function PreferencesPage() {
     () => WORKSPACES.find((w) => w.id === 'supervisor')!.features.filter((f) => f.landing && can(user, f.id)),
     [user],
   );
-  if (!active) return <Navigate to={`${SUPERVISOR_SETTINGS_PATH}/${TABS[0].id}`} replace />;
+  if (!active) return <Navigate to={`${base}/${TABS[0].id}`} replace />;
   const setAlerts = (patch: Partial<Preferences['alerts']>) => {
     setD({ ...d, alerts: { ...d.alerts, ...patch } });
     setErrors({});
@@ -57,7 +68,7 @@ export function PreferencesPage() {
     const e = validatePreferences(d);
     setErrors(e);
     if (Object.keys(e).length) {
-      navigate(`${SUPERVISOR_SETTINGS_PATH}/alerts`);
+      navigate(`${base}/alerts`);
       return;
     }
     preferencesStore.getState().save(user.username, d);
@@ -93,7 +104,7 @@ export function PreferencesPage() {
           <TabbedPanel
             tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id].label, icon: t.icon }))}
             selected={active.id}
-            onSelect={(k) => navigate(`${SUPERVISOR_SETTINGS_PATH}/${k as TabId}`)}
+            onSelect={(k) => navigate(`${base}/${k as TabId}`)}
             label={copy.title}
           >
             <div className="flex max-w-4xl flex-col">
@@ -150,6 +161,18 @@ export function PreferencesPage() {
                       >
                         {(i) => <Select.Item {...i} />}
                       </Select>
+                    </SettingsRow>
+                  </>
+                )}
+                {active.id === 'language' && (
+                  <>
+                    <SettingsRow label={copy.language.label} hint={copy.language.hint}>
+                      <LanguageSelect
+                        aria-label={copy.language.label}
+                        value={d.language}
+                        onChange={(language) => setD({ ...d, language })}
+                        extra={{ id: 'site', label: copy.language.siteDefault }}
+                      />
                     </SettingsRow>
                   </>
                 )}

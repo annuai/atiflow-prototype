@@ -1,3 +1,4 @@
+import { ins } from '../labels';
 import type { ConfigCategory, ConfigParam, ConfigSchema, ConfigValue, ConfigValues } from './types';
 
 /** The parameters of a category grouped under their headings, in schema order (parameters without a group come first, under no heading). */
@@ -17,12 +18,12 @@ export function paramError(p: ConfigParam, raw: ConfigValue): string {
   if (p.kind === 'number') {
     const text = String(raw).trim();
     const n = Number(text);
-    if (!text || !Number.isFinite(n)) return 'Enter a number.';
-    if (p.integer && !Number.isInteger(n)) return 'Enter a whole number.';
-    if (p.min !== undefined && n < p.min) return `Must be ${p.min}${p.unit ? ' ' + p.unit : ''} or more.`;
-    if (p.max !== undefined && n > p.max) return `Must be ${p.max}${p.unit ? ' ' + p.unit : ''} or less.`;
+    if (!text || !Number.isFinite(n)) return ins.errors.number;
+    if (p.integer && !Number.isInteger(n)) return ins.errors.whole;
+    if (p.min !== undefined && n < p.min) return ins.errors.min(`${p.min}${p.unit ? ' ' + p.unit : ''}`);
+    if (p.max !== undefined && n > p.max) return ins.errors.max(`${p.max}${p.unit ? ' ' + p.unit : ''}`);
   }
-  if (p.kind === 'choice' && !p.options.includes(String(raw))) return 'Choose one of the options.';
+  if (p.kind === 'choice' && !p.options.includes(String(raw))) return ins.errors.choose;
   return '';
 }
 

@@ -1,6 +1,8 @@
 /* Design tokens from Figma "AtiFlow-v4" (node 837:5241). Do not hard-code these elsewhere. */
 :root {
-  --font: 'Blinker', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font:
+    'Blinker', 'Noto Sans Devanagari', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Noto Sans Tamil', ui-sans-serif,
+    system-ui, -apple-system, 'Segoe UI', sans-serif;
   --text-sm: 14px;
   --lh-sm: 20px;
   --text-xs: 12px;

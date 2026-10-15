@@ -14,6 +14,8 @@ interface Props {
   onSelect(id: string): void;
   /** the accessible name of the tab bar */
   label: string;
+  /** classes of the whole tabbed area (default: fills the page card and may shrink below its content, so the card body inside scrolls; a card that scrolls AS A WHOLE must pass `flex-1` without `min-h-0`, otherwise the content overflows the area and the card's bottom padding is lost) */
+  rootClassName?: string;
   /** space around the tab bar (default: the page card's) */
   barClassName?: string;
   /** extra classes of the tab list itself (for example `overflow-x-auto` when there are many tabs) */
@@ -37,6 +39,7 @@ export function TabbedPanel({
   selected,
   onSelect,
   label,
+  rootClassName = 'min-h-0 flex-1',
   barClassName = 'min-w-0 flex-none px-5 pt-6',
   listClassName,
   panelClassName = 'md-body',
@@ -45,7 +48,7 @@ export function TabbedPanel({
   children,
 }: Props) {
   return (
-    <Tabs selectedKey={selected} onSelectionChange={(k) => onSelect(String(k))} className="min-h-0 flex-1">
+    <Tabs selectedKey={selected} onSelectionChange={(k) => onSelect(String(k))} className={rootClassName}>
       <div className={barClassName}>
         <Tabs.List type="underline" size="md" fullWidth className={listClassName} aria-label={label} items={tabs} />
       </div>

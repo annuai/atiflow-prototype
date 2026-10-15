@@ -1,3 +1,4 @@
+import { text } from '../text';
 import { useEffect, useRef, useState } from 'react';
 import type { Vec2 } from '@/core/types';
 import { pointAlong } from '@/features/workflow-builder';
@@ -58,12 +59,12 @@ export function useTripSimulation() {
     reset();
     setState({ status: 'running', step: '', progress: 0 });
     try {
-      say(`${robot}: starting at ${from}`, 2);
+      say(text.simSay.start(robot, from), 2);
       simBus.emit({ type: 'robot', p: plan.pts[0], heading: pointAlong(plan.pts, 0).heading });
       await sleep(600);
       alive();
       simBus.emit({ type: 'route', cur: plan.pts, done: [] });
-      say(`${robot}: driving to ${to}, ${Math.round(plan.len)} m`);
+      say(text.simSay.drive(robot, to, Math.round(plan.len)));
       const dur = Math.min(6000, 1200 + plan.len * 45),
         reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
       await new Promise<void>((res, rej) => {
@@ -82,7 +83,7 @@ export function useTripSimulation() {
         requestAnimationFrame(step);
       });
       simBus.emit({ type: 'route', cur: null, done: [plan.pts] });
-      say(`${robot}: arrived at ${to}`, 100);
+      say(text.simSay.arrive(robot, to), 100);
       await sleep(500);
       alive();
       setState({ status: 'done', step: '', progress: 100 });

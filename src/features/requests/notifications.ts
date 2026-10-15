@@ -1,5 +1,6 @@
 import { type NewNotification, type NotificationSource } from '@/features/notifications';
 import { type PublicUser } from '@/features/auth';
+import { t } from './text';
 import { canApprove, currentStep } from './model/rules';
 import { requestsStore } from './model/store';
 import type { StatusEvent, TripRequest } from './model/types';
@@ -8,35 +9,24 @@ import type { StatusEvent, TripRequest } from './model/types';
 function updateText(r: TripRequest, e: StatusEvent): { title: string; body: string; level: NewNotification['level'] } {
   const what = r.qty > 0 ? `${r.name} ×${r.qty}` : r.name;
   const ref = r.tripId ? `${r.tripId} · ${r.id}` : r.id;
+  const n = t.requests.notify;
   switch (e.status) {
     case 'approved':
       return e.by === 'Fleet'
-        ? { title: `${what} is waiting for a robot again`, body: `${ref} · ${e.note ?? ''}`, level: 'info' }
-        : {
-            title: `${what} was approved`,
-            body: `${ref}${e.by && r.needsApproval ? ` · by ${e.by}` : ''} · waiting for a robot`,
-            level: 'info',
-          };
+        ? { ...n.waitingAgain(what, ref, e.note ?? ''), level: 'info' }
+        : { ...n.approved(what, ref, e.by && r.needsApproval ? e.by : ''), level: 'info' };
     case 'rejected':
-      return {
-        title: `${what} was rejected`,
-        body: `${ref}${e.by ? ` · by ${e.by}` : ''}${e.note ? ` · ${e.note}` : ''}`,
-        level: 'warn',
-      };
+      return { ...n.rejected(what, ref, e.by ?? '', e.note ?? ''), level: 'warn' };
     case 'ongoing':
-      return { title: `${what} is on its way`, body: `${ref}${r.robotId ? ` · ${r.robotId}` : ''}`, level: 'info' };
+      return { ...n.ongoing(what, ref, r.robotId ?? ''), level: 'info' };
     case 'completed':
-      return { title: `${what} was delivered`, body: `${ref}`, level: 'success' };
+      return { ...n.completed(what, ref), level: 'success' };
     case 'cancelled':
-      return { title: `${what} was cancelled`, body: r.id, level: 'info' };
+      return { ...n.cancelled(what, r.id), level: 'info' };
     case 'failed':
-      return {
-        title: `${what} could not be delivered`,
-        body: `${ref}${e.note ? ` · ${e.note}` : ''}`,
-        level: 'critical',
-      };
+      return { ...n.failed(what, ref, e.note ?? ''), level: 'critical' };
     case 'pending':
-      return { title: `${what}: ${e.note ?? 'an approval step is done'}`, body: ref, level: 'info' };
+      return { ...n.stepDone(what, ref, e.note ?? ''), level: 'info' };
     default:
       return { title: what, body: r.id, level: 'info' };
   }
@@ -49,13 +39,13 @@ export function requestNotifications(requests: TripRequest[], user: PublicUser):
     if (r.requestedBy === user.username)
       r.history.forEach((e, i) => {
         if (i === 0) return;
-        const t = updateText(r, e); // the first event is the request itself
+        const u = updateText(r, e); // the first event is the request itself
         out.push({
           id: `req:${r.id}:${i}`,
           kind: 'trip',
-          level: t.level,
-          title: t.title,
-          body: t.body,
+          level: u.level,
+          title: u.title,
+          body: u.body,
           at: e.at,
           actions: [{ kind: 'requests' }],
         });
@@ -67,8 +57,14 @@ export function requestNotifications(requests: TripRequest[], user: PublicUser):
         id: `appr:${r.id}:${n}`,
         kind: 'approval',
         level: 'warn',
-        title: `Approval needed: ${r.qty > 0 ? `${r.name} ×${r.qty}` : r.name}`,
-        body: `${r.tripId} · ${r.id}${r.approvals.length > 1 ? ` (${n} of ${r.approvals.length})` : ''} · requested by ${r.requestedByName}`,
+        ...t.requests.notify.approvalNeeded(
+          r.qty > 0 ? `${r.name} ×${r.qty}` : r.name,
+          r.tripId,
+          r.id,
+          n,
+          r.approvals.length,
+          r.requestedByName,
+        ),
         at: r.history[r.history.length - 1]?.at ?? r.createdAt,
         actions: [{ kind: 'approvals' }],
       });

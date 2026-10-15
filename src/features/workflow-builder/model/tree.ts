@@ -1,5 +1,6 @@
 import { NODE_TYPES } from './registry';
 import type { ListKey, NodeTypeId, WfNode } from './types';
+import { copy } from '../copy';
 
 export interface Located {
   list: WfNode[];
@@ -38,19 +39,11 @@ export function clampMain(nodes: WfNode[], i: number) {
 
 /** Placement rules shared by click-to-add, drag-to-add and reorder. Returns a user-facing problem or null. */
 export function placementProblem(nodes: WfNode[], t: NodeTypeId | 'aiot', key: ListKey): Problem | null {
-  if (t === 'aiot')
-    return {
-      title: 'AIoT has no node card in the Figma file yet',
-      body: 'Only the palette tile is designed, so it can’t be added to the canvas.',
-    };
-  if (t === 'end' && key !== 'main') return { title: 'End nodes go at the end of the main flow.', body: '' };
-  if (t === 'logic' && key !== 'main')
-    return { title: 'If Logic can’t be nested inside a branch.', body: 'Drop it on the main flow instead.' };
+  if (t === 'aiot') return { title: copy.problems.aiotTitle, body: copy.problems.aiotBody };
+  if (t === 'end' && key !== 'main') return { title: copy.problems.endMain, body: '' };
+  if (t === 'logic' && key !== 'main') return { title: copy.problems.noNestTitle, body: copy.problems.noNestBody };
   if (t === 'end' && nodes.some((n) => n.t === 'end'))
-    return {
-      title: 'This workflow already ends with an End node.',
-      body: 'Remove the current End node first if you want to move it.',
-    };
+    return { title: copy.problems.endExistsTitle, body: copy.problems.endExistsBody };
   return null;
 }
 
@@ -82,8 +75,8 @@ export function removeNode(nodes: WfNode[], id: string): EditResult {
     return {
       nodes,
       problem: {
-        title: `The ${NODE_TYPES[loc.node.t].label} can't be removed.`,
-        body: 'Every workflow starts with a Start node and stops at an End node.',
+        title: copy.problems.fixedTitle(NODE_TYPES[loc.node.t].label),
+        body: copy.problems.fixedBody,
       },
     };
   const next = clone(nodes);

@@ -5,6 +5,7 @@ import { useResource } from '@/hooks/use-resource';
 import { CALIBRATIONS } from '../model/calibration';
 import type { CalibrationKind, CalibrationStatus, RobotRef } from '../model/types';
 import { copy } from '../copy';
+import { ins } from '../labels';
 
 /** The calibration status of one robot and the action to run one. While a run is under way its row shows as running (the service resolves when it is done). */
 export function useCalibration(robot: RobotRef) {
@@ -23,7 +24,7 @@ export function useCalibration(robot: RobotRef) {
         const done = await ops.calibration.run(robot, kind);
         list.set((list.data ?? []).map((s) => (s.kind === kind ? done : s)));
         notify.success(
-          copy.calibration.done(CALIBRATIONS.find((c) => c.kind === kind)?.title ?? 'Calibration'),
+          copy.calibration.done(CALIBRATIONS.find((c) => c.kind === kind)?.title ?? ins.calibrations.fallbackTitle),
           undefined,
           'robot-calibration',
         );

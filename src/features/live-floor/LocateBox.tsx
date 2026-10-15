@@ -6,6 +6,7 @@ import { useApp } from '@/core/store';
 import { notify } from '@/ui/toast';
 import { cx } from '@/utils/cx';
 import { findTargets, locateTarget, type LocateHit } from '@/ui/locate';
+import { copy } from '@/ui/copy';
 
 /** Bottom search box of the Live Floor: type a robot or station id, pick (or press Enter) and the camera flies there and selects it. */
 export function LocateBox({ legendClosed, onOpenLegend }: { legendClosed: boolean; onOpenLegend(): void }) {
@@ -23,12 +24,7 @@ export function LocateBox({ legendClosed, onOpenLegend }: { legendClosed: boolea
   const go = () => {
     const h = hits[Math.min(active, hits.length - 1)];
     if (h) locate(h);
-    else if (q.trim())
-      notify.warning(
-        `No robot or station matches “${q.trim()}”`,
-        'Try an id such as AMR-007 or STA-101.',
-        'locate-none',
-      );
+    else if (q.trim()) notify.warning(copy.locate.noMatch(q.trim()), copy.locate.tryId, 'locate-none');
   };
   return (
     <div className="cmdrow">
@@ -52,7 +48,7 @@ export function LocateBox({ legendClosed, onOpenLegend }: { legendClosed: boolea
         {open && hits.length > 0 && (
           <ul
             role="listbox"
-            aria-label="Matches"
+            aria-label={copy.locate.matches}
             className="absolute right-0 bottom-full left-0 z-20 mb-2 overflow-hidden rounded-xl border border-secondary bg-primary shadow-lg"
           >
             {hits.map((h, i) => (
@@ -84,8 +80,8 @@ export function LocateBox({ legendClosed, onOpenLegend }: { legendClosed: boolea
           icon={SearchLg}
           className="flex-1"
           wrapperClassName="shadow-none ring-0 bg-transparent"
-          placeholder="Search Robots or Stations by ID"
-          aria-label="Search Robots or Stations by ID"
+          placeholder={copy.locate.placeholder}
+          aria-label={copy.locate.placeholder}
           value={q}
           onChange={(v) => {
             setQ(v);
@@ -95,12 +91,12 @@ export function LocateBox({ legendClosed, onOpenLegend }: { legendClosed: boolea
           onFocus={() => setOpen(true)}
           onBlur={() => setOpen(false)}
         />
-        <Button size="sm" color="primary" iconLeading={Send01} aria-label="Locate" onPress={go} />
+        <Button size="sm" color="primary" iconLeading={Send01} aria-label={copy.locate.locate} onPress={go} />
       </div>
       {legendClosed && (
         <div className="float mapkey">
           <Button size="md" color="tertiary" iconLeading={Map01} onPress={onOpenLegend}>
-            Map key
+            {copy.locate.mapKey}
           </Button>
         </div>
       )}

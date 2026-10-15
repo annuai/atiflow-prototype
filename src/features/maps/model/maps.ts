@@ -3,6 +3,7 @@ import { registerStoreInit } from '@/data/storeInit';
 import { createPersister } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
+import { t } from '../text';
 import type { FleetMap } from './types';
 
 const NOW = Date.now(),
@@ -53,9 +54,9 @@ export const mapsStore = createStore<{ maps: FleetMap[] }>(() => ({ maps: withNa
 /** The text of a refused map name ('' = fine): not empty, not used by another map (ignoring case). */
 export const mapNameError = (id: string, name: string): string => {
   const n = name.trim();
-  if (!n) return 'Enter a name for the map.';
+  if (!n) return t.maps.nameEmpty;
   return mapsStore.getState().maps.some((m) => m.id !== id && m.name.toLowerCase() === n.toLowerCase())
-    ? 'Another map already has this name.'
+    ? t.maps.nameTaken
     : '';
 };
 /** Rename a map; returns an error text, or '' when it was saved. */

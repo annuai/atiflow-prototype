@@ -8,6 +8,7 @@ import { Label } from '@/components/base/input/label';
 import { useDevices, KINDS, nameOf } from '@/features/devices';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
+import { t as text } from '../text';
 
 /** Search the registered robots and pick one; the chosen robot is shown as a card (picture, name, connection state). */
 export function RobotPicker({
@@ -57,7 +58,7 @@ export function RobotPicker({
             isInvalid={!!error}
           />
           {robots.length === 0 ? (
-            <EmptyState icon={Cube01} title="No robots yet" subtext={t.noRobots} size="sm" />
+            <EmptyState icon={Cube01} title={text.maps.noRobotsTitle} subtext={t.noRobots} size="sm" />
           ) : (
             <ul className="max-h-40 overflow-auto rounded-xl border border-secondary" aria-label={t.robot}>
               {matches.length === 0 && (

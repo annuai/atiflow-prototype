@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle } from '@untitledui/icons';
 import { Input } from '@/components/base/input/input';
 import { ModalShell } from '@/components/modal/ModalShell';
+import { localized } from '@/i18n';
 
 interface Props {
   isOpen: boolean;
@@ -46,7 +47,7 @@ export function TypeToConfirmDialog({
       icon={AlertTriangle}
       title={title}
       subtitle={description}
-      secondary={{ label: 'Cancel', onPress: () => close(false) }}
+      secondary={{ label: localized('common').cancel, onPress: () => close(false) }}
       primary={{ label: confirmLabel, destructive: true, isDisabled: !ok, onPress: go }}
       onSubmit={go}
     >

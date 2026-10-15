@@ -19,6 +19,7 @@ import { NeedsAttentionCard } from './components/NeedsAttentionCard';
 import { StatusStrip } from './components/StatusStrip';
 import { TripsCard } from './components/TripsCard';
 import { copy } from './copy';
+import { t } from './text';
 import { firstName, greeting } from './data/greeting';
 import { useDashboard } from './data/source';
 import { TvScreen } from './tv/TvScreen';
@@ -57,7 +58,7 @@ export function DashboardPage() {
         <div className="title-block">
           <div>
             <h1>
-              {greeting(hour)} {user ? firstName(user.name) : 'there'}
+              {greeting(hour)} {user ? firstName(user.name) : t.page.there}
             </h1>
             <p>{copy.subtitle}</p>
           </div>
@@ -104,7 +105,7 @@ export function DashboardPage() {
           </div>
         </div>
       </div>
-      {tv && snap && <TvScreen snap={snap} siteName={site?.name ?? 'Live floor'} onExit={exitTv} />}
+      {tv && snap && <TvScreen snap={snap} siteName={site?.name ?? t.page.floorFallback} onExit={exitTv} />}
     </>
   );
 }

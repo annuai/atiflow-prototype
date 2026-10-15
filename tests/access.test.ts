@@ -58,6 +58,7 @@ describe('the access catalog: what exists to be permitted', () => {
       'Book trip',
       'History',
       'Action Center',
+      'Settings',
     ]);
     expect(new Set(ALL_PERMISSIONS).size).toBe(ALL_PERMISSIONS.length);
   });
@@ -71,10 +72,10 @@ describe('the access catalog: what exists to be permitted', () => {
 });
 
 describe('roles are presets; a user can be customised on top', () => {
-  it('configurator = the seven configurator features and nothing else; supervisor = the four; operator = the five; and Meera (a configurator with everything ticked) holds every permission', () => {
+  it('configurator = the seven configurator features and nothing else; supervisor = the four; operator = the six; and Meera (a configurator with everything ticked) holds every permission', () => {
     expect([...effective(kavin)].sort()).toEqual(WORKSPACES[0].features.map((f) => f.id).sort());
     expect([...effective(arjun)].sort()).toEqual(WORKSPACES[1].features.map((f) => f.id).sort());
-    expect(presetOf('operator')).toHaveLength(5);
+    expect(presetOf('operator')).toHaveLength(6);
     expect([...effective(meera)].sort()).toEqual([...ALL_PERMISSIONS].sort());
     expect(isCustomised(meera)).toBe(true);
   });
@@ -310,7 +311,9 @@ describe("a saved directory gets a seed user's new starting access once", () => 
         role: 'configurator' as const,
         title: 'T',
         custom: {
-          add: ALL_PERMISSIONS.filter((p) => !p.startsWith('configurator.') && p !== 'supervisor.settings'),
+          add: ALL_PERMISSIONS.filter(
+            (p) => !p.startsWith('configurator.') && p !== 'supervisor.settings' && p !== 'operator.settings',
+          ),
           remove: [],
         },
       },
@@ -327,7 +330,7 @@ describe("a saved directory gets a seed user's new starting access once", () => 
     expect(effective(out[0]).has('supervisor.settings')).toBe(true);
     expect(out[1]).toBe(saved[1]);
     expect(out.map((u) => u.username)).toEqual(['meera', 'kavin', 'rohan', 'sneha', 'vikram']);
-    expect(applySeedRevision(saved, 6)).toBe(saved);
+    expect(applySeedRevision(saved, 7)).toBe(saved);
   });
 });
 

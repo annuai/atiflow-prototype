@@ -1,19 +1,32 @@
 import type { RobotTelemetry } from '@/core/types';
+import { localized } from '@/i18n';
 import type { Candidate, Thresholds } from './types';
 
 /** Pure: what is asking for help right now. Nothing here knows about React, storage or the simulator: it reads telemetry (the same for a real fleet). */
 export const RULE_CODES = ['FORBIDDEN_ZONE', 'FLEET_BOUNDARY', 'OFF_LANE', 'WRONG_WAY', 'TRAFFIC_VIOLATION'];
 
+const D = () => localized('insights').actionCenter.detect;
+/** Getters, so the text follows the language in use when a call is made. */
 export const SUGGESTION = {
-  blocked:
-    'Walk to the robot, check the path ahead and remove what is in its way. It continues by itself once the way is clear.',
-  fault:
-    'Read the error on the robot, reset it and watch it for a moment. If the error comes back, take the robot out of service.',
-  deadlock: 'These robots are waiting for each other. Move one of them out of the way by hand so the others can pass.',
-  stuck: 'The robot is waiting for the road ahead. See who it waits for; if something physical holds it up, clear it.',
-  battery: 'Send the robot to a charger, or swap it for a charged one before it stops on the route.',
-  rule: 'The robot left the path it is allowed on. Stop it and guide it back to its lane.',
-} as const;
+  get blocked() {
+    return localized('insights').actionCenter.suggestion.blocked;
+  },
+  get fault() {
+    return localized('insights').actionCenter.suggestion.fault;
+  },
+  get deadlock() {
+    return localized('insights').actionCenter.suggestion.deadlock;
+  },
+  get stuck() {
+    return localized('insights').actionCenter.suggestion.stuck;
+  },
+  get battery() {
+    return localized('insights').actionCenter.suggestion.battery;
+  },
+  get rule() {
+    return localized('insights').actionCenter.suggestion.rule;
+  },
+};
 
 /** Strongly connected groups of 2+ waiting robots that wait for each other (Tarjan). Each group is one deadlock ring. */
 export function deadlockRings(robots: RobotTelemetry[]): string[][] {
@@ -54,7 +67,7 @@ export function deadlockRings(robots: RobotTelemetry[]): string[][] {
 
 const placeOf = (r: RobotTelemetry): string | undefined =>
   r.atStation ?? r.traffic?.zoneId ?? r.task?.next ?? undefined;
-const mins = (s: number) => (s < 60 ? `${Math.round(s)} s` : `${Math.floor(s / 60)} min`);
+const mins = (s: number) => (s < 60 ? D().sec(Math.round(s)) : D().min(Math.floor(s / 60)));
 
 /** `waitedS(id)` = how long the robot has been waiting without moving on (the engine tracks it). */
 export function detect(robots: RobotTelemetry[], waitedS: (id: string) => number, th: Thresholds): Candidate[] {
@@ -71,8 +84,8 @@ export function detect(robots: RobotTelemetry[], waitedS: (id: string) => number
       robots: ring,
       fleetId: first.fleetId,
       place: placeOf(first),
-      title: `${ring.length} robots are waiting for each other`,
-      reason: `${ring.join(', ')} each wait for the next one: none of them can move.`,
+      title: D().deadlockTitle(ring.length),
+      reason: D().deadlockReason(ring.join(', ')),
       suggestion: SUGGESTION.deadlock,
     });
   }
@@ -84,8 +97,8 @@ export function detect(robots: RobotTelemetry[], waitedS: (id: string) => number
         key: `blocked:${r.id}`,
         kind: 'blocked',
         severity: 'critical',
-        title: `${r.id} is blocked`,
-        reason: r.alerts?.find((a) => a.code === 'OBSTACLE')?.msg ?? 'Something is in its way',
+        title: D().blocked(r.id),
+        reason: r.alerts?.find((a) => a.code === 'OBSTACLE')?.msg ?? D().blockedFallback,
         suggestion: SUGGESTION.blocked,
       });
     if (r.state === 'error')
@@ -94,8 +107,8 @@ export function detect(robots: RobotTelemetry[], waitedS: (id: string) => number
         key: `fault:${r.id}`,
         kind: 'fault',
         severity: 'critical',
-        title: `${r.id} has an error`,
-        reason: r.alerts?.[0]?.msg ?? 'The robot reported a fault',
+        title: D().error(r.id),
+        reason: r.alerts?.[0]?.msg ?? D().errorFallback,
         suggestion: SUGGESTION.fault,
       });
     if (r.state === 'waiting' && !inRing.has(r.id)) {
@@ -106,8 +119,8 @@ export function detect(robots: RobotTelemetry[], waitedS: (id: string) => number
           key: `stuck:${r.id}`,
           kind: 'stuck',
           severity: s >= th.waitUrgentS ? 'critical' : 'warn',
-          title: `${r.id} has been waiting for ${mins(s)}`,
-          reason: r.alerts?.find((a) => a.code.endsWith('_WAIT'))?.msg ?? 'Waiting for the road ahead',
+          title: D().stuck(r.id, mins(s)),
+          reason: r.alerts?.find((a) => a.code.endsWith('_WAIT'))?.msg ?? D().stuckFallback,
           suggestion: SUGGESTION.stuck,
         });
     }
@@ -117,8 +130,8 @@ export function detect(robots: RobotTelemetry[], waitedS: (id: string) => number
         key: `battery:${r.id}`,
         kind: 'battery',
         severity: r.battery < 10 ? 'critical' : 'warn',
-        title: `${r.id} has a low battery`,
-        reason: `${Math.round(r.battery)}% left and it is not heading to a charger`,
+        title: D().battery(r.id),
+        reason: D().batteryReason(Math.round(r.battery)),
         suggestion: SUGGESTION.battery,
       });
     for (const a of r.alerts ?? [])
@@ -128,7 +141,7 @@ export function detect(robots: RobotTelemetry[], waitedS: (id: string) => number
           key: `rule:${r.id}:${a.code}`,
           kind: 'rule',
           severity: 'critical',
-          title: `${r.id} is off its allowed path`,
+          title: D().rule(r.id),
           reason: a.msg,
           suggestion: SUGGESTION.rule,
         });

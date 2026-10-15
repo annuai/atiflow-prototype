@@ -4,6 +4,7 @@ import { Input } from '@/components/base/input/input';
 import { BottomSheet } from '@/components/modal/BottomSheet';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
+import { t } from '../text';
 import type { TripRequest } from '../model/types';
 
 function Form({ r, onClose, onReject }: { r: TripRequest; onClose(): void; onReject(reason: string): void }) {
@@ -18,7 +19,7 @@ function Form({ r, onClose, onReject }: { r: TripRequest; onClose(): void; onRej
       footer={
         <div className="flex gap-3">
           <Button size="xl" color="tertiary" onPress={onClose}>
-            Cancel
+            {t.requests.cancel}
           </Button>
           <Button
             size="xl"
@@ -32,7 +33,7 @@ function Form({ r, onClose, onReject }: { r: TripRequest; onClose(): void; onRej
       }
     >
       <div className="flex flex-col gap-4 pt-2">
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Reason">
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t.requests.tabsLabel.reason}>
           {copy.approve.reject_.reasons.map((x) => (
             <button
               key={x}

@@ -11,6 +11,7 @@ import {
 } from '@untitledui/icons';
 import type { FC } from 'react';
 import { Button } from '@/components/base/buttons/button';
+import { localized } from '@/i18n';
 import { cx } from '@/utils/cx';
 import { copy, timeAgo } from '../copy';
 import type { AppNotification, NotificationAction, NotificationLevel } from '../types';
@@ -76,7 +77,12 @@ export function NotificationItem({
           </div>
         )}
       </div>
-      {!n.read && <span className="mt-2 size-2.5 shrink-0 rounded-full bg-brand-solid" aria-label="Unread" />}
+      {!n.read && (
+        <span
+          className="mt-2 size-2.5 shrink-0 rounded-full bg-brand-solid"
+          aria-label={localized('insights').notifications.ui.unread}
+        />
+      )}
     </li>
   );
 }

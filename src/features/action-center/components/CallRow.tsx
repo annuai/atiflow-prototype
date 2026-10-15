@@ -14,6 +14,7 @@ import { Button } from '@/components/base/buttons/button';
 import { FleetName } from '@/features/auth';
 import { useApp } from '@/core/store';
 import { fmtDuration } from '@/features/dashboard';
+import { localized } from '@/i18n';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
 import type { Call, CallKind } from '../model/types';
@@ -30,12 +31,12 @@ export const ageS = (c: Call, now: number) => Math.max(0, Math.round((now - c.op
 
 function RobotNow({ id }: { id: string }) {
   const r = useApp((s) => s.robots[id]);
-  if (!r) return <li className="text-tertiary">{id}: no data</li>;
+  if (!r) return <li className="text-tertiary">{localized('insights').actionCenter.ui.noData(id)}</li>;
   return (
     <li>
       <b className="text-primary">{id}</b> · {r.state} · {Math.round(r.battery)}%
-      {r.task ? ` · ${r.task.id} to ${r.task.to ?? '—'}` : ''}
-      {r.waitsOn?.length ? ` · waits for ${r.waitsOn.join(', ')}` : ''}
+      {r.task ? ` · ${localized('insights').actionCenter.ui.taskTo(r.task.id, r.task.to ?? '—')}` : ''}
+      {r.waitsOn?.length ? ` · ${localized('insights').actionCenter.ui.waitsFor(r.waitsOn.join(', '))}` : ''}
     </li>
   );
 }
@@ -110,7 +111,7 @@ export function CallRow({
               <FleetName id={c.fleetId} />
               {c.place && <span>{c.place}</span>}
               <span className={cx(waited >= 120 && !taken && 'font-semibold text-error-primary')}>
-                Open for {fmtDuration(waited)}
+                {localized('insights').actionCenter.ui.openFor(fmtDuration(waited))}
               </span>
               {taken && (
                 <span className="font-medium text-brand-secondary">

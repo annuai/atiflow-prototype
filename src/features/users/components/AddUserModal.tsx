@@ -10,6 +10,9 @@ import { copy } from '../copy';
 import { AvatarUpload } from './AvatarUpload';
 import { FleetPicker } from './FleetPicker';
 import { validateNew, type UserForm } from '../model/validate';
+import { localized } from '@/i18n';
+
+const misc = localized('misc');
 
 const roleByLabel = (label: string): RoleId => ROLES.find((r) => r.label === label)?.id ?? 'supervisor';
 const field = (key: string, label: string, over: Partial<FieldDef> = {}): FieldDef => ({
@@ -46,17 +49,21 @@ function Form({
     setErrors((e) => ({ ...e, [key]: '' }));
   };
   const defs = {
-    first: field('firstName', 'First Name', { required: true, placeholder: 'First name' }),
-    last: field('lastName', 'Last Name', { placeholder: 'Last name' }),
-    user: field('username', 'Username', { required: true, placeholder: 'Username' }),
-    email: field('email', 'Email', { required: true, placeholder: 'name@company.com' }),
-    pass: field('password', 'Password', { control: 'secret', required: true, placeholder: 'At least 4 characters' }),
-    role: field('role', 'Role', {
+    first: field('firstName', misc.userForm.firstName, { required: true, placeholder: misc.userForm.firstNamePh }),
+    last: field('lastName', misc.userForm.lastName, { placeholder: misc.userForm.lastNamePh }),
+    user: field('username', misc.userForm.username, { required: true, placeholder: misc.userForm.usernamePh }),
+    email: field('email', misc.userForm.email, { required: true, placeholder: misc.userForm.emailPh }),
+    pass: field('password', misc.userForm.password, {
+      control: 'secret',
+      required: true,
+      placeholder: misc.userForm.passwordPh,
+    }),
+    role: field('role', misc.userForm.role, {
       control: 'select',
       required: true,
       options: assignable.map((r) => roleById(r).label),
     }),
-    title: field('title', 'Title', { placeholder: roleById(f.role).label }),
+    title: field('title', misc.userForm.title, { placeholder: roleById(f.role).label }),
   };
   const submit = () => {
     const clean = {
@@ -95,7 +102,7 @@ function Form({
       title={copy.add_.title}
       subtitle={copy.add_.subtitle}
       divided
-      secondary={{ label: 'Cancel', onPress: () => onOpenChange(false) }}
+      secondary={{ label: localized('common').cancel, onPress: () => onOpenChange(false) }}
       primary={{ label: copy.add }}
       onSubmit={submit}
     >

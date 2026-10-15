@@ -1,3 +1,4 @@
+import { text } from '../text';
 import type { ZoneProp, ZoneTypeId } from './types';
 
 /**
@@ -22,7 +23,18 @@ export interface ZoneType {
   /** Which editor module holds it. */ module: 'exclusive' | 'zones';
   fields: ZoneField[];
 }
-const VALUE: ZoneField[] = [{ key: 'value', label: 'Value', kind: 'text', default: '' }];
+const VALUE: ZoneField[] = [
+  {
+    key: 'value',
+    get label() {
+      return text.zoneFields.value;
+    },
+    kind: 'text',
+    default: '',
+  },
+];
+/** The name of a zone type in the language in use (the id when a type has no text). */
+const labelOf = (id: string): string => (text.zoneTypes as Record<string, string | undefined>)[id] ?? id;
 const COLORS = [
   '#3b82f6',
   '#8b5cf6',
@@ -42,34 +54,56 @@ const COLORS = [
   '#fb923c',
   '#2dd4bf',
 ];
-const generic = (code: string, label: string, i: number): ZoneType => ({
-  id: code
+const generic = (code: string, i: number): ZoneType => {
+  const id = code
     .replace(/_ZONES?$/, '')
     .toLowerCase()
-    .replace(/_/g, '-'),
-  code,
-  label,
-  description: '',
-  color: COLORS[i % COLORS.length],
-  module: 'zones',
-  fields: VALUE,
-});
+    .replace(/_/g, '-');
+  return {
+    id,
+    code,
+    get label() {
+      return labelOf(id);
+    },
+    description: '',
+    color: COLORS[i % COLORS.length],
+    module: 'zones',
+    fields: VALUE,
+  };
+};
 
 export const ZONE_TYPES: ZoneType[] = [
   {
     id: 'exclusive',
     code: 'EXCLUSIVE_ZONES',
-    label: 'Traffic gate',
-    description: 'A robot enters only when there is room; the others wait at the hold point.',
+    get label() {
+      return labelOf('exclusive');
+    },
+    get description() {
+      return text.zoneDescriptions.exclusive;
+    },
     color: '#f59e0b',
     module: 'exclusive',
-    fields: [{ key: 'capacity', label: 'Robots allowed inside', kind: 'number', default: 1 }],
+    fields: [
+      {
+        key: 'capacity',
+        get label() {
+          return text.zoneFields.capacity;
+        },
+        kind: 'number',
+        default: 1,
+      },
+    ],
   },
   {
     id: 'area',
     code: 'WORK_AREAS',
-    label: 'Work area',
-    description: 'A named part of the floor a fleet works in.',
+    get label() {
+      return labelOf('area');
+    },
+    get description() {
+      return text.zoneDescriptions.area;
+    },
     color: '#14b8a6',
     module: 'zones',
     fields: [],
@@ -77,33 +111,46 @@ export const ZONE_TYPES: ZoneType[] = [
   {
     id: 'no-go',
     code: 'NO_GO_ZONES',
-    label: 'No-go',
-    description: 'Robots never enter.',
+    get label() {
+      return labelOf('no-go');
+    },
+    get description() {
+      return text.zoneDescriptions.noGo;
+    },
     color: '#ef4444',
     module: 'zones',
-    fields: [{ key: 'reason', label: 'Reason', kind: 'text', default: '' }],
+    fields: [
+      {
+        key: 'reason',
+        get label() {
+          return text.zoneFields.reason;
+        },
+        kind: 'text',
+        default: '',
+      },
+    ],
   },
   ...(
     [
-      ['LOW_SPEED_ZONES', 'Low speed'],
-      ['SPECIAL_CAMERA_ZONES', 'Special camera'],
-      ['RAMP_ZONES', 'Ramp'],
-      ['VARIABLE_PADDING_ZONES', 'Variable padding'],
-      ['OBSTACLE_AVOIDANCE_ZONES', 'Obstacle avoidance'],
-      ['TRAFFIC_INTERSECTION_ZONES', 'Traffic intersection'],
-      ['3D_COLLISION_DETECTION_ZONES', '3D collision detection'],
-      ['STEREO_DEPTH_DENOISING_ZONES', 'Stereo depth denoising'],
-      ['NO_PAYLOAD_SAFETY_ZONES', 'No payload safety'],
-      ['CONVEYOR_WALL_ZONES', 'Conveyor wall'],
-      ['TABLE_PICKUP_ZONES', 'Table pickup'],
-      ['WHEEL_POSE_ZONE', 'Wheel pose'],
-      ['DOCKING_ZONES', 'Docking'],
-      ['ZEBRA_CROSSING_ZONES', 'Zebra crossing'],
-      ['SPECIAL_LIDAR_2D_ZONES', 'Special 2D lidar'],
-      ['SMART_DOOR_ZONES', 'Smart door'],
-      ['VARIABLE_STOP_DIST_ZONES', 'Variable stop distance'],
+      'LOW_SPEED_ZONES',
+      'SPECIAL_CAMERA_ZONES',
+      'RAMP_ZONES',
+      'VARIABLE_PADDING_ZONES',
+      'OBSTACLE_AVOIDANCE_ZONES',
+      'TRAFFIC_INTERSECTION_ZONES',
+      '3D_COLLISION_DETECTION_ZONES',
+      'STEREO_DEPTH_DENOISING_ZONES',
+      'NO_PAYLOAD_SAFETY_ZONES',
+      'CONVEYOR_WALL_ZONES',
+      'TABLE_PICKUP_ZONES',
+      'WHEEL_POSE_ZONE',
+      'DOCKING_ZONES',
+      'ZEBRA_CROSSING_ZONES',
+      'SPECIAL_LIDAR_2D_ZONES',
+      'SMART_DOOR_ZONES',
+      'VARIABLE_STOP_DIST_ZONES',
     ] as const
-  ).map(([code, label], i) => generic(code, label, i)),
+  ).map((code, i) => generic(code, i)),
 ];
 export const zoneType = (id: ZoneTypeId): ZoneType =>
   ZONE_TYPES.find((t) => t.id === id) ?? {

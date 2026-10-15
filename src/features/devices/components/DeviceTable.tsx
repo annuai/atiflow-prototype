@@ -3,6 +3,7 @@ import { DataTable, type Column } from '@/components/data/DataTable';
 import { nameOf } from '../model/validate';
 import type { Device, DeviceKind } from '../model/types';
 import { StatusBadge } from './StatusBadge';
+import { t } from '../text';
 
 /** The list table shared by Robots and Hardware: name + picture, type badge, assigned fleet, status. Rows open the detail page. */
 export function DeviceTable({ kind, rows, onOpen }: { kind: DeviceKind; rows: Device[]; onOpen(d: Device): void }) {
@@ -31,13 +32,13 @@ export function DeviceTable({ kind, rows, onOpen }: { kind: DeviceKind; rows: De
     {
       id: 'fleet',
       sort: (d) => String(d.values.fleet ?? ''),
-      header: 'ASSIGNED FLEET',
-      cell: (d) => d.values.fleet || <span className="text-quaternary">Unassigned</span>,
+      header: t.list.columns.fleet.toUpperCase(),
+      cell: (d) => d.values.fleet || <span className="text-quaternary">{t.list.unassigned}</span>,
     },
     {
       id: 'status',
       sort: (d) => d.status,
-      header: 'STATUS',
+      header: t.list.columns.status.toUpperCase(),
       headClassName: 'w-32',
       cell: (d) => <StatusBadge status={d.status} />,
     },

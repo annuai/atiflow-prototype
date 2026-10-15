@@ -1,11 +1,12 @@
 import { SkeletonCard, SkeletonText, Skeleton } from '@/components/skeleton/Skeleton';
 import { SkeletonKpiRow, SkeletonPanel, SkeletonStatusStrip } from '@/components/skeleton/blocks';
+import { t } from '../text';
 
 /** The dashboard's layout in grey (status strip, five KPIs, the card rows), shown until the first snapshot of the floor arrives. */
 export function DashboardSkeleton() {
   const rows = 'grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]';
   return (
-    <div role="status" aria-label="Loading the dashboard" className="flex flex-col gap-5">
+    <div role="status" aria-label={t.page.loading} className="flex flex-col gap-5">
       <SkeletonStatusStrip />
       <SkeletonKpiRow />
       <div className={rows}>

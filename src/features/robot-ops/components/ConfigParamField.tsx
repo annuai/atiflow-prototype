@@ -2,6 +2,7 @@ import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
 import { Toggle } from '@/components/base/toggle/toggle';
 import { Label } from '@/components/base/input/label';
+import { optionLabel, paramHelp, paramLabel } from '../labels';
 import type { ConfigParam, ConfigValue } from '../model/types';
 
 /** One configuration parameter as a control: a number box, a switch or a choice. Disabled (dimmed) until the configuration is being edited. */
@@ -18,13 +19,15 @@ export function ConfigParamField({
   disabled: boolean;
   onChange(v: ConfigValue): void;
 }) {
-  const label = param.kind === 'number' && param.unit ? `${param.label} (${param.unit})` : param.label;
+  const name = paramLabel(param);
+  const help = paramHelp(param);
+  const label = param.kind === 'number' && param.unit ? `${name} (${param.unit})` : name;
   if (param.kind === 'toggle')
     return (
       <Toggle
         size="md"
         label={label}
-        hint={param.help}
+        hint={help}
         isDisabled={disabled}
         isSelected={value === true}
         onChange={onChange}
@@ -33,12 +36,12 @@ export function ConfigParamField({
   if (param.kind === 'choice')
     return (
       <div className="flex flex-col gap-1.5">
-        <Label tooltip={param.help}>{label}</Label>
+        <Label tooltip={help}>{label}</Label>
         <Select
           aria-label={label}
           isDisabled={disabled}
           selectedKey={String(value)}
-          items={param.options.map((o) => ({ id: o, label: o }))}
+          items={param.options.map((o) => ({ id: o, label: optionLabel(o) }))}
           onSelectionChange={(k) => onChange(String(k))}
         >
           {(item) => <Select.Item {...item} />}
@@ -48,7 +51,7 @@ export function ConfigParamField({
   return (
     <Input
       label={label}
-      tooltip={param.help ?? param.key}
+      tooltip={help ?? param.key}
       inputMode="decimal"
       value={String(value)}
       isDisabled={disabled}

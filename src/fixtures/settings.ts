@@ -16,6 +16,6 @@ export const seedSettings = (now = Date.now()): SettingsData => ({
     siteName: 'ECC Plant',
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
     units: 'metric',
-    language: 'English',
+    language: 'en',
   },
 });

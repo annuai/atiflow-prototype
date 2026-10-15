@@ -10,6 +10,7 @@ import { selectFleet, useWorkflow, wfStore } from '../model/store';
 import { useEligibleUsers } from '../model/users';
 import { stationLabel, useFleetStations } from '../model/stations';
 import type { FieldSpec, WfNode } from '../model/types';
+import { copy, optionLabel } from '../copy';
 
 function FieldSelect({
   value,
@@ -38,7 +39,7 @@ function FieldSelect({
       placeholder={placeholder}
       selectedKey={value || null}
       onSelectionChange={(k) => onChange(String(k))}
-      items={options.map((o) => ({ id: o, label: names?.[o] ?? o }))}
+      items={options.map((o) => ({ id: o, label: names?.[o] ?? optionLabel(o) }))}
     >
       {(item) => <Select.Item {...item} />}
     </Select>
@@ -58,7 +59,7 @@ function QtyInput({ node, field }: { node: WfNode; field: string }) {
     <Input
       size="sm"
       className="w-[72px]"
-      aria-label="Quantity"
+      aria-label={copy.field.qty}
       value={v}
       isDisabled={!!node.f.fromTablet}
       onChange={setV}
@@ -91,9 +92,9 @@ export function FieldControl({ node, spec, inBranch }: { node: WfNode; spec: Fie
         : (fd.opts ?? []);
   const emptyHint =
     fd.optsFrom === 'fleetMaterials' && opts.length === 0
-      ? 'No materials assigned'
+      ? copy.field.noMaterials
       : fd.optsFrom === 'fleetStations' && opts.length === 0
-        ? 'No stations on the map'
+        ? copy.field.noStations
         : undefined;
 
   if (fd.kind === 'users') {
@@ -110,7 +111,7 @@ export function FieldControl({ node, spec, inBranch }: { node: WfNode; spec: Fie
           options={options}
           value={picked}
           onChange={(ids) => set(node.id, fd.key, ids)}
-          placeholder={userOpts.length ? 'Search users' : 'No users with access to this fleet'}
+          placeholder={userOpts.length ? copy.field.searchUsers : copy.field.noUsers}
         />
       </div>
     );
@@ -149,7 +150,7 @@ export function FieldControl({ node, spec, inBranch }: { node: WfNode; spec: Fie
           <ButtonUtility
             size="sm"
             icon={Plus}
-            tooltip={`Add another ${label}`}
+            tooltip={copy.field.addAnother(label)}
             onPress={() => wfStore.getState().addMulti(node.id, fd.key, opts)}
           />
         </div>
@@ -163,7 +164,7 @@ export function FieldControl({ node, spec, inBranch }: { node: WfNode; spec: Fie
       names={names}
       value={cur}
       opts={opts}
-      placeholder={emptyHint ?? 'Select'}
+      placeholder={emptyHint ?? copy.field.select}
       onChange={(v) => set(node.id, fd.key, v)}
       className={fd.row ? 'min-w-[84px]' : 'w-full'}
     />

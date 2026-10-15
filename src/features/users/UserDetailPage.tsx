@@ -28,6 +28,9 @@ import { RoleBadge } from './components/RoleBadge';
 import { UserAvatar } from './components/UserAvatar';
 import { copy } from './copy';
 import { validateBasics } from './model/validate';
+import { localized } from '@/i18n';
+
+const misc = localized('misc');
 
 const roleByLabel = (label: string): RoleId => ROLES.find((r) => r.label === label)?.id ?? 'supervisor';
 
@@ -98,7 +101,7 @@ export function UserDetailPage() {
   };
   const note = self ? copy.detail.selfNote : null;
   const roles = assignableRoles().map((r) => roleById(r).label);
-  const roleField = { key: 'role', label: 'Roles', control: 'select' as const, options: roles };
+  const roleField = { key: 'role', label: misc.userForm.roles, control: 'select' as const, options: roles };
   return (
     <>
       <div className="content">
@@ -136,7 +139,7 @@ export function UserDetailPage() {
               <h2 className="text-lg font-semibold text-primary">{copy.detail.basic}</h2>
               <div className="grid grid-cols-2 gap-3">
                 <FormField
-                  def={{ key: 'firstName', label: 'First Name', control: 'text', required: true }}
+                  def={{ key: 'firstName', label: misc.userForm.firstName, control: 'text', required: true }}
                   value={draft.firstName}
                   onChange={set('firstName')}
                   error={errors.firstName}
@@ -144,7 +147,7 @@ export function UserDetailPage() {
                   fleets={[]}
                 />
                 <FormField
-                  def={{ key: 'lastName', label: 'Last Name', control: 'text' }}
+                  def={{ key: 'lastName', label: misc.userForm.lastName, control: 'text' }}
                   value={draft.lastName}
                   onChange={set('lastName')}
                   disabled={!canBasics}
@@ -152,14 +155,14 @@ export function UserDetailPage() {
                 />
               </div>
               <FormField
-                def={{ key: 'username', label: 'Username', control: 'text' }}
+                def={{ key: 'username', label: misc.userForm.username, control: 'text' }}
                 value={user.username}
                 onChange={() => {}}
                 disabled
                 fleets={[]}
               />
               <FormField
-                def={{ key: 'email', label: 'Email', control: 'text', required: true }}
+                def={{ key: 'email', label: misc.userForm.email, control: 'text', required: true }}
                 value={draft.email}
                 onChange={set('email')}
                 error={errors.email}
@@ -167,16 +170,26 @@ export function UserDetailPage() {
                 fleets={[]}
               />
               <FormField
-                def={{ key: 'title', label: 'Title', control: 'text', placeholder: roleById(user.role).label }}
+                def={{
+                  key: 'title',
+                  label: misc.userForm.title,
+                  control: 'text',
+                  placeholder: roleById(user.role).label,
+                }}
                 value={draft.title}
                 onChange={set('title')}
                 disabled={!canBasics}
                 fleets={[]}
               />
               <div className="flex flex-col gap-1.5">
-                <Label>Password</Label>
+                <Label>{misc.userForm.password}</Label>
                 <div className="flex items-center gap-3">
-                  <Input aria-label="Password" value={copy.detail.passwordMask} isDisabled wrapperClassName="flex-1" />
+                  <Input
+                    aria-label={misc.userForm.password}
+                    value={copy.detail.passwordMask}
+                    isDisabled
+                    wrapperClassName="flex-1"
+                  />
                   <Button size="md" color="secondary" isDisabled={!canBasics} onPress={() => setResetting(true)}>
                     {copy.detail.resetPassword}
                   </Button>

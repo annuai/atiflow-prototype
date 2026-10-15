@@ -8,6 +8,7 @@ import { NODE_TYPES } from '../model/registry';
 import { simBus } from '../sim/runner';
 import type { Vec2 } from '@/core/types';
 import { StationMap } from './StationMap';
+import { copy } from '../copy';
 
 const HEAD_H = 51,
   FOOT_H = 36;
@@ -88,23 +89,23 @@ export function MapPreview({
 
   const label = node ? NODE_TYPES[node.t].label : '';
   const hint = !fleet
-    ? 'Choose a fleet to see its stations'
+    ? copy.map.hintChooseFleet
     : !map
-      ? 'Loading the map…'
+      ? copy.map.loading
       : !stations.length
-        ? 'This fleet has no stations on the map'
+        ? copy.map.hintNoStations
         : pickable
-          ? `Click a station to set it for ${label}${sf!.multi ? ' (click again to remove)' : ''}`
+          ? copy.map.hintPick(label, sf!.multi)
           : running
             ? ''
-            : 'Select a Station or If Logic step, then click a station here';
+            : copy.map.hintSelect;
   return (
     <div
       ref={card}
       className={`wf-map ${mode}`}
       data-no-pan
       role="region"
-      aria-label="Station map"
+      aria-label={copy.map.title}
       style={
         mode === 'float' && moved
           ? { left: moved.x, top: moved.y, right: 'auto' }
@@ -121,11 +122,11 @@ export function MapPreview({
         onPointerCancel={onUp}
       >
         <Map01 className="size-4 text-fg-tertiary" />
-        Station map
+        {copy.map.title}
         {running && (
           <span className="ml-auto flex items-center gap-1.5 text-[11px] font-medium text-quaternary">
             <i className="size-1.5 rounded-full bg-[#22c55e]" />
-            Running
+            {copy.map.running}
           </span>
         )}
         <ButtonUtility
@@ -133,7 +134,7 @@ export function MapPreview({
           size="xs"
           color="tertiary"
           icon={Minus}
-          tooltip={mode === 'docked' ? 'Stop simulation and close' : 'Minimize the map'}
+          tooltip={mode === 'docked' ? copy.map.stopClose : copy.map.minimize}
           onPress={onClose}
         />
       </div>
@@ -151,7 +152,7 @@ export function MapPreview({
             robot={robot}
           />
         ) : (
-          <div className="grid size-full place-items-center text-sm text-tertiary">Loading the map…</div>
+          <div className="grid size-full place-items-center text-sm text-tertiary">{copy.map.loading}</div>
         )}
         {hint && (
           <div
@@ -179,17 +180,11 @@ export function MapPreview({
 /** Collapsed map: a small card that opens the full map. */
 export function MapMini({ onOpen }: { onOpen: () => void }) {
   return (
-    <button
-      className="wf-mini"
-      data-no-pan
-      aria-label="Open the station map"
-      title="Open the station map"
-      onClick={onOpen}
-    >
+    <button className="wf-mini" data-no-pan aria-label={copy.map.open} title={copy.map.open} onClick={onOpen}>
       <span className="wf-map-floor" style={{ backgroundImage: `url(${PREVIEW})` }} />
       <span className="head">
         <Map01 className="size-4 text-fg-tertiary" />
-        Station map
+        {copy.map.title}
       </span>
     </button>
   );

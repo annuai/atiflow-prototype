@@ -2,6 +2,7 @@ import { AlertTriangle, CheckCircle, Rocket01, XCircle } from '@untitledui/icons
 import { Button } from '@/components/base/buttons/button';
 import { ModalShell } from '@/components/modal/ModalShell';
 import { copy } from '../copy';
+import { text } from '../text';
 import type { MapProblem } from '../model/validate';
 
 /** Before Publish: the problems found. Blocking ones must be fixed (a published map may be at work); warnings are shown and may be ignored. */
@@ -57,7 +58,7 @@ export function PublishDialog({
       icon={Rocket01}
       title={blocks.length ? t.blocked : t.ready(nextNumber)}
       subtitle={blocks.length ? t.blockedHint : t.readyHint}
-      secondary={{ label: 'Cancel', onPress: () => onOpenChange(false) }}
+      secondary={{ label: text.common.cancel, onPress: () => onOpenChange(false) }}
       primary={{
         label: t.action,
         isDisabled: blocks.length > 0,

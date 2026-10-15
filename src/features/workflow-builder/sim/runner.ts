@@ -3,6 +3,7 @@ import type { Vec2 } from '@/core/types';
 import { wfStore, SIM_IDLE, selectFleet } from '../model/store';
 import { liveIdOf, mapNow } from '../model/stations';
 import type { WfNode } from '../model/types';
+import { copy, optionLabel } from '../copy';
 
 /** What the simulation tells the map: a robot driving from station to station (position + heading), the lane path of the leg being driven and of the legs already finished. The robot is only a picture of the workflow, nothing is running. */
 export type Frame =
@@ -124,13 +125,13 @@ export async function runSimulation(nodes: WfNode[]) {
     const f = n.f as Record<string, string>; // (the fields this simulation reads are all plain text)
     switch (n.t) {
       case 'start':
-        say(`Start: ${f.trigger} trigger, ${f.robot}, ${f.request}`);
+        say(copy.sim.start(optionLabel(f.trigger), f.robot, optionLabel(f.request)));
         await pause(900, tok);
         break;
       case 'material': {
         const q = f.fromTablet ? 5 + Math.floor(Math.random() * 16) : +f.qty || 0;
         qty[f.code] = (qty[f.code] || 0) + q;
-        say(f.fromTablet ? `Material: operator entered ${q} × ${f.code} on the tablet` : `Material: ${q} × ${f.code}`);
+        say(f.fromTablet ? copy.sim.materialTablet(q, f.code) : copy.sim.material(q, f.code));
         await pause(1000, tok);
         break;
       }
@@ -147,9 +148,7 @@ export async function runSimulation(nodes: WfNode[]) {
         )[f.cond];
         const b = ok ? 't' : 'o';
         S().setSim({ taken: { ...S().sim.taken, [n.id]: b } });
-        say(
-          `If ${f.material} quantity ${have} is ${String(f.cond).toLowerCase()} ${lim}: ${ok ? 'TRUE' : 'OTHERWISE'} branch`,
-        );
+        say(copy.sim.logic(f.material, have, optionLabel(String(f.cond)), lim, ok ? copy.branch.t : copy.branch.o));
         await pause(1500, tok);
         mark(n.id);
         for (const x of n.br![b]) await visit(x);
@@ -161,25 +160,24 @@ export async function runSimulation(nodes: WfNode[]) {
           const known = !!laneGraph()?.station(st);
           S().setSim({ hlStation: st });
           if (!known) {
-            say(`${st || 'This step'} isn't on the map, skipping it`);
+            say(copy.sim.notOnMap(st || copy.sim.thisStep));
             await pause(1100, tok);
             continue;
           }
           const leg = legBetween(prevStation, st);
-          const verb = f.action === 'Pick Up' ? 'pick up at' : 'drop off at';
           if (leg) {
             simBus.emit({ type: 'route', cur: leg.pts, done: legsDone });
-            say(`Driving to ${verb} ${st}: ${Math.round(leg.len)} m`);
+            say((f.action === 'Pick Up' ? copy.sim.drivingPick : copy.sim.drivingDrop)(st, Math.round(leg.len)));
             await drive(leg.pts, leg.len, tok);
             legsDone = [...legsDone, leg.pts];
             simBus.emit({ type: 'route', cur: null, done: legsDone });
           } else {
             const at = laneGraph()!.stationNode(st)!;
             simBus.emit({ type: 'robot', p: { x: at.x, y: at.y }, heading: 0 });
-            say(`Starting at ${st}`);
+            say(copy.sim.startingAt(st));
             await pause(500, tok);
           }
-          say(`${f.action === 'Pick Up' ? 'Picked up at' : 'Dropped off at'} ${st}`);
+          say((f.action === 'Pick Up' ? copy.sim.pickedUp : copy.sim.droppedOff)(st));
           await pause(700, tok);
           prevStation = st;
         }
@@ -187,7 +185,7 @@ export async function runSimulation(nodes: WfNode[]) {
         break;
       }
       case 'container':
-        say('Picking an empty container here, no scan needed');
+        say(copy.sim.container);
         await pause(1100, tok);
         break;
       case 'wait': {
@@ -195,19 +193,19 @@ export async function runSimulation(nodes: WfNode[]) {
           dur = Math.min(4000, Math.max(900, secs * 25)),
           t0 = performance.now();
         while (performance.now() - t0 < dur) {
-          say(`Waiting ${fmt(secs * (1 - (performance.now() - t0) / dur))}`);
+          say(copy.sim.waiting(fmt(secs * (1 - (performance.now() - t0) / dur))));
           await pause(100, tok);
         }
         break;
       }
       case 'confirm':
-        say(`Waiting for confirmation: ${f.op}`);
+        say(copy.sim.confirmWait(optionLabel(f.op)));
         await pause(1100, tok);
-        say(`${f.op} confirmed`);
+        say(copy.sim.confirmed(optionLabel(f.op)));
         await pause(500, tok);
         break;
       case 'end':
-        say('End node: workflow stops');
+        say(copy.sim.end);
         await pause(700, tok);
         break;
     }

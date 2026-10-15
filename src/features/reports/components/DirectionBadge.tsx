@@ -2,6 +2,7 @@ import { HelpCircle } from '@untitledui/icons';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
+import { insights } from '../insightsCopy';
 import type { MetricDef } from '../model/metrics';
 
 /** The (i) next to a title: what the metric means and how it is measured. */
@@ -10,8 +11,8 @@ export const MetricHint = ({ metric }: { metric: MetricDef }) => (
     size="xs"
     color="tertiary"
     icon={HelpCircle}
-    tooltip={`${metric.definition} Measured by: ${metric.measuredBy}.`}
-    aria-label={`${metric.label}: ${metric.definition} Measured by: ${metric.measuredBy}.`}
+    tooltip={insights.reports.hint(metric.definition, metric.measuredBy)}
+    aria-label={`${metric.label}: ${insights.reports.hint(metric.definition, metric.measuredBy)}`}
   />
 );
 

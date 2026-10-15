@@ -1,4 +1,7 @@
 import type { ConnectionDef, ConnectionField } from './types';
+import { localized } from '@/i18n';
+
+const misc = localized('misc').settings;
 
 const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}(:\d{1,5})?$/,
   HOSTNAME =
@@ -7,17 +10,15 @@ const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}(:\d{1
 /** Problem with one value of a field ('' = fine; an empty optional value is fine). Hosts are an IPv4 address or a host name, optionally with a port; URLs are http(s). */
 export function fieldError(f: ConnectionField, raw: string): string {
   const v = raw.trim();
-  if (!v) return f.required ? 'Required' : '';
+  if (!v) return f.required ? localized('common').required : '';
   if (f.kind === 'text' || f.kind === 'secret') return ''; // only "required" applies
   if (f.kind === 'host')
-    return IPV4.test(v) || (HOSTNAME.test(v) && !/^[\d.]+(:\d+)?$/.test(v))
-      ? ''
-      : 'Enter an IP address or a host name, e.g. 192.168.100.31';
+    return IPV4.test(v) || (HOSTNAME.test(v) && !/^[\d.]+(:\d+)?$/.test(v)) ? '' : misc.validation.host;
   try {
     const u = new URL(v);
-    return u.protocol === 'http:' || u.protocol === 'https:' ? '' : 'The address must start with http:// or https://';
+    return u.protocol === 'http:' || u.protocol === 'https:' ? '' : misc.validation.urlScheme;
   } catch {
-    return 'Enter a full address, e.g. https://mes.example.com/amr';
+    return misc.validation.urlFull;
   }
 }
 export function connectionErrors(def: ConnectionDef, values: Record<string, string>): Record<string, string> {

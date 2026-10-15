@@ -8,6 +8,7 @@ import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { copy, useBookingsRunning, cancelBooking, canCancelBooking, useBookings } from '@/features/bookings';
 import { RequestStatusBadge, useRequestsRunning, useRequests, useOperator } from '@/features/requests';
 import { timeAgo } from '@/utils/timeAgo';
+import { t } from './text';
 import { historyEntries, type HistoryKind } from './entries';
 
 type Filter = 'all' | HistoryKind;
@@ -88,7 +89,7 @@ export function OperatorHistoryPage() {
                       </div>
                       {e.outcome && (
                         <Badge size="lg" type="pill-color" color={e.outcome === 'approved' ? 'success' : 'error'}>
-                          {e.outcome === 'approved' ? 'Approved' : 'Rejected'}
+                          {t.history[e.outcome]}
                         </Badge>
                       )}
                       {e.outcome ? (

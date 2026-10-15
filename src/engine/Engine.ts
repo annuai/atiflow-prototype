@@ -9,6 +9,9 @@ import type { RobotTypeId } from '../data/robotTypes';
 import { ROBOT_MODELS, DEFAULT_MODEL, buildTrolley, robotPlanTexture } from './robotMesh';
 import { RulesLayer, SHARED_COLOR } from './rulesLayer';
 import { STATE_COLOR, STATE_PULSE } from './stateStyle';
+import { localized } from '@/i18n';
+
+const copy = localized('floor');
 
 const KIND_COLOR: Record<string, number> = { 'smt-machine': 0x7e9a94, equipment: 0x9aa9a5, workstation: 0xb4beba };
 const MUTED = 0xcfd5d3;
@@ -118,7 +121,8 @@ export class Engine {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     Object.assign(this.controls, {
       enableDamping: true,
-      dampingFactor: 0.08,
+      dampingFactor: 0.12, // 0.08 made the view keep gliding after the fingers stopped, which felt slow to settle
+      zoomSpeed: 1.8, // wheel, trackpad pinch and touch pinch all use it (the default 1 felt slow on a laptop trackpad)
       maxPolarAngle: Math.PI / 2.05,
       minDistance: 6,
       maxDistance: 700,
@@ -353,7 +357,7 @@ export class Engine {
       this.scene.add(mesh, edge);
       this.zoneMeshes.push({ zone: z, mesh, edge });
       this.layerGroups.zones.push(mesh, edge);
-      const lb = labelSprite(owners.length > 1 ? `${z.name} · shared` : z.name, { size: 52 });
+      const lb = labelSprite(owners.length > 1 ? copy.labels3d.shared(z.name) : z.name, { size: 52 });
       const cxz = (z.polygon[0][0] + z.polygon[2][0]) / 2,
         cyz = (z.polygon[0][1] + z.polygon[2][1]) / 2;
       lb.position.set(...toScene(cxz, cyz, 6));

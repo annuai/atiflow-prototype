@@ -10,6 +10,7 @@ import { copy } from '../copy';
 import { settingsStore, useSettings } from '../data/store';
 import { statusOf } from '../model/status';
 import type { ConnectionDef } from '../model/types';
+import { localized } from '@/i18n';
 
 /** One connection: who it is, whether it works and why (not), its values, and the actions. Neutral card: only the status badge carries the colour. */
 export function ConnectionCard({ def, onEdit }: { def: ConnectionDef; onEdit(): void }) {
@@ -32,7 +33,7 @@ export function ConnectionCard({ def, onEdit }: { def: ConnectionDef; onEdit(): 
     setBusy('sync');
     await settingsStore.getState().sync(def.id);
     setBusy(null);
-    notify.success(`${def.name} synced`, undefined, `sync-${def.id}`);
+    notify.success(localized('misc').settings.synced(def.name), undefined, `sync-${def.id}`);
   };
   return (
     <Card className="flex flex-col gap-4" aria-label={def.name}>

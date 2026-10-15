@@ -8,6 +8,25 @@ test.describe('a robot in the configurator', () => {
     await expect(page.getByRole('heading', { name: 'AMR-004' })).toBeVisible();
   });
 
+  test('the page card keeps its bottom padding when its content scrolls, on every tab', async ({ page }) => {
+    const card = page.getByTestId('device-detail');
+    for (const tab of await page.getByRole('tab').all()) {
+      await tab.click();
+      // the lowest thing on the tab, after scrolling the card to its end, must still have the card's padding (24px) below it
+      const gap = await card.evaluate(async (el) => {
+        await new Promise((r) => setTimeout(r, 600)); // the tab content fades in
+        el.scrollTop = el.scrollHeight;
+        const lowest = Math.max(
+          ...[...el.querySelectorAll('*')]
+            .filter((e) => e.getBoundingClientRect().height > 0)
+            .map((e) => e.getBoundingClientRect().bottom),
+        );
+        return el.getBoundingClientRect().bottom - lowest;
+      });
+      expect(gap).toBeGreaterThan(20);
+    }
+  });
+
   test('configuration: values are read-only, a wrong value is refused, a right one is saved and survives a reload', async ({
     page,
   }) => {

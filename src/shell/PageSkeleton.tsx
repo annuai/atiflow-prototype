@@ -1,10 +1,11 @@
 import { Delayed, Skeleton, SkeletonCard, SkeletonText } from '@/components/skeleton/Skeleton';
+import { copy as floor } from '@/ui/copy';
 
 /** Generic page while its code loads: the title block and one big card, in the same frame as every page, so nothing jumps when the real page arrives. */
 export function PageSkeleton() {
   return (
     <Delayed>
-      <div className="content" role="status" aria-label="Loading">
+      <div className="content" role="status" aria-label={floor.frame.loading}>
         <div className="title-block">
           <div className="flex flex-col gap-2">
             <Skeleton className="h-7 w-48" />

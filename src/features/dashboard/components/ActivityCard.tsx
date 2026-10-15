@@ -2,6 +2,7 @@ import { AreaChart } from '../charts/AreaChart';
 import type { HistoryPoint } from '../data/types';
 import { copy } from '../copy';
 import { Card, CardTitle } from './Cards';
+import { t } from '../text';
 
 /** Utilisation, running trips and waiting robots over time. The history starts when the page opens until a history API exists. */
 export function ActivityCard({
@@ -23,7 +24,7 @@ export function ActivityCard({
         <div>
           <p className="mb-1 text-xs font-medium text-secondary">{copy.throughput.utilisation} (%)</p>
           <AreaChart
-            label="Utilisation over time"
+            label={t.chart.utilisationOver}
             times={times}
             yMax={100}
             unit="%"
@@ -40,10 +41,10 @@ export function ActivityCard({
         </div>
         <div>
           <p className="mb-1 text-xs font-medium text-secondary">
-            {copy.throughput.trips} and {copy.throughput.waiting.toLowerCase()}
+            {t.chart.and(copy.throughput.trips, copy.throughput.waiting.toLowerCase())}
           </p>
           <AreaChart
-            label="Trips and waiting robots over time"
+            label={t.chart.tripsWaitingOver}
             times={times}
             yMax={Math.max(4, robots)}
             lines={[

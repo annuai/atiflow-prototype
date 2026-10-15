@@ -17,6 +17,7 @@ import { XClose } from '@untitledui/icons';
 import { LocateBox } from './LocateBox';
 import { feed } from './liveFeed';
 import { locateTarget } from '@/ui/locate';
+import { copy } from '@/ui/copy';
 
 /** Supervisor home: the 3D live floor. Content only; chrome comes from AppShell. */
 export function LiveFloorPage() {
@@ -100,8 +101,8 @@ export function LiveFloorPage() {
       <div className="content">
         <div className="title-block">
           <div>
-            <h1>Live Floor</h1>
-            <p>Track every robot and its activity in real time</p>
+            <h1>{copy.page.title}</h1>
+            <p>{copy.page.subtitle}</p>
           </div>
           {/* Header action slot (top-right of the title block, same row as "Live Floor"). Empty on purpose: Replay + Dispatch Task were removed. See CLAUDE.md section 13. */}
           <div className="actions" />
@@ -109,11 +110,11 @@ export function LiveFloorPage() {
         <div className="builder">
           <div className="bh">
             <span className="ic">▦</span>
-            <h2>Live View</h2>
+            <h2>{copy.page.liveView}</h2>
             <div style={{ flex: 1 }} />
             {manyFleets && (
               <>
-                <span style={{ fontSize: 12, fontWeight: 600 }}>Fleet -</span>
+                <span style={{ fontSize: 12, fontWeight: 600 }}>{copy.page.fleetLabel}</span>
                 <FleetSelect
                   className="fleet-select"
                   value={fleetId}
@@ -139,17 +140,13 @@ export function LiveFloorPage() {
                   size="xs"
                   color="tertiary"
                   icon={XClose}
-                  tooltip="Back to whole floor"
+                  tooltip={copy.page.backToFloor}
                   onPress={() => handle.engine?.home()}
                 />
               </div>
             )}
             {mode === 'walk' && (
-              <div className="float hint">
-                {coarse
-                  ? 'Left stick: move (push far to run) · Drag to look'
-                  : 'WASD move · Mouse look · Shift run · Esc exit'}
-              </div>
+              <div className="float hint">{coarse ? copy.walk.hintTouch : copy.walk.hintDesktop}</div>
             )}
             <WalkPad />
             <LocateBox legendClosed={!legendOpen} onOpenLegend={() => setLegend(true)} />

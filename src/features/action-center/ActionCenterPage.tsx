@@ -10,6 +10,7 @@ import { fleetDirectory } from '@/data/fleetDirectory';
 import { useAccess } from '@/features/auth';
 import { fmtDuration } from '@/features/dashboard';
 import { LIVE_FLOOR_PATH } from '@/features/live-floor';
+import { localized } from '@/i18n';
 import { notify } from '@/ui/toast';
 import { CallRow, ageS } from './components/CallRow';
 import { ResolveDialog } from './components/ResolveDialog';
@@ -100,7 +101,7 @@ export function ActionCenterPage() {
                   <SegmentedTabs<Tab>
                     value={tab}
                     onChange={setTab}
-                    label="Show"
+                    label={localized('insights').actionCenter.ui.show}
                     items={[
                       { id: 'open', label: copy.tabs.open(active.length) },
                       { id: 'mine', label: copy.tabs.mine(mine.length) },

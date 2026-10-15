@@ -8,6 +8,7 @@ import { useHistoryNav } from './useHistoryNav';
 import { Brain, HeadsetHelp } from '@/ui/icons/figma-icons';
 import { notify } from '@/ui/toast';
 import type { SearchHit } from './types';
+import { copy } from './copy';
 
 interface Props {
   onMenu: () => void;
@@ -25,12 +26,18 @@ export function Topbar({ onMenu, searchPlaceholder, getHits, onAi, onSupport }: 
   const hits = q.trim() ? getHits(q.trim()) : [];
   return (
     <header className="topbar">
-      <ButtonUtility className="menu-btn" icon={Menu02} tooltip="Open menu" onPress={onMenu} />
-      <ButtonUtility icon={ChevronLeft} tooltip="Back" aria-label="Back" isDisabled={!h.canBack} onPress={h.back} />
+      <ButtonUtility className="menu-btn" icon={Menu02} tooltip={copy.menuOpen} onPress={onMenu} />
+      <ButtonUtility
+        icon={ChevronLeft}
+        tooltip={copy.back}
+        aria-label={copy.back}
+        isDisabled={!h.canBack}
+        onPress={h.back}
+      />
       <ButtonUtility
         icon={ChevronRight}
-        tooltip="Forward"
-        aria-label="Forward"
+        tooltip={copy.forward}
+        aria-label={copy.forward}
         isDisabled={!h.canForward}
         onPress={h.forward}
       />
@@ -39,7 +46,7 @@ export function Topbar({ onMenu, searchPlaceholder, getHits, onAi, onSupport }: 
           size="sm"
           icon={SearchLg}
           placeholder={searchPlaceholder}
-          aria-label="Search"
+          aria-label={copy.search}
           value={q}
           onChange={(v) => {
             setQ(v);
@@ -71,24 +78,22 @@ export function Topbar({ onMenu, searchPlaceholder, getHits, onAi, onSupport }: 
       </div>
       <div className="tb-spacer" />
       <Button
-        aria-label="Go to Support"
+        aria-label={copy.support}
         size="sm"
         color="secondary"
         iconLeading={HeadsetHelp}
-        onPress={
-          onSupport ?? (() => notify.info('Support', 'Reach the AtiFlow support desk from the full app.', 'support'))
-        }
+        onPress={onSupport ?? (() => notify.info(copy.supportTitle, copy.supportToast, 'support'))}
       >
-        <span className="tb-text">Go to Support</span>
+        <span className="tb-text">{copy.support}</span>
       </Button>
       <Button
-        aria-label="Ati AI"
+        aria-label={copy.ai}
         size="sm"
         color="primary"
         iconLeading={Brain}
-        onPress={onAi ?? (() => notify.info("Ati AI isn't part of this prototype", undefined, 'ati-ai'))}
+        onPress={onAi ?? (() => notify.info(copy.aiToast, undefined, 'ati-ai'))}
       >
-        <span className="tb-text">Ati AI</span>
+        <span className="tb-text">{copy.ai}</span>
       </Button>
     </header>
   );

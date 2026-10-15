@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { text } from '../text';
 import type { Vec2 } from '@/core/types';
 import { simBus, type Frame } from '../sim/tripSim';
 import type { useViewport } from './useViewport';
@@ -66,7 +67,7 @@ export function SimLayer({ vp, marks }: { vp: Vp; marks: SimMark[] }) {
       {robot && (
         <g
           transform={`translate(${vp.X(robot.p.x)} ${vp.Y(robot.p.y)}) scale(${vp.u}) rotate(${(-robot.heading * 180) / Math.PI})`}
-          aria-label="Robot"
+          aria-label={text.aria.robot}
         >
           <rect x={-9} y={-6} width={18} height={12} rx={3} fill="#fcd900" stroke="#111827" strokeWidth={1.4} />
           <rect x={4} y={-4.6} width={3.6} height={9.2} rx={1} fill="#111827" />

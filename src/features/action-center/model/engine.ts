@@ -1,4 +1,5 @@
 import type { RobotTelemetry } from '@/core/types';
+import { localized } from '@/i18n';
 import { detect } from './detect';
 import type { Call, Candidate, Thresholds } from './types';
 
@@ -77,8 +78,8 @@ export class ActionCenterEngine {
           ...a,
           status: 'resolved',
           resolvedAt: now,
-          resolvedBy: a.claimedBy ?? 'Cleared on its own',
-          resolution: a.claimedBy ? 'Cleared' : 'Cleared on its own',
+          resolvedBy: a.claimedBy ?? localized('insights').actionCenter.engine.clearedOnOwn,
+          resolution: localized('insights').actionCenter.engine[a.claimedBy ? 'cleared' : 'clearedOnOwn'],
         });
         changed = true;
       }

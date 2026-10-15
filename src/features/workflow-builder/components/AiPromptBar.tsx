@@ -3,6 +3,7 @@ import { Send01, SearchLg, Stars02 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { wfStore } from '../model/store';
+import { copy } from '../copy';
 
 /** Ati AI: describe a workflow in plain text. Same bar position as the Live Floor command bar. */
 export function AiPromptBar() {
@@ -26,12 +27,12 @@ export function AiPromptBar() {
         icon={SearchLg}
         className="flex-1"
         wrapperClassName="shadow-none ring-0 bg-transparent"
-        placeholder="Ask AI to create logical workflows in plain text..."
-        aria-label="Describe a workflow"
+        placeholder={copy.ai.placeholder}
+        aria-label={copy.ai.aria}
         value={text}
         onChange={setText}
       />
-      <Button type="submit" size="sm" color="primary" iconLeading={Send01} aria-label="Build workflow from text" />
+      <Button type="submit" size="sm" color="primary" iconLeading={Send01} aria-label={copy.ai.send} />
     </form>
   );
 }

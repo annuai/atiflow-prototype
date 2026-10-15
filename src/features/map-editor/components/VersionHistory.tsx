@@ -7,6 +7,7 @@ import { ModalShell } from '@/components/modal/ModalShell';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { lastUpdated } from '@/utils/timeAgo';
 import { copy } from '../copy';
+import { text } from '../text';
 import type { MapHistory } from '../model/types';
 import { draftOf, publishedOf } from '../model/store';
 
@@ -56,7 +57,7 @@ export function VersionHistory({
         icon={ClockRewind}
         title={t.title}
         subtitle={t.subtitle}
-        primary={{ label: 'Close', onPress: () => onOpenChange(false) }}
+        primary={{ label: text.common.close, onPress: () => onOpenChange(false) }}
       >
         <ul className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto pt-4">
           {draft &&

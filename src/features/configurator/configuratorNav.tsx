@@ -20,6 +20,9 @@ import { datasetStore } from '@/data/dataset';
 import { useUnreadCount } from '@/features/notifications';
 import { USERS_PATH } from '@/features/access';
 import { canNow, useAccess } from '@/features/auth';
+import { localized } from '@/i18n';
+
+const nav = localized('nav');
 
 export const SETTINGS_PATH = '/configurator/settings';
 export const WORKFLOWS_PATH = '/configurator'; // "Workflows": opens a new workflow; /configurator/workflows/<id> shows one
@@ -42,7 +45,7 @@ function NewFleet() {
       <button className="sb-item" onClick={() => setOpen((o) => !o)}>
         <span>
           <img src={plusI} alt="" />
-          <span className="t">Create new fleet</span>
+          <span className="t">{nav.items.createFleet}</span>
         </span>
       </button>
       {open && (
@@ -55,14 +58,14 @@ function NewFleet() {
         >
           <Input
             size="sm"
-            aria-label="New fleet name"
-            placeholder="Fleet name"
+            aria-label={nav.items.fleetNameLabel}
+            placeholder={nav.items.fleetNamePlaceholder}
             value={name}
             onChange={setName}
             autoFocus
           />
           <Button type="submit" size="sm" color="primary">
-            Add
+            {nav.items.addFleet}
           </Button>
         </form>
       )}
@@ -82,32 +85,32 @@ export function useConfiguratorNav(): NavModel {
   const groups = [
     {
       id: 'global',
-      label: 'Global Setup',
+      label: nav.groups.globalSetup,
       items: [
         can('configurator.robots') && {
           id: 'robots',
-          label: 'Robots',
+          label: nav.features['configurator.robots'],
           icon: robotsI,
           active: at(KINDS.robot.route),
           onSelect: () => navigate(`${WORKFLOWS_PATH}/${KINDS.robot.route}`),
         },
         can('configurator.maps') && {
           id: 'maps',
-          label: 'Maps',
+          label: nav.features['configurator.maps'],
           icon: mapsI,
           active: at('maps'),
           onSelect: () => navigate(`${WORKFLOWS_PATH}/maps`),
         },
         can('configurator.hardware') && {
           id: 'hw',
-          label: 'Hardware',
+          label: nav.features['configurator.hardware'],
           icon: hardwareI,
           active: at(KINDS.hardware.route),
           onSelect: () => navigate(`${WORKFLOWS_PATH}/${KINDS.hardware.route}`),
         },
         canManageUsers && {
           id: 'users',
-          label: 'Users',
+          label: nav.items.users,
           icon: usersI,
           active: pathname.startsWith(USERS_PATH),
           onSelect: () => navigate(USERS_PATH),
@@ -116,18 +119,18 @@ export function useConfiguratorNav(): NavModel {
     },
     {
       id: 'build',
-      label: 'Build',
+      label: nav.groups.build,
       items: [
         can('configurator.master-data') && {
           id: 'md',
-          label: 'Master Data',
+          label: nav.features['configurator.master-data'],
           icon: masterI,
           active: at('master-data'),
           onSelect: () => navigate(`${WORKFLOWS_PATH}/master-data`),
         },
         can('configurator.workflows') && {
           id: 'wf',
-          label: 'Workflows',
+          label: nav.features['configurator.workflows'],
           icon: workflowsI,
           active: onWorkflows,
           onSelect: () => navigate(WORKFLOWS_PATH),
@@ -138,11 +141,11 @@ export function useConfiguratorNav(): NavModel {
       ? [
           {
             id: 'fleets',
-            label: 'Fleets',
+            label: nav.groups.fleets,
             items: [
               {
                 id: 'all-fleets',
-                label: 'All fleets',
+                label: nav.items.allFleets,
                 icon: fleetI,
                 active: pathname === FLEETS_PATH,
                 onSelect: () => navigate(FLEETS_PATH),
@@ -167,7 +170,7 @@ export function useConfiguratorNav(): NavModel {
     footerItems: [
       {
         id: 'notif',
-        label: 'Notifications',
+        label: nav.items.notifications,
         icon: bellI,
         badge: unread || undefined,
         active: pathname === '/configurator/notifications',
@@ -177,7 +180,7 @@ export function useConfiguratorNav(): NavModel {
         ? [
             {
               id: 'settings',
-              label: 'Settings',
+              label: nav.features['configurator.settings'],
               icon: gearI,
               active: pathname.startsWith(SETTINGS_PATH),
               onSelect: () => navigate(SETTINGS_PATH),
@@ -211,7 +214,7 @@ export function configuratorHits(q: string): SearchHit[] {
           .getState()
           .fleets.map((f) => f.name)
           .filter((n) => n.toLowerCase().includes(ql))
-          .map((n) => ({ kind: 'Fleet', title: n, to: fleetPath(n) }))
+          .map((n) => ({ kind: nav.hits.fleet, title: n, to: fleetPath(n) }))
       : []),
     ...devices,
     ...(window.location.pathname.startsWith(`${WORKFLOWS_PATH}/workflows/`) && canNow('configurator.workflows')

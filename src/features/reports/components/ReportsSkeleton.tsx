@@ -1,10 +1,12 @@
 import { Skeleton, SkeletonCard, SkeletonText } from '@/components/skeleton/Skeleton';
 import { SkeletonKpiRow, SkeletonPanel, SkeletonStatusStrip } from '@/components/skeleton/blocks';
 
+import { insights } from '../insightsCopy';
+
 /** The report's layout in grey: verdict strip, five KPI cards, trend chart beside "what changed". */
 export function ReportsSkeleton() {
   return (
-    <div role="status" aria-label="Loading the report" className="flex flex-col gap-5">
+    <div role="status" aria-label={insights.reports.loading} className="flex flex-col gap-5">
       <SkeletonStatusStrip titleWidth="w-64" detailWidth="w-44" />
       <SkeletonKpiRow footer />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">

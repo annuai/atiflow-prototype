@@ -1,6 +1,7 @@
 import { InlineNameEdit } from '@/components/form/InlineNameEdit';
 import { workflowNameError } from '../model/names';
 import { wfStore } from '../model/store';
+import { copy } from '../copy';
 
 /** Workflow name in the canvas header with an edit button (shared inline editor). Names are edited by hand only. */
 export function WorkflowName({ name }: { name: string }) {
@@ -13,8 +14,8 @@ export function WorkflowName({ name }: { name: string }) {
   return (
     <InlineNameEdit
       value={name}
-      label="Workflow name"
-      tooltip="Rename workflow"
+      label={copy.name.label}
+      tooltip={copy.name.tooltip}
       onSave={save}
       display={
         <h2 className="wf-name" title={name}>

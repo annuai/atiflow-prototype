@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { laneArrowPath } from '@/components/map/laneArrows';
 import type { SiteLayout } from '@/core/types';
+import { text } from '../text';
 import type { MapData, Selection } from '../model/types';
 import { drawingPreview, floorPaths, pt, stagingGeometry, type P } from './layers';
 import { DrawingLayer, LocatePulse, RoadHits, StagingLayer, StationLayer, ZoneLayer } from './layers/MapLayers';
@@ -93,18 +94,13 @@ export function MapCanvas({
   const preview = drawingPreview(tool, drawing, cursor);
   const movable = editable && mode === 'none';
   return (
-    <div
-      ref={vp.box}
-      className="relative size-full touch-none select-none overflow-hidden bg-[#f6f7f5]"
-      data-no-pan
-      onWheel={(e) => vp.zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY)}
-    >
+    <div ref={vp.box} className="relative size-full touch-none select-none overflow-hidden bg-[#f6f7f5]" data-no-pan>
       <svg
         width="100%"
         height="100%"
         viewBox={vp.viewBox}
         role="img"
-        aria-label="Map"
+        aria-label={text.aria.map}
         className={mode !== 'none' && editable ? 'cursor-crosshair' : 'cursor-grab'}
         onPointerDown={pointer.down}
         onPointerMove={pointer.move}

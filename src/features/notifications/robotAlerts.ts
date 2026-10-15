@@ -1,11 +1,13 @@
 import type { RobotTelemetry } from '@/core/types';
+import { localized } from '@/i18n';
 import type { NewNotification } from './types';
 import { DEFAULT_ALERTS, type AlertPrefs } from '@/features/preferences';
 
 export const STUCK_AFTER_S = 90,
   BATTERY_LOW = 25,
   BATTERY_REARM = 40;
-const mins = (s: number) => (s < 90 ? `${Math.round(s)} s` : `${Math.round(s / 60)} min`);
+const T = () => localized('insights').notifications.robot;
+const mins = (s: number) => (s < 90 ? T().sec(Math.round(s)) : T().min(Math.round(s / 60)));
 
 /**
  * Turns the robot feed into notifications for a supervisor: one when a robot becomes blocked or faulty, when it has been stuck waiting for a long time,
@@ -46,14 +48,14 @@ export class RobotAlertWatcher {
       if (r.state === 'blocked' && P.blocked)
         raise(r, 'blocked', {
           level: 'critical',
-          title: `${r.id} is blocked`,
-          body: `${r.alerts?.find((a) => a.code === 'OBSTACLE')?.msg ?? 'Something is in its way'} · ${where}`,
+          title: T().blocked(r.id),
+          body: `${r.alerts?.find((a) => a.code === 'OBSTACLE')?.msg ?? T().blockedFallback} · ${where}`,
         });
       if (r.state === 'error' && P.fault)
         raise(r, 'error', {
           level: 'critical',
-          title: `${r.id} has an error`,
-          body: `${r.alerts?.[0]?.msg ?? 'The robot reported a fault'} · ${where}`,
+          title: T().error(r.id),
+          body: `${r.alerts?.[0]?.msg ?? T().errorFallback} · ${where}`,
         });
       if (r.state === 'waiting') {
         const since = this.waitingSince.get(r.id) ?? now;
@@ -62,15 +64,15 @@ export class RobotAlertWatcher {
         if (P.stuck && s >= P.notifyAfterS)
           raise(r, 'stuck', {
             level: 'warn',
-            title: `${r.id} has been waiting for ${mins(s)}`,
-            body: `${r.alerts?.find((a) => a.code.endsWith('_WAIT'))?.msg ?? 'Waiting for the road ahead'} · ${where}`,
+            title: T().stuck(r.id, mins(s)),
+            body: `${r.alerts?.find((a) => a.code.endsWith('_WAIT'))?.msg ?? T().stuckFallback} · ${where}`,
           });
       } else this.waitingSince.delete(r.id);
       if (P.battery && r.battery < P.batteryLow && r.state !== 'charging' && r.task?.type !== 'charge')
         raise(r, 'battery', {
           level: 'warn',
-          title: `${r.id} battery is at ${Math.round(r.battery)}%`,
-          body: `Not heading to a charger · ${where}`,
+          title: T().battery(r.id, Math.round(r.battery)),
+          body: `${T().batteryBody} · ${where}`,
         });
       else if (r.battery >= rearm || r.state === 'charging') seen.delete(`${r.id}:battery`);
     }

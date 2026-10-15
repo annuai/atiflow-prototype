@@ -1,7 +1,12 @@
 import { summarise } from '@/core/stats';
 import { attentionList, batteryView, fleetStates, statusOf, tripRow } from './derive';
 import { ConditionClock, HistoryTracker, TripLog, WaitTracker } from './trackers';
+import { t } from '../text';
 import type { AttentionItem, DashboardInput, DashboardSnapshot, Kpi } from './types';
+
+/** The tracker keys a place in English (`lane L9`, `unknown`); shown in the language in use. */
+const placeLabel = (place: string) =>
+  place === 'unknown' ? t.place.unknown : place.startsWith('lane ') ? t.place.lane(place.slice(5)) : place;
 
 const TREND_WINDOW_MS = 5 * 60_000,
   SPARK_POINTS = 30;
@@ -63,7 +68,7 @@ export class DashboardEngine {
       attention: this.attention,
       trips: { running, recent: this.trips.recent },
       battery: batteryView(i),
-      hotspots: this.waits.top(5).map((h) => ({ ...h, label: h.place })),
+      hotspots: this.waits.top(5).map((h) => ({ ...h, label: placeLabel(h.place) })),
       history: pts,
       historySeconds: this.history.seconds,
     };
@@ -80,7 +85,7 @@ export class DashboardEngine {
     return [
       {
         id: 'working',
-        label: 'Robots working',
+        label: t.kpi.working,
         value: working,
         of: i.robots.length,
         series: series((p) => Math.round((p.utilisation / 100) * i.robots.length)),
@@ -89,7 +94,7 @@ export class DashboardEngine {
       },
       {
         id: 'trips',
-        label: 'Trips running',
+        label: t.kpi.trips,
         value: s.activeTrips,
         series: series((p) => p.trips),
         trend: trend(s.activeTrips, (p) => p.trips),
@@ -97,7 +102,7 @@ export class DashboardEngine {
       },
       {
         id: 'utilisation',
-        label: 'Utilisation',
+        label: t.kpi.utilisation,
         value: s.utilisation,
         unit: '%',
         series: series((p) => p.utilisation),
@@ -106,7 +111,7 @@ export class DashboardEngine {
       },
       {
         id: 'health',
-        label: 'Fleet health',
+        label: t.kpi.health,
         value: s.health,
         unit: '%',
         series: series((p) => Math.round(100 * (1 - p.attention / Math.max(i.robots.length, 1)))),
@@ -115,7 +120,7 @@ export class DashboardEngine {
       },
       {
         id: 'alerts',
-        label: 'Needs you',
+        label: t.kpi.alerts,
         value: alerts,
         series: series((p) => p.attention),
         trend: trend(alerts, (p) => p.attention),

@@ -6,6 +6,7 @@ import { notify } from '@/ui/toast';
 import { deviceStore, useDevices } from '../model/store';
 import { blankValues, validateNew } from '../model/validate';
 import type { DeviceKind, FieldValue } from '../model/types';
+import { t } from '../text';
 
 interface Props {
   kind: DeviceKind;
@@ -54,7 +55,7 @@ function Body({
           </div>
         ))}
       </div>
-      <div className="hidden w-[200px] shrink-0 flex-col items-center gap-4 sm:flex" aria-label="Preview">
+      <div className="hidden w-[200px] shrink-0 flex-col items-center gap-4 sm:flex" aria-label={t.modal.preview}>
         {preview.heading && <p className="text-xs font-semibold text-secondary">{preview.heading}</p>}
         <div className="grid size-[180px] place-items-center rounded-xl border border-primary bg-secondary p-4">
           {preview.image}
@@ -81,7 +82,8 @@ function Form({ kind, preset, isOpen, onOpenChange }: Props) {
     if (Object.keys(problems).length) return;
     deviceStore.getState().add(kind.id, clean);
     onOpenChange(false);
-    notify.success(`${clean.name} added`, 'It stays Offline until it connects.', 'device-added');
+    const done = t.modal.added(String(clean.name));
+    notify.success(done.title, done.body, 'device-added');
   };
   return (
     <ModalShell
@@ -91,7 +93,7 @@ function Form({ kind, preset, isOpen, onOpenChange }: Props) {
       title={kind.addLabel}
       subtitle={kind.addSubtitle}
       divided
-      secondary={{ label: 'Cancel', onPress: () => onOpenChange(false) }}
+      secondary={{ label: t.modal.cancel, onPress: () => onOpenChange(false) }}
       primary={{ label: kind.addLabel }}
       onSubmit={submit}
     >

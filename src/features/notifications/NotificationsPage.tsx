@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { OPERATOR_ACTION_CENTER_PATH, OPERATOR_APPROVE_PATH, OPERATOR_REQUEST_PATH } from '@/features/action-center';
 import { LIVE_FLOOR_PATH } from '@/features/live-floor';
+import { localized } from '@/i18n';
 import { NotificationItem } from './components/NotificationItem';
 import { copy } from './copy';
 import { useNotificationStore, useNotifications } from './NotificationsProvider';
@@ -52,7 +53,7 @@ export function NotificationsPage() {
             <SegmentedTabs<Tab>
               value={tab}
               onChange={setTab}
-              label="Show"
+              label={localized('insights').notifications.ui.show}
               items={[
                 { id: 'all', label: copy.all },
                 { id: 'unread', label: copy.unread(unread) },

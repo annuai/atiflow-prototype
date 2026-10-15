@@ -1,3 +1,4 @@
+import { text } from '../text';
 import { ROBOT_TYPES } from '@/data/robotTypes';
 import type { MapData, StagingAreaDef } from './types';
 
@@ -62,7 +63,7 @@ export function addStagingArea(
   const n = data.stagingAreas.length + 1;
   const a: StagingAreaDef = {
     id,
-    name: `Staging area ${n}`,
+    name: text.defaultNames.staging(n),
     sherpaType: ROBOT_TYPES[0].label,
     rotation: 0,
     x: round(at.x),
@@ -86,12 +87,12 @@ export const deleteStagingArea = (data: MapData, id: string): MapData => ({
 export function stagingProblems(data: MapData, a: StagingAreaDef): Record<string, string> {
   const e: Record<string, string> = {};
   const t = a.name.trim();
-  if (!t) e.name = 'Give the staging area a name';
+  if (!t) e.name = text.nameProblems.staging.empty;
   else if (data.stagingAreas.some((s) => s.id !== a.id && s.name.trim().toLowerCase() === t.toLowerCase()))
-    e.name = 'Another staging area already has this name';
-  if (!Number.isInteger(a.rows) || a.rows < 1 || a.rows > 200) e.rows = 'Rows: a whole number from 1 to 200';
-  if (!Number.isInteger(a.cols) || a.cols < 1 || a.cols > 200) e.cols = 'Columns: a whole number from 1 to 200';
-  if (!(a.cellLength > 0)) e.cellLength = 'Length must be above 0';
-  if (!(a.cellWidth > 0)) e.cellWidth = 'Width must be above 0';
+    e.name = text.nameProblems.staging.taken;
+  if (!Number.isInteger(a.rows) || a.rows < 1 || a.rows > 200) e.rows = text.stagingProblems.rows;
+  if (!Number.isInteger(a.cols) || a.cols < 1 || a.cols > 200) e.cols = text.stagingProblems.cols;
+  if (!(a.cellLength > 0)) e.cellLength = text.stagingProblems.cellLength;
+  if (!(a.cellWidth > 0)) e.cellWidth = text.stagingProblems.cellWidth;
   return e;
 }

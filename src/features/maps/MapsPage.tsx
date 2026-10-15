@@ -6,6 +6,7 @@ import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
 import { useFleets } from '@/features/fleets';
 import { copy } from './copy';
+import { t } from './text';
 import { GenerateMapModal } from './components/GenerateMapModal';
 import { ImportMapModal } from './components/ImportMapModal';
 import { MapCard } from './components/MapCard';
@@ -78,7 +79,7 @@ export function MapsPage() {
                 />
                 <Select
                   size="sm"
-                  aria-label="Sort"
+                  aria-label={t.maps.sort}
                   className="w-[200px]"
                   icon={FilterLines}
                   selectedKey={sort}

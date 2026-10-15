@@ -6,6 +6,7 @@ import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { InlineNameEdit } from '@/components/form/InlineNameEdit';
 import { renameMap } from '@/features/maps';
 import { copy } from '../copy';
+import { text } from '../text';
 
 /** The editor's top bar (Figma "Header Bar"): title, map name with its state, Design | Simulation, version history and Publish. */
 export function EditorHeader({
@@ -89,7 +90,7 @@ export function EditorHeader({
         )}
         <ButtonGroup
           size="sm"
-          aria-label="Mode"
+          aria-label={text.aria.mode}
           selectedKeys={[mode]}
           onSelectionChange={(k) => {
             const v = [...k][0];

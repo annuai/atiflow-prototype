@@ -6,6 +6,7 @@ import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { validateGroupForm } from '../model/logic';
 import { fleetsStore, profileOf, useFleets } from '../model/store';
+import { t } from '../text';
 
 function Body({
   fleet,
@@ -36,7 +37,7 @@ function Body({
       icon={Edit05}
       title={copy.groups.rename}
       secondary={{ label: copy.groups.form.cancel, onPress: () => onOpenChange(false) }}
-      primary={{ label: 'Save' }}
+      primary={{ label: t.fleets.save }}
       onSubmit={save}
     >
       <div className="pt-2">

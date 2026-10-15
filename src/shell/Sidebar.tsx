@@ -11,6 +11,8 @@ import chev from '@/ui/icons/chevron-down.svg';
 import { HeaderSwitcher, type SwitcherItem } from './HeaderSwitcher';
 import { UserMenu } from './UserMenu';
 import type { NavGroup, NavItem, NavModel } from './types';
+import { copy } from './copy';
+import { copy as floor } from '@/ui/copy';
 
 const CollapsedCtx = createContext(false);
 const SelectCtx = createContext<() => void>(() => {});
@@ -79,7 +81,7 @@ export function Sidebar({ title, switcher, useNavModel, user, onLogout, open, on
       <SelectCtx.Provider value={onClose}>
         <LayoutGroup id="sidebar">
           <aside className={'sidebar' + (open ? ' open' : '') + (collapsed ? ' collapsed' : '')}>
-            <button className="sb-close" aria-label="Close menu" onClick={onClose}>
+            <button className="sb-close" aria-label={floor.frame.closeMenu} onClick={onClose}>
               ×
             </button>
             <div className="sb-ws">
@@ -92,9 +94,9 @@ export function Sidebar({ title, switcher, useNavModel, user, onLogout, open, on
               <span className="sb-ver">v4.0</span>
               <button
                 className="sb-collapse"
-                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                aria-label={collapsed ? copy.sidebarExpand : copy.sidebarCollapse}
                 aria-expanded={!collapsed}
-                title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                title={collapsed ? copy.sidebarExpand : copy.sidebarCollapse}
                 onClick={onToggle}
               >
                 {collapsed ? '›' : '‹'}

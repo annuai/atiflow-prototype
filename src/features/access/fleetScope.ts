@@ -1,4 +1,5 @@
 import type { RoleId } from './roles';
+import { localized } from '@/i18n';
 
 /**
  * Fleet scope (pure): which fleets a person sees. Supervisors and operators are given the fleets they work with and see nothing else, so they are not
@@ -18,7 +19,7 @@ export function fleetScope(p: ScopeProfile, allIds: string[]): string[] | null {
 }
 /** The fleets a scoped role must be given when it is saved: one at least. '' = fine. */
 export const fleetsError = (role: RoleId, fleets: string[]): string =>
-  isFleetScoped(role) && fleets.length === 0 ? 'Select at least one fleet' : '';
+  isFleetScoped(role) && fleets.length === 0 ? localized('users').fleets.required : '';
 /** A stable text for the scope, to notice when it changed. */
 export const scopeKey = (p: ScopeProfile & { username?: string }, allIds: string[]): string =>
   `${p.username ?? ''}|${fleetScope(p, allIds)?.slice().sort().join(',') ?? '*'}`;

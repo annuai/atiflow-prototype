@@ -8,6 +8,7 @@ import { Input } from '@/components/base/input/input';
 import type { DeviceKind, FieldValue } from './model/types';
 import { useDevices } from './model/store';
 import { nameOf } from './model/validate';
+import { t } from './text';
 import { AddDeviceModal } from './components/AddDeviceModal';
 import { DeviceEmptyState } from './components/DeviceEmptyState';
 import { DeviceTable } from './components/DeviceTable';
@@ -42,8 +43,8 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
             {searching && (
               <Input
                 size="sm"
-                aria-label={`Search ${kind.plural.toLowerCase()}`}
-                placeholder={`Search ${kind.plural.toLowerCase()}`}
+                aria-label={t.list.searchLabel(kind.plural)}
+                placeholder={t.list.searchLabel(kind.plural)}
                 value={q}
                 onChange={setQ}
                 autoFocus
@@ -52,7 +53,7 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
             )}
             <ButtonUtility
               icon={SearchLg}
-              tooltip="Search"
+              tooltip={t.list.search}
               color="secondary"
               size="sm"
               onPress={() => {
@@ -71,7 +72,7 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
               <DeviceEmptyState kind={kind} onAdd={add} />
             </div>
           ) : rows.length === 0 ? (
-            <NoResults subtext={`No ${kind.plural.toLowerCase()} match “${q}”.`} className="m-auto" />
+            <NoResults subtext={t.list.noMatch(kind.plural, q)} className="m-auto" />
           ) : (
             <div className="dv-scroll">
               <DeviceTable

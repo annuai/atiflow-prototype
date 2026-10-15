@@ -4,4 +4,5 @@ export const OPERATOR_ACTION_CENTER_PATH = '/operator/action-center',
   OPERATOR_REQUEST_PATH = '/operator/request',
   OPERATOR_APPROVE_PATH = '/operator/approve',
   OPERATOR_BOOK_PATH = '/operator/book',
-  OPERATOR_HISTORY_PATH = '/operator/history';
+  OPERATOR_HISTORY_PATH = '/operator/history',
+  OPERATOR_SETTINGS_PATH = '/operator/settings';

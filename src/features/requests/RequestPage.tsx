@@ -14,6 +14,7 @@ import { CartSheet } from './components/CartSheet';
 import { MaterialCard } from './components/MaterialCard';
 import { RequestHistory } from './components/RequestHistory';
 import { copy } from './copy';
+import { t } from './text';
 import { useRequestsRunning } from './model/bridge';
 import { requestableItems } from './model/catalog';
 import { dropLine, requestsStore, setLine, useRequests } from './model/store';
@@ -82,7 +83,7 @@ export function RequestPage() {
               size="lg"
               value={tab}
               onChange={setTab}
-              label="Request"
+              label={t.requests.tabsLabel.request}
               items={[
                 { id: 'new', label: copy.request.tabs.new },
                 { id: 'history', label: copy.request.tabs.history(activeCount) },
@@ -104,7 +105,11 @@ export function RequestPage() {
                   onChange={setQ}
                 />
                 {groupNames.length > 1 && (
-                  <div className="-mx-1 flex shrink-0 gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Group">
+                  <div
+                    className="-mx-1 flex shrink-0 gap-2 overflow-x-auto px-1 pb-1"
+                    role="group"
+                    aria-label={t.requests.tabsLabel.group}
+                  >
                     {['all', ...groupNames].map((g) => (
                       <button
                         key={g}
@@ -154,7 +159,7 @@ export function RequestPage() {
               <ShoppingCart01 className="mr-2 inline size-5 align-text-bottom" />
               {copy.request.cart.items(cartItems.length)}
               <span className="ml-2 text-sm font-normal text-tertiary">
-                {cartItems.reduce((n, c) => n + c.qty, 0)} pcs
+                {t.requests.pcs(cartItems.reduce((n, c) => n + c.qty, 0))}
               </span>
             </p>
             <Button size="xl" color="primary" onPress={() => setSheet(true)}>

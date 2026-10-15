@@ -7,6 +7,7 @@ import { AppShell } from './AppShell';
 import { PageTransition } from './PageTransition';
 import { useShellExtras } from './shellExtras';
 import type { NavModel, SearchHit } from './types';
+import { copy } from './copy';
 
 const SHELLS: Partial<
   Record<WorkspaceId, { useNavModel: () => NavModel; getHits: (q: string) => SearchHit[]; placeholder: string }>
@@ -14,10 +15,24 @@ const SHELLS: Partial<
   configurator: {
     useNavModel: useConfiguratorNav,
     getHits: configuratorHits,
-    placeholder: 'Search live operations, fleets, trips, analytics...',
+    get placeholder() {
+      return copy.searchConfigurator;
+    },
   },
-  supervisor: { useNavModel: useLiveNav, getHits: liveHits, placeholder: 'Search robots, stations, zones…' },
-  operator: { useNavModel: useOperatorNav, getHits: operatorHits, placeholder: 'Search…' },
+  supervisor: {
+    useNavModel: useLiveNav,
+    getHits: liveHits,
+    get placeholder() {
+      return copy.searchSupervisor;
+    },
+  },
+  operator: {
+    useNavModel: useOperatorNav,
+    getHits: operatorHits,
+    get placeholder() {
+      return copy.searchOperator;
+    },
+  },
 };
 
 /**

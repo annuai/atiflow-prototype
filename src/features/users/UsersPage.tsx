@@ -13,6 +13,9 @@ import { AddUserModal } from './components/AddUserModal';
 import { RoleBadge } from './components/RoleBadge';
 import { UserAvatar } from './components/UserAvatar';
 import { copy } from './copy';
+import { localized } from '@/i18n';
+
+const misc = localized('misc');
 
 /** The users of the app. Only configurators (and the superuser) can open it (see features/access). Same layout as Robots / Hardware: title block with search and Add, one card with the table. */
 export function UsersPage() {
@@ -66,7 +69,7 @@ export function UsersPage() {
             {searching && (
               <Input
                 size="sm"
-                aria-label="Search users"
+                aria-label={misc.userForm.searchUsers}
                 placeholder={copy.search}
                 value={q}
                 onChange={setQ}
@@ -76,7 +79,7 @@ export function UsersPage() {
             )}
             <ButtonUtility
               icon={SearchLg}
-              tooltip="Search"
+              tooltip={misc.userForm.search}
               color="secondary"
               size="sm"
               onPress={() => {

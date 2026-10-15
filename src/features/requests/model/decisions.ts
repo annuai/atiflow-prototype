@@ -1,4 +1,5 @@
 import type { RequestStatus, TripRequest } from './types';
+import { t } from '../text';
 
 /** One approval decision: a Confirm step approved, or the request rejected at the step it was waiting at. */
 export interface Decision {
@@ -42,7 +43,7 @@ export function decisions(requests: TripRequest[], who: { username: string; name
           outcome: 'approved',
           by: a.by,
           at: a.at,
-          step: r.approvals.length > 1 ? `${i + 1} of ${r.approvals.length}` : undefined,
+          step: r.approvals.length > 1 ? t.requests.step(i + 1, r.approvals.length) : undefined,
         });
     });
     const rej = r.history.find((e) => e.status === 'rejected' && e.by && e.by !== 'Fleet');

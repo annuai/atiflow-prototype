@@ -5,8 +5,10 @@ import { Label } from '@/components/base/input/label';
 import { Select } from '@/components/base/select/select';
 import { cx } from '@/utils/cx';
 import type { FieldDef, FieldValue } from './types';
+import { localized } from '@/i18n';
 
-const UNASSIGNED = 'Unassigned';
+const UNASSIGNED = '__unassigned__';
+const misc = localized('misc');
 interface Props {
   def: FieldDef;
   label?: string;
@@ -31,7 +33,7 @@ const BadgeBox = ({ items }: { items: string[] }) => (
         </Badge>
       ))
     ) : (
-      <span className="text-sm text-placeholder">None</span>
+      <span className="text-sm text-placeholder">{misc.ui.none}</span>
     )}
   </div>
 );
@@ -62,7 +64,7 @@ export function FormField({
         aria-label={label}
         isDisabled={disabled}
         selectedKey={def.control === 'fleet' && !value ? UNASSIGNED : String(value)}
-        items={opts.map((o) => ({ id: o, label: o }))}
+        items={opts.map((o) => ({ id: o, label: o === UNASSIGNED ? misc.ui.unassigned : o }))}
         onSelectionChange={(k) => onChange(def.control === 'fleet' && k === UNASSIGNED ? '' : String(k))}
       >
         {(item) => <Select.Item {...item} />}

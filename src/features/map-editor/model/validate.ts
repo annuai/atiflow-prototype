@@ -1,6 +1,8 @@
+import { text } from '../text';
 import { stagingProblems, cellRef } from './staging';
 import { nodeOf } from './stations';
 import { pointInPolygon } from './zones';
+import { zoneType } from './zoneTypes';
 import type { MapData } from './types';
 
 /** A problem found before publishing. `block` problems stop Publish (the map may be at work); the others are only shown. */
@@ -10,6 +12,8 @@ export interface MapProblem {
   detail?: string;
   stationId?: string;
 }
+/** A cell state in words, in the language in use (the id itself when it has no text). */
+const stateWord = (s: string): string => (text.cellStates as Record<string, string | undefined>)[s] ?? s;
 const dist = (px: number, py: number, a: [number, number], b: [number, number]) => {
   const dx = b[0] - a[0],
     dy = b[1] - a[1],
@@ -47,23 +51,23 @@ export function publishProblems(
       if (w.length)
         out.push({
           level: 'block',
-          title: `${s.id} · ${s.name} was deleted but workflows use it`,
-          detail: `Used by ${w.join(', ')}. Put the station back or change those workflows first.`,
+          title: text.problems.deleted(s.id, s.name),
+          detail: text.problems.deletedDetail(w.join(', ')),
           stationId: s.id,
         });
     }
   const seen = new Map<string, string>();
   for (const s of next.stations) {
     const key = s.name.trim().toLowerCase();
-    if (!key) out.push({ level: 'block', title: `${s.id} has no name`, stationId: s.id });
+    if (!key) out.push({ level: 'block', title: text.problems.noName(s.id), stationId: s.id });
     else if (seen.has(key))
-      out.push({ level: 'block', title: `${s.id} and ${seen.get(key)} share the name “${s.name}”`, stationId: s.id });
+      out.push({ level: 'block', title: text.problems.shareName(s.id, seen.get(key) ?? '', s.name), stationId: s.id });
     else seen.set(key, s.id);
     if (s.onLane !== false && !onRoad(next, s.id))
       out.push({
         level: 'block',
-        title: `${s.id} · ${s.name} is set On route but no route reaches it`,
-        detail: 'Connect it with a route (the Routes tab), or set its placement to Off route.',
+        title: text.problems.notReached(s.id, s.name),
+        detail: text.problems.notReachedDetail,
         stationId: s.id,
       });
   }
@@ -75,13 +79,13 @@ export function publishProblems(
       if (hit)
         out.push({
           level: 'block',
-          title: `${r.name} passes through the no-go zone “${hit.name}”`,
-          detail: 'Robots never enter a no-go zone: move the road or the zone.',
+          title: text.problems.throughNoGo(r.name, hit.name),
+          detail: text.problems.throughNoGoDetail,
         });
     }
   for (const a of next.stagingAreas)
-    for (const [field, text] of Object.entries(stagingProblems(next, a)))
-      out.push({ level: 'block', title: `${a.name}: ${text}`, detail: `Field: ${field}` });
+    for (const [field, problem] of Object.entries(stagingProblems(next, a)))
+      out.push({ level: 'block', title: `${a.name}: ${problem}`, detail: text.problems.field(field) });
   for (const old of previous?.stagingAreas ?? []) {
     const now = next.stagingAreas.find((a) => a.id === old.id);
     const states = cellStatesOf(old.id);
@@ -97,22 +101,25 @@ export function publishProblems(
     if (holding.length)
       out.push({
         level: 'block',
-        title: `${old.name} ${now ? 'was made smaller' : 'was deleted'} but ${holding.length} cell${holding.length === 1 ? '' : 's'} that would go ${holding.length === 1 ? 'is' : 'are'} Filled or Reserved`,
-        detail: `${holding
-          .slice(0, 6)
-          .map((l) => `${l.ref} (${l.state})`)
-          .join(', ')}${holding.length > 6 ? '…' : ''}. Empty them in Master Data first.`,
+        title: text.problems.cellsLost(old.name, !!now, holding.length),
+        detail: text.problems.cellsLostDetail(
+          `${holding
+            .slice(0, 6)
+            .map((l) => `${l.ref} (${stateWord(l.state)})`)
+            .join(', ')}${holding.length > 6 ? '…' : ''}`,
+        ),
       });
     else if (blocked.length)
       out.push({
         level: 'warn',
-        title: `${old.name}: ${blocked.length} Blocked cell${blocked.length === 1 ? '' : 's'} will be removed`,
+        title: text.problems.blockedGo(old.name, blocked.length),
         detail: blocked
           .slice(0, 6)
           .map((l) => l.ref)
           .join(', '),
       });
   }
-  for (const z of next.zones) if (!z.name.trim()) out.push({ level: 'warn', title: `A ${z.type} zone has no name` });
+  for (const z of next.zones)
+    if (!z.name.trim()) out.push({ level: 'warn', title: text.problems.zoneNoName(zoneType(z.type).label) });
   return out;
 }

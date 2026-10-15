@@ -1,12 +1,13 @@
 import { STATUS } from '@/features/requests';
+import { t } from '../text';
 import type { BookingInput, BookedTrip } from './types';
 
 /** What is wrong with a booking (pure): '' = fine. */
 export function bookingError(b: Partial<BookingInput>): string {
-  if (!b.robotType) return 'Choose the robot to call.';
-  if (!b.from) return 'Choose the start station.';
-  if (!b.to) return 'Choose the end station.';
-  return b.from === b.to ? 'The start and end station must be different.' : '';
+  if (!b.robotType) return t.bookings.rules.robot;
+  if (!b.from) return t.bookings.rules.from;
+  if (!b.to) return t.bookings.rules.to;
+  return b.from === b.to ? t.bookings.rules.same : '';
 }
 /** The person who booked a trip may cancel it until a robot is on its way. */
 export const canCancelBooking = (t: BookedTrip, who: { username: string }): boolean =>

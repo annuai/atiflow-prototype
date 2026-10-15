@@ -19,13 +19,17 @@ import { ProgressBar } from '@/components/base/progress-indicators/progress-indi
 import { ChevronDown, ChevronRight, Home01, Users01, ChevronUp, XClose } from '@untitledui/icons';
 import type { NavGraph, RobotTelemetry } from '../core/types';
 import { locateTarget } from './locate';
+import { copy } from './copy';
+
+/** Looks up a translated name for an id the data may extend; unknown ids show as they are. */
+const tx = (m: Record<string, string>, k: string) => m[k] ?? k;
 
 type Mode = 'orbit' | 'top' | 'walk' | 'follow';
 export function CameraModes({ fleetOpen, onFleet }: { fleetOpen: boolean; onFleet: () => void }) {
   const m = useApp((s) => s.cameraMode);
   const change = (v: Mode) => {
     if (v === 'follow' && !store.getState().selectedId) {
-      notify.warning('No robot selected', 'Please select a robot first to follow.', 'follow-needs-robot');
+      notify.warning(copy.camera.noRobotTitle, copy.camera.noRobotText, 'follow-needs-robot');
       return;
     } // Follow stays clickable; explain instead of disabling
     store.getState().setCameraMode(v);
@@ -34,7 +38,7 @@ export function CameraModes({ fleetOpen, onFleet }: { fleetOpen: boolean; onFlee
     <div className="float modes">
       <ButtonGroup
         size="sm"
-        aria-label="Camera mode"
+        aria-label={copy.camera.label}
         selectedKeys={[m]}
         disallowEmptySelection
         onSelectionChange={(k) => {
@@ -42,29 +46,29 @@ export function CameraModes({ fleetOpen, onFleet }: { fleetOpen: boolean; onFlee
           if (v) change(v);
         }}
       >
-        <ButtonGroupItem id="orbit">3D</ButtonGroupItem>
-        <ButtonGroupItem id="top">2D</ButtonGroupItem>
-        <ButtonGroupItem id="walk">Walk</ButtonGroupItem>
-        <ButtonGroupItem id="follow">Follow</ButtonGroupItem>
+        <ButtonGroupItem id="orbit">{copy.camera.orbit}</ButtonGroupItem>
+        <ButtonGroupItem id="top">{copy.camera.top}</ButtonGroupItem>
+        <ButtonGroupItem id="walk">{copy.camera.walk}</ButtonGroupItem>
+        <ButtonGroupItem id="follow">{copy.camera.follow}</ButtonGroupItem>
       </ButtonGroup>
       <Button
         size="sm"
         color="secondary"
-        aria-label="Home (whole floor)"
+        aria-label={copy.camera.homeAria}
         iconLeading={Home01}
         onPress={() => handle.engine?.home()}
       >
-        <span className="lbl">Home</span>
+        <span className="lbl">{copy.camera.home}</span>
       </Button>
       <Button
         size="sm"
         color={fleetOpen ? 'primary' : 'secondary'}
         iconLeading={Users01}
-        aria-label="Fleet list"
+        aria-label={copy.camera.fleetAria}
         aria-pressed={fleetOpen}
         onPress={onFleet}
       >
-        <span className="lbl">Fleet</span>
+        <span className="lbl">{copy.camera.fleet}</span>
       </Button>
     </div>
   );
@@ -100,9 +104,9 @@ export function FleetList() {
   return (
     <div className="float fleet">
       <header>
-        <span>Fleet</span>
+        <span>{copy.fleetList.title}</span>
         <Badge size="sm" color="gray">
-          {all.length} robots
+          {copy.fleetList.robots(all.length)}
         </Badge>
       </header>
       <div className="counts">
@@ -114,7 +118,7 @@ export function FleetList() {
             onClick={() => setF(f === s ? null : s)}
           >
             <BadgeWithDot size="sm" color={STATE_TONE[s]}>
-              {n} {s}
+              {copy.fleetList.count(n, copy.states[s])}
             </BadgeWithDot>
           </button>
         ))}
@@ -129,7 +133,7 @@ export function FleetList() {
             <i className="dot" style={{ background: STATE_COLOR[r.state], width: 10, height: 10 }} />
             <div>
               <div className="nm">{r.id}</div>
-              <small>{r.task ? `${r.task.type} → ${r.task.to}` : r.state}</small>
+              <small>{r.task ? `${tx(copy.taskTypes, r.task.type)} → ${r.task.to}` : copy.states[r.state]}</small>
             </div>
             <span className="bat" style={{ color: r.battery < 25 ? '#dc2626' : undefined }}>
               {r.battery}%
@@ -138,21 +142,21 @@ export function FleetList() {
         ))}
       </div>
       <div className="events">
-        <b>Live events</b>
+        <b>{copy.fleetList.events}</b>
         {events.slice(0, 6).map((e, i) => (
           <button
             type="button"
             className="ev"
             key={i}
-            title={`Show ${e.robotId} on the map`}
-            aria-label={`${e.text}. Show ${e.robotId} on the map`}
+            title={copy.fleetList.showOnMap(e.robotId)}
+            aria-label={copy.fleetList.showOnMapAria(e.text, e.robotId)}
             onClick={() => locateTarget(e.robotId)}
           >
             <i className="dot" style={{ background: e.level === 'critical' ? '#ef4444' : '#14b8a6' }} />
             <span>{e.text}</span>
           </button>
         ))}
-        {!events.length && <span style={{ color: '#737373' }}>No events yet</span>}
+        {!events.length && <span style={{ color: '#737373' }}>{copy.fleetList.noEvents}</span>}
       </div>
     </div>
   );
@@ -170,19 +174,21 @@ function TripSection({ r, nav }: { r: RobotTelemetry; nav: NavGraph | null }) {
   const leg = t.leg ?? 0;
   const name = (id?: string) => nav?.stations.find((x) => x.id === id)?.name ?? '';
   const rows = [
-    ...(t.origin ? [{ id: t.origin, label: 'Start', status: 'done' }] : []),
-    ...stops.map((id, i) => ({ id, label: `Stop ${i + 1}`, status: i < leg ? 'done' : i === leg ? 'now' : 'next' })),
-    { id: t.to ?? '', label: 'Destination', status: leg >= stops.length ? 'now' : 'next' },
+    ...(t.origin ? [{ id: t.origin, label: copy.trip.start, status: 'done' }] : []),
+    ...stops.map((id, i) => ({
+      id,
+      label: copy.trip.stop(i + 1),
+      status: i < leg ? 'done' : i === leg ? 'now' : 'next',
+    })),
+    { id: t.to ?? '', label: copy.trip.destination, status: leg >= stops.length ? 'now' : 'next' },
   ].filter((x) => x.id);
-  const text: Record<string, string> = { done: 'done', now: 'heading here', next: 'next' };
+  const text: Record<string, string> = { done: copy.trip.done, now: copy.trip.now, next: copy.trip.next };
   return (
     <div className="trip">
       <button type="button" className="trip-head" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         {open ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
         <b>{t.id}</b>
-        <span>
-          {t.type} · {stops.length ? `${stops.length} stop${stops.length > 1 ? 's' : ''} · ` : ''}to {t.to}
-        </span>
+        <span>{copy.trip.summary(tx(copy.taskTypes, t.type), stops.length, t.to ?? '')}</span>
       </button>
       {open && (
         <div className="info-list">
@@ -217,45 +223,48 @@ export function RobotPanel() {
   const dest = nav?.stations.find((s) => s.id === (r.task?.next ?? r.task?.to));
   const trafficTxt = r.traffic
     ? r.traffic.status === 'waiting'
-      ? `Waiting for ${r.traffic.zoneId}`
-      : `Inside ${r.traffic.zoneId}`
-    : 'Clear';
+      ? copy.robotPanel.waitingFor(r.traffic.zoneId)
+      : copy.robotPanel.inside(r.traffic.zoneId)
+    : copy.robotPanel.clear;
   return (
     <InfoPanel
       title={r.id}
       onClose={() => store.getState().closeRobotPanel()}
       subtitle={`${robotTypeById(r.model).label} · ${fleet?.name ?? r.fleetId}`}
-      pill={{ label: r.state, tone: STATE_TONE[r.state] }}
+      pill={{ label: copy.states[r.state], tone: STATE_TONE[r.state] }}
       chips={fleet ? [{ label: fleet.name, color: fleet.color }] : []}
       stats={[
         {
-          label: 'Battery',
+          label: copy.robotPanel.battery,
           value: r.battery + '%',
           bar: { pct: r.battery, tone: r.battery < 25 ? 'error' : 'success' },
         },
-        { label: 'Speed', value: r.speed.toFixed(1) + ' m/s' },
-        { label: 'Trip', value: r.task?.id ?? '—' },
-        { label: 'Destination', value: r.task?.to ?? '—' },
-        { label: 'Payload', value: r.payload ? `${r.payload.kind} ×${r.payload.qty}` : 'Empty' },
-        { label: 'Lane', value: r.laneId ?? '—' },
-        { label: 'Traffic zone', value: trafficTxt },
-        { label: 'At station', value: r.atStation ?? '—' },
+        { label: copy.robotPanel.speed, value: r.speed.toFixed(1) + ' m/s' },
+        { label: copy.robotPanel.trip, value: r.task?.id ?? '—' },
+        { label: copy.robotPanel.destination, value: r.task?.to ?? '—' },
+        {
+          label: copy.robotPanel.payload,
+          value: r.payload ? `${r.payload.kind} ×${r.payload.qty}` : copy.robotPanel.empty,
+        },
+        { label: copy.robotPanel.lane, value: r.laneId ?? '—' },
+        { label: copy.robotPanel.trafficZone, value: trafficTxt },
+        { label: copy.robotPanel.atStation, value: r.atStation ?? '—' },
       ]}
       alerts={(r.alerts ?? []).map((a) => ({ text: a.msg, severity: a.severity }))}
       actions={[
-        { label: 'Locate', onClick: () => handle.engine?.focusRobot(r.id) },
-        { label: 'Follow', onClick: () => store.getState().setCameraMode('follow') },
+        { label: copy.robotPanel.locate, onClick: () => handle.engine?.focusRobot(r.id) },
+        { label: copy.robotPanel.follow, onClick: () => store.getState().setCameraMode('follow') },
       ]}
     >
       {dest && (
         <div className="sub" style={{ margin: '0 0 8px' }}>
-          Heading to <b>{dest.id}</b> · {dest.name}
+          {copy.robotPanel.headingTo} <b>{dest.id}</b> · {dest.name}
         </div>
       )}
       <TripSection key={r.task?.id} r={r} nav={nav} />
       {r.task?.progress != null && (
         <div className="progress">
-          <small>Trip progress</small>
+          <small>{copy.robotPanel.tripProgress}</small>
           <ProgressBar className="mt-1 h-1.5" value={Math.round((r.task.progress ?? 0) * 100)} />
         </div>
       )}
@@ -271,36 +280,39 @@ export function RobotMini() {
   const following = useApp((s) => s.cameraMode === 'follow');
   if (!r || open) return null;
   return (
-    <div className="float rmini" role="group" aria-label={`${r.id} (window minimised)`}>
+    <div className="float rmini" role="group" aria-label={copy.mini.minimised(r.id)}>
       <i className="dot" style={{ background: STATE_COLOR[r.state], width: 10, height: 10 }} />
-      <button className="rmini-open" onClick={() => store.getState().openRobotPanel()} aria-label={`Open ${r.id}`}>
+      <button
+        className="rmini-open"
+        onClick={() => store.getState().openRobotPanel()}
+        aria-label={copy.mini.open(r.id)}
+      >
         <b>{r.id}</b>
         <small>
-          {following ? 'Following · ' : ''}
-          {r.state} · {r.battery}%
+          {following ? `${copy.mini.following} · ` : ''}
+          {copy.states[r.state]} · {r.battery}%
         </small>
       </button>
       <ButtonUtility
         size="xs"
         color="tertiary"
         icon={ChevronUp}
-        tooltip="Open the robot window"
-        aria-label="Open the robot window"
+        tooltip={copy.mini.openWindow}
+        aria-label={copy.mini.openWindow}
         onPress={() => store.getState().openRobotPanel()}
       />
       <ButtonUtility
         size="xs"
         color="tertiary"
         icon={XClose}
-        tooltip={following ? 'Stop following' : 'Deselect'}
-        aria-label={following ? 'Stop following' : 'Deselect'}
+        tooltip={following ? copy.mini.stopFollowing : copy.mini.deselect}
+        aria-label={following ? copy.mini.stopFollowing : copy.mini.deselect}
         onPress={() => store.getState().select(null)}
       />
     </div>
   );
 }
 
-const STATION_KIND: Record<string, string> = { asrs: 'ASRS station', park: 'Parking spot', charge: 'Charging station' };
 export function StationPanel() {
   const id = useApp((s) => s.selectedStationId);
   const nav = useApp((s) => s.nav);
@@ -320,13 +332,14 @@ export function StationPanel() {
     )
     .sort((a, b) => pathLen(a) - pathLen(b));
   const charging = docked.some((r) => r.state === 'charging');
-  const status = charging ? 'Charging' : docked.length ? 'Occupied' : incoming.length ? 'Robot inbound' : 'Free';
+  const sp = copy.stationPanel;
+  const status = charging ? sp.charging : docked.length ? sp.occupied : incoming.length ? sp.inbound : sp.free;
   const zone = site?.zones.find((z) => z.id === st.zone);
   const owners = fleets.filter((f) => st.fleets.includes(f.id));
   return (
     <InfoPanel
       title={st.id}
-      subtitle={`${st.name} · ${STATION_KIND[st.type] ?? st.type[0].toUpperCase() + st.type.slice(1) + ' station'}`}
+      subtitle={`${st.name} · ${tx(copy.stationKinds, st.type)}`}
       onClose={() => store.getState().selectStation(null)}
       pill={{
         label: status,
@@ -334,17 +347,17 @@ export function StationPanel() {
       }}
       chips={owners.map((f) => ({ label: f.name, color: f.color }))}
       stats={[
-        { label: 'Actual name', value: st.name },
-        { label: 'Type', value: st.type },
-        { label: 'Map area', value: zone?.name ?? '—' + (owners.length > 1 ? ' (shared)' : '') },
-        { label: 'Incoming bots', value: incoming.length },
-        { label: 'Docked now', value: docked.length ? docked.map((r) => r.id).join(', ') : '—' },
-        { label: 'Served by', value: owners.length > 1 ? 'Both fleets (shared)' : (owners[0]?.name ?? '—') },
+        { label: sp.actualName, value: st.name },
+        { label: sp.type, value: tx(copy.stationTypes, st.type) },
+        { label: sp.mapArea, value: zone?.name ?? '—' + (owners.length > 1 ? sp.shared : '') },
+        { label: sp.incoming, value: incoming.length },
+        { label: sp.docked, value: docked.length ? docked.map((r) => r.id).join(', ') : '—' },
+        { label: sp.servedBy, value: owners.length > 1 ? sp.bothFleets : (owners[0]?.name ?? '—') },
       ]}
-      actions={[{ label: 'Locate', onClick: () => handle.engine?.focusStation(st.id) }]}
+      actions={[{ label: sp.locate, onClick: () => handle.engine?.focusStation(st.id) }]}
     >
       <div className="list-title">
-        Incoming bots <span style={{ color: STATION_COLOR[st.type] }}>●</span>
+        {sp.incoming} <span style={{ color: STATION_COLOR[st.type] }}>●</span>
       </div>
       <div className="info-list">
         {incoming.map((r) => {
@@ -356,18 +369,11 @@ export function StationPanel() {
               <i className="dot" style={{ background: STATE_COLOR[r.state] }} />
               <b>{r.id}</b>
               <span style={{ color: f?.color }}>{f?.name.split(' ')[0]}</span>
-              <em>{r.state === 'waiting' ? `waiting · ${eta}s` : `~${eta}s · ${d.toFixed(0)} m`}</em>
+              <em>{r.state === 'waiting' ? sp.waitingEta(eta) : sp.eta(eta, d.toFixed(0))}</em>
             </button>
           );
         })}
-        {!incoming.length && (
-          <EmptyState
-            icon={Truck01}
-            title="No robots are heading here"
-            subtext="Robots on their way will show here."
-            size="sm"
-          />
-        )}
+        {!incoming.length && <EmptyState icon={Truck01} title={sp.emptyTitle} subtext={sp.emptyText} size="sm" />}
       </div>
     </InfoPanel>
   );
@@ -383,46 +389,46 @@ export function MapLegend({ onClose }: { onClose(): void }) {
     wait = zs.reduce((a, z) => a + z.waiting.length, 0);
   return (
     <div className="float legend">
-      <button className="lg-head" onClick={onClose} aria-label="Close map key">
-        Map key <span>–</span>
+      <button className="lg-head" onClick={onClose} aria-label={copy.legend.close}>
+        {copy.legend.title} <span>–</span>
       </button>
       <>
         {fleets.map((f) => (
           <div className="lg" key={f.id}>
             <i className="lane" style={{ background: f.color }} />
-            {f.name} lanes <small>→ one way</small>
+            {copy.legend.lanes(f.name)} <small>{copy.legend.oneWay}</small>
           </div>
         ))}
         <div className="lg">
           <i className="lane" style={{ background: SHARED_COLOR }} />
-          Shared map area <small>both fleets</small>
+          {copy.legend.sharedArea} <small>{copy.legend.bothFleets}</small>
         </div>
         <div className="lg">
           <i className="sq tz" />
-          Traffic zone <small>wait if occupied</small>
+          {copy.legend.trafficZone} <small>{copy.legend.waitIfOccupied}</small>
         </div>
         <div className="lg">
           <i className="sq fz" />
-          Forbidden zone <small>never entered</small>
+          {copy.legend.forbiddenZone} <small>{copy.legend.neverEntered}</small>
         </div>
         <div className="lg">
           <i className="pin" />
-          Station <small>STA-1xx</small>
+          {copy.legend.station} <small>STA-1xx</small>
         </div>
         <div className="lg">
           <i className="pin" style={{ borderTopColor: STATION_COLOR.park }} />
-          Parking <small>PARK-001</small>
+          {copy.legend.parking} <small>PARK-001</small>
         </div>
         <div className="lg">
           <i className="pin" style={{ borderTopColor: STATION_COLOR.charge }} />
-          Charging <small>CHARGE-001</small>
+          {copy.legend.charging} <small>CHARGE-001</small>
         </div>
         <div className="lg-stats">
           <span>
-            Traffic zones: <b>{occ}</b> occupied · <b>{wait}</b> waiting
+            {copy.legend.trafficZones} <b>{occ}</b> {copy.legend.occupied} · <b>{wait}</b> {copy.legend.waiting}
           </span>
           <span className={violations ? 'bad' : 'good'}>
-            Rule violations: <b>{violations}</b>
+            {copy.legend.violations} <b>{violations}</b>
           </span>
         </div>
       </>

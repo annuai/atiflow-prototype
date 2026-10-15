@@ -1,3 +1,4 @@
+import { insights } from '../insightsCopy';
 import type { RangeSelection, ResolvedRange } from './types';
 
 const DAY = 86_400_000;
@@ -11,7 +12,14 @@ const short = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day
 export function resolveRange(sel: RangeSelection, now: Date = new Date()): ResolvedRange {
   const today = startOfDay(now);
   if (sel.preset === 'today')
-    return { preset: 'today', from: today, to: today, days: 1, label: 'Today', previousLabel: 'yesterday' };
+    return {
+      preset: 'today',
+      from: today,
+      to: today,
+      days: 1,
+      label: insights.reports.range.today,
+      previousLabel: insights.reports.range.yesterday,
+    };
   if (sel.preset === 'custom' && sel.from && sel.to) {
     const from = startOfDay(sel.from <= sel.to ? sel.from : sel.to),
       to = startOfDay(sel.from <= sel.to ? sel.to : sel.from),
@@ -22,7 +30,7 @@ export function resolveRange(sel: RangeSelection, now: Date = new Date()): Resol
       to,
       days,
       label: days === 1 ? short(from) : `${short(from)} – ${short(to)}`,
-      previousLabel: `the ${days} days before`,
+      previousLabel: insights.reports.range.daysBefore(days),
     };
   }
   const days = sel.preset === '30d' ? 30 : 7;
@@ -31,8 +39,8 @@ export function resolveRange(sel: RangeSelection, now: Date = new Date()): Resol
     from: addDays(today, 1 - days),
     to: today,
     days,
-    label: `Last ${days} days`,
-    previousLabel: `previous ${days} days`,
+    label: insights.reports.range.last(days),
+    previousLabel: insights.reports.range.previous(days),
   };
 }
 

@@ -7,6 +7,7 @@ import { copy } from '../copy';
 import { settingsStore, useSettings } from '../data/store';
 import { connectionErrors } from '../model/validate';
 import type { ConnectionDef, ConnectionField } from '../model/types';
+import { localized } from '@/i18n';
 
 function Form({ def, onOpenChange }: { def: ConnectionDef; onOpenChange(o: boolean): void }) {
   const saved = useSettings((s) => s.connections[def.id].values);
@@ -42,7 +43,7 @@ function Form({ def, onOpenChange }: { def: ConnectionDef; onOpenChange(o: boole
       title={copy.edit.title(def.name)}
       subtitle={copy.edit.subtitle}
       divided
-      secondary={{ label: 'Cancel', onPress: () => onOpenChange(false) }}
+      secondary={{ label: localized('common').cancel, onPress: () => onOpenChange(false) }}
       primary={{ label: copy.edit.save }}
       onSubmit={submit}
     >

@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
+import { LanguageSelect } from '@/components/data/LanguageSelect';
+import { DEFAULT_LOCALE, toLocale } from '@/i18n';
 import { Select } from '@/components/base/select/select';
 import { SettingsRow } from '@/components/data/SettingsRow';
 import { notify } from '@/ui/toast';
@@ -8,8 +10,7 @@ import { copy } from '../copy';
 import { ZONES } from '../model/zones';
 import { settingsStore, useSettings } from '../data/store';
 import type { GeneralSettings, Units } from '../model/types';
-
-const LANGUAGES = ['English'];
+import { localized } from '@/i18n';
 
 /** Site name, time zone, units and language: one form with Save / Cancel (Save is enabled only after a change). */
 export function GeneralPanel() {
@@ -20,7 +21,7 @@ export function GeneralPanel() {
   const zones = useMemo(() => (ZONES.includes(saved.timeZone) ? ZONES : [saved.timeZone, ...ZONES]), [saved.timeZone]);
   const save = () => {
     if (!g.siteName.trim()) {
-      setError('Required');
+      setError(localized('common').required);
       return;
     }
     settingsStore.getState().saveGeneral({ ...g, siteName: g.siteName.trim() });
@@ -65,14 +66,11 @@ export function GeneralPanel() {
         </Select>
       </SettingsRow>
       <SettingsRow label={copy.general.language} hint={copy.general.languageHint}>
-        <Select
+        <LanguageSelect
           aria-label={copy.general.language}
-          selectedKey={g.language}
-          onSelectionChange={(k) => setG({ ...g, language: String(k) })}
-          items={LANGUAGES.map((l) => ({ id: l, label: l }))}
-        >
-          {(item) => <Select.Item {...item} />}
-        </Select>
+          value={toLocale(g.language) ?? DEFAULT_LOCALE}
+          onChange={(language) => setG({ ...g, language })}
+        />
       </SettingsRow>
       <p className="pt-4 text-xs text-tertiary">{copy.general.note}</p>
       <div className="flex justify-end gap-3 pt-4">

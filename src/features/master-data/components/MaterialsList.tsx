@@ -8,6 +8,7 @@ import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { DataTable, type Column } from '@/components/data/DataTable';
 import { RowMenu } from '@/components/data/RowMenu';
 import { copy } from '../copy';
+import { t } from '../text';
 import { filterMaterials } from '../model/logic';
 import { useMasterData } from '../model/store';
 import type { Material } from '../model/types';
@@ -123,7 +124,7 @@ export function MaterialsList({ onAddMore, onAdd }: Props) {
             />
             <Select
               size="sm"
-              aria-label="Group"
+              aria-label={t.masterData.group}
               className="w-[200px]"
               selectedKey={group || 'all'}
               onSelectionChange={(k) => setGroup(k === 'all' ? ALL : String(k))}

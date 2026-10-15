@@ -11,6 +11,7 @@ import type {
   TripRow,
 } from './types';
 import type { ConditionClock } from './trackers';
+import { t } from '../text';
 
 /** Pure functions: telemetry in, dashboard numbers out. Thresholds are constants here so the rules are in one place. */
 export const WAIT_WARN_S = 45,
@@ -18,15 +19,23 @@ export const WAIT_WARN_S = 45,
   BATTERY_LOW = 25,
   BATTERY_CRITICAL = 10;
 
+/** `label` is a getter: it reads the language in use each time, never a text captured at load. */
+const group = (id: StateGroup, color: string) => ({
+  id,
+  color,
+  get label() {
+    return t.groups[id];
+  },
+});
 export const GROUPS: { id: StateGroup; label: string; color: string }[] = [
-  { id: 'moving', label: 'Moving', color: '#14b8a6' },
-  { id: 'working', label: 'Working', color: '#f59e0b' },
-  { id: 'waiting', label: 'Waiting', color: '#8b5cf6' },
-  { id: 'charging', label: 'Charging', color: '#22c55e' },
-  { id: 'parked', label: 'Parked', color: '#64748b' },
-  { id: 'idle', label: 'Idle', color: '#94a3b8' },
-  { id: 'attention', label: 'Blocked / error', color: '#ef4444' },
-  { id: 'offline', label: 'Offline', color: '#d4d4d4' },
+  group('moving', '#14b8a6'),
+  group('working', '#f59e0b'),
+  group('waiting', '#8b5cf6'),
+  group('charging', '#22c55e'),
+  group('parked', '#64748b'),
+  group('idle', '#94a3b8'),
+  group('attention', '#ef4444'),
+  group('offline', '#d4d4d4'),
 ];
 export const emptyCounts = (): Record<StateGroup, number> => ({
   moving: 0,
@@ -71,11 +80,14 @@ export function fleetStates(i: DashboardInput): FleetState[] {
   });
 }
 
-const WAIT_TEXT: Record<string, string> = {
-  intersection: 'for an intersection to clear',
-  traffic: 'for a traffic zone to free up',
-  headway: 'behind another robot',
-};
+const waitText = (reason?: string | null) =>
+  reason === 'intersection'
+    ? t.waitFor.intersection
+    : reason === 'traffic'
+      ? t.waitFor.traffic
+      : reason === 'headway'
+        ? t.waitFor.headway
+        : t.waitFor.road;
 /** Robots that need the supervisor, most urgent first (one entry per robot). `clock` gives how long each has been in that condition. */
 export function attentionList(i: DashboardInput, clock: ConditionClock): AttentionItem[] {
   const fleetName = (id: string) => i.fleets.find((f) => f.id === id)?.name ?? id;
@@ -95,8 +107,8 @@ export function attentionList(i: DashboardInput, clock: ConditionClock): Attenti
         kind: r.state,
         level: 'critical',
         seconds,
-        title: r.state === 'error' ? 'has an error' : 'is blocked',
-        detail: r.alerts?.[0]?.msg ?? (r.state === 'error' ? 'Reported a fault' : 'Something is in its way'),
+        title: r.state === 'error' ? t.attention.hasError : t.attention.isBlocked,
+        detail: r.alerts?.[0]?.msg ?? (r.state === 'error' ? t.attention.faultReported : t.attention.inTheWay),
       });
     }
     if (r.state === 'waiting') {
@@ -106,8 +118,8 @@ export function attentionList(i: DashboardInput, clock: ConditionClock): Attenti
           kind: 'waiting',
           level: seconds >= T.waitUrgentS ? 'critical' : 'warn',
           seconds,
-          title: `has waited ${fmtDuration(seconds)}`,
-          detail: `Waiting ${WAIT_TEXT[r.waitReason ?? ''] ?? 'for the road ahead'}${r.traffic ? ` (${r.traffic.zoneId})` : ''}${r.waitsOn?.length ? `, ${r.waitsOn[0]} is first` : ''}`,
+          title: t.attention.waited(fmtDuration(seconds)),
+          detail: t.attention.waiting(waitText(r.waitReason), r.traffic?.zoneId ?? '', r.waitsOn?.[0] ?? ''),
         });
     }
     if (r.battery < T.batteryLow && r.state !== 'charging' && r.task?.type !== 'charge')
@@ -115,8 +127,8 @@ export function attentionList(i: DashboardInput, clock: ConditionClock): Attenti
         kind: 'battery',
         level: r.battery < BATTERY_CRITICAL ? 'critical' : 'warn',
         seconds: secs('battery'),
-        title: `battery at ${Math.round(r.battery)}%`,
-        detail: 'Not heading to a charger',
+        title: t.attention.battery(Math.round(r.battery)),
+        detail: t.attention.noCharger,
       });
     const top = cands.sort((a, b) =>
       a.level === b.level ? b.seconds - a.seconds : a.level === 'critical' ? -1 : 1,
@@ -131,12 +143,12 @@ export function statusOf(attention: AttentionItem[], robots: RobotTelemetry[]): 
   const crit = attention.filter((a) => a.level === 'critical').length;
   const level: Level = crit ? 'critical' : attention.length ? 'warn' : 'ok';
   const working = robots.filter((r) => r.state === 'moving' || r.state === 'working').length;
-  const detail = `${working} of ${robots.length} robots working`;
-  if (level === 'ok') return { level, headline: 'All clear. The floor is running normally.', detail };
+  const detail = t.status.working(working, robots.length);
+  if (level === 'ok') return { level, headline: t.status.allClear, detail };
   const n = attention.length;
   return {
     level,
-    headline: `${n} robot${n > 1 ? 's' : ''} need${n > 1 ? '' : 's'} you${crit ? `, ${crit} urgent` : ''}`,
+    headline: t.status.need(n, crit),
     detail,
   };
 }
@@ -185,8 +197,10 @@ export function batteryView(i: DashboardInput): BatteryView {
 
 export const fmtDuration = (s: number) =>
   s < 60
-    ? `${s} s`
+    ? t.duration.seconds(s)
     : s < 3600
-      ? `${Math.floor(s / 60)} min${s % 60 >= 10 ? ` ${s % 60} s` : ''}`
-      : `${Math.floor(s / 3600)} h ${Math.floor((s % 3600) / 60)} min`;
+      ? s % 60 >= 10
+        ? t.duration.minutesSeconds(Math.floor(s / 60), s % 60)
+        : t.duration.minutes(Math.floor(s / 60))
+      : t.duration.hoursMinutes(Math.floor(s / 3600), Math.floor((s % 3600) / 60));
 export { summarise };

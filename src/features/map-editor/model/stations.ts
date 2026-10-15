@@ -1,13 +1,21 @@
 import type { StationType } from '@/core/types';
+import { text } from '../text';
 import type { MapData, MapStation } from './types';
 
 /** Pure edits of the stations of a map (the draft). Each returns a NEW MapData and never touches the published versions. */
 /** What a station is for on the floor. Pick-up / drop-off / buffer are not types: what happens at a station comes from the workflow, so those three all show as a plain Station. */
+const stationType = (id: 'drop' | 'asrs' | 'charge' | 'park', color: string) => ({
+  id: id as StationType,
+  get label() {
+    return text.stationTypes[id];
+  },
+  color,
+});
 export const STATION_TYPES: { id: StationType; label: string; color: string }[] = [
-  { id: 'drop', label: 'Station', color: '#f59e0b' },
-  { id: 'asrs', label: 'ASRS', color: '#14b8a6' },
-  { id: 'charge', label: 'Charging', color: '#3b82f6' },
-  { id: 'park', label: 'Parking', color: '#64748b' },
+  stationType('drop', '#f59e0b'),
+  stationType('asrs', '#14b8a6'),
+  stationType('charge', '#3b82f6'),
+  stationType('park', '#64748b'),
 ];
 export const plainType = (t: StationType): StationType => (t === 'pick' || t === 'buffer' ? 'drop' : t);
 export const stationColor = (t: StationType) => STATION_TYPES.find((x) => x.id === plainType(t))?.color ?? '#64748b';
@@ -36,7 +44,10 @@ export function addStation(
     data: {
       ...data,
       nodes: [...data.nodes, { id: nodeId, x: round(at.x), y: round(at.y), kind: 'station' }],
-      stations: [...data.stations, { id, name: `Station ${n}`, nodeId, type, zone: null, fleets: [fleetLive] }],
+      stations: [
+        ...data.stations,
+        { id, name: text.defaultNames.station(n), nodeId, type, zone: null, fleets: [fleetLive] },
+      ],
     },
   };
 }
@@ -67,8 +78,8 @@ export function deleteStation(data: MapData, id: string): MapData {
 /** What is wrong with a name ('' = fine): empty, or already used by another station of the map (ignoring case). */
 export function nameProblem(data: MapData, id: string, name: string): string {
   const t = name.trim();
-  if (!t) return 'Give the station a name';
+  if (!t) return text.nameProblems.station.empty;
   return data.stations.some((s) => s.id !== id && s.name.trim().toLowerCase() === t.toLowerCase())
-    ? 'Another station already has this name'
+    ? text.nameProblems.station.taken
     : '';
 }

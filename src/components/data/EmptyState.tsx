@@ -1,6 +1,9 @@
 import type { FC, ReactNode } from 'react';
 import { SearchLg } from '@untitledui/icons';
 import { cx } from '@/utils/cx';
+import { localized } from '@/i18n';
+
+const misc = localized('misc');
 
 type Size = 'sm' | 'md' | 'lg';
 const SIZE: Record<Size, { box: string; circle: string; icon: string; title: string; sub: string }> = {
@@ -77,4 +80,4 @@ export const NoResults = ({
   subtext?: ReactNode;
   size?: Size;
   className?: string;
-}) => <EmptyState icon={SearchLg} title="No results" subtext={subtext} size={size} className={className} />;
+}) => <EmptyState icon={SearchLg} title={misc.ui.noResults} subtext={subtext} size={size} className={className} />;

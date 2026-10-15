@@ -9,6 +9,7 @@ import { Label } from '@/components/base/input/label';
 import { Select } from '@/components/base/select/select';
 import { EmptyState } from '@/components/data/EmptyState';
 import { copy } from '../copy';
+import { text } from '../text';
 import { help } from '../help';
 import type { MapData, MapZone, ZoneProp } from '../model/types';
 import { zoneNameProblem } from '../model/zones';
@@ -203,7 +204,13 @@ export function ZoneForm({
           />
         ),
       )}
-      <Input label={f.corners} {...help('zone.corners')} size="sm" value={`${zone.polygon.length} points`} isDisabled />
+      <Input
+        label={f.corners}
+        {...help('zone.corners')}
+        size="sm"
+        value={text.points(zone.polygon.length)}
+        isDisabled
+      />
       <div className="mt-auto flex flex-col gap-2">
         <LocateButton onPress={onLocate} />
         {!editable ? (

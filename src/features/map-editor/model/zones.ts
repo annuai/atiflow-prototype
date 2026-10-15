@@ -1,3 +1,4 @@
+import { text } from '../text';
 import { zoneType } from './zoneTypes';
 import type { MapData, MapZone, ZoneProp, ZoneTypeId } from './types';
 
@@ -66,9 +67,9 @@ export const deleteZone = (data: MapData, id: string): MapData => ({
 });
 export function zoneNameProblem(data: MapData, id: string, name: string): string {
   const t = name.trim();
-  if (!t) return 'Give the zone a name';
+  if (!t) return text.nameProblems.zone.empty;
   return data.zones.some((z) => z.id !== id && z.name.trim().toLowerCase() === t.toLowerCase())
-    ? 'Another zone already has this name'
+    ? text.nameProblems.zone.taken
     : '';
 }
 export const pointInPolygon = (x: number, y: number, poly: P[]): boolean => {

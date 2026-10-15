@@ -1,5 +1,8 @@
 import { connectionErrors } from '../model/validate';
 import type { ConnectionDef } from '../model/types';
+import { localized } from '@/i18n';
+
+const misc = localized('misc').settings;
 
 /**
  * How a connection is checked and synced. Today a MOCK (no network): it checks the values are complete and well formed and answers after a short wait, so the page behaves like
@@ -20,8 +23,8 @@ export const mockTester = (delayMs = 700): ConnectionTester => ({
     if (key) return { ok: false, message: `${def.fields.find((f) => f.key === key)!.label}: ${bad[key]}` };
     const down = def.fields.find((f) => /\.invalid\b|unreachable/i.test(values[f.key] ?? ''));
     return down
-      ? { ok: false, message: `No answer from ${values[down.key]} (timed out)` }
-      : { ok: true, message: 'Reachable' };
+      ? { ok: false, message: misc.tester.noAnswer(values[down.key]) }
+      : { ok: true, message: misc.tester.reachable };
   },
   async sync() {
     await wait(delayMs);

@@ -9,6 +9,8 @@ import { wfStore } from '@/features/workflow-builder/model/store';
 import { notificationApi } from '@/features/notifications/notificationApi';
 import { NotificationsProvider } from '@/features/notifications/NotificationsProvider';
 import { PersistenceNotice } from '@/shell/PersistenceNotice';
+import { LocaleBoundary } from '@/i18n';
+import { LocaleSync } from './LocaleSync';
 import { AppToaster } from '@/ui/toast';
 import { NoAccessPage } from '@/features/access/NoAccessPage';
 import { ShellLayout } from '@/shell/ShellLayout';
@@ -110,72 +112,76 @@ export function AppRoot() {
   return (
     <BrowserRouter>
       <NotificationsProvider api={notificationApi}>
-        <AppToaster />
-        <PersistenceNotice />
-        <PageMemory />
-        <PageViews />
-        <Routes>
-          <Route path="/login" element={<LoginRoute />} />
-          <Route path="/supervisor" element={<RootRedirect />} />
-          <Route path="/operator" element={<RootRedirect />} />
-          <Route path="/supervisor/dashboard-new" element={<MovedTo to="/supervisor/dashboard" />} />
-          {/* one persistent frame (sidebar + top bar) per workspace; the pages below render inside its content area */}
-          <Route
-            element={
-              <RequireAccess>
-                <ShellLayout workspace="supervisor" />
-              </RequireAccess>
-            }
-          >
-            <Route path="/supervisor/dashboard" element={<DashboardPage />} />
-            <Route path="/supervisor/reports" element={<ReportsPage />} />
-            <Route path="/supervisor/notifications" element={<NotificationsPage />} />
-            <Route path="/supervisor/action-center" element={<ActionCenterPage />} />
-            <Route path="/supervisor/livefloor" element={<LiveFloorPage />} />
-            <Route path="/supervisor/settings/:tab?" element={<PreferencesPage />} />
-          </Route>
-          <Route
-            element={
-              <RequireAccess>
-                <ShellLayout workspace="operator" />
-              </RequireAccess>
-            }
-          >
-            <Route path="/operator/request" element={<RequestPage />} />
-            <Route path="/operator/book" element={<BookTripPage />} />
-            <Route path="/operator/approve" element={<ApprovePage />} />
-            <Route path="/operator/history" element={<OperatorHistoryPage />} />
-            <Route path="/operator/action-center" element={<ActionCenterPage />} />
-            <Route path="/operator/notifications" element={<NotificationsPage />} />
-          </Route>
-          <Route
-            element={
-              <RequireAccess>
-                <ShellLayout workspace="configurator" />
-              </RequireAccess>
-            }
-          >
-            <Route path="/configurator" element={<NewWorkflow />} />
-            <Route path="/configurator/workflows/:id" element={<WorkflowBuilderPage />} />
-            {(['robot', 'hardware'] as const).map((k) => (
-              <Route key={k} path={`/configurator/${KINDS[k].route}`}>
-                <Route index element={<DeviceListPage kind={KINDS[k]} />} />
-                <Route path=":name" element={<DeviceDetailPage kind={KINDS[k]} />} />
-              </Route>
-            ))}
-            <Route path="/configurator/master-data/:tab?" element={<MasterDataPage />} />
-            <Route path="/configurator/fleets" element={<FleetsIndexPage />} />
-            <Route path="/configurator/fleets/:name/:tab?" element={<FleetPage />} />
-            <Route path="/configurator/notifications" element={<NotificationsPage />} />
-            <Route path="/configurator/users" element={<UsersPage />} />
-            <Route path="/configurator/users/:username" element={<UserDetailPage />} />
-            <Route path="/configurator/settings/:tab?" element={<SettingsPage />} />
-            <Route path="/configurator/maps" element={<MapsPage />} />
-            <Route path="/configurator/maps/:id" element={<MapEditorPage />} />
-          </Route>
-          <Route path="/no-access" element={<NoAccessPage />} />
-          <Route path="*" element={<RootRedirect />} />
-        </Routes>
+        <LocaleSync />
+        <LocaleBoundary>
+          <AppToaster />
+          <PersistenceNotice />
+          <PageMemory />
+          <PageViews />
+          <Routes>
+            <Route path="/login" element={<LoginRoute />} />
+            <Route path="/supervisor" element={<RootRedirect />} />
+            <Route path="/operator" element={<RootRedirect />} />
+            <Route path="/supervisor/dashboard-new" element={<MovedTo to="/supervisor/dashboard" />} />
+            {/* one persistent frame (sidebar + top bar) per workspace; the pages below render inside its content area */}
+            <Route
+              element={
+                <RequireAccess>
+                  <ShellLayout workspace="supervisor" />
+                </RequireAccess>
+              }
+            >
+              <Route path="/supervisor/dashboard" element={<DashboardPage />} />
+              <Route path="/supervisor/reports" element={<ReportsPage />} />
+              <Route path="/supervisor/notifications" element={<NotificationsPage />} />
+              <Route path="/supervisor/action-center" element={<ActionCenterPage />} />
+              <Route path="/supervisor/livefloor" element={<LiveFloorPage />} />
+              <Route path="/supervisor/settings/:tab?" element={<PreferencesPage />} />
+            </Route>
+            <Route
+              element={
+                <RequireAccess>
+                  <ShellLayout workspace="operator" />
+                </RequireAccess>
+              }
+            >
+              <Route path="/operator/request" element={<RequestPage />} />
+              <Route path="/operator/book" element={<BookTripPage />} />
+              <Route path="/operator/approve" element={<ApprovePage />} />
+              <Route path="/operator/history" element={<OperatorHistoryPage />} />
+              <Route path="/operator/action-center" element={<ActionCenterPage />} />
+              <Route path="/operator/notifications" element={<NotificationsPage />} />
+              <Route path="/operator/settings/:tab?" element={<PreferencesPage />} />
+            </Route>
+            <Route
+              element={
+                <RequireAccess>
+                  <ShellLayout workspace="configurator" />
+                </RequireAccess>
+              }
+            >
+              <Route path="/configurator" element={<NewWorkflow />} />
+              <Route path="/configurator/workflows/:id" element={<WorkflowBuilderPage />} />
+              {(['robot', 'hardware'] as const).map((k) => (
+                <Route key={k} path={`/configurator/${KINDS[k].route}`}>
+                  <Route index element={<DeviceListPage kind={KINDS[k]} />} />
+                  <Route path=":name" element={<DeviceDetailPage kind={KINDS[k]} />} />
+                </Route>
+              ))}
+              <Route path="/configurator/master-data/:tab?" element={<MasterDataPage />} />
+              <Route path="/configurator/fleets" element={<FleetsIndexPage />} />
+              <Route path="/configurator/fleets/:name/:tab?" element={<FleetPage />} />
+              <Route path="/configurator/notifications" element={<NotificationsPage />} />
+              <Route path="/configurator/users" element={<UsersPage />} />
+              <Route path="/configurator/users/:username" element={<UserDetailPage />} />
+              <Route path="/configurator/settings/:tab?" element={<SettingsPage />} />
+              <Route path="/configurator/maps" element={<MapsPage />} />
+              <Route path="/configurator/maps/:id" element={<MapEditorPage />} />
+            </Route>
+            <Route path="/no-access" element={<NoAccessPage />} />
+            <Route path="*" element={<RootRedirect />} />
+          </Routes>
+        </LocaleBoundary>
       </NotificationsProvider>
     </BrowserRouter>
   );

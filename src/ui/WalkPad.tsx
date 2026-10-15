@@ -4,6 +4,7 @@ import { Button } from '@/components/base/buttons/button';
 import { store, useApp } from '../core/store';
 import { handle } from './engineHandle';
 import { useCoarse } from './useCoarse';
+import { copy } from './copy';
 
 const R = 52; // stick travel in px
 
@@ -37,7 +38,7 @@ export function WalkPad() {
       <div
         className="walkpad"
         role="application"
-        aria-label="Move stick"
+        aria-label={copy.walk.stick}
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId);
           const r = e.currentTarget.getBoundingClientRect();
@@ -57,7 +58,7 @@ export function WalkPad() {
           iconLeading={XClose}
           onPress={() => store.getState().setCameraMode('orbit')}
         >
-          Exit walk
+          {copy.walk.exit}
         </Button>
       </div>
     </>

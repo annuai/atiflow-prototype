@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 import { useListData } from 'react-stately';
 import { TagSelect } from '@/components/base/select/tag-select';
 import type { SelectItemType } from '@/components/base/select/select-shared';
+import { localized } from '@/i18n';
+
+const misc = localized('misc');
 
 export interface TagOption {
   id: string;
@@ -30,7 +33,7 @@ export function TagMultiSelect({
   options,
   value,
   onChange,
-  placeholder = 'Search',
+  placeholder = misc.ui.search,
   hint,
   error,
   required,

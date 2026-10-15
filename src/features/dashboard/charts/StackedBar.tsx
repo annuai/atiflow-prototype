@@ -1,3 +1,5 @@
+import { t } from '../text';
+
 export interface Segment {
   key: string;
   label: string;
@@ -20,7 +22,7 @@ export function StackedBar({
   const total = segments.reduce((a, s) => a + s.value, 0);
   if (!total)
     return (
-      <div className="rounded-full bg-secondary" style={{ height }} role="img" aria-label={`${label}: no robots`} />
+      <div className="rounded-full bg-secondary" style={{ height }} role="img" aria-label={t.chart.noRobots(label)} />
     );
   return (
     <div

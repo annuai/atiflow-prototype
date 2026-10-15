@@ -7,5 +7,5 @@ export function pageKey(pathname: string): string {
   return p
     .replace(/^(\/configurator\/fleets\/[^/]+)\/.*$/, '$1')
     .replace(/^(\/configurator\/master-data)\/.*$/, '$1')
-    .replace(/^(\/(?:configurator|supervisor)\/settings)\/.*$/, '$1');
+    .replace(/^(\/(?:configurator|supervisor|operator)\/settings)\/.*$/, '$1');
 }

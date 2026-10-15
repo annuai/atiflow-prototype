@@ -4,6 +4,9 @@ import type { NavGraph, SiteLayout, StationType } from '../core/types';
 import type { TrafficZoneState } from '../core/rules';
 import { LaneGraph } from '../core/lanes';
 import { labelSprite, liveLabel, stripeTexture } from './labels';
+import { localized } from '@/i18n';
+
+const copy = localized('floor');
 
 export const SHARED_COLOR = '#6366f1';
 export const STATION_COLOR: Record<StationType, string> = {
@@ -183,7 +186,7 @@ export class RulesLayer {
         this.root.add(w);
       }
       const lb = liveLabel(560, 80);
-      lb.set(`NO-GO · ${z.name}`, 'rgba(185,28,28,.92)');
+      lb.set(copy.labels3d.noGo(z.name), 'rgba(185,28,28,.92)');
       lb.sprite.position.set(...toScene((x0 + x1) / 2, (y0 + y1) / 2, 2.2));
       lb.sprite.scale.set(7, 7 / lb.sprite.userData.aspect, 1);
       this.root.add(lb.sprite);
@@ -283,7 +286,11 @@ export class RulesLayer {
       o.label.sprite.visible = occ > 0 || wait > 0 || d < 75;
       const cap = st?.zone.capacity ?? 1;
       o.label.set(
-        wait ? `${id} · ${occ}/${cap} · ${wait} waiting` : occ ? `${id} · ${occ}/${cap} occupied` : `${id} · free`,
+        wait
+          ? copy.labels3d.zoneWaiting(id, occ, cap, wait)
+          : occ
+            ? copy.labels3d.zoneOccupied(id, occ, cap)
+            : copy.labels3d.zoneFree(id),
         over
           ? 'rgba(162,28,175,.92)'
           : wait

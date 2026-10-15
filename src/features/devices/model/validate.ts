@@ -1,4 +1,5 @@
 import type { Device, DeviceKind, FieldValue } from './types';
+import { t } from '../text';
 
 export const nameOf = (d: Device) => String(d.values.name ?? '');
 const text = (v: FieldValue | undefined) => (Array.isArray(v) ? v.join(',') : (v ?? '')).trim();
@@ -14,9 +15,9 @@ export function validateNew(
   for (const f of kind.fields) {
     if (!f.modal) continue;
     const v = text(values[f.key]);
-    if (f.required && !v) errors[f.key] = `${f.label} is required`;
+    if (f.required && !v) errors[f.key] = t.errors.required(f.label);
     else if (f.unique && v && existing.some((d) => same(text(d.values[f.key]), v)))
-      errors[f.key] = `${f.label} "${v}" is already registered`;
+      errors[f.key] = t.errors.taken(f.label, v);
   }
   return errors;
 }

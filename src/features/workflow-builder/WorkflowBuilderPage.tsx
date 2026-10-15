@@ -17,27 +17,20 @@ import { selectFleet, selectNodes, useFleetNames, useWorkflow, wfStore } from '.
 import { publishProblem } from './model/validate';
 import { runSimulation, stopSimulation } from './sim/runner';
 import './workflow.css';
-
-const NO_FLEET = {
-  title: 'Select a fleet to start building workflows',
-  body: 'Choose the fleet this workflow is for. Its materials, stations and robots are used while you build.',
-  draft: 'New workflow',
-  placeholder: 'Select a fleet',
-  none: 'No fleets yet: create one in the sidebar',
-};
+import { copy } from './copy';
 
 /** Canvas stand-in shown until the user picks a fleet for the new workflow. */
 function SelectFleetPrompt() {
   const fleets = useFleetNames();
   return (
     <div className="canvas wf-canvas wf-nofleet">
-      <EmptyState icon={Dataflow03} size="lg" title={NO_FLEET.title} subtext={NO_FLEET.body}>
+      <EmptyState icon={Dataflow03} size="lg" title={copy.noFleet.title} subtext={copy.noFleet.body}>
         <Select
           size="md"
-          aria-label="Fleet for this workflow"
+          aria-label={copy.noFleet.aria}
           className="mt-4 w-64"
           selectedKey={null}
-          placeholder={fleets.length ? NO_FLEET.placeholder : NO_FLEET.none}
+          placeholder={fleets.length ? copy.noFleet.placeholder : copy.noFleet.none}
           isDisabled={!fleets.length}
           onSelectionChange={(k) => wfStore.getState().assignFleet(String(k))}
           items={fleets.map((n) => ({ id: n, label: n }))}
@@ -111,8 +104,8 @@ function Builder() {
       <div className="content">
         <div className="title-block wf-title">
           <div>
-            <h1>Workflow Builder</h1>
-            <p>Set new workflows and publish them</p>
+            <h1>{copy.page.title}</h1>
+            <p>{copy.page.subtitle}</p>
           </div>
           <div className="actions">
             <Button
@@ -123,14 +116,18 @@ function Builder() {
               iconLeading={sim.status === 'running' ? Stop : sim.status === 'done' ? CheckCircle : Play}
               onPress={onSimulate}
             >
-              {sim.status === 'running' ? 'Stop' : sim.status === 'done' ? 'Completed' : 'Simulate'}
+              {sim.status === 'running'
+                ? copy.page.stop
+                : sim.status === 'done'
+                  ? copy.page.completed
+                  : copy.page.simulate}
               {sim.status === 'running' && <span className="bar" style={{ width: sim.progress + '%' }} />}
             </Button>
             <Button size="sm" color="secondary" isDisabled={!hasFleet} onPress={() => wfStore.getState().saveDraft()}>
-              Save Draft
+              {copy.page.saveDraft}
             </Button>
             <Button size="sm" color="primary" isDisabled={!hasFleet} isLoading={publishing} onPress={onPublish}>
-              Publish Workflow
+              {copy.page.publish}
             </Button>
           </div>
         </div>
@@ -142,19 +139,19 @@ function Builder() {
                 <>
                   <WorkflowName key={current} name={title} />
                   <Badge size="sm" color="brand">
-                    {countNodes(nodes)} nodes
+                    {copy.page.nodes(countNodes(nodes))}
                   </Badge>
                 </>
               ) : (
-                <h2 className="wf-name">{NO_FLEET.draft}</h2>
+                <h2 className="wf-name">{copy.noFleet.draft}</h2>
               )}
               <div style={{ flex: 1 }} />
               <ButtonUtility
                 className="hide-sm"
                 size="sm"
                 icon={ReverseLeft}
-                tooltip="Undo (Ctrl+Z)"
-                aria-label="Undo"
+                tooltip={copy.page.undoTip}
+                aria-label={copy.page.undo}
                 isDisabled={!canUndo}
                 onPress={() => wfStore.getState().undo()}
               />
@@ -162,18 +159,18 @@ function Builder() {
                 className="hide-sm"
                 size="sm"
                 icon={ReverseRight}
-                tooltip="Redo (Ctrl+Shift+Z)"
-                aria-label="Redo"
+                tooltip={copy.page.redoTip}
+                aria-label={copy.page.redo}
                 isDisabled={!canRedo}
                 onPress={() => wfStore.getState().redo()}
               />
-              <span style={{ fontSize: 12, fontWeight: 600 }}>Fleet -</span>
+              <span style={{ fontSize: 12, fontWeight: 600 }}>{copy.page.fleetLabel}</span>
               <Select
                 size="sm"
-                aria-label="Fleet"
+                aria-label={copy.page.fleetAria}
                 className="fleet-select"
                 selectedKey={fleet || null}
-                placeholder={NO_FLEET.placeholder}
+                placeholder={copy.noFleet.placeholder}
                 onSelectionChange={(k) => wfStore.getState().assignFleet(String(k))}
                 items={fleets.map((n) => ({ id: n, label: n }))}
               >

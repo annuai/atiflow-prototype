@@ -69,7 +69,7 @@ export const SEED_USERS: UserRecord[] = [
 /** The revision in which a starting user first existed: a saved directory older than that gets the user added once (see `applySeedRevision`). */
 export const SEED_SINCE: Record<string, number> = { rohan: 4, sneha: 4, vikram: 5 };
 /** Bump this when the starting access of a seed user changes (e.g. Meera gets a new feature): a saved directory gets the new starting access added once (see `applySeedRevision`). */
-export const SEED_REVISION = 6;
+export const SEED_REVISION = 7;
 export const AVATARS: Record<string, string> = { arjun, kavin, meera };
 
 /** DUMMY credentials of the starting users (plain text on purpose, prototype only). Read by the dummy sign-in service and by nothing else. */

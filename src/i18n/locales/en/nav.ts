@@ -1,0 +1,56 @@
+/** Names of workspaces, roles, features and sidebar entries. Keys of `features` are permission ids (features/access/catalog.ts). */
+export const nav = {
+  workspaces: {
+    configurator: {
+      title: 'CONFIGURATOR',
+      name: 'Configurator',
+      blurb: 'Set up robots, maps, hardware, master data, workflows, fleets and settings',
+    },
+    supervisor: {
+      title: 'SUPERVISOR',
+      name: 'Supervisor',
+      blurb: 'Watch the floor and read how the fleet is doing',
+    },
+    operator: {
+      title: 'OPERATOR',
+      name: 'Operator',
+      blurb: 'Request materials, book trips, approve requests and handle robot calls',
+    },
+  },
+  roles: {
+    configurator: { label: 'Configurator', blurb: 'Full access to configuration, and manages users' },
+    supervisor: { label: 'Supervisor', blurb: 'Dashboard, reports, the live floor and the Action Center' },
+    operator: { label: 'Operator', blurb: 'Request, book trips, approve, history and the Action Center' },
+  },
+  features: {
+    'configurator.robots': 'Robots',
+    'configurator.maps': 'Maps',
+    'configurator.hardware': 'Hardware',
+    'configurator.master-data': 'Master Data',
+    'configurator.workflows': 'Workflows',
+    'configurator.fleets': 'Fleets',
+    'configurator.settings': 'Settings',
+    'supervisor.dashboard': 'Dashboard',
+    'supervisor.reports': 'Reports',
+    'supervisor.live-floor': 'Live Floor',
+    'supervisor.action-center': 'Action Center',
+    'supervisor.settings': 'Settings',
+    'operator.request': 'Request',
+    'operator.approve': 'Approve',
+    'operator.book-trip': 'Book trip',
+    'operator.history': 'History',
+    'operator.action-center': 'Action Center',
+    'operator.settings': 'Settings',
+  },
+  groups: { operations: 'Operations', globalSetup: 'Global Setup', build: 'Build', fleets: 'Fleets' },
+  items: {
+    users: 'Users',
+    notifications: 'Notifications',
+    allFleets: 'All fleets',
+    createFleet: 'Create new fleet',
+    fleetNameLabel: 'New fleet name',
+    fleetNamePlaceholder: 'Fleet name',
+    addFleet: 'Add',
+  },
+  hits: { robot: 'Robot', trip: 'Trip', zone: 'Zone', station: 'Station', fleet: 'Fleet', hardware: 'Hardware' },
+} as const;

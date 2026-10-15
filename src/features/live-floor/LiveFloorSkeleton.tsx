@@ -1,9 +1,10 @@
 import { Skeleton } from '@/components/skeleton/Skeleton';
+import { copy } from '@/ui/copy';
 
 /** The floor while the site and the robot models load: the controls and a few plan-shaped blocks in grey, so the canvas does not pop in from nothing. */
 export function LiveFloorSkeleton() {
   return (
-    <div role="status" aria-label="Loading the floor" className="absolute inset-0 z-20 overflow-hidden bg-[#e6ebe9]">
+    <div role="status" aria-label={copy.page.loading} className="absolute inset-0 z-20 overflow-hidden bg-[#e6ebe9]">
       <Skeleton className="absolute left-5 top-4 h-10 w-64 rounded-lg" />
       <Skeleton className="absolute left-[8%] top-[24%] h-24 w-[34%] rounded-md" />
       <Skeleton className="absolute left-[8%] top-[52%] h-20 w-[28%] rounded-md" />

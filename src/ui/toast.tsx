@@ -2,6 +2,7 @@ import { toast, Toaster } from 'sonner';
 import { AlertCircle, CheckCircle, InfoCircle, XClose } from '@untitledui/icons';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { FeaturedIcon } from '@/components/foundations/featured-icon/featured-icon';
+import { copy } from './copy';
 
 /**
  * App toasts. Untitled UI's own `Notifications`/`toaster` component is PRO-only (needs `npx untitledui login`), so this renders the
@@ -46,7 +47,7 @@ function Notice({
         <p className="text-sm font-semibold text-secondary">{title}</p>
         {description && <p className="mt-0.5 text-sm text-tertiary">{description}</p>}
       </div>
-      <ButtonUtility size="xs" color="tertiary" icon={XClose} tooltip="Dismiss" onPress={onClose} />
+      <ButtonUtility size="xs" color="tertiary" icon={XClose} tooltip={copy.toast.dismiss} onPress={onClose} />
     </div>
   );
 }

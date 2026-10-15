@@ -4,6 +4,7 @@ import { Badge } from '@/components/base/badges/badges';
 import { RowMenu } from '@/components/data/RowMenu';
 import { StatusBadge, type Device, type DeviceKind, nameOf } from '@/features/devices';
 import { copy } from '../copy';
+import { t } from '../text';
 
 interface Props {
   kind: DeviceKind;
@@ -26,7 +27,7 @@ export function DeviceCard({ kind, device, layout, fleet, onUnassign }: Props) {
       to={to}
       state={{ fleet }}
       className={`${cls} outline-focus-ring after:absolute after:inset-0 focus-visible:after:outline-2`}
-      aria-label={`Open ${name}`}
+      aria-label={t.fleets.open(name)}
     >
       {name}
     </Link>

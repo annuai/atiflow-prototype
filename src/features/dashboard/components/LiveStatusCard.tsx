@@ -4,14 +4,11 @@ import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { Select } from '@/components/base/select/select';
 import type { RobotTelemetry, SiteLayout } from '@/core/types';
 import { Card, CardTitle } from '@/components/data/Card';
+import { copy } from '../copy';
+import { t } from '../text';
 import { MAP_COLORS, mapStateOf, type MapColor } from '../data/mapState';
 
-const LEGEND: [MapColor, string][] = [
-  ['moving', 'Moving'],
-  ['idle', 'Idle'],
-  ['charging', 'Charging'],
-  ['attention', 'Attention'],
-];
+const LEGEND: MapColor[] = ['moving', 'idle', 'charging', 'attention'];
 const bbox = (pts: [number, number][]) => {
   const xs = pts.map((p) => p[0]),
     ys = pts.map((p) => p[1]);
@@ -72,9 +69,9 @@ export function LiveStatusCard({
   if (!site || !base)
     return (
       <Card className="h-full">
-        <CardTitle title="Live Status" />
+        <CardTitle title={t.live.title} />
         <div className="grid h-72 place-items-center rounded-xl bg-secondary text-sm text-tertiary">
-          Loading the floor…
+          {t.live.loading}
         </div>
       </Card>
     );
@@ -91,21 +88,22 @@ export function LiveStatusCard({
       <CardTitle
         title={
           <span className="flex items-center gap-2">
-            Live Status<span className="text-tertiary">-</span>
+            {t.live.title}
+            <span className="text-tertiary">-</span>
           </span>
         }
       >
         {!readOnly && (
           <Select
             size="sm"
-            aria-label="Zone"
+            aria-label={t.live.zone}
             className="w-44"
             selectedKey={zone}
             onSelectionChange={(k) => {
               setZone(String(k));
               setZoom(1);
             }}
-            items={[{ id: 'all', label: 'Whole floor' }, ...zones.map((z) => ({ id: z.id, label: z.name }))]}
+            items={[{ id: 'all', label: t.live.wholeFloor }, ...zones.map((z) => ({ id: z.id, label: z.name }))]}
           >
             {(item) => <Select.Item {...item} />}
           </Select>
@@ -115,8 +113,8 @@ export function LiveStatusCard({
             size="sm"
             color="secondary"
             icon={LinkExternal01}
-            tooltip="Open Live Floor"
-            aria-label="Open Live Floor"
+            tooltip={copy.map.open}
+            aria-label={copy.map.open}
             onPress={onOpen}
           />
         )}
@@ -131,7 +129,7 @@ export function LiveStatusCard({
           viewBox={view}
           className={readOnly ? 'block h-full min-h-0 w-full' : 'block h-72 w-full sm:h-80'}
           role="img"
-          aria-label="Floor plan with the robots on it"
+          aria-label={t.live.plan}
           preserveAspectRatio="xMidYMid meet"
         >
           <g transform="matrix(0 -1 1 0 0 0)">
@@ -145,7 +143,7 @@ export function LiveStatusCard({
                   onClick={() => onLocate(b.id)}
                   className="cursor-pointer"
                 >
-                  <title>{`${b.id} · ${b.state}`}</title>
+                  <title>{`${b.id} · ${t.robotState[b.state] ?? b.state}`}</title>
                   <circle r={r * 1.7} fill={c} fillOpacity={0.22} />
                   <circle r={r} fill={c} stroke="#fff" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
                 </g>
@@ -159,24 +157,24 @@ export function LiveStatusCard({
               size="sm"
               color="tertiary"
               icon={Plus}
-              aria-label="Zoom in"
+              aria-label={t.live.zoomIn}
               onPress={() => setZoom((z) => Math.min(6, z * 1.4))}
             />
             <ButtonUtility
               size="sm"
               color="tertiary"
               icon={Minus}
-              aria-label="Zoom out"
+              aria-label={t.live.zoomOut}
               onPress={() => setZoom((z) => Math.max(1, z / 1.4))}
             />
           </div>
         )}
       </div>
       <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
-        {LEGEND.map(([k, label]) => (
+        {LEGEND.map((k) => (
           <li key={k} className="flex items-center gap-1.5">
             <span className="size-2 rounded-full" style={{ background: MAP_COLORS[k] }} />
-            {label}
+            {t.live.legend[k]}
           </li>
         ))}
       </ul>

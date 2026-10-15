@@ -7,6 +7,7 @@ import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { timeAgo } from '@/utils/timeAgo';
 import { copy } from '../copy';
+import { t } from '../text';
 import { cancelRequest } from '../model/actions';
 import { canCancel, currentStep, groupRequests, type Person } from '../model/rules';
 import { useUserNames } from '../model/useUserNames';
@@ -114,7 +115,7 @@ export function RequestHistory({
           size="lg"
           value={filter}
           onChange={setFilter}
-          label="Show"
+          label={t.requests.tabsLabel.show}
           items={[
             { id: 'active', label: copy.history.filters.active },
             { id: 'past', label: copy.history.filters.past },

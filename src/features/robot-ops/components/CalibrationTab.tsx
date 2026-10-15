@@ -72,7 +72,7 @@ export function CalibrationTab({ robot, online }: { robot: RobotRef; online: boo
         icon={Target04}
         title={copy.calibration.confirmTitle(asked?.title ?? '')}
         subtitle={copy.calibration.confirmBody}
-        secondary={{ label: 'Cancel', onPress: () => setAsking(null) }}
+        secondary={{ label: copy.config.cancel, onPress: () => setAsking(null) }}
         primary={{
           label: copy.calibration.action,
           onPress: () => {

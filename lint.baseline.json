@@ -1,9 +1,9 @@
 {
-  "total": 27,
+  "total": 26,
   "rules": {
     "complexity": 4,
     "max-lines": 4,
-    "react-hooks/exhaustive-deps": 8,
+    "react-hooks/exhaustive-deps": 7,
     "react-hooks/refs": 9,
     "react-hooks/use-memo": 2
   }

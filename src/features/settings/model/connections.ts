@@ -1,4 +1,9 @@
+import { localized } from '@/i18n';
 import type { ConnectionDef, ConnectionId } from './types';
+
+// text is read through getters: the language can change while the app runs, a module-level copy would stay in the first one
+const fm = localized('misc').settings.connections.fleetManager;
+const mes = localized('misc').settings.connections.mes;
 
 /**
  * THE catalog of connections. Everything about one (its name, fields, whether it syncs) is here; the cards, the edit dialog, the status and the test all read it.
@@ -7,46 +12,84 @@ import type { ConnectionDef, ConnectionId } from './types';
 export const CONNECTIONS: ConnectionDef[] = [
   {
     id: 'fleet-manager',
-    name: 'Fleet Manager',
+    get name() {
+      return fm.name;
+    },
     initials: 'FM',
     color: '#0f9d8a',
     syncs: true,
     fields: [
       {
         key: 'host',
-        label: 'Host address',
+        get label() {
+          return fm.hostAddress;
+        },
         kind: 'host',
-        placeholder: '192.168.100.31 or fleet.example.com',
+        get placeholder() {
+          return fm.hostPlaceholder;
+        },
         required: true,
       },
       {
         key: 'clientId',
-        label: 'Client ID',
+        get label() {
+          return fm.clientId;
+        },
         kind: 'text',
-        placeholder: 'The ID this app signs in with',
+        get placeholder() {
+          return fm.clientIdPlaceholder;
+        },
         required: true,
-        group: 'Fleet Manager Credentials',
+        get group() {
+          return fm.credentials;
+        },
       },
       {
         key: 'clientSecret',
-        label: 'Client secret',
+        get label() {
+          return fm.clientSecret;
+        },
         kind: 'secret',
-        placeholder: 'The secret that goes with the Client ID',
+        get placeholder() {
+          return fm.secretPlaceholder;
+        },
         required: true,
-        group: 'Fleet Manager Credentials',
-        hint: 'Kept hidden. Enter a new one to replace it.',
+        get group() {
+          return fm.credentials;
+        },
+        get hint() {
+          return fm.secretHint;
+        },
       },
     ],
   },
   {
     id: 'mes',
-    name: 'MES Connections',
+    get name() {
+      return mes.name;
+    },
     initials: 'MES',
     color: '#1d5fc4',
     syncs: false,
     fields: [
-      { key: 'amrUrl', label: 'AMR URL', kind: 'url', placeholder: 'https://mes.example.com/amr', required: true },
-      { key: 'bomUrl', label: 'BOM URL', kind: 'url', placeholder: 'https://mes.example.com/bom', required: true },
+      {
+        key: 'amrUrl',
+        get label() {
+          return mes.amrUrl;
+        },
+        kind: 'url',
+        placeholder: 'https://mes.example.com/amr',
+        required: true,
+      },
+      {
+        key: 'bomUrl',
+        get label() {
+          return mes.bomUrl;
+        },
+        kind: 'url',
+        placeholder: 'https://mes.example.com/bom',
+        required: true,
+      },
     ],
   },
 ];

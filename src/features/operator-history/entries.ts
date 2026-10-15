@@ -1,5 +1,6 @@
 import { decisions, type RequestStatus, type TripRequest } from '@/features/requests';
 import { type BookedTrip } from '@/features/bookings';
+import { t } from './text';
 
 export type HistoryKind = 'request' | 'approval' | 'trip';
 export interface HistoryEntry {
@@ -39,8 +40,8 @@ export function historyEntries(
       key: `dec:${d.key}`,
       kind: 'approval',
       at: d.at,
-      title: `${d.outcome === 'approved' ? 'Approved' : 'Rejected'} · ${d.qty > 0 ? `${d.name} ×${d.qty}` : d.name}`,
-      subtitle: `${d.tripId} · requested by ${d.requestedByName}${d.step ? ` · approval ${d.step}` : ''}${d.note ? ` · ${d.note}` : ''}`,
+      title: t.history.decisionTitle(t.history[d.outcome], d.qty > 0 ? `${d.name} ×${d.qty}` : d.name),
+      subtitle: t.history.decisionSubtitle(d.tripId, d.requestedByName, d.step ?? '', d.note ?? ''),
       tripId: d.tripId,
       status: d.status,
       outcome: d.outcome,

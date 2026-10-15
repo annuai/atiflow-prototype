@@ -8,6 +8,7 @@ import { authStore, useAuth } from '@/features/auth/authStore';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import type { NavModel, SearchHit } from './types';
+import { copy } from './copy';
 
 interface Props {
   useNavModel: () => NavModel;
@@ -25,7 +26,7 @@ export function AppShell({ useNavModel, searchPlaceholder, getHits, onAi, childr
   const items = workspacesOf(user).map((w) => ({
     id: w.id,
     label: w.name,
-    hint: w.built ? undefined : 'Coming soon',
+    hint: w.built ? undefined : copy.comingSoon,
     disabled: !w.built,
   }));
   const switchTo = (id: string) => {

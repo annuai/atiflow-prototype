@@ -1,9 +1,11 @@
 import { laneArrowPath } from '@/components/map/laneArrows';
+import { useMapView } from '@/components/map/useMapView';
 import { gestureBusy, isCoarse, useTouchGestures } from '@/components/map/useTouchGestures';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Minus, Plus, Home01 } from '@untitledui/icons';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import type { NavGraph, SiteLayout, Vec2 } from '@/core/types';
+import { copy } from '../copy';
 
 /**
  * The factory map as a plan (the same site and lane map the Live Floor shows, drawn flat as SVG): walls, machines, zones, lanes and the stations as pins. No robots: this is
@@ -42,25 +44,23 @@ export function StationMap({
   const W = maxX - minX,
     H = maxY - minY,
     P = (x: number, y: number) => `${(x - minX).toFixed(1)} ${(maxY - y).toFixed(1)}`;
-  const box = useRef<HTMLDivElement>(null);
+  const [el, box] = useState<HTMLDivElement | null>(null); // the container, kept in state so effects run when it appears
   const [size, setSize] = useState({ w: 360, h: 520 });
-  const [z, setZ] = useState(1);
-  const [c, setC] = useState({ x: W / 2, y: H / 2 });
   const [hover, setHover] = useState<string | null>(null);
   useEffect(() => {
-    const el = box.current;
     if (!el) return;
     const ro = new ResizeObserver(() => setSize({ w: Math.max(80, el.clientWidth), h: Math.max(80, el.clientHeight) }));
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [el]);
   // the view box has the aspect of the container, so the whole site fits at zoom 1 and pixels map to metres evenly
   const fit = Math.max(W / size.w, H / size.h) * 1.04;
+  const { view, zoomAt: zoomView, panBy, set } = useMapView({ el, W, H, size, fit, maxZoom: MAX_ZOOM }); // shared zoom / pan of every flat map
+  const z = view.z;
   const vw = (size.w * fit) / z,
     vh = (size.h * fit) / z;
-  const vx = c.x - vw / 2,
-    vy = c.y - vh / 2;
-  const clampC = (x: number, y: number) => ({ x: Math.min(W, Math.max(0, x)), y: Math.min(H, Math.max(0, y)) });
+  const vx = view.cx - vw / 2,
+    vy = view.cy - vh / 2;
 
   const layers = useMemo(() => {
     const walls = site.walls.map((w) => `M${P(w.a[0], w.a[1])}L${P(w.b[0], w.b[1])}`).join('');
@@ -95,47 +95,16 @@ export function StationMap({
     d.moved = true;
     d.x = e.clientX;
     d.y = e.clientY;
-    const k = vw / size.w;
-    setC((o) => clampC(o.x - dx * k, o.y - dy * k));
+    panBy(dx, dy);
   };
   const onUp = () => {
     setTimeout(() => {
       drag.current = null;
     });
   };
-  const panBy = (dx: number, dy: number) => {
-    const k = vw / size.w;
-    setC((o) => clampC(o.x - dx * k, o.y - dy * k));
-  };
-  const zoomAt = (factor: number, px?: number, py?: number) => {
-    const nz = Math.min(MAX_ZOOM, Math.max(1, z * factor));
-    if (nz === z) return;
-    const r = box.current!.getBoundingClientRect();
-    const fx = px === undefined ? 0.5 : (px - r.left) / r.width,
-      fy = py === undefined ? 0.5 : (py - r.top) / r.height;
-    const wx = vx + vw * fx,
-      wy = vy + vh * fy,
-      nvw = (size.w * fit) / nz,
-      nvh = (size.h * fit) / nz;
-    setZ(nz);
-    setC(clampC(wx - nvw * (fx - 0.5), wy - nvh * (fy - 0.5)));
-  };
-  const touch = useTouchGestures(box, { zoomAt, panBy }); // two fingers pinch-zoom and pan (the buttons and wheel stay)
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY);
-  };
-  useEffect(() => {
-    const el = box.current;
-    if (!el) return;
-    const stop = (e: WheelEvent) => e.preventDefault();
-    el.addEventListener('wheel', stop, { passive: false });
-    return () => el.removeEventListener('wheel', stop);
-  }, []);
-  const reset = () => {
-    setZ(1);
-    setC({ x: W / 2, y: H / 2 });
-  };
+  const zoomAt = (factor: number, px?: number, py?: number, smooth = false) => zoomView(factor, px, py, smooth);
+  const touch = useTouchGestures(el, { zoomAt, panBy }); // two fingers pinch-zoom and pan; wheel and trackpad pinch are handled by useMapView
+  const reset = () => set(1, W / 2, H / 2);
 
   const u = vw / size.w; // metres per screen pixel: pins, labels and the robot keep their pixel size when zooming (like sections in Figma), so a cluster opens up as you zoom in
   const arrows = useMemo(
@@ -162,10 +131,10 @@ export function StationMap({
           if (click && !drag.current?.moved && !gestureBusy(touch.current)) onPick(s.id);
         }}
         role={click ? 'button' : undefined}
-        aria-label={click ? `Pick ${s.id} ${s.name}` : undefined}
+        aria-label={click ? copy.map.pick(s.id, s.name) : undefined}
         data-station={s.id}
       >
-        <title>{`${s.id} · ${s.name}${ok ? '' : ' (not on this fleet’s map)'}`}</title>
+        <title>{`${s.id} · ${s.name}${ok ? '' : copy.map.notOnMap}`}</title>
         {hl && <circle r={12} fill="#5eead4" opacity={0.35} />}
         {hl && <circle r={9} fill="none" stroke="#14b8a6" strokeWidth={1.6} />}
         <circle r={isCoarse ? 18 : 9} fill="transparent" />
@@ -194,7 +163,6 @@ export function StationMap({
       ref={box}
       className="relative size-full touch-none select-none overflow-hidden"
       data-no-pan
-      onWheel={onWheel}
       onPointerDown={onDown}
       onPointerMove={onMove}
       onPointerUp={onUp}
@@ -205,7 +173,7 @@ export function StationMap({
         height="100%"
         viewBox={`${vx} ${vy} ${vw} ${vh}`}
         role="img"
-        aria-label="Factory map with stations"
+        aria-label={copy.map.aria}
         className={pickable ? 'cursor-crosshair' : 'cursor-grab'}
       >
         {site.zones
@@ -269,7 +237,7 @@ export function StationMap({
         {robot && (
           <g
             transform={`translate(${(robot.p.x - minX).toFixed(2)} ${(maxY - robot.p.y).toFixed(2)}) scale(${u}) rotate(${(-robot.heading * 180) / Math.PI})`}
-            aria-label="Robot"
+            aria-label={copy.map.robot}
             pointerEvents="none"
           >
             <rect x={-9} y={-6} width={18} height={12} rx={3} fill="#fcd900" stroke="#111827" strokeWidth={1.4} />
@@ -287,24 +255,24 @@ export function StationMap({
           size="xs"
           color="tertiary"
           icon={Plus}
-          tooltip="Zoom in"
-          aria-label="Zoom in"
-          onPress={() => zoomAt(1.5)}
+          tooltip={copy.map.zoomIn}
+          aria-label={copy.map.zoomIn}
+          onPress={() => zoomAt(1.5, undefined, undefined, true)}
         />
         <ButtonUtility
           size="xs"
           color="tertiary"
           icon={Minus}
-          tooltip="Zoom out"
-          aria-label="Zoom out"
-          onPress={() => zoomAt(1 / 1.5)}
+          tooltip={copy.map.zoomOut}
+          aria-label={copy.map.zoomOut}
+          onPress={() => zoomAt(1 / 1.5, undefined, undefined, true)}
         />
         <ButtonUtility
           size="xs"
           color="tertiary"
           icon={Home01}
-          tooltip="Fit the whole map"
-          aria-label="Fit the whole map"
+          tooltip={copy.map.fit}
+          aria-label={copy.map.fit}
           onPress={reset}
         />
       </div>

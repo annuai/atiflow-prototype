@@ -1,4 +1,5 @@
 import { HEADLINE, METRICS, METRIC_ORDER } from './metrics';
+import { insights } from '../insightsCopy';
 import type { MetricDef } from './metrics';
 import type { Report } from './types';
 
@@ -43,42 +44,35 @@ export interface Verdict {
   headline: string;
   detail: string;
 }
-const list = (names: string[]) =>
-  names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 /** The one-line answer to "how did the fleet do?": availability below target and headline KPIs that clearly slipped decide the level. */
 export function summary(report: Report): Verdict {
   const av = report.fleet.chargingAvailability,
     all = moves(report),
     vs = report.range.previousLabel;
   const slipped = all.filter((x) => !x.improved && HEADLINE.includes(x.metric.id) && Math.abs(x.pct) >= WORSE_AT);
+  const v = insights.reports.verdict;
   if (av !== null && av < AVAILABILITY_TARGET)
     return {
       level: 'critical',
-      headline: 'Fleet availability is below target',
-      detail: `Only ${Math.round(av)}% of the time were ${AVAILABILITY_TARGET}% of the robots available. Review the charging schedule.`,
+      headline: v.availabilityHeadline,
+      detail: v.availabilityDetail(Math.round(av), AVAILABILITY_TARGET),
     };
   if (slipped.length)
     return {
       level: slipped.some((x) => Math.abs(x.pct) >= CRITICAL_AT) ? 'critical' : 'warn',
-      headline: `${list(slipped.slice(0, 2).map((x) => x.metric.label))} slipped`,
-      detail: `Compared with ${vs}: ${slipped
-        .slice(0, 3)
-        .map((x) => `${x.metric.label} ${x.pct > 0 ? '+' : '−'}${Math.abs(x.pct).toFixed(0)}%`)
-        .join(', ')}.`,
+      headline: v.slippedHeadline(v.list(slipped.slice(0, 2).map((x) => x.metric.label))),
+      detail: v.slippedDetail(
+        vs,
+        slipped
+          .slice(0, 3)
+          .map((x) => `${x.metric.label} ${x.pct > 0 ? '+' : '−'}${Math.abs(x.pct).toFixed(0)}%`)
+          .join(', '),
+      ),
     };
-  if (!report.previous)
-    return {
-      level: 'ok',
-      headline: 'The fleet is running normally',
-      detail: 'Comparison with the period before appears once there is history.',
-    };
+  if (!report.previous) return { level: 'ok', headline: v.normalHeadline, detail: v.normalDetail };
   const good = HEADLINE.filter((id) => {
     const c = change(METRICS[id], report.fleet[id], report.previous![id]);
     return c && c.improved !== false;
   }).length;
-  return {
-    level: 'ok',
-    headline: 'The fleet is steady',
-    detail: `${good} of ${HEADLINE.length} headline KPIs improved or held compared with ${vs}.`,
-  };
+  return { level: 'ok', headline: v.steadyHeadline, detail: v.steadyDetail(good, HEADLINE.length, vs) };
 }

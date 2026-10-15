@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { t } from '../text';
 
 export interface Line {
   key: string;
@@ -33,7 +34,7 @@ export function AreaChart({
   if (n < 2)
     return (
       <div className="grid h-[170px] place-items-center rounded-lg bg-secondary text-sm text-tertiary">
-        Collecting data…
+        {t.chart.collecting}
       </div>
     );
   const x = (i: number) => L + (i / (n - 1)) * (W - L - R),
@@ -41,7 +42,10 @@ export function AreaChart({
   const last = times[n - 1];
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * yMax));
   const span = (last - times[0]) / 60000;
-  const axis = [0, 0.5, 1].map((f) => ({ f, text: f === 1 ? 'now' : `${Math.round(span * (1 - f))} min ago` }));
+  const axis = [0, 0.5, 1].map((f) => ({
+    f,
+    text: f === 1 ? t.chart.now : t.chart.minAgo(Math.round(span * (1 - f))),
+  }));
   return (
     <div className="relative">
       <svg
@@ -109,7 +113,9 @@ export function AreaChart({
           className="pointer-events-none absolute top-1 rounded-lg border border-secondary bg-primary px-2.5 py-1.5 text-xs shadow-sm"
           style={{ left: `${Math.min(70, (x(hover) / W) * 100)}%` }}
         >
-          <div className="mb-0.5 text-tertiary">{Math.max(0, Math.round((last - times[hover]) / 1000))} s ago</div>
+          <div className="mb-0.5 text-tertiary">
+            {t.chart.secAgo(Math.max(0, Math.round((last - times[hover]) / 1000)))}
+          </div>
           {lines.map((l) => (
             <div key={l.key} className="flex items-center gap-1.5">
               <i className="size-2 rounded-full" style={{ background: l.color }} />

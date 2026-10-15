@@ -1,4 +1,5 @@
 import type { FleetMap, StationGroup } from './types';
+import { t } from '../text';
 
 /** Station ids whose group holds this material (the "Station goods at" column). */
 export const stationsOfMaterial = (groups: StationGroup[], code: string) =>
@@ -14,13 +15,12 @@ export function validateGroupForm(
   editing?: string,
 ): Record<string, string> {
   const e: Record<string, string> = {};
-  if (!v.name.trim()) e.name = 'Group name is required';
+  if (!v.name.trim()) e.name = t.fleets.errors.groupName;
   else if (groups.some((g) => g.id !== editing && g.name.trim().toLowerCase() === v.name.trim().toLowerCase()))
-    e.name = `A group named "${v.name.trim()}" already exists`;
-  if (!editing && !v.stationId) e.stationId = 'Choose a station';
-  else if (!editing && groups.some((g) => g.stationId === v.stationId))
-    e.stationId = 'This station already has a group';
-  if (!editing && v.codes.length === 0) e.codes = 'Select at least one material';
+    e.name = t.fleets.errors.groupExists(v.name.trim());
+  if (!editing && !v.stationId) e.stationId = t.fleets.errors.station;
+  else if (!editing && groups.some((g) => g.stationId === v.stationId)) e.stationId = t.fleets.errors.stationHasGroup;
+  if (!editing && v.codes.length === 0) e.codes = t.fleets.errors.codes;
   return e;
 }
 

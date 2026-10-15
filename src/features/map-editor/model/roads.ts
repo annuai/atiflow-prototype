@@ -1,3 +1,4 @@
+import { text } from '../text';
 import type { Lane, NavNode } from '@/core/types';
 import type { MapData, MapRoad, RoadHeading } from './types';
 
@@ -95,7 +96,7 @@ export function addRoad(data: MapData, points: P[], opt: RoadOptions): { data: M
   if (!opt.oneWay) lanes.push(mk(b, a, [...pts].reverse()));
   const road: MapRoad = {
     id: `R${num}`,
-    name: opt.name?.trim() || `Road ${num}`,
+    name: opt.name?.trim() || text.defaultNames.road(num),
     oneWay: !!opt.oneWay,
     points: pts,
     laneIds: lanes.map((l) => l.id),
@@ -177,9 +178,9 @@ export function deleteRoad(data: MapData, id: string): MapData {
 export const roadLength = (r: MapRoad) => Math.round(pathLength(r.points) * 10) / 10;
 export function nameProblem(data: MapData, id: string, name: string): string {
   const t = name.trim();
-  if (!t) return 'Give the road a name';
+  if (!t) return text.nameProblems.road.empty;
   return data.roads.some((r) => r.id !== id && r.name.trim().toLowerCase() === t.toLowerCase())
-    ? 'Another road already has this name'
+    ? text.nameProblems.road.taken
     : '';
 }
 
@@ -194,7 +195,7 @@ export function roadsFromLanes(lanes: Lane[]): MapRoad[] {
       const fwd = ls.length > 1 && ls.some((l) => l.from !== ls[0].from) ? ls : ls;
       return {
         id: `R${i + 1}`,
-        name: `Road ${i + 1}`,
+        name: text.defaultNames.road(i + 1),
         oneWay: fwd.length === 1,
         points: offsetPolyline(
           ls[0].geom.map((g) => [...g] as P),

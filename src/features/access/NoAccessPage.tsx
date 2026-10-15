@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Lock01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { authStore, useAuth } from '@/features/auth';
+import { copy } from '@/ui/copy';
 
 /** Shown to a signed-in user whose access has no page to open yet (for example a line supervisor or an operator). */
 export function NoAccessPage() {
@@ -15,8 +16,8 @@ export function NoAccessPage() {
         <EmptyState
           icon={Lock01}
           size="lg"
-          title="Nothing to open yet"
-          subtext={`${user.name}, your access has no pages in this app yet. Ask a configurator to update your permissions.`}
+          title={copy.noAccess.title}
+          subtext={copy.noAccess.text(user.name)}
           action={
             <Button
               size="sm"
@@ -26,7 +27,7 @@ export function NoAccessPage() {
                 navigate('/login', { replace: true });
               }}
             >
-              Log out
+              {copy.noAccess.logout}
             </Button>
           }
         />

@@ -4,6 +4,7 @@ import { Button } from '@/components/base/buttons/button';
 import { EmptyState } from '@/components/data/EmptyState';
 import { useNow } from '@/hooks/use-now';
 import { copy } from '../copy';
+import { ins, noteLabel } from '../labels';
 import { useSoftware } from '../data/useSoftware';
 import { formatCheck, formatDate, updateAvailable } from '../model/software';
 import type { RobotRef } from '../model/types';
@@ -55,7 +56,7 @@ export function SoftwareUpdateTab({
                 {copy.software.installed}: <span className="font-semibold text-secondary">{s.installed ?? '—'}</span> ·{' '}
                 {copy.software.lastCheck}:{' '}
                 <span className="font-semibold text-secondary">{formatCheck(s.lastCheckedAt, now)}</span> ·{' '}
-                {copy.software.lastUpdated}: {s.lastUpdatedAt === null ? 'Never' : formatDate(s.lastUpdatedAt)}
+                {copy.software.lastUpdated}: {s.lastUpdatedAt === null ? ins.time.never : formatDate(s.lastUpdatedAt)}
               </p>
               {!outOfDate && <p className="mt-1 text-xs text-quaternary">{copy.software.upToDate}</p>}
               {outOfDate && !online && <p className="mt-1 text-xs text-quaternary">{copy.software.offline}</p>}
@@ -98,7 +99,7 @@ export function SoftwareUpdateTab({
                       <p className="text-sm font-semibold text-primary">
                         {h.version} <span className="font-normal text-tertiary">({formatDate(h.at)})</span>
                       </p>
-                      <p className="text-sm text-secondary">{h.notes}</p>
+                      <p className="text-sm text-secondary">{noteLabel(h)}</p>
                     </div>
                     <span className={h.result === 'success' ? 'text-sm text-tertiary' : 'text-sm text-error-primary'}>
                       {h.result === 'success' ? copy.software.success : copy.software.failedRow}

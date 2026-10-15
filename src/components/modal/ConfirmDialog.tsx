@@ -1,5 +1,6 @@
 import { Trash01 } from '@untitledui/icons';
 import { ModalShell } from '@/components/modal/ModalShell';
+import { localized } from '@/i18n';
 
 interface Props {
   isOpen: boolean;
@@ -18,7 +19,7 @@ export function ConfirmDialog({ isOpen, onOpenChange, title, description, confir
       icon={Trash01}
       title={title}
       subtitle={description}
-      secondary={{ label: 'Cancel', onPress: () => onOpenChange(false) }}
+      secondary={{ label: localized('common').cancel, onPress: () => onOpenChange(false) }}
       primary={{
         label: confirmLabel,
         destructive: true,

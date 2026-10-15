@@ -4,6 +4,7 @@ import { NODE_TYPES } from '../model/registry';
 import { wfStore } from '../model/store';
 import type { NodeTypeId } from '../model/types';
 import { NodeIcon } from './icons';
+import { copy } from '../copy';
 
 /** Nodes menu (Figma "Nodes palette"). Mouse/pen: drag a tile onto a gap or click to append. Touch: tap to append (the palette scrolls). */
 export function NodePalette({
@@ -14,7 +15,7 @@ export function NodePalette({
   const handled = useRef(false);
   return (
     <div className="float wf-palette" data-no-pan data-wf-palette>
-      <div className="ttl">Nodes</div>
+      <div className="ttl">{copy.palette.title}</div>
       <div className="wf-tiles">
         {PALETTE.map((p) => {
           const bg = p.accent ?? NODE_TYPES[p.type as NodeTypeId].accent;
@@ -23,7 +24,7 @@ export function NodePalette({
             <button
               key={p.type}
               className="wf-tile"
-              aria-label={`Add ${p.label} node`}
+              aria-label={copy.palette.add(p.label)}
               onPointerDown={(e) => {
                 if (e.pointerType !== 'touch' && p.type !== 'aiot') handled.current = true;
                 onTileDown(e, p.type, e.currentTarget.querySelector('.box') as HTMLElement);
