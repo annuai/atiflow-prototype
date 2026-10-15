@@ -8,8 +8,11 @@ let furthest = 0;
  * react-router stores each entry's position in `history.state.idx`; a push cuts off everything after it, a back/forward (POP) does not.
  */
 export function useHistoryNav() {
-  const navigate = useNavigate(); const type = useNavigationType(); useLocation();       // re-evaluate on every navigation
+  const navigate = useNavigate();
+  const type = useNavigationType();
+  useLocation(); // re-evaluate on every navigation
   const idx: number = window.history.state?.idx ?? 0;
-  if (type === 'PUSH') furthest = idx; else furthest = Math.max(furthest, idx);
+  if (type === 'PUSH') furthest = idx;
+  else furthest = Math.max(furthest, idx);
   return { canBack: idx > 0, canForward: idx < furthest, back: () => navigate(-1), forward: () => navigate(1) };
 }

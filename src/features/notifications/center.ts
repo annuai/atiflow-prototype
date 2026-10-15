@@ -6,14 +6,26 @@ export class NotificationCenter {
   constructor(public items: AppNotification[] = []) {}
   /** Adds the ones not seen before; returns how many were new. */
   add(list: NewNotification[]): number {
-    const have = new Set(this.items.map((n) => n.id)); const fresh = list.filter((n) => !have.has(n.id)).map((n) => ({ ...n, read: false }));
+    const have = new Set(this.items.map((n) => n.id));
+    const fresh = list.filter((n) => !have.has(n.id)).map((n) => ({ ...n, read: false }));
     if (!fresh.length) return 0;
-    this.items = [...fresh, ...this.items].sort((a, b) => b.at - a.at).slice(0, MAX_NOTIFICATIONS); return fresh.length;
+    this.items = [...fresh, ...this.items].sort((a, b) => b.at - a.at).slice(0, MAX_NOTIFICATIONS);
+    return fresh.length;
   }
-  markRead(id: string) { this.items = this.items.map((n) => (n.id === id ? { ...n, read: true } : n)); }
-  markAllRead() { this.items = this.items.map((n) => (n.read ? n : { ...n, read: true })); }
-  clear() { this.items = []; }
-  get unread() { return this.items.filter((n) => !n.read).length; }
+  markRead(id: string) {
+    this.items = this.items.map((n) => (n.id === id ? { ...n, read: true } : n));
+  }
+  markAllRead() {
+    this.items = this.items.map((n) => (n.read ? n : { ...n, read: true }));
+  }
+  clear() {
+    this.items = [];
+  }
+  get unread() {
+    return this.items.filter((n) => !n.read).length;
+  }
 }
 
-export const isNotificationList = (v: unknown): v is AppNotification[] => Array.isArray(v) && v.every((n) => n && typeof n.id === 'string' && typeof n.title === 'string' && typeof n.at === 'number');
+export const isNotificationList = (v: unknown): v is AppNotification[] =>
+  Array.isArray(v) &&
+  v.every((n) => n && typeof n.id === 'string' && typeof n.title === 'string' && typeof n.at === 'number');

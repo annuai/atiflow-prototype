@@ -1,6 +1,41 @@
 /* Login-only motion. The robot + ribbon drive right-to-left over the card (Figma node 78:9426: 8.04 s linear, infinite). */
-@keyframes ati-drive { 0% { translate: 492px 0; } 99.763% { translate: -248px 0; } 100% { translate: -450px 0; } }
-.ati-drive { animation: ati-drive 8.037s linear infinite; }
-@keyframes ati-shake { 0%, 100% { translate: 0 0; } 20%, 60% { translate: -6px 0; } 40%, 80% { translate: 6px 0; } }
-.ati-shake { animation: ati-shake .35s ease; }
-@media (prefers-reduced-motion: reduce) { .ati-drive { animation: none; translate: 0 0; } .ati-shake { animation: none; } }
+@keyframes ati-drive {
+  0% {
+    translate: 492px 0;
+  }
+  99.763% {
+    translate: -248px 0;
+  }
+  100% {
+    translate: -450px 0;
+  }
+}
+.ati-drive {
+  animation: ati-drive 8.037s linear infinite;
+}
+@keyframes ati-shake {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  20%,
+  60% {
+    translate: -6px 0;
+  }
+  40%,
+  80% {
+    translate: 6px 0;
+  }
+}
+.ati-shake {
+  animation: ati-shake 0.35s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ati-drive {
+    animation: none;
+    translate: 0 0;
+  }
+  .ati-shake {
+    animation: none;
+  }
+}

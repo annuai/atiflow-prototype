@@ -5,8 +5,11 @@ import { SkeletonRow, SkeletonStatusStrip } from '@/components/skeleton/blocks';
 export function ActionCenterSkeleton() {
   return (
     <div role="status" aria-label="Loading the calls" className="flex flex-col gap-4">
-      <SkeletonStatusStrip titleWidth="w-52" detailWidth="w-72 max-w-full" /><Skeleton className="h-9 w-72 rounded-lg" />
-      {Array.from({ length: 3 }, (_, i) => <SkeletonRow key={i} withButton />)}
+      <SkeletonStatusStrip titleWidth="w-52" detailWidth="w-72 max-w-full" />
+      <Skeleton className="h-9 w-72 rounded-lg" />
+      {Array.from({ length: 3 }, (_, i) => (
+        <SkeletonRow key={i} withButton />
+      ))}
     </div>
   );
 }

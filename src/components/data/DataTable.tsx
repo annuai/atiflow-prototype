@@ -5,28 +5,36 @@ import { cx } from '@/utils/cx';
 import { sortRows } from './sortRows';
 
 export interface Column<T> {
-  id: string; header: string; cell(row: T): ReactNode;
+  id: string;
+  header: string;
+  cell(row: T): ReactNode;
   /** Tooltip on a help icon next to the heading. */
   hint?: string;
   /** What to sort this column by. Give it and the heading becomes a sort button (click: ascending, again: descending); leave it out for columns that cannot be sorted (menus). */
   sort?(row: T): string | number | null | undefined;
   /** Classes for the cell / the heading (width, alignment...). */
-  className?: string; headClassName?: string;
+  className?: string;
+  headClassName?: string;
 }
 export interface RowSelection {
-  selected: Set<string>; onChange(next: Set<string>): void;
+  selected: Set<string>;
+  onChange(next: Set<string>): void;
   /** Rows shown checked but not changeable (e.g. already added). */
   locked?: Set<string>;
   /** Rows that cannot be selected and are shown unchecked (e.g. invalid). */
   disabled?: Set<string>;
 }
 interface Props<T> {
-  label: string; rows: T[]; rowKey(row: T): string; columns: Column<T>[];
+  label: string;
+  rows: T[];
+  rowKey(row: T): string;
+  columns: Column<T>[];
   /** Makes rows clickable (keyboard accessible). */
   onRowAction?(row: T): void;
   selection?: RowSelection;
   /** Keep the heading row visible while the body scrolls (use inside a height-limited box). */
-  stickyHeader?: boolean; minWidth?: number;
+  stickyHeader?: boolean;
+  minWidth?: number;
   /** No zebra striping and a white heading row (flat tables inside a card). */
   plain?: boolean;
 }
@@ -36,10 +44,30 @@ interface Props<T> {
  * Each row is a `group`, so cells can reveal controls on row hover with `opacity-0 group-hover:opacity-100`.
  * Every column with a `sort` accessor sorts the rows when its heading is clicked (numbers numerically, text naturally, empty values last).
  */
-export function DataTable<T>({ label, rows: input, rowKey, columns, onRowAction, selection, stickyHeader, minWidth, plain }: Props<T>) {
+export function DataTable<T>({
+  label,
+  rows: input,
+  rowKey,
+  columns,
+  onRowAction,
+  selection,
+  stickyHeader,
+  minWidth,
+  plain,
+}: Props<T>) {
   const [sort, setSort] = useState<SortDescriptor | undefined>();
-  const rows = useMemo(() => sortRows(input, columns, sort?.column ? String(sort.column) : null, sort?.direction === 'descending' ? 'descending' : 'ascending'), [input, columns, sort]);
-  const locked = selection?.locked ?? new Set<string>(); const disabled = new Set([...locked, ...(selection?.disabled ?? [])]);
+  const rows = useMemo(
+    () =>
+      sortRows(
+        input,
+        columns,
+        sort?.column ? String(sort.column) : null,
+        sort?.direction === 'descending' ? 'descending' : 'ascending',
+      ),
+    [input, columns, sort],
+  );
+  const locked = selection?.locked ?? new Set<string>();
+  const disabled = new Set([...locked, ...(selection?.disabled ?? [])]);
   const selectedKeys = selection ? new Set([...selection.selected, ...locked]) : undefined;
   const onSelectionChange = (keys: Selection) => {
     if (!selection) return;
@@ -47,14 +75,46 @@ export function DataTable<T>({ label, rows: input, rowKey, columns, onRowAction,
     selection.onChange(new Set(next.filter((k) => !disabled.has(k))));
   };
   return (
-    <Table aria-label={label} size="sm" style={minWidth ? { minWidth } : undefined} sortDescriptor={sort} onSortChange={setSort} {...(selection ? { selectionMode: 'multiple' as const, selectedKeys, onSelectionChange, disabledKeys: disabled } : {})}>
+    <Table
+      aria-label={label}
+      size="sm"
+      style={minWidth ? { minWidth } : undefined}
+      sortDescriptor={sort}
+      onSortChange={setSort}
+      {...(selection
+        ? { selectionMode: 'multiple' as const, selectedKeys, onSelectionChange, disabledKeys: disabled }
+        : {})}
+    >
       <Table.Header className={plain ? 'bg-primary' : undefined}>
-        {columns.map((c, i) => <Table.Head key={c.id} id={c.id} isRowHeader={i === 0} allowsSorting={!!c.sort} label={c.header} tooltip={c.hint} className={cx(stickyHeader && 'sticky top-0 z-10', (plain ? 'bg-primary' : stickyHeader && 'bg-secondary'), c.headClassName)} />)}
+        {columns.map((c, i) => (
+          <Table.Head
+            key={c.id}
+            id={c.id}
+            isRowHeader={i === 0}
+            allowsSorting={!!c.sort}
+            label={c.header}
+            tooltip={c.hint}
+            className={cx(
+              stickyHeader && 'sticky top-0 z-10',
+              plain ? 'bg-primary' : stickyHeader && 'bg-secondary',
+              c.headClassName,
+            )}
+          />
+        ))}
       </Table.Header>
       <Table.Body>
         {rows.map((r) => (
-          <Table.Row key={rowKey(r)} id={rowKey(r)} onAction={onRowAction ? () => onRowAction(r) : undefined} className={cx('group h-auto', !plain && 'even:bg-secondary', onRowAction && 'cursor-pointer')}>
-            {columns.map((c) => <Table.Cell key={c.id} className={cx('px-4 py-3', c.className)}>{c.cell(r)}</Table.Cell>)}
+          <Table.Row
+            key={rowKey(r)}
+            id={rowKey(r)}
+            onAction={onRowAction ? () => onRowAction(r) : undefined}
+            className={cx('group h-auto', !plain && 'even:bg-secondary', onRowAction && 'cursor-pointer')}
+          >
+            {columns.map((c) => (
+              <Table.Cell key={c.id} className={cx('px-4 py-3', c.className)}>
+                {c.cell(r)}
+              </Table.Cell>
+            ))}
           </Table.Row>
         ))}
       </Table.Body>

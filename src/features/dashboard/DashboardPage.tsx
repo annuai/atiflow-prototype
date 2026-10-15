@@ -28,38 +28,81 @@ import { TvScreen } from './tv/TvScreen';
  * to use real data, write another `DashboardSource` (data/source.ts).
  */
 export function DashboardPage() {
-  const navigate = useNavigate(); const user = useAuth((s) => s.user); const site = useApp((s) => s.site); const snap = useDashboard(); const phase = useLoadPhase(!snap);
-  const [params, setParams] = useSearchParams(); const tv = params.get('tv') === '1';
-  const setTv = useCallback((on: boolean) => {
-    setParams(on ? { tv: '1' } : {}, { replace: true });
-    if (on) void document.documentElement.requestFullscreen?.().catch(() => {}); else if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});       // real full screen when the browser allows it
-  }, [setParams]);
+  const navigate = useNavigate();
+  const user = useAuth((s) => s.user);
+  const site = useApp((s) => s.site);
+  const snap = useDashboard();
+  const phase = useLoadPhase(!snap);
+  const [params, setParams] = useSearchParams();
+  const tv = params.get('tv') === '1';
+  const setTv = useCallback(
+    (on: boolean) => {
+      setParams(on ? { tv: '1' } : {}, { replace: true });
+      if (on) void document.documentElement.requestFullscreen?.().catch(() => {});
+      else if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}); // real full screen when the browser allows it
+    },
+    [setParams],
+  );
   const exitTv = useCallback(() => setTv(false), [setTv]);
-  const [hour, setHour] = useState(() => new Date().getHours()); useEffect(() => { const t = window.setInterval(() => setHour(new Date().getHours()), 60_000); return () => window.clearInterval(t); }, []);
+  const [hour, setHour] = useState(() => new Date().getHours());
+  useEffect(() => {
+    const t = window.setInterval(() => setHour(new Date().getHours()), 60_000);
+    return () => window.clearInterval(t);
+  }, []);
   const locate = (id: string) => navigate(LIVE_FLOOR_PATH, { state: { locate: id } });
-  const help = () => notify.info(copy.attention.helpToast, copy.attention.helpBody, 'call-help');           // placeholder until a notification service exists
+  const help = () => notify.info(copy.attention.helpToast, copy.attention.helpBody, 'call-help'); // placeholder until a notification service exists
   return (
     <>
       <div className="content">
-        <div className="title-block"><div><h1>{greeting(hour)} {user ? firstName(user.name) : 'there'}</h1><p>{copy.subtitle}</p></div>
-          <div className="actions items-center"><BadgeWithDot size="md" color="success">{copy.live}</BadgeWithDot><Button size="sm" color="secondary" iconLeading={Monitor01} onPress={() => setTv(true)}>{copy.tv}</Button></div></div>
-        <div className="builder md-card"><div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
-          {!snap || phase !== 'ready' ? (phase === 'skeleton' ? <DashboardSkeleton /> : null) : <>
-            <StatusStrip status={snap.status} />
-            <KpiRow kpis={snap.kpis} />
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-              <NeedsAttentionCard items={snap.attention} onLocate={locate} onHelp={help} />
-              <FleetStatesCard fleets={snap.fleets} onSelect={() => navigate(LIVE_FLOOR_PATH)} />
-            </div>
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-              <LiveStatusCard site={snap.site ?? site} robots={snap.robots} onLocate={locate} onOpen={() => navigate(LIVE_FLOOR_PATH)} />
-              <TripsCard running={snap.trips.running} recent={snap.trips.recent} onLocate={locate} />
-            </div>
-            <ActivityCard history={snap.history} seconds={snap.historySeconds} robots={snap.robots.length} />
-            <div className="grid gap-4 lg:grid-cols-2"><BatteryCard battery={snap.battery} onLocate={locate} /><HotspotsCard hotspots={snap.hotspots} /></div>
-            <p className="text-center text-xs text-tertiary">{copy.sample}</p>
-          </>}
-        </div></div>
+        <div className="title-block">
+          <div>
+            <h1>
+              {greeting(hour)} {user ? firstName(user.name) : 'there'}
+            </h1>
+            <p>{copy.subtitle}</p>
+          </div>
+          <div className="actions items-center">
+            <BadgeWithDot size="md" color="success">
+              {copy.live}
+            </BadgeWithDot>
+            <Button size="sm" color="secondary" iconLeading={Monitor01} onPress={() => setTv(true)}>
+              {copy.tv}
+            </Button>
+          </div>
+        </div>
+        <div className="builder md-card">
+          <div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
+            {!snap || phase !== 'ready' ? (
+              phase === 'skeleton' ? (
+                <DashboardSkeleton />
+              ) : null
+            ) : (
+              <>
+                <StatusStrip status={snap.status} />
+                <KpiRow kpis={snap.kpis} />
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+                  <NeedsAttentionCard items={snap.attention} onLocate={locate} onHelp={help} />
+                  <FleetStatesCard fleets={snap.fleets} onSelect={() => navigate(LIVE_FLOOR_PATH)} />
+                </div>
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+                  <LiveStatusCard
+                    site={snap.site ?? site}
+                    robots={snap.robots}
+                    onLocate={locate}
+                    onOpen={() => navigate(LIVE_FLOOR_PATH)}
+                  />
+                  <TripsCard running={snap.trips.running} recent={snap.trips.recent} onLocate={locate} />
+                </div>
+                <ActivityCard history={snap.history} seconds={snap.historySeconds} robots={snap.robots.length} />
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <BatteryCard battery={snap.battery} onLocate={locate} />
+                  <HotspotsCard hotspots={snap.hotspots} />
+                </div>
+                <p className="text-center text-xs text-tertiary">{copy.sample}</p>
+              </>
+            )}
+          </div>
+        </div>
       </div>
       {tv && snap && <TvScreen snap={snap} siteName={site?.name ?? 'Live floor'} onExit={exitTv} />}
     </>

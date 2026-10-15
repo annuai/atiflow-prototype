@@ -12,9 +12,27 @@ export interface StorageBackend {
 
 /** Browser storage under one key. Quietly does nothing where storage is unavailable (tests, private mode). */
 export const localBackend = (key: string): StorageBackend => ({
-  read() { try { return localStorage.getItem(key); } catch { return null; } },
-  write(text) { try { localStorage.setItem(key, text); } catch { /* no storage */ } },
-  remove() { try { localStorage.removeItem(key); } catch { /* no storage */ } },
+  read() {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  write(text) {
+    try {
+      localStorage.setItem(key, text);
+    } catch {
+      /* no storage */
+    }
+  },
+  remove() {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      /* no storage */
+    }
+  },
 });
 
 export interface Document<T> {
@@ -31,12 +49,24 @@ export interface Document<T> {
 
 export function createDocument<T>(backend: StorageBackend, seed: () => T, valid: (v: unknown) => v is T): Document<T> {
   const parse = (text: string): { value: T } | { error: string } => {
-    try { const v: unknown = JSON.parse(text); return valid(v) ? { value: v } : { error: 'The JSON does not have the shape of the dataset.' }; } catch { return { error: 'This is not valid JSON.' }; }
+    try {
+      const v: unknown = JSON.parse(text);
+      return valid(v) ? { value: v } : { error: 'The JSON does not have the shape of the dataset.' };
+    } catch {
+      return { error: 'This is not valid JSON.' };
+    }
   };
   return {
-    load() { const raw = backend.read(); const r = raw ? parse(raw) : null; return r && 'value' in r ? r.value : seed(); },
+    load() {
+      const raw = backend.read();
+      const r = raw ? parse(raw) : null;
+      return r && 'value' in r ? r.value : seed();
+    },
     save: (value) => backend.write(JSON.stringify(value)),
-    reset() { backend.remove(); return seed(); },
+    reset() {
+      backend.remove();
+      return seed();
+    },
     exportText: (value) => JSON.stringify(value, null, 2),
     parse,
   };
@@ -49,21 +79,55 @@ export function createDocument<T>(backend: StorageBackend, seed: () => T, valid:
  *  - anything else is reported and the seed is used, WITHOUT erasing what was saved (it is only replaced by the next save), so a bad document never crashes a page.
  */
 export function createValidatedDocument<S extends z.ZodType>(opts: {
-  backend: StorageBackend; schema: S; seed: () => z.infer<S>; /** turn an older or damaged shape into the current one (return anything; it is validated again) */ migrate?: (raw: unknown) => unknown;
+  backend: StorageBackend;
+  schema: S;
+  seed: () => z.infer<S>;
+  /** turn an older or damaged shape into the current one (return anything; it is validated again) */ migrate?: (
+    raw: unknown,
+  ) => unknown;
   /** told when saved data was unusable (for logging) */ onInvalid?: (reason: string) => void;
 }): Document<z.infer<S>> {
-  type T = z.infer<S>; const { backend, schema, seed, migrate, onInvalid } = opts;
-  const describe = (e: z.ZodError) => e.issues.slice(0, 3).map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`).join('; ');
+  type T = z.infer<S>;
+  const { backend, schema, seed, migrate, onInvalid } = opts;
+  const describe = (e: z.ZodError) =>
+    e.issues
+      .slice(0, 3)
+      .map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`)
+      .join('; ');
   const check = (raw: unknown): { value: T } | { error: string } => {
-    const first = schema.safeParse(raw); if (first.success) return { value: first.data };
-    if (migrate) { try { const second = schema.safeParse(migrate(raw)); if (second.success) return { value: second.data }; } catch { /* fall through to the error */ } }
+    const first = schema.safeParse(raw);
+    if (first.success) return { value: first.data };
+    if (migrate) {
+      try {
+        const second = schema.safeParse(migrate(raw));
+        if (second.success) return { value: second.data };
+      } catch {
+        /* fall through to the error */
+      }
+    }
     return { error: describe(first.error) };
   };
-  const parse = (text: string): { value: T } | { error: string } => { try { return check(JSON.parse(text)); } catch { return { error: 'This is not valid JSON.' }; } };
+  const parse = (text: string): { value: T } | { error: string } => {
+    try {
+      return check(JSON.parse(text));
+    } catch {
+      return { error: 'This is not valid JSON.' };
+    }
+  };
   return {
-    load() { const raw = backend.read(); if (!raw) return seed(); const r = parse(raw); if ('value' in r) return r.value; onInvalid?.(r.error); return seed(); },
+    load() {
+      const raw = backend.read();
+      if (!raw) return seed();
+      const r = parse(raw);
+      if ('value' in r) return r.value;
+      onInvalid?.(r.error);
+      return seed();
+    },
     save: (value) => backend.write(JSON.stringify(value)),
-    reset() { backend.remove(); return seed(); },
+    reset() {
+      backend.remove();
+      return seed();
+    },
     exportText: (value) => JSON.stringify(value, null, 2),
     parse,
   };

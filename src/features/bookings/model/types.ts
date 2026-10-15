@@ -5,11 +5,31 @@ import type { RequestStatus, StatusEvent } from '@/features/requests/model/types
  * (status Approved = waiting for a robot) and then follows the floor's reports like a requested trip. The names are kept as they were when it was booked.
  */
 export interface BookedTrip {
-  id: string; /** TRP-xxx, from the shared trip counter */ tripId: string;
-  fleet: string; /** lane-map id of the fleet */ fleetLive: string;
-  /** robot type id (telemetry `model`) and its name as it was shown */ robotType: string; robotLabel: string;
-  from: string; to: string; fromName: string; toName: string;
-  status: RequestStatus; history: StatusEvent[];
-  bookedBy: string; bookedByName: string; createdAt: number; robotId?: string; note?: string;
+  id: string;
+  /** TRP-xxx, from the shared trip counter */ tripId: string;
+  fleet: string;
+  /** lane-map id of the fleet */ fleetLive: string;
+  /** robot type id (telemetry `model`) and its name as it was shown */ robotType: string;
+  robotLabel: string;
+  from: string;
+  to: string;
+  fromName: string;
+  toName: string;
+  status: RequestStatus;
+  history: StatusEvent[];
+  bookedBy: string;
+  bookedByName: string;
+  createdAt: number;
+  robotId?: string;
+  note?: string;
 }
-export interface BookingInput { fleet: string; fleetLive: string; robotType: string; robotLabel: string; from: string; to: string; fromName: string; toName: string }
+export interface BookingInput {
+  fleet: string;
+  fleetLive: string;
+  robotType: string;
+  robotLabel: string;
+  from: string;
+  to: string;
+  fromName: string;
+  toName: string;
+}

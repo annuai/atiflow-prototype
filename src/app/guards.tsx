@@ -8,7 +8,8 @@ import { useAuth } from '@/features/auth/authStore';
  * sends them to the first page they can open. Which route needs which permission is declared in the access catalog, not on the routes.
  */
 export function RequireAccess({ children }: { children: ReactNode }) {
-  const user = useAuth((s) => s.user); const loc = useLocation();
+  const user = useAuth((s) => s.user);
+  const loc = useLocation();
   if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />;
   if (!canOpen(user, loc.pathname)) return <Navigate to={landingPath(user)} replace />;
   return <>{children}</>;

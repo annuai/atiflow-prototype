@@ -12,7 +12,8 @@ const SIZE: Record<Size, { box: string; circle: string; icon: string; title: str
 export interface EmptyStateProps {
   /** An Untitled UI icon (or any component that takes `className`). */
   icon: FC<{ className?: string }>;
-  title: string; subtext?: ReactNode;
+  title: string;
+  subtext?: ReactNode;
   /** Buttons that fix the emptiness ("Add the first robot"). */
   action?: ReactNode;
   /** Anything extra under the text (quick picks). */
@@ -28,11 +29,37 @@ export interface EmptyStateProps {
  * THE empty state of the app: an icon, a title and a subtext (and, when useful, an action). Every list, panel, page and dialog that can be empty uses this one component,
  * so empty screens look and read the same everywhere. Change how they look here.
  */
-export function EmptyState({ icon: Icon, title, subtext, action, children, size = 'md', framed, tone = 'neutral', className }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  subtext,
+  action,
+  children,
+  size = 'md',
+  framed,
+  tone = 'neutral',
+  className,
+}: EmptyStateProps) {
   const s = SIZE[size];
   return (
-    <div role="status" className={cx('mx-auto flex w-full max-w-lg flex-col items-center justify-center text-center', s.box, framed && 'rounded-xl border border-dashed border-primary', className)}>
-      <span className={cx('mb-1 grid place-items-center rounded-full', s.circle, tone === 'positive' ? 'bg-success-secondary text-fg-success-primary' : 'bg-secondary text-fg-quaternary')}><Icon className={s.icon} /></span>
+    <div
+      role="status"
+      className={cx(
+        'mx-auto flex w-full max-w-lg flex-col items-center justify-center text-center',
+        s.box,
+        framed && 'rounded-xl border border-dashed border-primary',
+        className,
+      )}
+    >
+      <span
+        className={cx(
+          'mb-1 grid place-items-center rounded-full',
+          s.circle,
+          tone === 'positive' ? 'bg-success-secondary text-fg-success-primary' : 'bg-secondary text-fg-quaternary',
+        )}
+      >
+        <Icon className={s.icon} />
+      </span>
       <p className={cx('font-semibold text-primary', s.title)}>{title}</p>
       {subtext && <p className={cx('text-tertiary', s.sub)}>{subtext}</p>}
       {children}
@@ -42,4 +69,12 @@ export function EmptyState({ icon: Icon, title, subtext, action, children, size 
 }
 
 /** A search or filter that matches nothing: same component, the search icon and the same wording everywhere. */
-export const NoResults = ({ subtext, size = 'md', className }: { subtext?: ReactNode; size?: Size; className?: string }) => <EmptyState icon={SearchLg} title="No results" subtext={subtext} size={size} className={className} />;
+export const NoResults = ({
+  subtext,
+  size = 'md',
+  className,
+}: {
+  subtext?: ReactNode;
+  size?: Size;
+  className?: string;
+}) => <EmptyState icon={SearchLg} title="No results" subtext={subtext} size={size} className={className} />;

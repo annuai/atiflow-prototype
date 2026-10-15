@@ -20,22 +20,51 @@ export interface FleetsState {
   pruneMaterial(fleet: string, code: string): void;
 }
 function load(): Record<string, FleetProfile> {
-  try { const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null'); if (raw && typeof raw === 'object') return raw; } catch { /* fall through */ }
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null');
+    if (raw && typeof raw === 'object') return raw;
+  } catch {
+    /* fall through */
+  }
   return SEED_PROFILES;
 }
 export const profileOf = (profiles: Record<string, FleetProfile>, fleet: string) => profiles[fleet] ?? EMPTY_PROFILE;
 
 export const fleetsStore = createStore<FleetsState>((set, get) => {
-  const edit = (fleet: string, f: (g: FleetProfile['groups']) => FleetProfile['groups']) => { const p = profileOf(get().profiles, fleet); set({ profiles: { ...get().profiles, [fleet]: { ...p, groups: f(p.groups) } } }); };
+  const edit = (fleet: string, f: (g: FleetProfile['groups']) => FleetProfile['groups']) => {
+    const p = profileOf(get().profiles, fleet);
+    set({ profiles: { ...get().profiles, [fleet]: { ...p, groups: f(p.groups) } } });
+  };
   return {
     profiles: load(),
-    renameProfile: (from, to) => { const { [from]: p, ...rest } = get().profiles; if (p) set({ profiles: { ...rest, [to]: p } }); },
-    assignMap: (fleet, mapId) => { const p = profileOf(get().profiles, fleet); if (p.mapId === mapId) return; set({ profiles: { ...get().profiles, [fleet]: { mapId, groups: [] } } }); },
-    createGroup: (fleet, g) => edit(fleet, (gs) => addGroup(gs, g)), renameGroup: (fleet, id, name) => edit(fleet, (gs) => renameGroup(gs, id, name)), deleteGroup: (fleet, id) => edit(fleet, (gs) => deleteGroup(gs, id)),
-    addToGroup: (fleet, id, codes) => edit(fleet, (gs) => addToGroup(gs, id, codes)), removeFromGroup: (fleet, id, code) => edit(fleet, (gs) => removeFromGroup(gs, id, code)), pruneMaterial: (fleet, code) => edit(fleet, (gs) => pruneMaterial(gs, code)),
+    renameProfile: (from, to) => {
+      const { [from]: p, ...rest } = get().profiles;
+      if (p) set({ profiles: { ...rest, [to]: p } });
+    },
+    assignMap: (fleet, mapId) => {
+      const p = profileOf(get().profiles, fleet);
+      if (p.mapId === mapId) return;
+      set({ profiles: { ...get().profiles, [fleet]: { mapId, groups: [] } } });
+    },
+    createGroup: (fleet, g) => edit(fleet, (gs) => addGroup(gs, g)),
+    renameGroup: (fleet, id, name) => edit(fleet, (gs) => renameGroup(gs, id, name)),
+    deleteGroup: (fleet, id) => edit(fleet, (gs) => deleteGroup(gs, id)),
+    addToGroup: (fleet, id, codes) => edit(fleet, (gs) => addToGroup(gs, id, codes)),
+    removeFromGroup: (fleet, id, code) => edit(fleet, (gs) => removeFromGroup(gs, id, code)),
+    pruneMaterial: (fleet, code) => edit(fleet, (gs) => pruneMaterial(gs, code)),
   };
 });
-export const useFleets = <T,>(sel: (s: FleetsState) => T) => useStore(fleetsStore, sel);
+export const useFleets = <T>(sel: (s: FleetsState) => T) => useStore(fleetsStore, sel);
 
 let timer: ReturnType<typeof setTimeout> | undefined;
-fleetsStore.subscribe((s, p) => { if (s.profiles === p.profiles) return; clearTimeout(timer); timer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(s.profiles)); } catch { /* no storage */ } }, 250); });
+fleetsStore.subscribe((s, p) => {
+  if (s.profiles === p.profiles) return;
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(s.profiles));
+    } catch {
+      /* no storage */
+    }
+  }, 250);
+});

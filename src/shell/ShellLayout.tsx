@@ -8,8 +8,14 @@ import { PageTransition } from './PageTransition';
 import { useShellExtras } from './shellExtras';
 import type { NavModel, SearchHit } from './types';
 
-const SHELLS: Partial<Record<WorkspaceId, { useNavModel: () => NavModel; getHits: (q: string) => SearchHit[]; placeholder: string }>> = {
-  configurator: { useNavModel: useConfiguratorNav, getHits: configuratorHits, placeholder: 'Search live operations, fleets, trips, analytics...' },
+const SHELLS: Partial<
+  Record<WorkspaceId, { useNavModel: () => NavModel; getHits: (q: string) => SearchHit[]; placeholder: string }>
+> = {
+  configurator: {
+    useNavModel: useConfiguratorNav,
+    getHits: configuratorHits,
+    placeholder: 'Search live operations, fleets, trips, analytics...',
+  },
   supervisor: { useNavModel: useLiveNav, getHits: liveHits, placeholder: 'Search robots, stations, zones…' },
   operator: { useNavModel: useOperatorNav, getHits: operatorHits, placeholder: 'Search…' },
 };
@@ -20,10 +26,19 @@ const SHELLS: Partial<Record<WorkspaceId, { useNavModel: () => NavModel; getHits
  */
 /** (Keyed by workspace: the sidebar of each workspace uses its own hook, so a switch must remount it instead of re-rendering it with a different hook.) */
 export function ShellLayout({ workspace }: { workspace: WorkspaceId }) {
-  const s = SHELLS[workspace]!; const { onAi } = useShellExtras();
+  const s = SHELLS[workspace]!;
+  const { onAi } = useShellExtras();
   return (
     <MotionConfig reducedMotion="user">
-      <AppShell key={workspace} useNavModel={s.useNavModel} getHits={s.getHits} searchPlaceholder={s.placeholder} onAi={onAi}><PageTransition /></AppShell>
+      <AppShell
+        key={workspace}
+        useNavModel={s.useNavModel}
+        getHits={s.getHits}
+        searchPlaceholder={s.placeholder}
+        onAi={onAi}
+      >
+        <PageTransition />
+      </AppShell>
     </MotionConfig>
   );
 }

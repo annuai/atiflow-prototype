@@ -9,8 +9,17 @@ import { fleetsStore } from './store';
  * Workflow names are deliberately left alone (they are edited by hand). Returns an error text, or '' when renamed.
  */
 export function renameFleet(from: string, to: string): string {
-  const name = to.trim(); const error = fleetNameError(name, datasetStore.getState().fleets.map((f) => f.name), from); if (error) return error;
+  const name = to.trim();
+  const error = fleetNameError(
+    name,
+    datasetStore.getState().fleets.map((f) => f.name),
+    from,
+  );
+  if (error) return error;
   if (name === from) return '';
-  wfStore.getState().renameFleet(from, name); fleetsStore.getState().renameProfile(from, name); datasetStore.getState().renameFleet(from, name); masterDataStore.getState().renameFleet(from, name);
+  wfStore.getState().renameFleet(from, name);
+  fleetsStore.getState().renameProfile(from, name);
+  datasetStore.getState().renameFleet(from, name);
+  masterDataStore.getState().renameFleet(from, name);
   return '';
 }

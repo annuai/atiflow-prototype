@@ -1,25 +1,40 @@
 import type { FleetMap, StationGroup } from './types';
 
 /** Station ids whose group holds this material (the "Station goods at" column). */
-export const stationsOfMaterial = (groups: StationGroup[], code: string) => groups.filter((g) => g.codes.includes(code)).map((g) => g.stationId);
+export const stationsOfMaterial = (groups: StationGroup[], code: string) =>
+  groups.filter((g) => g.codes.includes(code)).map((g) => g.stationId);
 
 /** Stations of the map that do not have a group yet (a station can be grouped once). */
-export const freeStations = (map: FleetMap | null, groups: StationGroup[]) => (map?.stations ?? []).filter((s) => !groups.some((g) => g.stationId === s.id));
+export const freeStations = (map: FleetMap | null, groups: StationGroup[]) =>
+  (map?.stations ?? []).filter((s) => !groups.some((g) => g.stationId === s.id));
 
-export function validateGroupForm(v: { name: string; stationId: string; codes: string[] }, groups: StationGroup[], editing?: string): Record<string, string> {
+export function validateGroupForm(
+  v: { name: string; stationId: string; codes: string[] },
+  groups: StationGroup[],
+  editing?: string,
+): Record<string, string> {
   const e: Record<string, string> = {};
   if (!v.name.trim()) e.name = 'Group name is required';
-  else if (groups.some((g) => g.id !== editing && g.name.trim().toLowerCase() === v.name.trim().toLowerCase())) e.name = `A group named "${v.name.trim()}" already exists`;
+  else if (groups.some((g) => g.id !== editing && g.name.trim().toLowerCase() === v.name.trim().toLowerCase()))
+    e.name = `A group named "${v.name.trim()}" already exists`;
   if (!editing && !v.stationId) e.stationId = 'Choose a station';
-  else if (!editing && groups.some((g) => g.stationId === v.stationId)) e.stationId = 'This station already has a group';
+  else if (!editing && groups.some((g) => g.stationId === v.stationId))
+    e.stationId = 'This station already has a group';
   if (!editing && v.codes.length === 0) e.codes = 'Select at least one material';
   return e;
 }
 
-export const addGroup = (groups: StationGroup[], g: { name: string; stationId: string; codes: string[] }): StationGroup[] => [...groups, { id: g.stationId, stationId: g.stationId, name: g.name.trim(), codes: g.codes }];
-export const renameGroup = (groups: StationGroup[], id: string, name: string) => groups.map((g) => (g.id === id ? { ...g, name: name.trim() } : g));
+export const addGroup = (
+  groups: StationGroup[],
+  g: { name: string; stationId: string; codes: string[] },
+): StationGroup[] => [...groups, { id: g.stationId, stationId: g.stationId, name: g.name.trim(), codes: g.codes }];
+export const renameGroup = (groups: StationGroup[], id: string, name: string) =>
+  groups.map((g) => (g.id === id ? { ...g, name: name.trim() } : g));
 export const deleteGroup = (groups: StationGroup[], id: string) => groups.filter((g) => g.id !== id);
-export const addToGroup = (groups: StationGroup[], id: string, codes: string[]) => groups.map((g) => (g.id === id ? { ...g, codes: [...new Set([...g.codes, ...codes])] } : g));
-export const removeFromGroup = (groups: StationGroup[], id: string, code: string) => groups.map((g) => (g.id === id ? { ...g, codes: g.codes.filter((c) => c !== code) } : g));
+export const addToGroup = (groups: StationGroup[], id: string, codes: string[]) =>
+  groups.map((g) => (g.id === id ? { ...g, codes: [...new Set([...g.codes, ...codes])] } : g));
+export const removeFromGroup = (groups: StationGroup[], id: string, code: string) =>
+  groups.map((g) => (g.id === id ? { ...g, codes: g.codes.filter((c) => c !== code) } : g));
 /** A material left the fleet: it also leaves every group. */
-export const pruneMaterial = (groups: StationGroup[], code: string) => groups.map((g) => (g.codes.includes(code) ? { ...g, codes: g.codes.filter((c) => c !== code) } : g));
+export const pruneMaterial = (groups: StationGroup[], code: string) =>
+  groups.map((g) => (g.codes.includes(code) ? { ...g, codes: g.codes.filter((c) => c !== code) } : g));

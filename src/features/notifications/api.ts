@@ -4,13 +4,18 @@ import type { Audience, NewNotification, NotificationApi, SourcesByAudience } fr
 
 /** The audiences a user belongs to: the workspaces they can enter that have notifications. */
 export const audiencesOf = (user: Parameters<typeof enterableWorkspaces>[0]): Audience[] => {
-  const ids = enterableWorkspaces(user).map((w) => w.id).filter((id): id is Audience => id === 'supervisor' || id === 'configurator' || id === 'operator');
-  return ids.includes('supervisor') ? ids.filter((id) => id !== 'operator') : ids;          // operators and supervisors get the same robot alerts: once is enough
+  const ids = enterableWorkspaces(user)
+    .map((w) => w.id)
+    .filter((id): id is Audience => id === 'supervisor' || id === 'configurator' || id === 'operator');
+  return ids.includes('supervisor') ? ids.filter((id) => id !== 'operator') : ids; // operators and supervisors get the same robot alerts: once is enough
 };
 
 /** Today's implementation: each audience's sources inside this app (live robot alerts, the mock MES feed). */
 export const localApi = (sources: SourcesByAudience = SOURCES): NotificationApi => ({
-  subscribe(user, emit) { const stops = audiencesOf(user).flatMap((a) => sources[a]().map((s) => s.start(emit, user))); return () => stops.forEach((stop) => stop()); },
+  subscribe(user, emit) {
+    const stops = audiencesOf(user).flatMap((a) => sources[a]().map((s) => s.start(emit, user)));
+    return () => stops.forEach((stop) => stop());
+  },
 });
 
 export interface RestApiOptions {
@@ -27,18 +32,41 @@ export interface RestApiOptions {
  * Use it by replacing `localApi()` with `restApi({ baseUrl: '/api' })` in `index.ts`.
  */
 export function restApi(o: RestApiOptions): NotificationApi {
-  const call = o.fetch ?? ((...a: Parameters<typeof fetch>) => fetch(...a)); const headers = () => ({ 'Content-Type': 'application/json', ...(o.headers?.() ?? {}) });
+  const call = o.fetch ?? ((...a: Parameters<typeof fetch>) => fetch(...a));
+  const headers = () => ({ 'Content-Type': 'application/json', ...(o.headers?.() ?? {}) });
   const url = (u: string, path: string) => `${o.baseUrl}/users/${encodeURIComponent(u)}/notifications${path}`;
-  const get = async (username: string, since: number): Promise<NewNotification[]> => { const r = await call(url(username, `?since=${since}`), { headers: headers() }); if (!r.ok) throw new Error(`notifications: ${r.status}`); return ((await r.json()) as { items: NewNotification[] }).items ?? []; };
+  const get = async (username: string, since: number): Promise<NewNotification[]> => {
+    const r = await call(url(username, `?since=${since}`), { headers: headers() });
+    if (!r.ok) throw new Error(`notifications: ${r.status}`);
+    return ((await r.json()) as { items: NewNotification[] }).items ?? [];
+  };
   return {
     history: (user) => get(user.username, 0),
     subscribe(user, emit) {
-      let since = Date.now(); let stopped = false;
+      let since = Date.now();
+      let stopped = false;
       const t = setInterval(async () => {
-        try { const items = await get(user.username, since); if (stopped || !items.length) return; since = Math.max(since, ...items.map((n) => n.at)); emit(items); } catch { /* the next poll tries again */ }
+        try {
+          const items = await get(user.username, since);
+          if (stopped || !items.length) return;
+          since = Math.max(since, ...items.map((n) => n.at));
+          emit(items);
+        } catch {
+          /* the next poll tries again */
+        }
       }, o.pollMs ?? 15_000);
-      return () => { stopped = true; clearInterval(t); };
+      return () => {
+        stopped = true;
+        clearInterval(t);
+      };
     },
-    async markRead(user, ids) { const r = await call(url(user.username, '/read'), { method: 'POST', headers: headers(), body: JSON.stringify({ ids }) }); if (!r.ok) throw new Error(`notifications: ${r.status}`); },
+    async markRead(user, ids) {
+      const r = await call(url(user.username, '/read'), {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ ids }),
+      });
+      if (!r.ok) throw new Error(`notifications: ${r.status}`);
+    },
   };
 }

@@ -9,22 +9,68 @@ import { copy } from '../copy';
 import { Card, CardTitle } from './Cards';
 
 /** Robots that need the supervisor, most urgent first. In TV mode the buttons are left out (nobody can click them). */
-export function NeedsAttentionCard({ items, tv, limit, onLocate, onHelp }: { items: AttentionItem[]; tv?: boolean; limit?: number; onLocate?(robotId: string): void; onHelp?(item: AttentionItem): void }) {
+export function NeedsAttentionCard({
+  items,
+  tv,
+  limit,
+  onLocate,
+  onHelp,
+}: {
+  items: AttentionItem[];
+  tv?: boolean;
+  limit?: number;
+  onLocate?(robotId: string): void;
+  onHelp?(item: AttentionItem): void;
+}) {
   const shown = limit ? items.slice(0, limit) : items;
   return (
     <Card tv={tv} className="flex h-full flex-col">
-      <CardTitle title={copy.attention.title}>{items.length > 0 && <Badge size="sm" color={items.some((i) => i.level === 'critical') ? 'error' : 'warning'}>{items.length}</Badge>}</CardTitle>
+      <CardTitle title={copy.attention.title}>
+        {items.length > 0 && (
+          <Badge size="sm" color={items.some((i) => i.level === 'critical') ? 'error' : 'warning'}>
+            {items.length}
+          </Badge>
+        )}
+      </CardTitle>
       {!shown.length ? (
-        <EmptyState icon={CheckCircle} tone="positive" title={copy.attention.empty} subtext={copy.attention.emptyHint} size="sm" className="my-auto" />
+        <EmptyState
+          icon={CheckCircle}
+          tone="positive"
+          title={copy.attention.empty}
+          subtext={copy.attention.emptyHint}
+          size="sm"
+          className="my-auto"
+        />
       ) : (
         <ul className="flex flex-col gap-2 overflow-y-auto">
           {shown.map((a) => (
-            <li key={a.id} className={cx('flex items-center gap-3 rounded-lg border-l-4 bg-secondary px-3', tv ? 'py-3' : 'py-2.5', a.level === 'critical' ? 'border-l-error-solid' : 'border-l-warning-solid')}>
+            <li
+              key={a.id}
+              className={cx(
+                'flex items-center gap-3 rounded-lg border-l-4 bg-secondary px-3',
+                tv ? 'py-3' : 'py-2.5',
+                a.level === 'critical' ? 'border-l-error-solid' : 'border-l-warning-solid',
+              )}
+            >
               <div className="min-w-0 flex-1">
-                <p className={cx('truncate font-medium text-primary', tv ? 'text-lg' : 'text-sm')}><b>{a.robotId}</b> {a.title}</p>
-                <p className={cx('truncate text-tertiary', tv ? 'text-base' : 'text-xs')}>{a.detail} · {a.fleetName}{a.seconds >= 60 && a.kind !== 'waiting' ? ` · ${fmtDuration(a.seconds)}` : ''}</p>
+                <p className={cx('truncate font-medium text-primary', tv ? 'text-lg' : 'text-sm')}>
+                  <b>{a.robotId}</b> {a.title}
+                </p>
+                <p className={cx('truncate text-tertiary', tv ? 'text-base' : 'text-xs')}>
+                  {a.detail} · {a.fleetName}
+                  {a.seconds >= 60 && a.kind !== 'waiting' ? ` · ${fmtDuration(a.seconds)}` : ''}
+                </p>
               </div>
-              {!tv && <div className="flex shrink-0 gap-1.5"><Button size="sm" color="secondary" onPress={() => onLocate?.(a.robotId)}>{copy.attention.locate}</Button><Button size="sm" color="tertiary" onPress={() => onHelp?.(a)}>{copy.attention.help}</Button></div>}
+              {!tv && (
+                <div className="flex shrink-0 gap-1.5">
+                  <Button size="sm" color="secondary" onPress={() => onLocate?.(a.robotId)}>
+                    {copy.attention.locate}
+                  </Button>
+                  <Button size="sm" color="tertiary" onPress={() => onHelp?.(a)}>
+                    {copy.attention.help}
+                  </Button>
+                </div>
+              )}
             </li>
           ))}
         </ul>

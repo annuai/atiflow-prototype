@@ -2,11 +2,19 @@ import { buildArea, type AreaSpec } from './areas';
 import type { Material, MaterialGroup, StagingArea } from './types';
 import { FLEET_NAME } from '@/data/fleets';
 
-const MIN = 60_000, H = 60 * MIN, DAY = 24 * H;
+const MIN = 60_000,
+  H = 60 * MIN,
+  DAY = 24 * H;
 /** Starting data (what the design shows). Replace with a backend later; nothing else in the feature holds data. */
 const GROUPS: [name: string, prefix: string, ageMs: number][] = [
-  ['Fasteners & Fixings', 'FST', 2 * MIN], ['Packaging', 'PKG', H], ['Sub-Assemblies', 'SUB', DAY], ['Consumables', 'CON', 2 * DAY],
-  ['Electrical', 'ELC', 3 * DAY], ['Raw Materials', 'RAW', 7 * DAY], ['Seals & Gaskets', 'SEA', 7 * DAY], ['Paint & Coatings', 'PNT', 21 * DAY],
+  ['Fasteners & Fixings', 'FST', 2 * MIN],
+  ['Packaging', 'PKG', H],
+  ['Sub-Assemblies', 'SUB', DAY],
+  ['Consumables', 'CON', 2 * DAY],
+  ['Electrical', 'ELC', 3 * DAY],
+  ['Raw Materials', 'RAW', 7 * DAY],
+  ['Seals & Gaskets', 'SEA', 7 * DAY],
+  ['Paint & Coatings', 'PNT', 21 * DAY],
 ];
 const MATERIALS: [code: string, name: string, group: string, fleets: string[]][] = [
   ['DCP-1001', 'Drive Chain Pin 8mm', 'Fasteners & Fixings', [FLEET_NAME.lineSide]],
@@ -23,9 +31,20 @@ const AREAS: [id: string, spec: AreaSpec][] = [
 ];
 
 export function seedGroups(now: number): MaterialGroup[] {
-  return GROUPS.map(([name, prefix, age], i) => ({ id: `GRP-${String(i + 1).padStart(3, '0')}`, name, prefix, updatedAt: now - age }));
+  return GROUPS.map(([name, prefix, age], i) => ({
+    id: `GRP-${String(i + 1).padStart(3, '0')}`,
+    name,
+    prefix,
+    updatedAt: now - age,
+  }));
 }
 export function seedMaterials(now: number, groups: MaterialGroup[]): Material[] {
-  return MATERIALS.map(([code, name, group, fleets], i) => ({ code, name, group: groups.find((g) => g.name === group)?.id ?? '', fleets, updatedAt: now - i * MIN }));
+  return MATERIALS.map(([code, name, group, fleets], i) => ({
+    code,
+    name,
+    group: groups.find((g) => g.name === group)?.id ?? '',
+    fleets,
+    updatedAt: now - i * MIN,
+  }));
 }
 export const seedAreas = (): StagingArea[] => AREAS.map(([id, spec], i) => buildArea(id, spec, 7 + i));

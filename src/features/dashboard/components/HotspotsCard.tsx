@@ -11,11 +11,34 @@ export function HotspotsCard({ hotspots, tv }: { hotspots: Hotspot[]; tv?: boole
   return (
     <Card tv={tv}>
       <CardTitle title={copy.hotspots.title} hint={copy.hotspots.hint} />
-      {!hotspots.length ? <EmptyState icon={Clock} tone="positive" title={copy.hotspots.empty} subtext={copy.hotspots.emptyHint} size="sm" /> : (
+      {!hotspots.length ? (
+        <EmptyState
+          icon={Clock}
+          tone="positive"
+          title={copy.hotspots.empty}
+          subtext={copy.hotspots.emptyHint}
+          size="sm"
+        />
+      ) : (
         <ul className="flex flex-col gap-2.5">
           {hotspots.map((h) => (
-            <li key={h.place}><div className="mb-1 flex items-center justify-between text-sm"><span className="font-medium text-primary">{h.label}</span><span className="text-xs text-tertiary">{h.waitingNow ? <b className="mr-2 text-fg-warning-primary">{copy.hotspots.now(h.waitingNow)}</b> : null}{fmtDuration(h.seconds)}</span></div>
-              <div className="h-2 overflow-hidden rounded-full bg-secondary"><i className="block h-full rounded-full bg-fg-brand-secondary transition-[width] duration-500" style={{ width: `${(h.seconds / max) * 100}%`, background: '#8b5cf6' }} /></div></li>
+            <li key={h.place}>
+              <div className="mb-1 flex items-center justify-between text-sm">
+                <span className="font-medium text-primary">{h.label}</span>
+                <span className="text-xs text-tertiary">
+                  {h.waitingNow ? (
+                    <b className="mr-2 text-fg-warning-primary">{copy.hotspots.now(h.waitingNow)}</b>
+                  ) : null}
+                  {fmtDuration(h.seconds)}
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                <i
+                  className="block h-full rounded-full bg-fg-brand-secondary transition-[width] duration-500"
+                  style={{ width: `${(h.seconds / max) * 100}%`, background: '#8b5cf6' }}
+                />
+              </div>
+            </li>
           ))}
         </ul>
       )}

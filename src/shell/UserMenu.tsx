@@ -10,14 +10,24 @@ export function UserMenu({ user, onLogout }: { user: PublicUser; onLogout: () =>
     <Dropdown.Root>
       <AriaButton className="sb-user" aria-label={`Account menu for ${user.name}`}>
         <Avatar size="md" status="online" src={user.avatar} alt={user.name} />
-        <div className="t"><b>{user.name}</b><small>{user.title}</small></div>
+        <div className="t">
+          <b>{user.name}</b>
+          <small>{user.title}</small>
+        </div>
       </AriaButton>
       <Dropdown.Popover placement="top start" className="w-60">
         <div className="flex items-center gap-3 border-b border-secondary px-3 py-3">
           <Avatar size="md" src={user.avatar} alt="" />
-          <div className="min-w-0"><p className="truncate text-sm font-semibold text-secondary">{user.name}</p><p className="truncate text-xs text-tertiary">{user.title}</p></div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-secondary">{user.name}</p>
+            <p className="truncate text-xs text-tertiary">{user.title}</p>
+          </div>
         </div>
-        <Dropdown.Menu onAction={(k) => { if (k === 'logout') onLogout(); }}>
+        <Dropdown.Menu
+          onAction={(k) => {
+            if (k === 'logout') onLogout();
+          }}
+        >
           <Dropdown.Item id="logout" icon={LogOut01} label="Log out" />
         </Dropdown.Menu>
       </Dropdown.Popover>

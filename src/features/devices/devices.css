@@ -1,6 +1,22 @@
 /* Robots / Hardware pages. Layout reuses .content / .title-block / .builder from app.css; only the few extras live here (prefix dv-). */
-.dv-card { margin-bottom: 12px; }
-.dv-scroll { flex: 1; min-height: 0; overflow: auto; }
-.dv-search { width: 220px; }
-.dv-detail { padding-bottom: 12px; padding-top: 12px; min-height: 0; }
-@media (max-width: 720px) { .dv-search { width: 140px; } }
+.dv-card {
+  margin-bottom: 12px;
+}
+.dv-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.dv-search {
+  width: 220px;
+}
+.dv-detail {
+  padding-bottom: 12px;
+  padding-top: 12px;
+  min-height: 0;
+}
+@media (max-width: 720px) {
+  .dv-search {
+    width: 140px;
+  }
+}

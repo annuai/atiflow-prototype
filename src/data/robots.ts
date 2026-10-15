@@ -18,7 +18,12 @@ export interface RobotRecord {
 }
 
 export function robotRecords(d: Pick<DatasetData, 'robot' | 'fleets'>): RobotRecord[] {
-  return d.robot.map((r) => ({ id: String(r.values.name), type: robotTypeByLabel(r.values.sherpaType), fleet: d.fleets.find((f) => f.name === r.values.fleet) ?? null, status: r.status }));
+  return d.robot.map((r) => ({
+    id: String(r.values.name),
+    type: robotTypeByLabel(r.values.sherpaType),
+    fleet: d.fleets.find((f) => f.name === r.values.fleet) ?? null,
+    status: r.status,
+  }));
 }
 
 /**
@@ -30,4 +35,8 @@ export function robotsOnFloor(records: RobotRecord[], mapFleetIds: Iterable<stri
   return records.filter((r) => r.fleet && r.status !== 'offline' && maps.has(r.fleet.liveId ?? r.fleet.id));
 }
 
-export const useRobotRecords = (): RobotRecord[] => { const robot = useStore(datasetStore, (s) => s.robot), fleets = useStore(datasetStore, (s) => s.fleets); return robotRecords({ robot, fleets }); };
+export const useRobotRecords = (): RobotRecord[] => {
+  const robot = useStore(datasetStore, (s) => s.robot),
+    fleets = useStore(datasetStore, (s) => s.fleets);
+  return robotRecords({ robot, fleets });
+};

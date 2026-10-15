@@ -11,17 +11,25 @@ import { PageSkeleton } from './PageSkeleton';
  * location it was shown with until it is gone; a page that stays (a tab change inside it) keeps following the real location.
  */
 function Frozen({ children }: { children: ReactNode }) {
-  const loc = useContext(UNSAFE_LocationContext); const present = useIsPresent(); const held = useRef(loc); if (present) held.current = loc;
+  const loc = useContext(UNSAFE_LocationContext);
+  const present = useIsPresent();
+  const held = useRef(loc);
+  if (present) held.current = loc;
   return <UNSAFE_LocationContext.Provider value={held.current}>{children}</UNSAFE_LocationContext.Provider>;
 }
 
 /** Page changes: the old page fades out and lifts a little, the new one rises in. Only the content area moves; the sidebar and top bar stay (they live in the layout above). */
 export function PageTransition() {
-  const outlet = useOutlet(); const key = pageKey(useLocation().pathname);
+  const outlet = useOutlet();
+  const key = pageKey(useLocation().pathname);
   return (
     <AnimatePresence mode="wait" initial={false}>
       <PageMotion key={key} className="page-frame">
-        <Frozen><PageErrorBoundary><Suspense fallback={<PageSkeleton />}>{outlet}</Suspense></PageErrorBoundary></Frozen>
+        <Frozen>
+          <PageErrorBoundary>
+            <Suspense fallback={<PageSkeleton />}>{outlet}</Suspense>
+          </PageErrorBoundary>
+        </Frozen>
       </PageMotion>
     </AnimatePresence>
   );

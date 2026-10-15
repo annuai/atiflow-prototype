@@ -7,5 +7,5 @@ import type { SourcesByAudience } from './types';
 export const SOURCES: SourcesByAudience = {
   supervisor: () => [liveAlertsSource()],
   configurator: () => [mesSource()],
-  operator: () => [requestUpdatesSource()],         // trip status updates for their own requests, and requests waiting for their approval
+  operator: () => [requestUpdatesSource()], // trip status updates for their own requests, and requests waiting for their approval
 };

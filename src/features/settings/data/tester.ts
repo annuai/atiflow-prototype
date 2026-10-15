@@ -14,10 +14,21 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const mockTester = (delayMs = 700): ConnectionTester => ({
   async test(def, values) {
-    await wait(delayMs); const bad = connectionErrors(def, values); const key = Object.keys(bad)[0]; if (key) return { ok: false, message: `${def.fields.find((f) => f.key === key)!.label}: ${bad[key]}` };
-    const down = def.fields.find((f) => /\.invalid\b|unreachable/i.test(values[f.key] ?? '')); return down ? { ok: false, message: `No answer from ${values[down.key]} (timed out)` } : { ok: true, message: 'Reachable' };
+    await wait(delayMs);
+    const bad = connectionErrors(def, values);
+    const key = Object.keys(bad)[0];
+    if (key) return { ok: false, message: `${def.fields.find((f) => f.key === key)!.label}: ${bad[key]}` };
+    const down = def.fields.find((f) => /\.invalid\b|unreachable/i.test(values[f.key] ?? ''));
+    return down
+      ? { ok: false, message: `No answer from ${values[down.key]} (timed out)` }
+      : { ok: true, message: 'Reachable' };
   },
-  async sync() { await wait(delayMs); return Date.now(); },
+  async sync() {
+    await wait(delayMs);
+    return Date.now();
+  },
 });
 export let connectionTester: ConnectionTester = mockTester();
-export const setConnectionTester = (t: ConnectionTester) => { connectionTester = t; };           // swap in a real one (or a fast one in tests)
+export const setConnectionTester = (t: ConnectionTester) => {
+  connectionTester = t;
+}; // swap in a real one (or a fast one in tests)

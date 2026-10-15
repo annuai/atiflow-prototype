@@ -10,10 +10,15 @@ import type { MapData, MapHistory, MapVersion } from './types';
  */
 const KEY = 'atiflow.mapversions.v1';
 type Saved = Record<string, MapHistory>;
-const doc = createDocument<Saved>(localBackend(KEY), () => ({}), (v): v is Saved => !!v && typeof v === 'object' && !Array.isArray(v));
+const doc = createDocument<Saved>(
+  localBackend(KEY),
+  () => ({}),
+  (v): v is Saved => !!v && typeof v === 'object' && !Array.isArray(v),
+);
 
 export const draftOf = (h?: MapHistory) => h?.versions.find((v) => v.status === 'draft');
-export const publishedOf = (h?: MapHistory) => (h?.versions.filter((v) => v.status === 'published') ?? []).sort((a, b) => (b.number ?? 0) - (a.number ?? 0));
+export const publishedOf = (h?: MapHistory) =>
+  (h?.versions.filter((v) => v.status === 'published') ?? []).sort((a, b) => (b.number ?? 0) - (a.number ?? 0));
 export const latestOf = (h?: MapHistory) => publishedOf(h)[0];
 const uid = () => `mv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -35,35 +40,119 @@ export interface MapVersionsState {
 const put = (s: Saved, mapId: string, versions: MapVersion[]): Saved => ({ ...s, [mapId]: { versions } });
 
 export const mapVersionsStore = createStore<MapVersionsState>((set, get) => ({
-  byMap: Object.fromEntries(Object.entries(doc.load()).map(([k, h]) => [k, { versions: h.versions.map((v) => ({ ...v, data: normaliseData(v.data) })) }])),
+  byMap: Object.fromEntries(
+    Object.entries(doc.load()).map(([k, h]) => [
+      k,
+      { versions: h.versions.map((v) => ({ ...v, data: normaliseData(v.data) })) },
+    ]),
+  ),
   ensure(mapId, number, data, now = Date.now()) {
     if (get().byMap[mapId]?.versions.length) return;
-    set({ byMap: put(get().byMap, mapId, [{ id: uid(), mapId, status: 'published', number, basedOn: null, createdAt: now, createdBy: 'System', publishedAt: now, publishedBy: 'System', data }]) });
+    set({
+      byMap: put(get().byMap, mapId, [
+        {
+          id: uid(),
+          mapId,
+          status: 'published',
+          number,
+          basedOn: null,
+          createdAt: now,
+          createdBy: 'System',
+          publishedAt: now,
+          publishedBy: 'System',
+          data,
+        },
+      ]),
+    });
   },
   startDraft(mapId, by, fromNumber, now = Date.now()) {
-    const h = get().byMap[mapId]; if (!h) return null; const existing = draftOf(h); if (existing) return existing;
-    const from = fromNumber ? h.versions.find((v) => v.number === fromNumber) : latestOf(h); if (!from) return null;
-    const draft: MapVersion = { id: uid(), mapId, status: 'draft', number: null, basedOn: from.number, createdAt: now, createdBy: by, data: structuredClone(from.data) };
-    set({ byMap: put(get().byMap, mapId, [...h.versions, draft]) }); return draft;
+    const h = get().byMap[mapId];
+    if (!h) return null;
+    const existing = draftOf(h);
+    if (existing) return existing;
+    const from = fromNumber ? h.versions.find((v) => v.number === fromNumber) : latestOf(h);
+    if (!from) return null;
+    const draft: MapVersion = {
+      id: uid(),
+      mapId,
+      status: 'draft',
+      number: null,
+      basedOn: from.number,
+      createdAt: now,
+      createdBy: by,
+      data: structuredClone(from.data),
+    };
+    set({ byMap: put(get().byMap, mapId, [...h.versions, draft]) });
+    return draft;
   },
   updateDraft(mapId, edit) {
-    const h = get().byMap[mapId]; const d = draftOf(h); if (!h || !d) return;
-    set({ byMap: put(get().byMap, mapId, h.versions.map((v) => (v.id === d.id ? { ...v, data: edit(v.data) } : v))) });
+    const h = get().byMap[mapId];
+    const d = draftOf(h);
+    if (!h || !d) return;
+    set({
+      byMap: put(
+        get().byMap,
+        mapId,
+        h.versions.map((v) => (v.id === d.id ? { ...v, data: edit(v.data) } : v)),
+      ),
+    });
   },
   restoreToDraft(mapId, fromNumber, by, now = Date.now()) {
-    const h = get().byMap[mapId]; const from = h?.versions.find((v) => v.number === fromNumber && v.status === 'published'); if (!h || !from) return null;
-    const d = draftOf(h); if (!d) return get().startDraft(mapId, by, fromNumber, now);
-    const next = { ...d, basedOn: from.number, data: structuredClone(from.data) }; set({ byMap: put(get().byMap, mapId, h.versions.map((v) => (v.id === d.id ? next : v))) }); return next;
+    const h = get().byMap[mapId];
+    const from = h?.versions.find((v) => v.number === fromNumber && v.status === 'published');
+    if (!h || !from) return null;
+    const d = draftOf(h);
+    if (!d) return get().startDraft(mapId, by, fromNumber, now);
+    const next = { ...d, basedOn: from.number, data: structuredClone(from.data) };
+    set({
+      byMap: put(
+        get().byMap,
+        mapId,
+        h.versions.map((v) => (v.id === d.id ? next : v)),
+      ),
+    });
+    return next;
   },
-  discardDraft(mapId) { const h = get().byMap[mapId]; if (!h) return; set({ byMap: put(get().byMap, mapId, h.versions.filter((v) => v.status !== 'draft')) }); },
+  discardDraft(mapId) {
+    const h = get().byMap[mapId];
+    if (!h) return;
+    set({
+      byMap: put(
+        get().byMap,
+        mapId,
+        h.versions.filter((v) => v.status !== 'draft'),
+      ),
+    });
+  },
   publish(mapId, by, now = Date.now()) {
-    const h = get().byMap[mapId]; const d = draftOf(h); if (!h || !d) return null; const number = (latestOf(h)?.number ?? 0) + 1;
-    set({ byMap: put(get().byMap, mapId, h.versions.map((v) => (v.id === d.id ? { ...v, status: 'published' as const, number, publishedAt: now, publishedBy: by } : v))) }); return number;
+    const h = get().byMap[mapId];
+    const d = draftOf(h);
+    if (!h || !d) return null;
+    const number = (latestOf(h)?.number ?? 0) + 1;
+    set({
+      byMap: put(
+        get().byMap,
+        mapId,
+        h.versions.map((v) =>
+          v.id === d.id ? { ...v, status: 'published' as const, number, publishedAt: now, publishedBy: by } : v,
+        ),
+      ),
+    });
+    return number;
   },
-  reset() { doc.reset(); set({ byMap: {} }); },
+  reset() {
+    doc.reset();
+    set({ byMap: {} });
+  },
 }));
-export const useMapVersions = <T,>(sel: (s: MapVersionsState) => T) => useStore(mapVersionsStore, sel);
+export const useMapVersions = <T>(sel: (s: MapVersionsState) => T) => useStore(mapVersionsStore, sel);
 
-let saved = mapVersionsStore.getState().byMap; let timer: ReturnType<typeof setTimeout> | undefined;
-mapVersionsStore.subscribe((s) => { if (s.byMap === saved) return; saved = s.byMap; clearTimeout(timer); timer = setTimeout(() => doc.save(s.byMap), 400); });
+let saved = mapVersionsStore.getState().byMap;
+let timer: ReturnType<typeof setTimeout> | undefined;
+mapVersionsStore.subscribe((s) => {
+  if (s.byMap === saved) return;
+  saved = s.byMap;
+  clearTimeout(timer);
+  timer = setTimeout(() => doc.save(s.byMap), 400);
+});
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __mapVersions: mapVersionsStore });

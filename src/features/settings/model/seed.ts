@@ -5,8 +5,17 @@ const HOUR = 3_600_000;
 export const seedSettings = (now = Date.now()): SettingsData => ({
   version: 1,
   connections: {
-    'fleet-manager': { values: { host: '192.168.100.31', clientId: 'app_user_example', clientSecret: 'example-secret-value' }, lastSynced: now - 18 * HOUR, lastTest: { ok: true, message: 'Reachable', at: now - 18 * HOUR } },
+    'fleet-manager': {
+      values: { host: '192.168.100.31', clientId: 'app_user_example', clientSecret: 'example-secret-value' },
+      lastSynced: now - 18 * HOUR,
+      lastTest: { ok: true, message: 'Reachable', at: now - 18 * HOUR },
+    },
     mes: { values: { amrUrl: '', bomUrl: '' } },
   },
-  general: { siteName: 'ECC Plant', timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', units: 'metric', language: 'English' },
+  general: {
+    siteName: 'ECC Plant',
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    units: 'metric',
+    language: 'English',
+  },
 });

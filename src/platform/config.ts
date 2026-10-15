@@ -16,7 +16,9 @@ export const AppConfigSchema = z.object({
   /** Feature flags by name; a missing flag is off. */
   features: z.record(z.string(), z.boolean()).default({}),
   logLevel: z.enum(['debug', 'info', 'warn', 'error', 'silent']).default('info'),
-  errorReporting: z.object({ enabled: z.boolean().default(false), dsn: z.string().optional() }).default({ enabled: false }),
+  errorReporting: z
+    .object({ enabled: z.boolean().default(false), dsn: z.string().optional() })
+    .default({ enabled: false }),
 });
 export type AppConfig = z.infer<typeof AppConfigSchema>;
 
@@ -27,29 +29,67 @@ let current: AppConfig = DEFAULT_CONFIG;
 export const getConfig = (): AppConfig => current;
 export const isFeatureEnabled = (flag: string): boolean => current.features[flag] === true;
 /** For tests and tools: set the configuration directly (validated). */
-export function setConfig(value: unknown): AppConfig { current = AppConfigSchema.parse(value); return current; }
+export function setConfig(value: unknown): AppConfig {
+  current = AppConfigSchema.parse(value);
+  return current;
+}
 
-export interface ConfigSources { env?: Record<string, unknown>; fetchJson?: () => Promise<unknown>; onProblem?: (message: string) => void }
+export interface ConfigSources {
+  env?: Record<string, unknown>;
+  fetchJson?: () => Promise<unknown>;
+  onProblem?: (message: string) => void;
+}
 /** The part of the config that `VITE_*` variables can set. */
 export function fromEnv(env: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
-  if (env.VITE_ENVIRONMENT) out.environment = env.VITE_ENVIRONMENT; if (env.VITE_RELEASE) out.release = env.VITE_RELEASE; if (env.VITE_DATA_MODE) out.dataMode = env.VITE_DATA_MODE; if (env.VITE_LOG_LEVEL) out.logLevel = env.VITE_LOG_LEVEL;
-  const api: Record<string, unknown> = {}; if (env.VITE_FLEET_MANAGER_URL) api.fleetManager = env.VITE_FLEET_MANAGER_URL; if (env.VITE_DEPLOYMENT_MANAGER_URL) api.deploymentManager = env.VITE_DEPLOYMENT_MANAGER_URL; if (env.VITE_AUTH_URL) api.auth = env.VITE_AUTH_URL;
-  if (Object.keys(api).length) out.api = api; return out;
+  if (env.VITE_ENVIRONMENT) out.environment = env.VITE_ENVIRONMENT;
+  if (env.VITE_RELEASE) out.release = env.VITE_RELEASE;
+  if (env.VITE_DATA_MODE) out.dataMode = env.VITE_DATA_MODE;
+  if (env.VITE_LOG_LEVEL) out.logLevel = env.VITE_LOG_LEVEL;
+  const api: Record<string, unknown> = {};
+  if (env.VITE_FLEET_MANAGER_URL) api.fleetManager = env.VITE_FLEET_MANAGER_URL;
+  if (env.VITE_DEPLOYMENT_MANAGER_URL) api.deploymentManager = env.VITE_DEPLOYMENT_MANAGER_URL;
+  if (env.VITE_AUTH_URL) api.auth = env.VITE_AUTH_URL;
+  if (Object.keys(api).length) out.api = api;
+  return out;
 }
 /** Merge config layers (later wins; `api`, `features` and `errorReporting` are merged key by key). */
 export function mergeConfig(...layers: Record<string, unknown>[]): Record<string, unknown> {
   const out: Record<string, unknown> = {};
-  for (const l of layers) for (const [k, v] of Object.entries(l)) out[k] = v && typeof v === 'object' && !Array.isArray(v) && typeof out[k] === 'object' && out[k] ? { ...(out[k] as object), ...(v as object) } : v;
+  for (const l of layers)
+    for (const [k, v] of Object.entries(l))
+      out[k] =
+        v && typeof v === 'object' && !Array.isArray(v) && typeof out[k] === 'object' && out[k]
+          ? { ...(out[k] as object), ...(v as object) }
+          : v;
   return out;
 }
 /**
  * Load the configuration once at start-up. Never throws: a layer that is missing or invalid is skipped (and reported through `onProblem`), so the app always starts with something valid.
  */
-export async function loadConfig({ env = {}, fetchJson, onProblem = () => {} }: ConfigSources = {}): Promise<AppConfig> {
+export async function loadConfig({
+  env = {},
+  fetchJson,
+  onProblem = () => {},
+}: ConfigSources = {}): Promise<AppConfig> {
   const layers: Record<string, unknown>[] = [fromEnv(env)];
-  if (fetchJson) { try { const j = await fetchJson(); if (j && typeof j === 'object') layers.push(j as Record<string, unknown>); } catch (e) { onProblem(`config.json could not be read: ${e instanceof Error ? e.message : String(e)}`); } }
-  let merged = mergeConfig(...layers); let parsed = AppConfigSchema.safeParse(merged);
-  if (!parsed.success) { onProblem(`Configuration ignored, using defaults: ${parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`); merged = {}; parsed = AppConfigSchema.safeParse(merged); }
-  current = parsed.success ? parsed.data : DEFAULT_CONFIG; return current;
+  if (fetchJson) {
+    try {
+      const j = await fetchJson();
+      if (j && typeof j === 'object') layers.push(j as Record<string, unknown>);
+    } catch (e) {
+      onProblem(`config.json could not be read: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  let merged = mergeConfig(...layers);
+  let parsed = AppConfigSchema.safeParse(merged);
+  if (!parsed.success) {
+    onProblem(
+      `Configuration ignored, using defaults: ${parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`,
+    );
+    merged = {};
+    parsed = AppConfigSchema.safeParse(merged);
+  }
+  current = parsed.success ? parsed.data : DEFAULT_CONFIG;
+  return current;
 }

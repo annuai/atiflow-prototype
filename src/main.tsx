@@ -9,7 +9,11 @@ import { installGlobalErrorHandlers, loadConfig, log } from './platform';
 async function start() {
   await loadConfig({
     env: import.meta.env,
-    fetchJson: async () => { const r = await fetch(`${import.meta.env.BASE_URL}config.json`, { cache: 'no-store' }); if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); },
+    fetchJson: async () => {
+      const r = await fetch(`${import.meta.env.BASE_URL}config.json`, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    },
     onProblem: (m) => log.warn(m),
   });
   installGlobalErrorHandlers(window);

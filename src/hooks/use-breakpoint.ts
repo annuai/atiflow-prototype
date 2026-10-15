@@ -1,11 +1,11 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from 'react';
 
 const screens = {
-    sm: "640px",
-    md: "768px",
-    lg: "1024px",
-    xl: "1280px",
-    "2xl": "1536px",
+  sm: '640px',
+  md: '768px',
+  lg: '1024px',
+  xl: '1280px',
+  '2xl': '1536px',
 };
 
 /**
@@ -16,23 +16,23 @@ const screens = {
  *
  * @returns A boolean indicating whether the viewport size applies.
  */
-export const useBreakpoint = (size: "sm" | "md" | "lg" | "xl" | "2xl") => {
-    const query = `(min-width: ${screens[size]})`;
+export const useBreakpoint = (size: 'sm' | 'md' | 'lg' | 'xl' | '2xl') => {
+  const query = `(min-width: ${screens[size]})`;
 
-    const subscribe = useCallback(
-        (onChange: () => void) => {
-            const breakpoint = window.matchMedia(query);
-            breakpoint.addEventListener("change", onChange);
-            return () => breakpoint.removeEventListener("change", onChange);
-        },
-        [query],
-    );
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      const breakpoint = window.matchMedia(query);
+      breakpoint.addEventListener('change', onChange);
+      return () => breakpoint.removeEventListener('change', onChange);
+    },
+    [query],
+  );
 
-    // The server has no viewport, so it renders the desktop layout (as before); the browser
-    // then reads the real value without a hydration mismatch.
-    return useSyncExternalStore(
-        subscribe,
-        () => window.matchMedia(query).matches,
-        () => true,
-    );
+  // The server has no viewport, so it renders the desktop layout (as before); the browser
+  // then reads the real value without a hydration mismatch.
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(query).matches,
+    () => true,
+  );
 };

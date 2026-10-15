@@ -7,7 +7,9 @@ export interface UserRecord {
   username: string;
   /** PROTOTYPE ONLY: plain text on purpose (no encryption requested). Replace with a real backend before any real use. */
   password: string;
-  firstName: string; lastName: string; email: string;
+  firstName: string;
+  lastName: string;
+  email: string;
   role: Role;
   /** Permissions added to / removed from the role's preset for this one user. */
   custom?: Custom;

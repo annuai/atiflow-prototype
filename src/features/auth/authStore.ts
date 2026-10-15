@@ -7,10 +7,16 @@ import type { PublicUser } from './types';
 const KEY = 'atiflow.session';
 /** Only the username is persisted; the profile is re-resolved on load so avatars/titles stay current. */
 function restore(): PublicUser | null {
-  try { const raw = localStorage.getItem(KEY) ?? sessionStorage.getItem(KEY); return raw ? findUser(JSON.parse(raw).username) : null; } catch { return null; }
+  try {
+    const raw = localStorage.getItem(KEY) ?? sessionStorage.getItem(KEY);
+    return raw ? findUser(JSON.parse(raw).username) : null;
+  } catch {
+    return null;
+  }
 }
 function persist(user: PublicUser | null, keep: boolean) {
-  localStorage.removeItem(KEY); sessionStorage.removeItem(KEY);
+  localStorage.removeItem(KEY);
+  sessionStorage.removeItem(KEY);
   if (user) (keep ? localStorage : sessionStorage).setItem(KEY, JSON.stringify({ username: user.username }));
 }
 
@@ -24,17 +30,25 @@ export interface AuthState {
 export const authStore = createStore<AuthState>((set) => ({
   user: restore(),
   async login(username, password, keep) {
-    await new Promise((r) => setTimeout(r, 450));            // feels like a request; harmless for a prototype
+    await new Promise((r) => setTimeout(r, 450)); // feels like a request; harmless for a prototype
     const user = authenticate(username, password);
     if (!user) return 'invalid';
-    persist(user, keep); set({ user }); return 'ok';
+    persist(user, keep);
+    set({ user });
+    return 'ok';
   },
-  logout() { persist(null, false); set({ user: null }); },
+  logout() {
+    persist(null, false);
+    set({ user: null });
+  },
 }));
-export const useAuth = <T,>(sel: (s: AuthState) => T) => useStore(authStore, sel);
+export const useAuth = <T>(sel: (s: AuthState) => T) => useStore(authStore, sel);
 
 /** The signed-in user follows the directory: when a configurator changes their role or access (here or in another tab) it applies at once, and a deleted user is signed out. */
 userDirectory.subscribe(() => {
-  const cur = authStore.getState().user; if (!cur) return; const fresh = findUser(cur.username);
-  if (!fresh) authStore.getState().logout(); else if (JSON.stringify(fresh) !== JSON.stringify(cur)) authStore.setState({ user: fresh });
+  const cur = authStore.getState().user;
+  if (!cur) return;
+  const fresh = findUser(cur.username);
+  if (!fresh) authStore.getState().logout();
+  else if (JSON.stringify(fresh) !== JSON.stringify(cur)) authStore.setState({ user: fresh });
 });

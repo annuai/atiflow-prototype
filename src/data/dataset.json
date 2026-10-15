@@ -23,10 +23,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0844",
         "apiKey": "sk-amr001-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.44",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -41,10 +38,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0845",
         "apiKey": "sk-amr002-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.45",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -59,10 +53,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0846",
         "apiKey": "sk-amr003-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.46",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -77,10 +68,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0847",
         "apiKey": "sk-amr004-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.47",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -110,10 +98,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0849",
         "apiKey": "sk-amr006-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.49",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -128,10 +113,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0850",
         "apiKey": "sk-amr007-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.50",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -146,10 +128,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0851",
         "apiKey": "sk-amr008-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.51",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -164,10 +143,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0852",
         "apiKey": "sk-amr009-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.52",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -197,10 +173,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0854",
         "apiKey": "sk-amr011-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.54",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -215,10 +188,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0855",
         "apiKey": "sk-amr012-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.55",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -233,10 +203,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0856",
         "apiKey": "sk-amr013-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.56",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -251,10 +218,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0857",
         "apiKey": "sk-amr014-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.57",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
@@ -269,10 +233,7 @@
         "sherpaType": "Sherpa XT Lite",
         "hardwareId": "HW-2024-AMR-0858",
         "apiKey": "sk-amr015-f8a3b2c1d4e5",
-        "addons": [
-          "Auto-Hitch",
-          "Auto Un-hitch"
-        ],
+        "addons": ["Auto-Hitch", "Auto Un-hitch"],
         "ip": "192.168.1.58",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",

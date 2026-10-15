@@ -9,7 +9,12 @@ import { sampleMeasured, type RosterRobot } from './sampleMeasured';
 /** Less data than this and "Today" falls back to the sample figures (a few seconds of simulator run say nothing yet). */
 const MIN_LIVE_S = 180;
 
-export interface SourceDeps { roster(): Promise<RosterRobot[]>; live?: { query(from: number, to: number): import('@/core/measurements').Measured }; now?(): Date; delayMs?: number }
+export interface SourceDeps {
+  roster(): Promise<RosterRobot[]>;
+  live?: { query(from: number, to: number): import('@/core/measurements').Measured };
+  now?(): Date;
+  delayMs?: number;
+}
 
 /**
  * The Reports source. "Today" is MEASURED from the running fleet (the measurement log fed by the simulator's telemetry and events) once it has a few minutes
@@ -21,11 +26,14 @@ export function createReportSource(deps: SourceDeps): ReportSource {
     async fetch(range) {
       const roster = await deps.roster();
       if (range.preset === 'today' && deps.live) {
-        const t = now(), m = deps.live.query(startOfDay(t).getTime(), t.getTime());
-        if (m.observedS >= MIN_LIVE_S) return buildReport(range, m, null, { kind: 'live', observedMin: Math.round(m.observedS / 60) });
+        const t = now(),
+          m = deps.live.query(startOfDay(t).getTime(), t.getTime());
+        if (m.observedS >= MIN_LIVE_S)
+          return buildReport(range, m, null, { kind: 'live', observedMin: Math.round(m.observedS / 60) });
       }
-      if (deps.delayMs) await new Promise((r) => setTimeout(r, deps.delayMs));                                           // feels like a request
-      const m = sampleMeasured(roster, range, now()), prev = sampleMeasured(roster, previousRange(range), now());
+      if (deps.delayMs) await new Promise((r) => setTimeout(r, deps.delayMs)); // feels like a request
+      const m = sampleMeasured(roster, range, now()),
+        prev = sampleMeasured(roster, previousRange(range), now());
       return buildReport(range, m, prev, { kind: 'sample' });
     },
   };
@@ -35,7 +43,11 @@ export function createReportSource(deps: SourceDeps): ReportSource {
 export const reportSource = createReportSource({
   roster: async () => {
     const { nav } = await feed.ready();
-    return robotsOnFloor(robotRecords(datasetStore.getState()), nav.fleets.map((f) => f.id)).map((r) => ({ id: r.id, fleetId: r.fleet!.liveId ?? r.fleet!.id }));
+    return robotsOnFloor(
+      robotRecords(datasetStore.getState()),
+      nav.fleets.map((f) => f.id),
+    ).map((r) => ({ id: r.id, fleetId: r.fleet!.liveId ?? r.fleet!.id }));
   },
-  live: measurements, delayMs: 350,
+  live: measurements,
+  delayMs: 350,
 });

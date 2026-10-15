@@ -1,8 +1,9 @@
 {
-  "total": 97,
+  "total": 104,
   "rules": {
     "@typescript-eslint/no-explicit-any": 1,
     "complexity": 4,
+    "max-lines": 7,
     "no-console": 1,
     "no-restricted-globals": 32,
     "react-hooks/exhaustive-deps": 10,

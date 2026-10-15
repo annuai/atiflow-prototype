@@ -1,15 +1,46 @@
 /* Design tokens from Figma "AtiFlow-v4" (node 837:5241). Do not hard-code these elsewhere. */
 :root {
   --font: 'Blinker', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --text-sm: 14px; --lh-sm: 20px; --text-xs: 12px; --lh-xs: 18px;
-  --sp-xxs: 2px; --sp-xs: 4px; --sp-sm: 6px; --sp-md: 8px; --sp-lg: 12px; --sp-2xl: 20px;
-  --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 20px; --r-full: 9999px;
-  --bg-page: #f5f5f5; --bg-primary: #ffffff; --bg-tertiary: #f5f5f5; --bg-brand: #66cbc4;
-  --border-primary: #d4d4d4; --border-secondary: #e5e5e5;
-  --text-secondary: #404040; --text-placeholder: #737373; --fg-quaternary: #a3a3a3; --fg-success: #22c55e;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
+  --text-sm: 14px;
+  --lh-sm: 20px;
+  --text-xs: 12px;
+  --lh-xs: 18px;
+  --sp-xxs: 2px;
+  --sp-xs: 4px;
+  --sp-sm: 6px;
+  --sp-md: 8px;
+  --sp-lg: 12px;
+  --sp-2xl: 20px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 20px;
+  --r-full: 9999px;
+  --bg-page: #f5f5f5;
+  --bg-primary: #ffffff;
+  --bg-tertiary: #f5f5f5;
+  --bg-brand: #66cbc4;
+  --border-primary: #d4d4d4;
+  --border-secondary: #e5e5e5;
+  --text-secondary: #404040;
+  --text-placeholder: #737373;
+  --fg-quaternary: #a3a3a3;
+  --fg-success: #22c55e;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
   /* the dark sidebar theme as one reusable surface (sidebar, login card header, login footer) */
-  --surface-sidebar: radial-gradient(circle at 100% 100%, rgba(99,102,241,.16), rgba(99,102,241,0) 65%), radial-gradient(circle at 0 0, rgba(45,212,191,.22), rgba(45,212,191,0) 60%), linear-gradient(148deg, #132630 0%, #0f1b24 38%, #111827 85%);
-  --sb-text: #cbd5e1; --sb-label: #64748b; --sb-accent: #5eead4;
-  --s-moving: #14b8a6; --s-working: #f59e0b; --s-charging: #22c55e; --s-blocked: #ef4444; --s-error: #dc2626; --s-idle: #94a3b8; --s-offline: #cbd5e1; --s-paused: #64748b;
+  --surface-sidebar:
+    radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.16), rgba(99, 102, 241, 0) 65%),
+    radial-gradient(circle at 0 0, rgba(45, 212, 191, 0.22), rgba(45, 212, 191, 0) 60%),
+    linear-gradient(148deg, #132630 0%, #0f1b24 38%, #111827 85%);
+  --sb-text: #cbd5e1;
+  --sb-label: #64748b;
+  --sb-accent: #5eead4;
+  --s-moving: #14b8a6;
+  --s-working: #f59e0b;
+  --s-charging: #22c55e;
+  --s-blocked: #ef4444;
+  --s-error: #dc2626;
+  --s-idle: #94a3b8;
+  --s-offline: #cbd5e1;
+  --s-paused: #64748b;
 }
