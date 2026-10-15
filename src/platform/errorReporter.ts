@@ -1,3 +1,4 @@
+import { runtimeContext } from './context';
 import { log } from './logger';
 
 export interface ErrorContext {
@@ -22,7 +23,7 @@ export function setErrorReporter(next: ErrorReporter) {
 /** Report an error (never throws, even if the reporter does). */
 export function reportError(error: unknown, context?: ErrorContext) {
   try {
-    reporter.capture(error, context);
+    reporter.capture(error, { ...context, extra: { ...runtimeContext(), ...context?.extra } });
   } catch (e) {
     log.child('errors').error('the error reporter failed', e);
   }

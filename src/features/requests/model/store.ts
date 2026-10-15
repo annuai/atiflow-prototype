@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
-import { createPersister } from '@/data/persist';
+import { registerStoreInit } from '@/data/storeInit';
+import { createPersister, withoutSaving } from '@/data/persist';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
 import { tripIds, tripNumber } from '@/data/tripIds';
@@ -188,9 +189,15 @@ requestsStore.subscribe((s) => {
   }
 });
 // another tab (another operator on the same browser) changed the requests: take them over
-services().requests.subscribe((doc) => {
+const adopt = (doc: RequestsDocument) => {
   saved = normalise(doc.requests as TripRequest[]);
   requestsStore.setState({ seq: doc.seq, requests: saved });
+};
+let unlisten = services().requests.subscribe(adopt);
+registerStoreInit(() => {
+  unlisten();
+  withoutSaving(() => adopt(services().requests.snapshot()));
+  unlisten = services().requests.subscribe(adopt);
 });
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __requests: requestsStore });
 

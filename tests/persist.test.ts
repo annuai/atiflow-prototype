@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createPersister, flushAll, persistOnce, persistence } from '../src/data/persist';
+import { createPersister, flushAll, persistOnce, persistence, retryAll } from '../src/data/persist';
 import { setErrorReporter, setLogSinks } from '../src/platform';
 
 const reported: unknown[] = [];
@@ -76,6 +76,20 @@ describe('persister', () => {
     await p.flush();
     expect(saved).toEqual(['keep me']);
     expect(persistence.getState().failed).toEqual({});
+  });
+  it('asking to flush or retry when nothing is waiting never stops later saves (the tab becoming visible does exactly that)', async () => {
+    const saved: string[] = [];
+    const p = createPersister<string>('t6', async (v) => void saved.push(v));
+    await p.flush();
+    p.retry();
+    await flushAll();
+    retryAll();
+    p.queue('after');
+    await p.flush();
+    expect(saved).toEqual(['after']);
+    p.queue('and again');
+    await p.flush();
+    expect(saved).toEqual(['after', 'and again']);
   });
   it('flushAll saves what is waiting without waiting for the delay', async () => {
     const saved: string[] = [];

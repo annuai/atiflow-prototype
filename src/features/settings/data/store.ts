@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
-import { createPersister } from '@/data/persist';
+import { registerStoreInit } from '@/data/storeInit';
+import { createPersister, withoutSaving } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { connectionById } from '../model/connections';
@@ -46,4 +47,5 @@ settingsStore.subscribe((s, p) => {
   if (s.connections !== p.connections || s.general !== p.general)
     persist.queue({ version: 1, connections: s.connections, general: s.general });
 });
+registerStoreInit(() => withoutSaving(() => settingsStore.setState({ ...services().settings.read() })));
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __settings: settingsStore });

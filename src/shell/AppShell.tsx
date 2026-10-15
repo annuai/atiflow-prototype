@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { services } from '@/services';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'motion/react';
@@ -35,9 +35,11 @@ export function AppShell({ useNavModel, searchPlaceholder, getHits, onAi, childr
   const [navOpen, setNavOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => services().device.get('sb-collapsed') === '1');
   // the menu drawer shuts whenever the page changes, however it changed (menu, Back / Forward, search, a link): an open drawer's dim layer covers the page and swallows every touch, which looked like "the page does not scroll"
-  useEffect(() => {
+  const [shownPath, setShownPath] = useState(pathname);
+  if (shownPath !== pathname) {
+    setShownPath(pathname);
     setNavOpen(false);
-  }, [pathname]);
+  }
   const logout = () => {
     authStore.getState().logout();
     navigate('/login', { replace: true });

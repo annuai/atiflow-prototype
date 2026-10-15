@@ -1,4 +1,5 @@
 import { createStore } from 'zustand/vanilla';
+import { registerStoreInit } from '@/data/storeInit';
 import { createPersister } from '@/data/persist';
 import { useEffect, useState } from 'react';
 import { useStore } from 'zustand';
@@ -15,7 +16,7 @@ import type { Call } from '../model/types';
  * this browser so it survives a reload and can be exported. A server later = another place to save the log and the claims (`ActionCenterEngine` stays).
  */
 export const actionCenter = createStore<ActionState>(() => ({ active: [], log: [] }));
-export const engine = new ActionCenterEngine(services().actionLog.read() ?? [], (s) => {
+export const engine = new ActionCenterEngine(services().actionLog.read(), (s) => {
   actionCenter.setState(s);
 });
 actionCenter.setState(engine.state);
@@ -27,10 +28,16 @@ actionCenter.subscribe((s) => {
     persist.queue(s.log);
   }
 });
-services().actionLog.subscribe((log) => {
+const adoptLog = (log: Call[]) => {
   engine.state = { ...engine.state, log };
   saved = log;
   actionCenter.setState({ log });
+};
+let unlisten = services().actionLog.subscribe(adoptLog);
+registerStoreInit(() => {
+  unlisten();
+  adoptLog(services().actionLog.read());
+  unlisten = services().actionLog.subscribe(adoptLog);
 });
 
 /** The calls this person may see: only their fleets (the feed already filters, this also guards the saved log, which belongs to the whole browser). */

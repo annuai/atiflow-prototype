@@ -1,4 +1,5 @@
 import { getConfig } from './config';
+import { runtimeContext } from './context';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 export interface LogEntry {
@@ -7,6 +8,8 @@ export interface LogEntry {
   message: string;
   data?: unknown;
   at: number;
+  /** release, environment and signed-in user at the moment of the log line */
+  context?: Record<string, unknown>;
 }
 /** Where log lines go. The default prints to the browser console; a service (Datadog, Cloud Logging...) is another sink. */
 export type LogSink = (entry: LogEntry) => void;
@@ -33,7 +36,7 @@ export function setLogSinks(next: LogSink[]) {
 export function createLogger(scope = 'app', minLevel: () => LogLevel | 'silent' = () => getConfig().logLevel): Logger {
   const emit = (level: LogLevel) => (message: string, data?: unknown) => {
     if (ORDER[level] >= ORDER[minLevel()]) {
-      const entry = { level, scope, message, data, at: Date.now() };
+      const entry: LogEntry = { level, scope, message, data, at: Date.now(), context: { ...runtimeContext() } };
       for (const s of sinks) s(entry);
     }
   };

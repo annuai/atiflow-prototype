@@ -34,6 +34,16 @@ const set = (name: string, error: string | null) =>
   });
 
 const all = new Set<Persister<never>>();
+let suspended = 0;
+/** Run `fn` (a store taking over data it just READ) without handing that data back to the service: `queue` ignores everything while it runs. */
+export function withoutSaving<T>(fn: () => T): T {
+  suspended++;
+  try {
+    return fn();
+  } finally {
+    suspended--;
+  }
+}
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const NONE = Symbol('none');
 
@@ -67,7 +77,10 @@ export function createPersister<T>(
   };
   const run = (): Promise<void> => {
     if (running) return running;
-    running = (async () => {
+    if (pending === NONE) return Promise.resolve(); // nothing waiting: never start (and never leave behind) an empty run
+    // (with something waiting the loop awaits at least once, so `running` is set before the task can finish)
+    const self: { task?: Promise<void> } = {}; // (the task is stored below, before it can finish)
+    self.task = (async () => {
       try {
         while (pending !== NONE) {
           const v = pending;
@@ -75,14 +88,16 @@ export function createPersister<T>(
           await attempt(v);
         }
       } finally {
-        running = null;
+        if (running === self.task) running = null;
       }
     })();
-    return running;
+    running = self.task;
+    return self.task;
   };
   const p: Persister<T> = {
     name,
     queue(value) {
+      if (suspended) return;
       pending = value;
       clearTimeout(timer);
       timer = setTimeout(() => void run(), delayMs);
@@ -92,7 +107,8 @@ export function createPersister<T>(
       return run();
     },
     retry() {
-      if (failedValue !== NONE && pending === NONE) pending = failedValue;
+      if (failedValue === NONE) return; // nothing failed: nothing to try again
+      if (pending === NONE) pending = failedValue;
       void p.flush();
     },
   };

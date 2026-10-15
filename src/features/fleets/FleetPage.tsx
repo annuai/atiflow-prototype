@@ -1,9 +1,8 @@
-import { useRef } from 'react';
-import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
+import { useState } from 'react';
+import { TabbedPanel } from '@/components/data/TabbedPanel';
 import { useDataset } from '@/data/dataset';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Dataflow03, LayoutGrid01, Package, Settings02 } from '@untitledui/icons';
-import { Tabs } from '@/components/application/tabs/tabs';
 import { Badge } from '@/components/base/badges/badges';
 import { useDevices } from '@/features/devices';
 import { useMasterData } from '@/features/master-data';
@@ -33,7 +32,7 @@ type TabId = (typeof TABS)[number]['id'];
 export function FleetPage() {
   const { name = '', tab = '' } = useParams();
   const navigate = useNavigate();
-  const renamedFrom = useRef('');
+  const [renamedFrom, setRenamedFrom] = useState(''); // the old name of a fleet that was just renamed (its old URL is briefly unknown)
   const known = useDataset((s) => s.fleets.some((f) => f.name === name));
   const active = TABS.find((t) => t.id === tab);
   const map = useMap(useFleets((s) => profileOf(s.profiles, name).mapId));
@@ -41,13 +40,13 @@ export function FleetPage() {
   const hardware = useDevices((s) => s.hardware).filter((d) => d.values.fleet === name).length;
   const workflows = useWorkflow((s) => workflowsOfFleet(s.workflows, name).filter(isKept).length);
   const materials = useMasterData((s) => s.materials).filter((m) => m.fleets.includes(name)).length;
-  if (known) renamedFrom.current = '';
-  if (!known && renamedFrom.current !== name) return <Navigate to="/configurator" replace />; // (a fleet that was just renamed is briefly unknown under its old URL)
+  if (known && renamedFrom) setRenamedFrom('');
+  if (!known && renamedFrom !== name) return <Navigate to="/configurator" replace />; // (a fleet that was just renamed is briefly unknown under its old URL)
   if (!active) return <Navigate to={fleetPath(name)} replace />;
   const onRename = (to: string) => {
-    renamedFrom.current = name;
+    setRenamedFrom(name);
     const e = renameFleet(name, to);
-    if (e) renamedFrom.current = '';
+    if (e) setRenamedFrom('');
     if (!e && to.trim() !== name) {
       navigate(fleetPath(to.trim(), active.id), { replace: true });
       notify.success(copy.rename.done.title, copy.rename.done.body(name, to.trim()), 'fleet-renamed');
@@ -79,24 +78,15 @@ export function FleetPage() {
           </div>
         </div>
         <div className="builder md-card">
-          <Tabs
-            selectedKey={active.id}
-            onSelectionChange={(k) => navigate(fleetPath(name, String(k)))}
-            className="min-w-0 flex-none px-5 pt-6"
+          <TabbedPanel
+            tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id], icon: t.icon, badge: counts[t.id] }))}
+            selected={active.id}
+            onSelect={(k) => navigate(fleetPath(name, k))}
+            label={name}
+            contentKey={`${name}/${active.id}`}
           >
-            <Tabs.List
-              type="underline"
-              size="md"
-              fullWidth
-              aria-label={name}
-              items={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id], icon: t.icon, badge: counts[t.id] }))}
-            />
-          </Tabs>
-          <div className="md-body">
-            <TabPanelMotion tabKey={`${name}/${active.id}`} fill>
-              <active.Panel fleet={name} />
-            </TabPanelMotion>
-          </div>
+            <active.Panel fleet={name} />
+          </TabbedPanel>
         </div>
       </div>
     </>

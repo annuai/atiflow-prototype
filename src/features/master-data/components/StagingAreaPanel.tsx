@@ -40,7 +40,7 @@ function AreaCard({ area, selected, onSelect }: { area: StagingArea; selected: b
           {used}/{total}
         </span>
       </span>
-      <ProgressBar value={used} max={total} valueFormatter={() => ''} />
+      <ProgressBar value={used} max={total} valueFormatter={() => ''} ariaLabel={`${area.name} utilisation`} />
     </button>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncedState } from '@/hooks/use-synced-state';
 import { ArrowLeft, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
@@ -39,8 +39,7 @@ export function StationForm({
   onDelete(): void;
 }) {
   const f = copy.stations.form;
-  const [name, setName] = useState(station.name);
-  useEffect(() => setName(station.name), [station.id, station.name]);
+  const [name, setName] = useSyncedState(station.name, station.id);
   const problem = nameProblem(data, station.id, name);
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">

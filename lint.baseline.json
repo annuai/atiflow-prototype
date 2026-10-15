@@ -1,13 +1,10 @@
 {
-  "total": 67,
+  "total": 27,
   "rules": {
     "complexity": 4,
-    "max-lines": 7,
-    "react-hooks/exhaustive-deps": 10,
-    "react-hooks/globals": 2,
-    "react-hooks/purity": 2,
-    "react-hooks/refs": 25,
-    "react-hooks/set-state-in-effect": 15,
+    "max-lines": 4,
+    "react-hooks/exhaustive-deps": 8,
+    "react-hooks/refs": 9,
     "react-hooks/use-memo": 2
   }
 }

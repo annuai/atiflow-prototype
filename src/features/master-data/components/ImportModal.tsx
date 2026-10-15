@@ -45,8 +45,10 @@ export function ImportModal({ flow, dispatch, source = mockErp }: Props) {
   const [manual, setManual] = useState({ name: '', code: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // a fresh opening starts clean
-  useEffect(() => {
+  // a fresh opening starts clean (everything is cleared when the dialog closes)
+  const [wasOpen, setWasOpen] = useState(flow.open);
+  if (wasOpen !== flow.open) {
+    setWasOpen(flow.open);
     if (!flow.open) {
       setPicked({ codes: new Set(), rows: new Map() });
       setFile(null);
@@ -55,7 +57,7 @@ export function ImportModal({ flow, dispatch, source = mockErp }: Props) {
       setManual({ name: '', code: '' });
       setErrors({});
     }
-  }, [flow.open]);
+  }
   // leaving the progress step when the job ends
   useEffect(() => {
     if (flow.open && flow.step === 'progress' && (job.status === 'done' || job.status === 'cancelled')) {

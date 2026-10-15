@@ -28,17 +28,20 @@ export interface ProgressBarProps {
      * It receives the raw value and the calculated percentage.
      */
     valueFormatter?: (value: number, valueInPercentage: number) => string | number;
+    /** Accessible name of the bar (added for accessibility; see docs/vendored-changes.md). */
+    ariaLabel?: string;
 }
 
 /**
  * A basic progress bar component.
  */
-export const ProgressBarBase = ({ value, min = 0, max = 100, className, progressClassName }: ProgressBarProps) => {
+export const ProgressBarBase = ({ value, min = 0, max = 100, className, progressClassName, ariaLabel = "Progress" }: ProgressBarProps) => {
     const percentage = ((value - min) * 100) / (max - min);
 
     return (
         <div
             role="progressbar"
+            aria-label={ariaLabel}
             aria-valuenow={value}
             aria-valuemin={min}
             aria-valuemax={max}
@@ -69,11 +72,11 @@ export interface ProgressIndicatorWithTextProps extends ProgressBarProps {
 /**
  * A progress bar component that displays the value text in various configurable layouts.
  */
-export const ProgressBar = ({ value, min = 0, max = 100, valueFormatter, labelPosition, className, progressClassName }: ProgressIndicatorWithTextProps) => {
+export const ProgressBar = ({ value, min = 0, max = 100, valueFormatter, labelPosition, className, progressClassName, ariaLabel }: ProgressIndicatorWithTextProps) => {
     const percentage = ((value - min) * 100) / (max - min);
     const formattedValue = valueFormatter ? valueFormatter(value, percentage) : `${percentage.toFixed(0)}%`; // Default to rounded percentage
 
-    const baseProgressBar = <ProgressBarBase min={min} max={max} value={value} className={className} progressClassName={progressClassName} />;
+    const baseProgressBar = <ProgressBarBase min={min} max={max} value={value} className={className} progressClassName={progressClassName} ariaLabel={ariaLabel} />;
 
     switch (labelPosition) {
         case "right":

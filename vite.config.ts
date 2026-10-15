@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { configDefaults, defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath } from 'node:url';
@@ -29,5 +29,6 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 700, // vendor-three (the 3D engine) is the one large chunk, and only the Live Floor loads it
   },
+  test: { exclude: [...configDefaults.exclude, 'tests/e2e/**'] }, // (the browser tests in tests/e2e run with Playwright, not Vitest)
   server: { host: true, port: 5173, strictPort: true }, // host: true = listen on all interfaces so phones/tablets on the LAN can open it
 });

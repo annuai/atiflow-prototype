@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncedState } from '@/hooks/use-synced-state';
 import { ArrowLeft, Route, SwitchVertical01, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
@@ -92,8 +92,7 @@ export function RoadForm({
   onDelete(): void;
 }) {
   const f = copy.routes.form;
-  const [name, setName] = useState(road.name);
-  useEffect(() => setName(road.name), [road.id, road.name]);
+  const [name, setName] = useSyncedState(road.name, road.id);
   const problem = nameProblem(data, road.id, name);
   const a = road.points[0],
     b = road.points[road.points.length - 1];

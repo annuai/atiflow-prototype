@@ -23,15 +23,18 @@ export interface TouchState {
  * pointer; for a moment after the gesture ends `lastAt` is recent, so the finger lifting is not taken for a tap.
  */
 export function useTouchGestures(
-  box: RefObject<HTMLElement | null>,
+  /** the map's container: a ref object, or the element itself (from a callback ref, so the effect runs when it appears) */
+  box: RefObject<HTMLElement | null> | HTMLElement | null,
   api: { zoomAt(factor: number, clientX: number, clientY: number): void; panBy(dxPx: number, dyPx: number): void },
 ) {
   const state = useRef<TouchState>({ pinching: false, lastAt: 0 });
   const fingers = useRef(new Map<number, Pt>());
   const apiRef = useRef(api);
-  apiRef.current = api;
   useEffect(() => {
-    const el = box.current;
+    apiRef.current = api;
+  });
+  useEffect(() => {
+    const el = box && 'current' in box ? box.current : box;
     if (!el) return;
     const f = fingers.current,
       s = state.current;

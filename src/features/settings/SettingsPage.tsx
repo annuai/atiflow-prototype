@@ -1,7 +1,6 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
+import { TabbedPanel } from '@/components/data/TabbedPanel';
 import { Globe01, Link03 } from '@untitledui/icons';
-import { Tabs } from '@/components/application/tabs/tabs';
 import { SETTINGS_PATH } from '@/features/configurator';
 import { ConnectionsPanel } from './components/ConnectionsPanel';
 import { GeneralPanel } from './components/GeneralPanel';
@@ -30,24 +29,14 @@ export function SettingsPage() {
           </div>
         </div>
         <div className="builder md-card">
-          <Tabs
-            selectedKey={active.id}
-            onSelectionChange={(k) => navigate(`${SETTINGS_PATH}/${k as TabId}`)}
-            className="min-w-0 flex-none px-5 pt-6"
+          <TabbedPanel
+            tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id].label, icon: t.icon }))}
+            selected={active.id}
+            onSelect={(k) => navigate(`${SETTINGS_PATH}/${k as TabId}`)}
+            label={copy.title}
           >
-            <Tabs.List
-              type="underline"
-              size="md"
-              fullWidth
-              aria-label={copy.title}
-              items={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id].label, icon: t.icon }))}
-            />
-          </Tabs>
-          <div className="md-body">
-            <TabPanelMotion tabKey={active.id} fill>
-              <active.Panel />
-            </TabPanelMotion>
-          </div>
+            <active.Panel />
+          </TabbedPanel>
         </div>
       </div>
     </>

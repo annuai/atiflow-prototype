@@ -22,25 +22,20 @@ export function ApiStep({ source, showStatus, selected, onSelect, picked }: Prop
   const existing = useMasterData((s) => s.materials);
   const [text, setText] = useState('');
   const [prefix, setPrefix] = useState('');
-  const [result, setResult] = useState<ErpResult | null>(null);
-  const [loading, setLoading] = useState(true);
-
+  const [answer, setAnswer] = useState<{ q: string; result: ErpResult } | null>(null);
+  const q = `${text}\u0000${prefix}`;
   useEffect(() => {
     let live = true;
-    setLoading(true);
     const t = setTimeout(() => {
-      source.search({ text, prefix, limit: RESULT_LIMIT }).then((r) => {
-        if (live) {
-          setResult(r);
-          setLoading(false);
-        }
-      });
+      source.search({ text, prefix, limit: RESULT_LIMIT }).then((r) => live && setAnswer({ q, result: r }));
     }, DEBOUNCE_MS);
     return () => {
       live = false;
       clearTimeout(t);
     };
-  }, [source, text, prefix]);
+  }, [source, text, prefix, q]);
+  const result = answer?.result ?? null; // (the previous answer stays on screen while a new one is loading)
+  const loading = answer?.q !== q;
 
   const rows: PickerRow[] = useMemo(
     () => (result?.rows ?? []).map((r) => ({ ...r, status: hasCode(existing, r.code) ? 'added' : 'available' })),

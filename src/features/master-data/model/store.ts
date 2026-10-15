@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
-import { createPersister } from '@/data/persist';
+import { registerStoreInit } from '@/data/storeInit';
+import { createPersister, withoutSaving } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { cellKey, toggleBlocked } from './areas';
@@ -78,3 +79,5 @@ masterDataStore.subscribe((s, p) => {
   if (s.materials === p.materials && s.groups === p.groups && s.areas === p.areas) return;
   persist.queue({ materials: s.materials, groups: s.groups, areas: s.areas });
 });
+
+registerStoreInit(() => withoutSaving(() => masterDataStore.setState({ ...load() })));

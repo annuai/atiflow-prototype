@@ -23,7 +23,7 @@ function Body({ onOpenChange, source }: { onOpenChange(o: boolean): void; source
   const [f, setF] = useState<NewMapForm>(BLANK);
   const [posegraph, setPosegraph] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [runs, setRuns] = useState<RunData[] | null>(null);
+  const [loaded, setLoaded] = useState<{ robot: string; runs: RunData[] } | null>(null);
   const set = (patch: Partial<NewMapForm>) => {
     setF((o) => ({ ...o, ...patch }));
     setErrors((e) => {
@@ -35,12 +35,12 @@ function Body({ onOpenChange, source }: { onOpenChange(o: boolean): void; source
   // run data depends on the chosen robot
   useEffect(() => {
     let live = true;
-    setRuns(null);
-    if (f.robot) source.forRobot(f.robot).then((r) => live && setRuns(r));
+    if (f.robot) source.forRobot(f.robot).then((r) => live && setLoaded({ robot: f.robot, runs: r }));
     return () => {
       live = false;
     };
   }, [f.robot, source]);
+  const runs = f.robot && loaded?.robot === f.robot ? loaded.runs : null; // (null while the robot's runs are loading)
   const submit = () => {
     const e = validateNewMap(f, maps, t.errors);
     setErrors(e);

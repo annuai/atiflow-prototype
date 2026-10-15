@@ -1,4 +1,5 @@
 import { createStore } from 'zustand/vanilla';
+import { registerStoreInit } from '@/data/storeInit';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { findUser } from './authService';
@@ -37,6 +38,7 @@ export const authStore = createStore<AuthState>((set) => ({
     set({ user: null });
   },
 }));
+registerStoreInit(() => authStore.setState({ user: restore() })); // (the services were replaced: who is signed in is read again)
 export const useAuth = <T>(sel: (s: AuthState) => T) => useStore(authStore, sel);
 
 /** The signed-in user follows the directory: when a configurator changes their role or access (here or in another tab) it applies at once, and a deleted user is signed out. */

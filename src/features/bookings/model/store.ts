@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
-import { createPersister } from '@/data/persist';
+import { registerStoreInit } from '@/data/storeInit';
+import { createPersister, withoutSaving } from '@/data/persist';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
 import { tripIds, tripNumber } from '@/data/tripIds';
@@ -111,5 +112,11 @@ bookingsStore.subscribe((s) => {
   if (s.trips === saved.trips && s.seq === saved.seq) return;
   saved = s;
   persist.queue({ trips: s.trips, seq: s.seq });
+});
+registerStoreInit(() => {
+  const b = services().bookings.snapshot() as Saved;
+  tripIds.ensureAtLeast(Math.max(0, ...b.trips.map((t) => tripNumber(t.tripId))));
+  withoutSaving(() => bookingsStore.setState({ trips: b.trips, seq: b.seq }));
+  saved = bookingsStore.getState();
 });
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __bookings: bookingsStore });

@@ -1,8 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
+import { TabbedPanel } from '@/components/data/TabbedPanel';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GamingPad01, RefreshCcw03, Rows01, Settings02, Trash01 } from '@untitledui/icons';
-import { Tabs } from '@/components/application/tabs/tabs';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { useFleetNames } from '@/features/workflow-builder';
@@ -116,6 +115,58 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
       )}
     </div>
   );
+  const content = (
+    <>
+      {tab === 'Details' ? (
+        <>
+          <div>
+            <h2 className="text-lg font-semibold text-primary">{kind.detail.heading}</h2>
+            <p className="text-sm text-tertiary">{kind.detail.description}</p>
+          </div>
+          <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
+            {fields.map((f) => {
+              const d = detailOf(f);
+              const editable = !!d.editable && editing;
+              return (
+                <FormField
+                  key={f.key}
+                  def={f}
+                  label={d.label ?? f.label}
+                  display={d.display}
+                  value={value(f.key)}
+                  disabled={!editable}
+                  fleets={fleets}
+                  onChange={(v) => setDraft((o) => ({ ...o, [f.key]: v }))}
+                />
+              );
+            })}
+          </div>
+          {footer({
+            editing,
+            busy: false,
+            disabled: false,
+            editLabel: 'Edit Details',
+            onEdit: () => setEditing(true),
+            onSave: save,
+            onCancel: () => {
+              setEditing(false);
+              setDraft({});
+            },
+          })}
+        </>
+      ) : tab === 'Configuration' ? (
+        <ConfigurationTab robot={robot} renderFooter={footer} />
+      ) : tab === 'Calibration' ? (
+        <CalibrationTab robot={robot} online={online} />
+      ) : (
+        <SoftwareUpdateTab
+          robot={robot}
+          online={online}
+          onInstalled={(version) => deviceStore.getState().update(kind.id, name, { firmware: version })}
+        />
+      )}
+    </>
+  );
   return (
     <>
       <div className="flex shrink-0 flex-wrap items-end justify-between gap-4 px-1 sm:min-h-[140px] sm:flex-nowrap">
@@ -149,72 +200,26 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
         data-testid="device-detail"
       >
         {tabs ? (
-          <Tabs selectedKey={tab} onSelectionChange={(k) => setTab(String(k))} className="mt-6 min-w-0">
-            <Tabs.List
-              type="underline"
-              size="md"
-              fullWidth
-              className="overflow-x-auto"
-              aria-label="Sections"
-              items={tabs.map((t, i) => ({ id: t, label: t, icon: TAB_ICONS[i] }))}
-            />
-          </Tabs>
+          <TabbedPanel
+            tabs={tabs.map((t, i) => ({ id: t, label: t, icon: TAB_ICONS[i] }))}
+            selected={tab}
+            onSelect={setTab}
+            label="Sections"
+            barClassName="mt-6 min-w-0"
+            listClassName="overflow-x-auto"
+            panelClassName="flex flex-1 flex-col pt-6"
+            contentClassName="flex flex-1 flex-col gap-6 sm:gap-8"
+          >
+            {content}
+          </TabbedPanel>
         ) : (
-          <div className="mt-6 h-px w-full bg-border-secondary" />
+          <>
+            <div className="mt-6 h-px w-full bg-border-secondary" />
+            <div className="flex flex-1 flex-col pt-6">
+              <div className="flex flex-1 flex-col gap-6 sm:gap-8">{content}</div>
+            </div>
+          </>
         )}
-
-        <div className="flex flex-1 flex-col pt-6">
-          <TabPanelMotion tabKey={tab} className="flex flex-1 flex-col gap-6 sm:gap-8">
-            {tab === 'Details' ? (
-              <>
-                <div>
-                  <h2 className="text-lg font-semibold text-primary">{kind.detail.heading}</h2>
-                  <p className="text-sm text-tertiary">{kind.detail.description}</p>
-                </div>
-                <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
-                  {fields.map((f) => {
-                    const d = detailOf(f);
-                    const editable = !!d.editable && editing;
-                    return (
-                      <FormField
-                        key={f.key}
-                        def={f}
-                        label={d.label ?? f.label}
-                        display={d.display}
-                        value={value(f.key)}
-                        disabled={!editable}
-                        fleets={fleets}
-                        onChange={(v) => setDraft((o) => ({ ...o, [f.key]: v }))}
-                      />
-                    );
-                  })}
-                </div>
-                {footer({
-                  editing,
-                  busy: false,
-                  disabled: false,
-                  editLabel: 'Edit Details',
-                  onEdit: () => setEditing(true),
-                  onSave: save,
-                  onCancel: () => {
-                    setEditing(false);
-                    setDraft({});
-                  },
-                })}
-              </>
-            ) : tab === 'Configuration' ? (
-              <ConfigurationTab robot={robot} renderFooter={footer} />
-            ) : tab === 'Calibration' ? (
-              <CalibrationTab robot={robot} online={online} />
-            ) : (
-              <SoftwareUpdateTab
-                robot={robot}
-                online={online}
-                onInstalled={(version) => deviceStore.getState().update(kind.id, name, { firmware: version })}
-              />
-            )}
-          </TabPanelMotion>
-        </div>
         <ConfirmDialog
           isOpen={confirm}
           onOpenChange={setConfirm}

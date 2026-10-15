@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
-import { createPersister } from '@/data/persist';
+import { registerStoreInit } from '@/data/storeInit';
+import { createPersister, withoutSaving } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { normaliseData } from './seed';
@@ -34,13 +35,16 @@ export interface MapVersionsState {
 }
 const put = (s: Saved, mapId: string, versions: MapVersion[]): Saved => ({ ...s, [mapId]: { versions } });
 
-export const mapVersionsStore = createStore<MapVersionsState>((set, get) => ({
-  byMap: Object.fromEntries(
-    Object.entries(services().mapVersions.read() ?? {}).map(([k, h]) => [
+/** What the service holds, with every version's data completed (older saved maps lack newer fields). */
+const loadVersions = (): Saved =>
+  Object.fromEntries(
+    Object.entries(services().mapVersions.read()).map(([k, h]) => [
       k,
       { versions: h.versions.map((v) => ({ ...v, data: normaliseData(v.data) })) },
     ]),
-  ),
+  );
+export const mapVersionsStore = createStore<MapVersionsState>((set, get) => ({
+  byMap: loadVersions(),
   ensure(mapId, number, data, now = Date.now()) {
     if (get().byMap[mapId]?.versions.length) return;
     set({
@@ -149,4 +153,10 @@ mapVersionsStore.subscribe((s) => {
   saved = s.byMap;
   persist.queue(s.byMap);
 });
+registerStoreInit(() =>
+  withoutSaving(() => {
+    mapVersionsStore.setState({ byMap: loadVersions() });
+    saved = mapVersionsStore.getState().byMap;
+  }),
+);
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __mapVersions: mapVersionsStore });

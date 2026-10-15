@@ -3,7 +3,7 @@ import './styles/globals.css'; // Tailwind + Untitled UI theme first, so the das
 import './ui/tokens.css';
 import './ui/app.css';
 import { BootFailure } from './shell/BootFailure';
-import { installGlobalErrorHandlers, loadConfig, log } from './platform';
+import { installGlobalErrorHandlers, loadConfig, log, observeWebVitals } from './platform';
 import { createServices, hydrateServices, setServices } from './services';
 
 /**
@@ -22,6 +22,7 @@ async function start() {
     onProblem: (m) => log.warn(m),
   });
   installGlobalErrorHandlers(window);
+  observeWebVitals();
   const services = setServices(createServices(config));
   const { failed } = await hydrateServices(services);
   if (failed.length) {

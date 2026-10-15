@@ -1,26 +1,17 @@
 import { createStore } from 'zustand/vanilla';
-import { createPersister } from '@/data/persist';
+import { createPersister, withoutSaving } from '@/data/persist';
+import { registerStoreInit } from '@/data/storeInit';
 import { useStore } from 'zustand';
 import { notify } from '@/ui/toast';
 import { services } from '@/services';
 import { fleetMaterialCodes } from '@/features/master-data';
 import { fleetStations } from './stations';
-import { createNode, syncIds } from './factory';
+import { createNode } from './factory';
 import { applySteps, parsePrompt } from './parsePrompt';
 import { defaultWorkflowName, workflowNameError } from './names';
 import { datasetStore, useDataset } from '@/data/dataset';
-import { prefillUsers } from './users';
-import {
-  blankWorkflow,
-  isBlankDraft,
-  isKept,
-  seedWorkflows,
-  upgradeToV5,
-  upgradeToV6,
-  upgradeToV7,
-  withRouteSamples,
-  normaliseRobots,
-} from './seed';
+import { loadWorkflows } from './loadSaved';
+import { blankWorkflow, isBlankDraft, isKept } from './seed';
 import { insertNode, locate, moveNode, removeNode, updateField, type Problem } from './tree';
 import { publishProblem } from './validate';
 import type { FieldValue, ListKey, NodeTypeId, WfNode, Workflow, Workflows } from './types';
@@ -96,90 +87,7 @@ export const selectFleet = (s: WfState) => (s.current ? (s.workflows[s.current]?
 export const workflowsOfFleet = (workflows: Workflows, fleet: string) =>
   Object.values(workflows).filter((w) => w.fleet === fleet);
 
-type Saved = { workflows: Workflows; current: string | null };
-const load = (): Saved => {
-  const s = loadSaved();
-  return { ...s, workflows: normaliseRobots(s.workflows) };
-}; // whatever was loaded: robot names that match no robot become the default robot
-/** What the `workflows` service holds, upgraded (older versions), repaired and topped up with the sample routes. Unsaved workflows do not survive a reload. */
-function loadSaved(): Saved {
-  const svc = services().workflows;
-  const keep = (ws: Workflows): Workflows => Object.fromEntries(Object.entries(ws).filter(([, w]) => isKept(w)));
-  const done = (workflows: Workflows): Saved => {
-    Object.values(workflows).forEach((w) => syncIds(w.nodes));
-    return { workflows, current: null };
-  };
-  try {
-    const saved = svc.snapshot();
-    if (saved) return done(normaliseRobots(withRouteSamples(keep(saved))));
-    const legacy = svc.readLegacy?.();
-    const data = legacy?.data as { workflows?: Workflows; fleetNames?: unknown; fleets?: unknown } | undefined;
-    switch (legacy?.version) {
-      case 6: // Confirm steps had an approval station, operators were mapped to stations
-        if (data?.workflows) return done(normaliseRobots(prefillUsers(upgradeToV7(keep(data.workflows)))));
-        break;
-      case 5: // requestors were listed on the Start step
-        if (data?.workflows) return done(normaliseRobots(prefillUsers(upgradeToV7(upgradeToV6(keep(data.workflows))))));
-        break;
-      case 4: // placeholder User IDs and the "Request from Tablet" type
-        if (data?.workflows)
-          return done(normaliseRobots(prefillUsers(upgradeToV7(upgradeToV6(upgradeToV5(keep(data.workflows)))))));
-        break;
-      case 3: // no saved flag; built workflows with a fleet count as saved
-        if (data?.workflows && Array.isArray(data.fleetNames))
-          return done(
-            Object.fromEntries(
-              Object.entries(data.workflows)
-                .filter(([, w]) => w.fleet && w.nodes.length > 2)
-                .map(([id, w]) => [id, { ...w, saved: true }]),
-            ),
-          );
-        break;
-      case 2: // one workflow per fleet, keyed by fleet name
-        if (data?.fleets) {
-          const workflows: Workflows = {};
-          Object.entries(data.fleets as Record<string, { wf?: string; nodes: WfNode[]; published?: boolean }>).forEach(
-            ([fleet, f], i) => {
-              syncIds(f.nodes);
-              const id = `w-v2-${i}`;
-              workflows[id] = {
-                id,
-                fleet,
-                nodes: f.nodes,
-                published: f.published,
-                saved: true,
-                name: !f.wf || f.wf === 'Workflow Canvas' ? defaultWorkflowName(fleet) : f.wf,
-              };
-            },
-          );
-          return { workflows, current: null };
-        }
-    }
-  } catch {
-    /* fall through */
-  }
-  return { workflows: seedWorkflows(), current: null };
-}
-/** Workflows saved before stations came from the map used S101-style names in branches and If Logic: they are the map's STA-101 stations. */
-function migrateStations(ws: Workflows): Workflows {
-  const fix = (v: FieldValue): FieldValue =>
-    Array.isArray(v) ? v.map((x) => String(fix(x))) : typeof v === 'string' ? v.replace(/^S(\d{3})$/, 'STA-$1') : v;
-  const walk = (nodes: WfNode[]) =>
-    nodes.forEach((n) => {
-      if ('station' in n.f) n.f.station = fix(n.f.station);
-      if (n.br) {
-        walk(n.br.t);
-        walk(n.br.o);
-      }
-    });
-  Object.values(ws).forEach((w) => walk(w.nodes));
-  return ws;
-}
-const boot = (() => {
-  const b = load();
-  migrateStations(b.workflows);
-  return b;
-})();
+const boot = loadWorkflows();
 
 export const wfStore = createStore<WfState>((set, get) => {
   const problem = (p: Problem | undefined) => {
@@ -437,6 +345,12 @@ export const useFleetNames = () =>
 // the list as loaded (upgraded from an older version, old robot names replaced, sample routes added) is saved straight away, not only after the next edit
 const persist = createPersister('workflows', (v: Workflows) => services().workflows.save(v), { delayMs: 250 });
 persist.queue(wfStore.getState().workflows);
+// the services were replaced: read the workflows again (upgraded the same way) and save the upgraded list
+registerStoreInit(() => {
+  const b = loadWorkflows();
+  withoutSaving(() => wfStore.setState({ workflows: b.workflows, current: null, hist: {} }));
+  persist.queue(b.workflows);
+});
 // persist workflows (not history/sim) shortly after any change
 wfStore.subscribe((s, p) => {
   if (s.workflows !== p.workflows) persist.queue(s.workflows);

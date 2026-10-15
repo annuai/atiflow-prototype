@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
+import { TabbedPanel } from '@/components/data/TabbedPanel';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Bell01, Home02 } from '@untitledui/icons';
-import { Tabs } from '@/components/application/tabs/tabs';
 import { Button } from '@/components/base/buttons/button';
 import { Select } from '@/components/base/select/select';
 import { Toggle } from '@/components/base/toggle/toggle';
@@ -91,22 +90,14 @@ export function PreferencesPage() {
           </div>
         </div>
         <div className="builder md-card">
-          <Tabs
-            selectedKey={active.id}
-            onSelectionChange={(k) => navigate(`${SUPERVISOR_SETTINGS_PATH}/${k as TabId}`)}
-            className="min-w-0 flex-none px-5 pt-6"
+          <TabbedPanel
+            tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id].label, icon: t.icon }))}
+            selected={active.id}
+            onSelect={(k) => navigate(`${SUPERVISOR_SETTINGS_PATH}/${k as TabId}`)}
+            label={copy.title}
           >
-            <Tabs.List
-              type="underline"
-              size="md"
-              fullWidth
-              aria-label={copy.title}
-              items={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id].label, icon: t.icon }))}
-            />
-          </Tabs>
-          <div className="md-body">
             <div className="flex max-w-4xl flex-col">
-              <TabPanelMotion tabKey={active.id} className="flex flex-col">
+              <div className="flex flex-col">
                 {active.id === 'alerts' && (
                   <>
                     <SettingsRow label={copy.alerts.notify} hint={copy.alerts.notifyHint}>
@@ -162,7 +153,7 @@ export function PreferencesPage() {
                     </SettingsRow>
                   </>
                 )}
-              </TabPanelMotion>
+              </div>
               <div className="flex flex-wrap justify-between gap-3 pt-5">
                 <Button
                   size="md"
@@ -193,7 +184,7 @@ export function PreferencesPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </TabbedPanel>
         </div>
       </div>
     </>

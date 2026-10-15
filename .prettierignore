@@ -11,3 +11,5 @@ src/components/foundations
 src/components/shared-assets
 .dependency-cruiser-known-violations.json
 lint.baseline.json
+test-results
+playwright-report

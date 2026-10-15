@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useOnChange } from '@/hooks/use-synced-state';
 import { ArrowLeft, ChevronRight, Plus, Route, SwitchVertical01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
@@ -72,17 +73,17 @@ export function BookTripPage() {
       (x) => x.count > 0,
     );
   }, [records, fleet, fleetLive]);
-  useEffect(() => {
-    if (robot && !types.some((x) => x.type.id === robot)) {
-      setRobot('');
-      setStep(1);
-    }
-  }, [types, robot]); // the chosen robot type is gone (fleet changed): choose again
-  useEffect(() => {
+  // the chosen robot type is gone (fleet changed): choose again
+  if (robot && !types.some((x) => x.type.id === robot)) {
+    setRobot('');
+    setStep(1);
+  }
+  // another fleet: the stations chosen so far belong to the old one
+  useOnChange(fleet?.id, () => {
     setFrom('');
     setTo('');
     setStep(1);
-  }, [fleet?.id]);
+  });
   const nameOf = (id: string) => {
     const s = stations.find((x) => x.id === id);
     return s ? stationLabel(s) : id;

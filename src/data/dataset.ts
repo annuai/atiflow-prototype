@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
-import { createPersister } from './persist';
+import { registerStoreInit } from './storeInit';
+import { createPersister, withoutSaving } from './persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import type { FleetRecord } from './fleets';
@@ -97,6 +98,13 @@ datasetStore.subscribe((s, p) => {
   persist.queue({ version: 1, fleets: s.fleets, robot: s.robot, hardware: s.hardware });
 });
 // another tab (e.g. a configurator editing robots while a supervisor watches the floor) saved the dataset: take it over, so every window shows the same robots
-services().dataset.subscribe((data) => datasetStore.setState({ ...data }));
+const listen = () => services().dataset.subscribe((data) => datasetStore.setState({ ...data }));
+let unlisten = listen();
+// the services were replaced: read the new ones and listen to them
+registerStoreInit(() => {
+  unlisten();
+  withoutSaving(() => datasetStore.setState({ ...services().dataset.read() }));
+  unlisten = listen();
+});
 if (import.meta.env?.DEV && typeof window !== 'undefined')
   Object.assign(window, { __dataset: datasetStore, __datasetDoc: datasetDoc }); // dev-only: inspect / export / import from the console

@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
-import { createPersister, persistOnce } from '@/data/persist';
+import { registerStoreInit } from '@/data/storeInit';
+import { createPersister, persistOnce, withoutSaving } from '@/data/persist';
 import { useStore } from 'zustand';
 import { roleById } from '@/features/access';
 import { services } from '@/services';
@@ -71,5 +72,11 @@ userDirectory.subscribe((s, p) => {
   if (s.users !== p.users) persist.queue(s.users);
 });
 // another tab (e.g. a configurator changed this user's access) saved the directory: take it over
-services().users.subscribe((users) => userDirectory.setState({ users }));
+const listen = () => services().users.subscribe((users) => userDirectory.setState({ users }));
+let unlisten = listen();
+registerStoreInit(() => {
+  unlisten();
+  withoutSaving(() => userDirectory.setState({ users: services().users.snapshot() }));
+  unlisten = listen();
+});
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __users: userDirectory });

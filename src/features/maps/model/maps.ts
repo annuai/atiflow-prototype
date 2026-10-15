@@ -1,4 +1,5 @@
 import { createStore } from 'zustand/vanilla';
+import { registerStoreInit } from '@/data/storeInit';
 import { createPersister } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
@@ -41,7 +42,7 @@ export const SYSTEM_MAPS: FleetMap[] = [
 ];
 
 /** Names chosen in the Map Editor, saved in this browser (the name is not part of a map version: renaming never needs a draft). */
-const savedNames = (): Record<string, string> => services().mapNames.read() ?? {};
+const savedNames = (): Record<string, string> => services().mapNames.read();
 const withNames = (maps: FleetMap[]) => {
   const n = savedNames();
   return maps.map((m) => (n[m.id] ? { ...m, name: n[m.id] } : m));
@@ -66,6 +67,7 @@ export function renameMap(id: string, name: string): string {
   namePersist.queue({ ...savedNames(), [id]: n });
   return '';
 }
+registerStoreInit(() => mapsStore.setState({ maps: withNames(SYSTEM_MAPS) }));
 export const useMaps = () => useStore(mapsStore, (s) => s.maps);
 export const useMap = (id: string | null) => useStore(mapsStore, (s) => s.maps.find((m) => m.id === id) ?? null);
 export const mapById = (id: string | null) => mapsStore.getState().maps.find((m) => m.id === id) ?? null;

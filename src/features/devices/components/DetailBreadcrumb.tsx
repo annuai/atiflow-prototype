@@ -21,7 +21,7 @@ export function DetailBreadcrumb({ trail }: { trail: Crumb[] }) {
               <button
                 type="button"
                 onClick={c.onPress}
-                className="cursor-pointer rounded-md px-2 py-1 text-quaternary hover:bg-primary_hover hover:text-tertiary"
+                className="cursor-pointer rounded-md px-2 py-1 text-tertiary hover:bg-primary_hover hover:text-secondary"
               >
                 {c.label}
               </button>

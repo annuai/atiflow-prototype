@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncedState } from '@/hooks/use-synced-state';
 import { ArrowLeft, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
@@ -33,8 +33,7 @@ export function StagingForm({
   onDelete(): void;
 }) {
   const f = copy.staging.form;
-  const [name, setName] = useState(area.name);
-  useEffect(() => setName(area.name), [area.id, area.name]);
+  const [name, setName] = useSyncedState(area.name, area.id);
   const problems = stagingProblems(data, { ...area, name });
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">

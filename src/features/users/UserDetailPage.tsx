@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
@@ -50,20 +50,21 @@ export function UserDetailPage() {
   const [editing, setEditing] = useState(false),
     [resetting, setResetting] = useState(false),
     [deleting, setDeleting] = useState(false);
-  useEffect(() => {
-    if (user) {
-      setDraft({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        title: user.title,
-        role: user.role,
-        fleets: user.fleets ?? [],
-      });
-      setErrors({});
-      setEditing(false);
-    }
-  }, [user?.username]); // eslint-disable-line react-hooks/exhaustive-deps
+  // another person opened: start their form from their stored details
+  const [shownUser, setShownUser] = useState(user?.username);
+  if (user && shownUser !== user.username) {
+    setShownUser(user.username);
+    setDraft({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      title: user.title,
+      role: user.role,
+      fleets: user.fleets ?? [],
+    });
+    setErrors({});
+    setEditing(false);
+  }
   if (!user) return <Navigate to={USERS_PATH} replace />;
   const self = actor.username === user.username,
     canAccess = true,

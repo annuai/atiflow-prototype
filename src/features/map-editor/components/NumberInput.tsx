@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncedState } from '@/hooks/use-synced-state';
 import { Input } from '@/components/base/input/input';
 
 /** A number box that edits as text and commits on blur / Enter (an unreadable value goes back to what it was). Used for positions, sizes, angles. */
@@ -23,8 +23,7 @@ export function NumberInput({
   integer?: boolean;
   className?: string;
 }) {
-  const [text, setText] = useState(String(value));
-  useEffect(() => setText(String(value)), [value]);
+  const [text, setText] = useSyncedState(String(value));
   const commit = () => {
     const n = parseFloat(text);
     if (Number.isFinite(n) && (!integer || Number.isInteger(n))) {

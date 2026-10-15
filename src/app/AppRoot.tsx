@@ -1,6 +1,8 @@
 import { lazy, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/features/auth/authStore';
+import { authStore, useAuth } from '@/features/auth/authStore';
+import { metrics, setRuntimeContext } from '@/platform';
+import { pageKey } from '@/shell/pageKey';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { KINDS } from '@/features/devices/model/kinds';
 import { wfStore } from '@/features/workflow-builder/model/store';
@@ -85,6 +87,14 @@ function PageMemory() {
   }, [user, pathname]);
   return null;
 }
+// every log line, error report and metric carries who was signed in
+setRuntimeContext(() => ({ user: authStore.getState().user?.username }));
+/** Counts page views (tabs inside a page are the same page, like for the page transition). */
+function PageViews() {
+  const { pathname } = useLocation();
+  useEffect(() => metrics.track('page_view', { path: pageKey(pathname) }), [pathname]);
+  return null;
+}
 /** A page that moved: keeps the query (e.g. `?tv=1` of a wall display's bookmark). */
 function MovedTo({ to }: { to: string }) {
   const { search } = useLocation();
@@ -103,6 +113,7 @@ export function AppRoot() {
         <AppToaster />
         <PersistenceNotice />
         <PageMemory />
+        <PageViews />
         <Routes>
           <Route path="/login" element={<LoginRoute />} />
           <Route path="/supervisor" element={<RootRedirect />} />

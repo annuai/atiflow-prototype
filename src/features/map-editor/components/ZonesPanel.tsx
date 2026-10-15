@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncedState } from '@/hooks/use-synced-state';
 import { ArrowLeft, ChevronDown, LayoutGrid01, Plus, Hand, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
@@ -116,8 +116,7 @@ export function ZoneForm({
 }) {
   const f = copy.zones.form;
   const t: ZoneType = zoneType(zone.type);
-  const [name, setName] = useState(zone.name);
-  useEffect(() => setName(zone.name), [zone.id, zone.name]);
+  const [name, setName] = useSyncedState(zone.name, zone.id);
   const problem = zoneNameProblem(data, zone.id, name);
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">

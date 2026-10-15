@@ -1,8 +1,10 @@
 import type { AppConfig } from '@/platform';
 import { log, reportError } from '@/platform';
+import { reinitStores } from '@/data/storeInit';
 import { installTripIdCounter } from '@/data/tripIds';
 import type { Services } from './ports';
 import { createDummyServices } from './dummy';
+import { instrumentServices } from './instrument';
 
 export type { Services } from './ports';
 export * from './ports';
@@ -13,8 +15,10 @@ export * from './ports';
  */
 let current: Services | null = null;
 export function setServices(next: Services): Services {
+  const replaced = current !== null && current !== next;
   current = next;
   installTripIdCounter(next.tripIds);
+  if (replaced) reinitStores(); // services replaced after the app was running: every store reads again
   return next;
 }
 export function services(): Services {
@@ -26,7 +30,7 @@ export function services(): Services {
  * exists for a service it falls back to the dummy one and says so in the log, so a half-wired deployment is visible rather than silently fake.
  */
 export function createServices(config: Pick<AppConfig, 'dataMode' | 'api'>): Services {
-  const dummy = createDummyServices({ latencyMs: 450, workMs: 2500 });
+  const dummy = instrumentServices(createDummyServices({ latencyMs: 450, workMs: 2500 }));
   if (config.dataMode === 'dummy') return dummy;
   const l = log.child('services');
   for (const name of Object.keys(dummy) as (keyof Services)[])

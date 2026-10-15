@@ -26,7 +26,7 @@ export function StackedBar({
     <div
       className="flex w-full gap-px overflow-hidden rounded-full bg-secondary"
       style={{ height }}
-      role="img"
+      role={onSelect ? 'group' : 'img'}
       aria-label={`${label}: ${segments
         .filter((s) => s.value)
         .map((s) => `${s.value} ${s.label}`)

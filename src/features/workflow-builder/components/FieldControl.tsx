@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncedState } from '@/hooks/use-synced-state';
 import { Plus } from '@untitledui/icons';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
@@ -48,8 +48,7 @@ function FieldSelect({
 /** Quantity box: edits locally, commits digits-only on blur/Enter (one undo step per edit). Disabled when the quantity comes from the tablet. */
 function QtyInput({ node, field }: { node: WfNode; field: string }) {
   const value = String(node.f[field] ?? '');
-  const [v, setV] = useState(value);
-  useEffect(() => setV(value), [value]);
+  const [v, setV] = useSyncedState(value);
   const commit = () => {
     const d = v.replace(/[^\d]/g, '') || '0';
     setV(d);

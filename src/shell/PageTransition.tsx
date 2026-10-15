@@ -1,4 +1,4 @@
-import { Suspense, useContext, useRef, type ReactNode } from 'react';
+import { Suspense, useContext, useState, type ReactNode } from 'react';
 import { UNSAFE_LocationContext, useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, useIsPresent } from 'motion/react';
 import { PageMotion } from '@/components/motion/PageMotion';
@@ -13,9 +13,9 @@ import { PageSkeleton } from './PageSkeleton';
 function Frozen({ children }: { children: ReactNode }) {
   const loc = useContext(UNSAFE_LocationContext);
   const present = useIsPresent();
-  const held = useRef(loc);
-  if (present) held.current = loc;
-  return <UNSAFE_LocationContext.Provider value={held.current}>{children}</UNSAFE_LocationContext.Provider>;
+  const [held, setHeld] = useState(loc);
+  if (present && held !== loc) setHeld(loc); // follow the real location while the page is shown; once it is leaving, keep the last one
+  return <UNSAFE_LocationContext.Provider value={present ? loc : held}>{children}</UNSAFE_LocationContext.Provider>;
 }
 
 /** Page changes: the old page fades out and lifts a little, the new one rises in. Only the content area moves; the sidebar and top bar stay (they live in the layout above). */

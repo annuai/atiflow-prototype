@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
-import { createPersister } from '@/data/persist';
+import { registerStoreInit } from '@/data/storeInit';
+import { createPersister, withoutSaving } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { authStore, useAuth } from '@/features/auth';
@@ -37,3 +38,5 @@ export function useMyPreferences(): Preferences {
   const saved = useStore(preferencesStore, (s) => (u ? s.byUser[u] : undefined));
   return withDefaults(saved);
 }
+
+registerStoreInit(() => withoutSaving(() => preferencesStore.setState({ byUser: load() })));

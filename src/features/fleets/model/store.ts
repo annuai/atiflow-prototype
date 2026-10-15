@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
-import { createPersister } from '@/data/persist';
+import { registerStoreInit } from '@/data/storeInit';
+import { createPersister, withoutSaving } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { addGroup, addToGroup, deleteGroup, pruneMaterial, removeFromGroup, renameGroup } from './logic';
@@ -61,3 +62,5 @@ const persist = createPersister(
 fleetsStore.subscribe((s, p) => {
   if (s.profiles !== p.profiles) persist.queue(s.profiles);
 });
+
+registerStoreInit(() => withoutSaving(() => fleetsStore.setState({ profiles: load() })));
