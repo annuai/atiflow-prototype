@@ -35,6 +35,31 @@ export const localBackend = (key: string): StorageBackend => ({
   },
 });
 
+/** Browser session storage under one key (cleared when the browser closes). */
+export const sessionBackend = (key: string): StorageBackend => ({
+  read() {
+    try {
+      return sessionStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  write(text) {
+    try {
+      sessionStorage.setItem(key, text);
+    } catch {
+      /* no storage */
+    }
+  },
+  remove() {
+    try {
+      sessionStorage.removeItem(key);
+    } catch {
+      /* no storage */
+    }
+  },
+});
+
 export interface Document<T> {
   /** The saved document, or the seed when nothing valid is saved. */
   load(): T;

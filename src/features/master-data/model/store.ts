@@ -1,11 +1,11 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
+import { services } from '@/services';
 import { cellKey, toggleBlocked } from './areas';
 import { assignToFleet, ensureGroup, mergeMaterials, unassignFromFleet } from './logic';
 import { seedAreas, seedGroups, seedMaterials } from './seed';
 import type { IncomingMaterial, Material, MaterialGroup, StagingArea } from './types';
 
-const KEY = 'atiflow.masterdata.v1';
 export interface MasterDataState {
   materials: Material[];
   groups: MaterialGroup[];
@@ -23,12 +23,8 @@ export interface MasterDataState {
 }
 
 function load(): Pick<MasterDataState, 'materials' | 'groups' | 'areas'> {
-  try {
-    const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null');
-    if (Array.isArray(raw?.materials) && Array.isArray(raw?.groups) && Array.isArray(raw?.areas)) return raw;
-  } catch {
-    /* fall through */
-  }
+  const saved = services().masterData.read();
+  if (saved) return saved;
   const now = Date.now();
   const groups = seedGroups(now);
   return { groups, materials: seedMaterials(now, groups), areas: seedAreas() };
@@ -83,11 +79,8 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 masterDataStore.subscribe((s, p) => {
   if (s.materials === p.materials && s.groups === p.groups && s.areas === p.areas) return;
   clearTimeout(timer);
-  timer = setTimeout(() => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify({ materials: s.materials, groups: s.groups, areas: s.areas }));
-    } catch {
-      /* no storage (tests / private mode) */
-    }
-  }, 250);
+  timer = setTimeout(
+    () => void services().masterData.save({ materials: s.materials, groups: s.groups, areas: s.areas }),
+    250,
+  );
 });

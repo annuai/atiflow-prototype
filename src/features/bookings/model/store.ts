@@ -2,12 +2,10 @@ import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
 import { tripIds, tripNumber } from '@/core/tripIds';
-import { createValidatedDocument, localBackend } from '@/data/storage';
-import { log } from '@/platform';
+import { services } from '@/services';
 import { isAllowedNext } from '@/features/requests/model/rules';
 import type { RequestStatus } from '@/features/requests/model/types';
 import { bookingError, canCancelBooking } from './rules';
-import { BookingsDocumentSchema } from './schema';
 import type { BookedTrip, BookingInput } from './types';
 
 /** Every booked trip (history included), saved in this browser (`StorageBackend`: a server later = another backend). Handing trips to the fleet and taking updates back is `bridge.ts`. */
@@ -15,13 +13,6 @@ interface Saved {
   trips: BookedTrip[];
   seq: number;
 }
-const KEY = 'atiflow.bookings.v1';
-const doc = createValidatedDocument({
-  backend: localBackend(KEY),
-  schema: BookingsDocumentSchema,
-  seed: (): Saved => ({ trips: [], seq: 0 }),
-  onInvalid: (why) => log.child('bookings').warn(`saved trips ignored: ${why}`),
-});
 
 export interface BookingsState extends Saved {
   /** Book a trip: it gets its trip id now and waits for a robot (Approved). Returns the trip, or null with nothing booked when the booking is not valid. */
@@ -38,7 +29,7 @@ const push = (t: BookedTrip, status: RequestStatus, at: number, by?: string, not
   status,
   history: [...t.history, { status, at, by, note }],
 });
-const boot = doc.load();
+const boot: Saved = services().bookings.snapshot() as Saved;
 tripIds.ensureAtLeast(Math.max(0, ...boot.trips.map((t) => tripNumber(t.tripId))));
 
 export const bookingsStore = createStore<BookingsState>((set, get) => ({
@@ -104,7 +95,7 @@ export const bookingsStore = createStore<BookingsState>((set, get) => ({
     });
   },
   reset() {
-    doc.reset();
+    services().bookings.resetToSeed?.();
     set({ trips: [], seq: 0 });
   },
 }));
@@ -116,6 +107,6 @@ bookingsStore.subscribe((s) => {
   if (s.trips === saved.trips && s.seq === saved.seq) return;
   saved = s;
   clearTimeout(timer);
-  timer = setTimeout(() => doc.save({ trips: s.trips, seq: s.seq }), 150);
+  timer = setTimeout(() => void services().bookings.save({ trips: s.trips, seq: s.seq }), 150);
 });
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __bookings: bookingsStore });

@@ -1,17 +1,17 @@
 import { ALL_PERMISSIONS, presetOf } from '@/features/access';
-import type { UserRecord } from './types';
+import type { UserRecord } from '@/features/auth/types';
 import arjun from './avatars/arjun.png';
 import kavin from './avatars/kavin.png';
 import meera from './avatars/meera.png';
 
 /**
- * The STARTING users (the live list is the editable directory, `userDirectory.ts`, which the Users page manages). Plain-text passwords and example e-mail
- * addresses are intentional for this prototype. Avatars are not stored with the users: they are looked up here by username.
+ * DUMMY DATA. The STARTING users (the live list is the editable directory, `features/auth/userDirectory.ts`, which the Users page manages). Example e-mail addresses are
+ * intentional. Profiles carry NO password: credentials are a separate thing (`SEED_CREDENTIALS` below), only the dummy sign-in service reads them, and a real identity
+ * provider replaces both. Avatars are not stored with the users: they are looked up here by username.
  */
 export const SEED_USERS: UserRecord[] = [
   {
     username: 'arjun',
-    password: '1234',
     firstName: 'Arjun',
     lastName: 'Singh',
     email: 'arjun@atimotors.com',
@@ -21,7 +21,6 @@ export const SEED_USERS: UserRecord[] = [
   },
   {
     username: 'kavin',
-    password: '1234',
     firstName: 'Kavin',
     lastName: '',
     email: 'kavin@atimotors.com',
@@ -30,7 +29,6 @@ export const SEED_USERS: UserRecord[] = [
   },
   {
     username: 'meera',
-    password: '1234',
     firstName: 'Meera',
     lastName: '',
     email: 'meera@atimotors.com',
@@ -40,7 +38,6 @@ export const SEED_USERS: UserRecord[] = [
   }, // a configurator who also has every other module ticked
   {
     username: 'rohan',
-    password: '1234',
     firstName: 'Rohan',
     lastName: 'Mehta',
     email: 'rohan@atimotors.com',
@@ -51,7 +48,6 @@ export const SEED_USERS: UserRecord[] = [
   },
   {
     username: 'sneha',
-    password: '1234',
     firstName: 'Sneha',
     lastName: 'Rao',
     email: 'sneha@atimotors.com',
@@ -62,7 +58,6 @@ export const SEED_USERS: UserRecord[] = [
   },
   {
     username: 'vikram',
-    password: '1234',
     firstName: 'Vikram',
     lastName: 'Nair',
     email: 'vikram@atimotors.com',
@@ -76,3 +71,6 @@ export const SEED_SINCE: Record<string, number> = { rohan: 4, sneha: 4, vikram: 
 /** Bump this when the starting access of a seed user changes (e.g. Meera gets a new feature): a saved directory gets the new starting access added once (see `applySeedRevision`). */
 export const SEED_REVISION = 6;
 export const AVATARS: Record<string, string> = { arjun, kavin, meera };
+
+/** DUMMY credentials of the starting users (plain text on purpose, prototype only). Read by the dummy sign-in service and by nothing else. */
+export const SEED_CREDENTIALS: Record<string, string> = Object.fromEntries(SEED_USERS.map((u) => [u.username, '1234']));

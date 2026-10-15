@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fleetScope, fleetsError, isFleetScoped, scopeKey } from '../src/features/access';
-import { migrate } from '../src/features/auth/userDirectory';
-import { SEED_USERS } from '../src/features/auth/users';
+import { migrateUsers as migrate } from '../src/services/dummy/identity';
+import { SEED_USERS } from '../src/fixtures/users';
 import { validateBasics, validateNew } from '../src/features/users/model/validate';
 import { datasetStore } from '../src/data/dataset';
 

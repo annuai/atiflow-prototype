@@ -1,7 +1,7 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
-import { createDocument, localBackend } from '@/data/storage';
+import { services } from '@/services';
 import type { PublicUser } from '@/features/auth/types';
-import { NotificationCenter, isNotificationList } from './center';
+import { NotificationCenter } from './center';
 import type { AppNotification, NewNotification, NotificationApi } from './types';
 
 export interface NotificationState {
@@ -17,8 +17,7 @@ export interface NotificationState {
 export type NotificationStore = StoreApi<NotificationState>;
 
 /** A per-user copy kept in this browser so the list is there straight away (and offline); the API stays the source of truth. */
-const browserCache = (username: string) =>
-  createDocument<AppNotification[]>(localBackend(`atiflow.notifications.v1.${username}`), () => [], isNotificationList);
+const browserCache = (username: string) => services().notificationCache.forUser(username);
 
 /** The notification data for one app: it asks `api` for everything and keeps each signed-in user's list apart. Create one per app (the provider does) or per test. */
 export function createNotificationStore(
@@ -60,7 +59,7 @@ export function createNotificationStore(
         stop?.();
         stop = null;
         saved = user ? cache(user.username) : null;
-        center = new NotificationCenter(saved ? saved.load() : []);
+        center = new NotificationCenter(saved ? (saved.read() ?? []) : []);
         set({ owner: user, items: center.items });
         if (!user) return;
         stop = api.subscribe(user, (list) => get().add(list));

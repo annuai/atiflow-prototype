@@ -62,6 +62,27 @@ module.exports = {
       from: { path: '^src/features/([^/]+)/' },
       to: { path: '^src/features/', pathNot: ['^src/features/$1/', '^src/features/[^/]+/index\\.ts$'] },
     },
+    {
+      name: 'services-are-below-the-screens',
+      severity: 'error',
+      comment: 'services/ (the ports and their adapters) never import screens, the shell, the app or the 3D engine.',
+      from: { path: '^src/services/' },
+      to: { path: '^src/(ui|shell|app|components|engine)/' },
+    },
+    {
+      name: 'fixtures-are-plain-data',
+      severity: 'error',
+      comment: 'fixtures/ (the dummy data) import no screens, shell, app, engine or services.',
+      from: { path: '^src/fixtures/' },
+      to: { path: '^src/(ui|shell|app|components|engine|services)/' },
+    },
+    {
+      name: 'dummy-adapters-only-through-the-container',
+      severity: 'error',
+      comment: 'Only services/ itself (and main.tsx) may import the dummy adapters; everything else asks `services()`.',
+      from: { path: '^src/', pathNot: '^src/(services/|main\\.tsx)' },
+      to: { path: '^src/services/dummy/' },
+    },
     { name: 'no-circular', severity: 'error', comment: 'No import cycles.', from: {}, to: { circular: true } },
     {
       name: 'src-does-not-use-dev-dependencies',

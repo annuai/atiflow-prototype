@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { services } from '@/services';
 import { useLocation } from 'react-router-dom';
 import { store, useApp } from '@/core/store';
 import { Engine } from '@/engine/Engine';
@@ -87,10 +88,10 @@ export function LiveFloorPage() {
     window.addEventListener('resize', f);
     return () => window.removeEventListener('resize', f);
   }, [fleetOpen, ready]);
-  const [legendOpen, setLegendOpen] = useState(() => localStorage.getItem('atiflow.legendOpen') !== '0'); // map key: open by default, remembered once closed
+  const [legendOpen, setLegendOpen] = useState(() => services().device.get('atiflow.legendOpen') !== '0'); // map key: open by default, remembered once closed
   const setLegend = (o: boolean) => {
     setLegendOpen(o);
-    localStorage.setItem('atiflow.legendOpen', o ? '1' : '0');
+    services().device.set('atiflow.legendOpen', o ? '1' : '0');
   };
   const coarse = useCoarse();
   const loadPhase = useLoadPhase(!ready);

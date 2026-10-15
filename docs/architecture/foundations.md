@@ -42,3 +42,6 @@ features   never import app/ (the route table); no import cycles; src never impo
 4. A feature exposes what others may use from its `index.ts`; do not import another feature's internal files.
 5. New saved data gets a zod schema and `createValidatedDocument`.
 6. Keep lines under 120 columns (Prettier does it) and files under 400 lines (lint warns).
+
+## Phase 2: service ports and dummy adapters (done)
+`src/services/ports.ts` lists what the app asks of the outside world; `src/services/dummy` answers it from typed fixtures and browser storage; `src/services/index.ts` chooses per service from `dataMode`. Behind ports: users, auth (credentials separate from profiles), session, workflows, requests, bookings, trip ids, dataset, fleet profiles, master data, map names and versions, settings, preferences, notification cache, action log and per-device interface choices. Not behind a port: the live telemetry feed (it is the `TelemetryAdapter` contract already) and the starting data of some stores (still owned by their features). See CLAUDE.md section 59.

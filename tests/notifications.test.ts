@@ -134,11 +134,10 @@ const memCache = () => {
   const mem = new Map<string, AppNotification[]>();
   const doc = (u: string) =>
     ({
-      load: () => mem.get(u) ?? [],
-      save: (v: AppNotification[]) => void mem.set(u, v),
-      reset: () => [],
-      exportText: () => '',
-      parse: () => ({ error: '' }),
+      read: () => mem.get(u) ?? null,
+      save: async (v: AppNotification[]) => void mem.set(u, v),
+      subscribe: () => () => {},
+      clear: () => void mem.delete(u),
     }) as never;
   return { mem, doc };
 };

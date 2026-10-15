@@ -1,3 +1,4 @@
+import { services } from '@/services';
 import { canOpen, landingPath } from '@/features/access';
 import type { PublicUser } from '@/features/auth/types';
 import { prefsOf } from '@/features/preferences/data/store';
@@ -9,21 +10,13 @@ const normalize = (path: string) => (path.startsWith('/configurator/workflows/')
 
 export function rememberPage(user: PublicUser, path: string) {
   if (path === '/login' || !canOpen(user, normalize(path))) return;
-  try {
-    localStorage.setItem(key(user.username), normalize(path));
-  } catch {
-    /* storage unavailable: nothing to remember */
-  }
+  services().device.set(key(user.username), normalize(path));
 }
 export function landingFor(user: PublicUser): string {
   const start = prefsOf(user.username).startPage; // "the page I used last" (default) or a page the user chose to open on
   let remembered: string | null = start !== 'last' ? start : null;
   if (!remembered) {
-    try {
-      remembered = localStorage.getItem(key(user.username));
-    } catch {
-      /* ignore */
-    }
+    remembered = services().device.get(key(user.username));
   }
   return landingPath(user, remembered);
 }

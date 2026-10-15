@@ -1,8 +1,9 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import seedJson from './dataset.json';
-import { createDocument, localBackend } from './storage';
+import { services } from '@/services';
 import type { FleetRecord } from './fleets';
+import type { DatasetData } from './datasetTypes';
 import type { Device, DeviceKindId, FieldValue } from '@/features/devices/model/types';
 
 /**
@@ -11,12 +12,7 @@ import type { Device, DeviceKindId, FieldValue } from '@/features/devices/model/
  * (browser storage today, a backend later: write another `StorageBackend`, the rest stays).
  * Fleets are referred to by NAME in other stores (renaming cascades through `renameFleet`).
  */
-export interface DatasetData {
-  version: 1;
-  fleets: FleetRecord[];
-  robot: Device[];
-  hardware: Device[];
-}
+export type { DatasetData } from './datasetTypes';
 export interface DatasetState extends DatasetData {
   addFleet(name: string): FleetRecord;
   /** Renames the fleet and every robot / hardware assigned to it. */
@@ -36,8 +32,22 @@ const isDataset = (v: unknown): v is DatasetData => {
   const d = v as DatasetData;
   return !!d && d.version === 1 && Array.isArray(d.fleets) && Array.isArray(d.robot) && Array.isArray(d.hardware);
 };
-const KEY = 'atiflow.dataset.v1';
-export const datasetDoc = createDocument<DatasetData>(localBackend(KEY), seed, isDataset);
+/** Backup / restore helpers for the dev handle and tests: the dataset as text, and text back into a dataset (checked). Saving itself goes through the `dataset` service. */
+export const datasetDoc = {
+  exportText: (value: DatasetData) => JSON.stringify(value, null, 2),
+  parse(text: string): { value: DatasetData } | { error: string } {
+    try {
+      const v: unknown = JSON.parse(text);
+      return isDataset(v) ? { value: v } : { error: 'The JSON does not have the shape of the dataset.' };
+    } catch {
+      return { error: 'This is not valid JSON.' };
+    }
+  },
+  reset(): DatasetData {
+    services().dataset.clear();
+    return seed();
+  },
+};
 
 const nameOf = (d: Device) => String(d.values.name ?? '');
 const slug = (s: string) =>
@@ -47,7 +57,7 @@ const slug = (s: string) =>
     .replace(/^-|-$/g, '') || 'fleet';
 
 export const datasetStore = createStore<DatasetState>((set, get) => ({
-  ...datasetDoc.load(),
+  ...(services().dataset.read() ?? seed()),
   addFleet(name) {
     const { fleets } = get();
     let id = slug(name);
@@ -82,16 +92,11 @@ datasetStore.subscribe((s, p) => {
   if (s.fleets === p.fleets && s.robot === p.robot && s.hardware === p.hardware) return;
   clearTimeout(timer);
   timer = setTimeout(
-    () => datasetDoc.save({ version: 1, fleets: s.fleets, robot: s.robot, hardware: s.hardware }),
+    () => void services().dataset.save({ version: 1, fleets: s.fleets, robot: s.robot, hardware: s.hardware }),
     250,
   );
 });
 // another tab (e.g. a configurator editing robots while a supervisor watches the floor) saved the dataset: take it over, so every window shows the same robots
-if (typeof window !== 'undefined')
-  window.addEventListener('storage', (e) => {
-    if (e.key !== KEY || !e.newValue) return;
-    const r = datasetDoc.parse(e.newValue);
-    if ('value' in r) datasetStore.setState({ ...r.value });
-  });
+services().dataset.subscribe((data) => datasetStore.setState({ ...data }));
 if (import.meta.env?.DEV && typeof window !== 'undefined')
   Object.assign(window, { __dataset: datasetStore, __datasetDoc: datasetDoc }); // dev-only: inspect / export / import from the console

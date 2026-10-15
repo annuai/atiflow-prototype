@@ -1,23 +1,18 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
-import { authenticate, findUser } from './authService';
+import { services } from '@/services';
+import { findUser } from './authService';
 import { userDirectory } from './userDirectory';
 import type { PublicUser } from './types';
 
-const KEY = 'atiflow.session';
-/** Only the username is persisted; the profile is re-resolved on load so avatars/titles stay current. */
+/** Only the username is kept (by the session service); the profile is re-resolved on load so avatars/titles stay current. */
 function restore(): PublicUser | null {
-  try {
-    const raw = localStorage.getItem(KEY) ?? sessionStorage.getItem(KEY);
-    return raw ? findUser(JSON.parse(raw).username) : null;
-  } catch {
-    return null;
-  }
+  const name = services().session.read();
+  return name ? findUser(name) : null;
 }
 function persist(user: PublicUser | null, keep: boolean) {
-  localStorage.removeItem(KEY);
-  sessionStorage.removeItem(KEY);
-  if (user) (keep ? localStorage : sessionStorage).setItem(KEY, JSON.stringify({ username: user.username }));
+  if (user) services().session.write(user.username, keep);
+  else services().session.clear();
 }
 
 export interface AuthState {
@@ -30,8 +25,8 @@ export interface AuthState {
 export const authStore = createStore<AuthState>((set) => ({
   user: restore(),
   async login(username, password, keep) {
-    await new Promise((r) => setTimeout(r, 450)); // feels like a request; harmless for a prototype
-    const user = authenticate(username, password);
+    const name = await services().auth.signIn(username, password);
+    const user = name ? findUser(name) : null;
     if (!user) return 'invalid';
     persist(user, keep);
     set({ user });

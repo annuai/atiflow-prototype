@@ -2,7 +2,7 @@ import { createStore } from 'zustand/vanilla';
 import { useEffect, useState } from 'react';
 import { useStore } from 'zustand';
 import { store } from '@/core/store';
-import { createDocument, localBackend } from '@/data/storage';
+import { services } from '@/services';
 import { visibleLiveIds } from '@/features/access/useFleetScope';
 import { feed } from '@/features/live-floor/liveFeed';
 import { myPrefsNow } from '@/features/preferences/data/store';
@@ -13,13 +13,8 @@ import type { Call } from '../model/types';
  * The Action Center's calls. Open calls come from the live telemetry (and so from the same fleet scope as everything else); the resolved log is kept in
  * this browser so it survives a reload and can be exported. A server later = another place to save the log and the claims (`ActionCenterEngine` stays).
  */
-const logDoc = createDocument<Call[]>(
-  localBackend('atiflow.actioncenter.v1'),
-  () => [],
-  (v): v is Call[] => Array.isArray(v),
-);
 export const actionCenter = createStore<ActionState>(() => ({ active: [], log: [] }));
-export const engine = new ActionCenterEngine(logDoc.load(), (s) => {
+export const engine = new ActionCenterEngine(services().actionLog.read() ?? [], (s) => {
   actionCenter.setState(s);
 });
 actionCenter.setState(engine.state);
@@ -27,24 +22,14 @@ let saved = engine.state.log;
 actionCenter.subscribe((s) => {
   if (s.log !== saved) {
     saved = s.log;
-    logDoc.save(s.log);
+    void services().actionLog.save(s.log);
   }
 });
-if (typeof window !== 'undefined')
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'atiflow.actioncenter.v1' && e.newValue) {
-      try {
-        const v = JSON.parse(e.newValue);
-        if (Array.isArray(v)) {
-          engine.state = { ...engine.state, log: v };
-          saved = v;
-          actionCenter.setState({ log: v });
-        }
-      } catch {
-        /* ignore */
-      }
-    }
-  });
+services().actionLog.subscribe((log) => {
+  engine.state = { ...engine.state, log };
+  saved = log;
+  actionCenter.setState({ log });
+});
 
 /** The calls this person may see: only their fleets (the feed already filters, this also guards the saved log, which belongs to the whole browser). */
 export const inScope = (c: Call): boolean => {

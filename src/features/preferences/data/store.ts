@@ -1,19 +1,12 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
+import { services } from '@/services';
 import { authStore, useAuth } from '@/features/auth/authStore';
 import { DEFAULT_PREFERENCES, withDefaults } from '../model/defaults';
 import type { Preferences } from '../model/types';
 
-/** Preferences per person, saved in the browser (one document, keyed by username; a server later means another place to read and write them). */
-const KEY = 'atiflow.preferences.v1';
-function load(): Record<string, Partial<Preferences>> {
-  try {
-    const v = JSON.parse(localStorage.getItem(KEY) ?? 'null');
-    return v && typeof v === 'object' ? v : {};
-  } catch {
-    return {};
-  }
-}
+/** Preferences per person: a client-side cache over the `preferences` service (one document keyed by username; the dummy one lives in browser storage). */
+const load = (): Record<string, Partial<Preferences>> => services().preferences.read() ?? {};
 export interface PreferencesState {
   byUser: Record<string, Partial<Preferences>>;
   save(username: string, p: Preferences): void;
@@ -28,13 +21,7 @@ export const preferencesStore = createStore<PreferencesState>((set, get) => ({
   },
 }));
 preferencesStore.subscribe((s, p) => {
-  if (s.byUser !== p.byUser) {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(s.byUser));
-    } catch {
-      /* not saved */
-    }
-  }
+  if (s.byUser !== p.byUser) void services().preferences.save(s.byUser);
 });
 
 export const prefsOf = (username: string | null | undefined): Preferences =>

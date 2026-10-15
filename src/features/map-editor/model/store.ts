@@ -1,6 +1,6 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
-import { createDocument, localBackend } from '@/data/storage';
+import { services } from '@/services';
 import { normaliseData } from './seed';
 import type { MapData, MapHistory, MapVersion } from './types';
 
@@ -8,13 +8,7 @@ import type { MapData, MapHistory, MapVersion } from './types';
  * The version history of every map, saved in this browser. A map has published versions (v5, v6...: read-only for good, one of them is the latest) and at most ONE draft, the only
  * thing that can be edited. Publishing turns the draft into the next version. (A server later = another StorageBackend; the rules here stay.)
  */
-const KEY = 'atiflow.mapversions.v1';
 type Saved = Record<string, MapHistory>;
-const doc = createDocument<Saved>(
-  localBackend(KEY),
-  () => ({}),
-  (v): v is Saved => !!v && typeof v === 'object' && !Array.isArray(v),
-);
 
 export const draftOf = (h?: MapHistory) => h?.versions.find((v) => v.status === 'draft');
 export const publishedOf = (h?: MapHistory) =>
@@ -41,7 +35,7 @@ const put = (s: Saved, mapId: string, versions: MapVersion[]): Saved => ({ ...s,
 
 export const mapVersionsStore = createStore<MapVersionsState>((set, get) => ({
   byMap: Object.fromEntries(
-    Object.entries(doc.load()).map(([k, h]) => [
+    Object.entries(services().mapVersions.read() ?? {}).map(([k, h]) => [
       k,
       { versions: h.versions.map((v) => ({ ...v, data: normaliseData(v.data) })) },
     ]),
@@ -141,7 +135,7 @@ export const mapVersionsStore = createStore<MapVersionsState>((set, get) => ({
     return number;
   },
   reset() {
-    doc.reset();
+    services().mapVersions.clear();
     set({ byMap: {} });
   },
 }));
@@ -153,6 +147,6 @@ mapVersionsStore.subscribe((s) => {
   if (s.byMap === saved) return;
   saved = s.byMap;
   clearTimeout(timer);
-  timer = setTimeout(() => doc.save(s.byMap), 400);
+  timer = setTimeout(() => void services().mapVersions.save(s.byMap), 400);
 });
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __mapVersions: mapVersionsStore });

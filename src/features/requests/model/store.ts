@@ -2,7 +2,8 @@ import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
 import { tripIds, tripNumber } from '@/core/tripIds';
-import { createDocument, localBackend } from '@/data/storage';
+import { services } from '@/services';
+import type { RequestsDocument } from './schema';
 import { can } from '@/features/access';
 import { toPublic, userDirectory } from '@/features/auth/userDirectory';
 import { canApprove, canCancel, currentStep, isAllowedNext, type Person } from './rules';
@@ -12,16 +13,7 @@ import type { CartLine, RequestableItem, RequestStatus, TripRequest } from './ty
  * All requests (history included), saved in this browser (`StorageBackend`: a server later = another backend). The store only keeps and changes requests following the rules in
  * `rules.ts`; handing approved ones to the fleet and taking updates back is `bridge.ts`.
  */
-interface Saved {
-  requests: TripRequest[];
-  seq: number;
-}
-const KEY = 'atiflow.requests.v1';
-const doc = createDocument<Saved>(
-  localBackend(KEY),
-  () => ({ requests: [], seq: 0 }),
-  (v): v is Saved => !!v && Array.isArray((v as Saved).requests) && typeof (v as Saved).seq === 'number',
-);
+type Saved = { requests: TripRequest[]; seq: number };
 
 export interface Requester {
   username: string;
@@ -69,8 +61,10 @@ export function normalise(list: TripRequest[]): TripRequest[] {
     return { ...withTrip, approvals };
   });
 }
-const boot = doc.load();
-boot.requests = normalise(boot.requests);
+const boot: Saved = (({ requests, seq }: RequestsDocument) => ({
+  requests: normalise(requests as TripRequest[]),
+  seq,
+}))(services().requests.snapshot());
 tripIds.ensureAtLeast(Math.max(0, ...boot.requests.map((r) => tripNumber(r.tripId)))); // saved requests keep their ids: new ones count on from them
 export const requestsStore = createStore<RequestsState>((set, get) => ({
   ...boot,
@@ -178,9 +172,8 @@ export const requestsStore = createStore<RequestsState>((set, get) => ({
     });
   },
   reset() {
-    doc.reset();
     tripIds.reset();
-    set({ requests: [], seq: 0 });
+    set({ ...(services().requests.resetToSeed?.() ?? { requests: [], seq: 0 }), requests: [] });
   },
 }));
 export const useRequests = <T>(sel: (s: RequestsState) => T) => useStore(requestsStore, sel);
@@ -189,19 +182,14 @@ let saved = requestsStore.getState().requests;
 requestsStore.subscribe((s) => {
   if (s.requests !== saved) {
     saved = s.requests;
-    doc.save({ requests: s.requests, seq: s.seq });
+    void services().requests.save({ requests: s.requests, seq: s.seq });
   }
 });
 // another tab (another operator on the same browser) changed the requests: take them over
-if (typeof window !== 'undefined')
-  window.addEventListener('storage', (e) => {
-    if (e.key !== KEY || !e.newValue) return;
-    const r = doc.parse(e.newValue);
-    if ('value' in r) {
-      saved = normalise(r.value.requests);
-      requestsStore.setState({ ...r.value, requests: saved });
-    }
-  });
+services().requests.subscribe((doc) => {
+  saved = normalise(doc.requests as TripRequest[]);
+  requestsStore.setState({ seq: doc.seq, requests: saved });
+});
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __requests: requestsStore });
 
 /** A cart helper (pure): add or change a line, drop a line, clear. The cart itself lives only in the page while a person chooses; it is never saved. */

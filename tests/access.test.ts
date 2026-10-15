@@ -20,7 +20,8 @@ import {
 } from '../src/features/access';
 import { authStore } from '../src/features/auth/authStore';
 import { findUser } from '../src/features/auth/authService';
-import { applySeedRevision, migrate, toPublic, userDirectory, usernameTaken } from '../src/features/auth/userDirectory';
+import { toPublic, userDirectory, usernameTaken } from '../src/features/auth/userDirectory';
+import { applySeedRevision, migrateUsers as migrate } from '../src/services/dummy/identity';
 import { validateBasics, validateNew } from '../src/features/users/model/validate';
 
 const kavin = { username: 'kavin', role: 'configurator' as const },
@@ -286,7 +287,6 @@ describe('profile pictures and old saved users', () => {
     const old = migrate([
       {
         username: 'x',
-        password: 'p',
         firstName: 'X',
         lastName: '',
         email: 'x@y.zz',
@@ -304,7 +304,6 @@ describe("a saved directory gets a seed user's new starting access once", () => 
     const saved = [
       {
         username: 'meera',
-        password: 'x',
         firstName: 'Meera',
         lastName: '',
         email: 'm@x.co',
@@ -317,7 +316,6 @@ describe("a saved directory gets a seed user's new starting access once", () => 
       },
       {
         username: 'kavin',
-        password: 'x',
         firstName: 'K',
         lastName: '',
         email: 'k@x.co',
@@ -338,7 +336,6 @@ describe('the removed Line Supervisor role', () => {
     const out = migrate([
       {
         username: 'lee',
-        password: 'x',
         firstName: 'Lee',
         lastName: '',
         email: 'l@x.co',

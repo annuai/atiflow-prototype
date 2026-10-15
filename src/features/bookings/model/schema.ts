@@ -1,21 +1,7 @@
 import { z } from 'zod';
+import { RequestStatusSchema, StatusEventSchema } from '@/data/statusSchema';
 
 /** The saved shape of the booked-trips document (`atiflow.bookings.v1`). The type below is what `BookedTrip` / the store use; this is the check applied when it is read back. */
-export const RequestStatusSchema = z.enum([
-  'pending',
-  'approved',
-  'ongoing',
-  'completed',
-  'cancelled',
-  'rejected',
-  'failed',
-]);
-export const StatusEventSchema = z.object({
-  status: RequestStatusSchema,
-  at: z.number(),
-  by: z.string().optional(),
-  note: z.string().optional(),
-});
 export const BookedTripSchema = z.object({
   id: z.string(),
   tripId: z.string(),

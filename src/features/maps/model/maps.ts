@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
+import { services } from '@/services';
 import type { FleetMap } from './types';
 
 const NOW = Date.now(),
@@ -39,15 +40,7 @@ export const SYSTEM_MAPS: FleetMap[] = [
 ];
 
 /** Names chosen in the Map Editor, saved in this browser (the name is not part of a map version: renaming never needs a draft). */
-const NAMES_KEY = 'atiflow.mapnames.v1';
-const savedNames = (): Record<string, string> => {
-  try {
-    const r = JSON.parse(localStorage.getItem(NAMES_KEY) ?? '{}');
-    return r && typeof r === 'object' ? r : {};
-  } catch {
-    return {};
-  }
-};
+const savedNames = (): Record<string, string> => services().mapNames.read() ?? {};
 const withNames = (maps: FleetMap[]) => {
   const n = savedNames();
   return maps.map((m) => (n[m.id] ? { ...m, name: n[m.id] } : m));
@@ -68,11 +61,7 @@ export function renameMap(id: string, name: string): string {
   if (e) return e;
   const n = name.trim();
   mapsStore.setState({ maps: mapsStore.getState().maps.map((m) => (m.id === id ? { ...m, name: n } : m)) });
-  try {
-    localStorage.setItem(NAMES_KEY, JSON.stringify({ ...savedNames(), [id]: n }));
-  } catch {
-    /* no storage (tests / private mode) */
-  }
+  void services().mapNames.save({ ...savedNames(), [id]: n });
   return '';
 }
 export const useMaps = () => useStore(mapsStore, (s) => s.maps);

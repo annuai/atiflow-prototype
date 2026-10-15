@@ -1,10 +1,10 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
+import { services } from '@/services';
 import { addGroup, addToGroup, deleteGroup, pruneMaterial, removeFromGroup, renameGroup } from './logic';
 import { EMPTY_PROFILE, SEED_PROFILES } from './seed';
 import type { FleetProfile } from './types';
 
-const KEY = 'atiflow.fleets.v1';
 export interface FleetsState {
   profiles: Record<string, FleetProfile>;
   /** Point the fleet at a map. Station groups belong to the old map's stations, so they are cleared when the map changes. */
@@ -19,15 +19,7 @@ export interface FleetsState {
   /** A material was unassigned from the fleet: drop it from the fleet's groups. */
   pruneMaterial(fleet: string, code: string): void;
 }
-function load(): Record<string, FleetProfile> {
-  try {
-    const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null');
-    if (raw && typeof raw === 'object') return raw;
-  } catch {
-    /* fall through */
-  }
-  return SEED_PROFILES;
-}
+const load = (): Record<string, FleetProfile> => services().fleetProfiles.read() ?? SEED_PROFILES;
 export const profileOf = (profiles: Record<string, FleetProfile>, fleet: string) => profiles[fleet] ?? EMPTY_PROFILE;
 
 export const fleetsStore = createStore<FleetsState>((set, get) => {
@@ -60,11 +52,5 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 fleetsStore.subscribe((s, p) => {
   if (s.profiles === p.profiles) return;
   clearTimeout(timer);
-  timer = setTimeout(() => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(s.profiles));
-    } catch {
-      /* no storage */
-    }
-  }, 250);
+  timer = setTimeout(() => void services().fleetProfiles.save(s.profiles), 250);
 });

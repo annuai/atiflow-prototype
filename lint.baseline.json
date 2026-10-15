@@ -1,11 +1,10 @@
 {
-  "total": 104,
+  "total": 72,
   "rules": {
     "@typescript-eslint/no-explicit-any": 1,
     "complexity": 4,
     "max-lines": 7,
     "no-console": 1,
-    "no-restricted-globals": 32,
     "react-hooks/exhaustive-deps": 10,
     "react-hooks/globals": 2,
     "react-hooks/purity": 5,

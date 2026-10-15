@@ -1,6 +1,7 @@
 import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import { notify } from '@/ui/toast';
+import { services } from '@/services';
 import { fleetMaterialCodes } from '@/features/master-data/model/selectors';
 import { fleetStations } from './stations';
 import { createNode, syncIds } from './factory';
@@ -23,12 +24,6 @@ import { insertNode, locate, moveNode, removeNode, updateField, type Problem } f
 import { publishProblem } from './validate';
 import type { FieldValue, ListKey, NodeTypeId, WfNode, Workflow, Workflows } from './types';
 
-const KEY = 'atiflow.workflows.v7',
-  KEY_V6 = 'atiflow.workflows.v6',
-  KEY_V5 = 'atiflow.workflows.v5',
-  KEY_V4 = 'atiflow.workflows.v4',
-  KEY_V3 = 'atiflow.workflows.v3',
-  KEY_V2 = 'atiflow.workflows.v2';
 export interface SimState {
   status: 'idle' | 'running' | 'done';
   step: string;
@@ -101,65 +96,63 @@ export const workflowsOfFleet = (workflows: Workflows, fleet: string) =>
   Object.values(workflows).filter((w) => w.fleet === fleet);
 
 type Saved = { workflows: Workflows; current: string | null };
-function load(): Saved {
+const load = (): Saved => {
   const s = loadSaved();
   return { ...s, workflows: normaliseRobots(s.workflows) };
-} // whatever was loaded: robot names that match no robot become the default robot
+}; // whatever was loaded: robot names that match no robot become the default robot
+/** What the `workflows` service holds, upgraded (older versions), repaired and topped up with the sample routes. Unsaved workflows do not survive a reload. */
 function loadSaved(): Saved {
+  const svc = services().workflows;
+  const keep = (ws: Workflows): Workflows => Object.fromEntries(Object.entries(ws).filter(([, w]) => isKept(w)));
+  const done = (workflows: Workflows): Saved => {
+    Object.values(workflows).forEach((w) => syncIds(w.nodes));
+    return { workflows, current: null };
+  };
   try {
-    const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null');
-    const keep = (ws: Workflows): Workflows => Object.fromEntries(Object.entries(ws).filter(([, w]) => isKept(w))); // unsaved workflows do not survive a reload
-    if (raw?.workflows && typeof raw.workflows === 'object') {
-      const workflows = normaliseRobots(withRouteSamples(keep(raw.workflows)));
-      Object.values(workflows).forEach((w) => syncIds(w.nodes));
-      return { workflows, current: null };
-    }
-    const v6 = JSON.parse(localStorage.getItem(KEY_V6) ?? 'null'); // v6: Confirm steps had an approval station, operators were mapped to stations
-    if (v6?.workflows && typeof v6.workflows === 'object') {
-      const workflows = normaliseRobots(prefillUsers(upgradeToV7(keep(v6.workflows))));
-      Object.values(workflows).forEach((w) => syncIds(w.nodes));
-      return { workflows, current: null };
-    }
-    const v5 = JSON.parse(localStorage.getItem(KEY_V5) ?? 'null'); // v5: requestors were listed on the Start step
-    if (v5?.workflows && typeof v5.workflows === 'object') {
-      const workflows = normaliseRobots(prefillUsers(upgradeToV7(upgradeToV6(keep(v5.workflows)))));
-      Object.values(workflows).forEach((w) => syncIds(w.nodes));
-      return { workflows, current: null };
-    }
-    const v4 = JSON.parse(localStorage.getItem(KEY_V4) ?? 'null'); // v4: placeholder User IDs and the "Request from Tablet" type
-    if (v4?.workflows && typeof v4.workflows === 'object') {
-      const workflows = normaliseRobots(prefillUsers(upgradeToV7(upgradeToV6(upgradeToV5(keep(v4.workflows))))));
-      Object.values(workflows).forEach((w) => syncIds(w.nodes));
-      return { workflows, current: null };
-    }
-    const v3 = JSON.parse(localStorage.getItem(KEY_V3) ?? 'null'); // v3: no saved flag; built workflows with a fleet count as saved
-    if (v3?.workflows && Array.isArray(v3.fleetNames)) {
-      const workflows = Object.fromEntries(
-        Object.entries(v3.workflows as Workflows)
-          .filter(([, w]) => w.fleet && w.nodes.length > 2)
-          .map(([id, w]) => [id, { ...w, saved: true }]),
-      );
-      Object.values(workflows).forEach((w) => syncIds(w.nodes));
-      return { workflows, current: null };
-    }
-    const old = JSON.parse(localStorage.getItem(KEY_V2) ?? 'null'); // v2: one workflow per fleet, keyed by fleet name
-    if (old?.fleets) {
-      const workflows: Workflows = {};
-      Object.entries(old.fleets as Record<string, { wf?: string; nodes: WfNode[]; published?: boolean }>).forEach(
-        ([fleet, f], i) => {
-          syncIds(f.nodes);
-          const id = `w-v2-${i}`;
-          workflows[id] = {
-            id,
-            fleet,
-            nodes: f.nodes,
-            published: f.published,
-            saved: true,
-            name: !f.wf || f.wf === 'Workflow Canvas' ? defaultWorkflowName(fleet) : f.wf,
-          };
-        },
-      );
-      return { workflows, current: null };
+    const saved = svc.snapshot();
+    if (saved) return done(normaliseRobots(withRouteSamples(keep(saved))));
+    const legacy = svc.readLegacy?.();
+    const data = legacy?.data as { workflows?: Workflows; fleetNames?: unknown; fleets?: unknown } | undefined;
+    switch (legacy?.version) {
+      case 6: // Confirm steps had an approval station, operators were mapped to stations
+        if (data?.workflows) return done(normaliseRobots(prefillUsers(upgradeToV7(keep(data.workflows)))));
+        break;
+      case 5: // requestors were listed on the Start step
+        if (data?.workflows) return done(normaliseRobots(prefillUsers(upgradeToV7(upgradeToV6(keep(data.workflows))))));
+        break;
+      case 4: // placeholder User IDs and the "Request from Tablet" type
+        if (data?.workflows)
+          return done(normaliseRobots(prefillUsers(upgradeToV7(upgradeToV6(upgradeToV5(keep(data.workflows)))))));
+        break;
+      case 3: // no saved flag; built workflows with a fleet count as saved
+        if (data?.workflows && Array.isArray(data.fleetNames))
+          return done(
+            Object.fromEntries(
+              Object.entries(data.workflows)
+                .filter(([, w]) => w.fleet && w.nodes.length > 2)
+                .map(([id, w]) => [id, { ...w, saved: true }]),
+            ),
+          );
+        break;
+      case 2: // one workflow per fleet, keyed by fleet name
+        if (data?.fleets) {
+          const workflows: Workflows = {};
+          Object.entries(data.fleets as Record<string, { wf?: string; nodes: WfNode[]; published?: boolean }>).forEach(
+            ([fleet, f], i) => {
+              syncIds(f.nodes);
+              const id = `w-v2-${i}`;
+              workflows[id] = {
+                id,
+                fleet,
+                nodes: f.nodes,
+                published: f.published,
+                saved: true,
+                name: !f.wf || f.wf === 'Workflow Canvas' ? defaultWorkflowName(fleet) : f.wf,
+              };
+            },
+          );
+          return { workflows, current: null };
+        }
     }
   } catch {
     /* fall through */
@@ -441,23 +434,13 @@ export const useFleetNames = () =>
     .filter(Boolean);
 
 // the list as loaded (upgraded from an older version, old robot names replaced, sample routes added) is saved straight away, not only after the next edit
-try {
-  localStorage.setItem(KEY, JSON.stringify({ workflows: wfStore.getState().workflows, current: null }));
-} catch {
-  /* no storage (tests / private mode) */
-}
+void services().workflows.save(wfStore.getState().workflows);
 // persist workflows (not history/sim) shortly after any change
 let timer: ReturnType<typeof setTimeout> | undefined;
 wfStore.subscribe((s, p) => {
-  if (s.workflows === p.workflows && s.current === p.current) return;
+  if (s.workflows === p.workflows) return;
   clearTimeout(timer);
-  timer = setTimeout(() => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify({ workflows: s.workflows, current: s.current }));
-    } catch {
-      /* no storage (tests / private mode) */
-    }
-  }, 250);
+  timer = setTimeout(() => void services().workflows.save(s.workflows), 250);
 });
 
 if (import.meta.env.DEV && typeof window !== 'undefined') Object.assign(window, { __wf: wfStore }); // dev-only handle for console testing

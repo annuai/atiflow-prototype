@@ -11,7 +11,7 @@ import { normaliseRobots, routeSampleWorkflows, sampleWorkflows } from '../src/f
 import { createNode, createStart } from '../src/features/workflow-builder/model/factory';
 import { historyEntries } from '../src/features/operator-history/entries';
 import type { TripRequest } from '../src/features/requests/model/types';
-import { SEED_USERS } from '../src/features/auth/users';
+import { SEED_USERS } from '../src/fixtures/users';
 import { can } from '../src/features/access';
 import { toPublic } from '../src/features/auth/userDirectory';
 
