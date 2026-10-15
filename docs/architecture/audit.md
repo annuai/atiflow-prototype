@@ -1,6 +1,6 @@
 # Phase 0: architecture audit of Ati Flow (front end)
 
-Scope: everything under `src/` (383 files, about 14,400 lines we wrote, plus 60 files of Untitled UI library code). The numbers come from `npm run audit:architecture`; the raw output is in [`audit-data.md`](./audit-data.md) and can be regenerated at any time.
+Scope: everything under `src/` (388 files we wrote, plus 60 files of Untitled UI library code). The findings below were measured **before** Prettier was applied (about 14,400 lines, 14% of them over 160 characters); `audit-data.md` is regenerated after formatting (about 34,500 lines, because the formatter splits the very long lines, which also shows the real size of the biggest files: `adapters/sim.ts` and `engine/Engine.ts` are each over 1,100 lines). The numbers come from `npm run audit:architecture` and can be regenerated at any time.
 
 ## 1. Verdict in one paragraph
 
@@ -17,7 +17,7 @@ The structure is better than the size suggests: the pure logic (`core/`, `adapte
 | 5 | **No runtime configuration.** Environment, data mode, API base URLs, feature flags and log level do not exist; paths and constants are in code. `public/config.json` is described in docs but not built. | 3 `public/sites/` paths in 2 files | A production build must be configured at deploy time without a rebuild. | 1 |
 | 6 | **No error reporting or logging seam.** Errors go to the page error boundary and `console`; there is no port for a service such as Sentry. | 2 `console.*` calls; `PageErrorBoundary` only renders | Cannot observe real failures. | 1 |
 | 7 | **No lint, format or CI.** Only `tsc` and `vitest` run, by hand. | no ESLint / Prettier config, no `.github/` | Nothing stops a regression or a layer violation from merging. | 1 |
-| 8 | **Density.** 14% of lines are over 160 characters, 203 lines are over 300 characters. Worst: `adapters/sim.ts`, `engine/Engine.ts`, `MapEditorPage.tsx`. | inventory §5 | Hard to review and to diff; mostly mechanical to fix with a formatter. | 1 (formatter), 4 (split the big files) |
+| 8 | **Density.** 14% of lines were over 160 characters (203 over 300). Worst: `adapters/sim.ts`, `engine/Engine.ts`, `MapEditorPage.tsx`. | inventory §5 | Hard to review and to diff. **Fixed mechanically in phase 1 by Prettier** (now 250 long lines left, mostly strings and comments); what remains is size: 7 files over 400 lines (lint warns). | 1 (done), 4 (split the 7 big files) |
 | 9 | **A data layer that points upward.** `src/data` imports types from `features/devices`. | `data/robots.ts`, `data/dataset.ts` | Inverts the dependency direction; the shared dataset should own its types. | 2 |
 | 10 | **Credentials in client code and storage.** User passwords are in `features/auth/users.ts`; the Fleet Manager client secret is saved in plain local storage by Settings. | inventory §6 | Acceptable only because there is no backend; must be gone before real use. | 2 (auth port), 3 |
 | 11 | **Browser-only simulator is the "fleet".** `adapters/sim.ts` runs in the page and the Live Floor, Dashboard, requests and bookings read it through `liveFeed.ts`. | `features/live-floor/liveFeed.ts` | Good seam already (`TelemetryAdapter` + orders), but the orders and trip-id counter are also owned by the page. | 3 |

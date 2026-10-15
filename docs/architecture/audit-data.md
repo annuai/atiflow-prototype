@@ -1,5 +1,5 @@
 # Architecture inventory (generated)
-Files: 443 (383 ours, 60 Untitled UI library). Lines (ours): 14423.
+Files: 448 (388 ours, 60 Untitled UI library). Lines (ours): 34499.
 
 ## 1. Storage access outside the storage layer
 
@@ -23,7 +23,7 @@ Files touching local/session storage directly (everything except `src/data/stora
 | key | defined in |
 |---|---|
 | `atiflow.actioncenter.v1` | src/features/action-center/data/store.ts |
-| `atiflow.bookings.v1` | src/features/bookings/model/store.ts |
+| `atiflow.bookings.v1` | src/features/bookings/model/schema.ts, src/features/bookings/model/store.ts |
 | `atiflow.dataset.v1` | src/data/dataset.ts |
 | `atiflow.fleets.v1` | src/features/fleets/model/store.ts |
 | `atiflow.legendOpen` | src/features/live-floor/LiveFloorPage.tsx |
@@ -47,18 +47,19 @@ Files touching local/session storage directly (everything except `src/data/stora
 
 ## 3. Layer imports (src/core, adapters, engine, ui, data, components, features)
 
-| from \ to | adapters | app | assets | components | core | data | engine | features | main.tsx | shell | ui | utils |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| adapters | 1 |  |  |  | 6 |  |  |  |  |  |  |  |
-| app |  | 2 |  |  |  |  |  | 32 |  | 1 | 1 |  |
-| components |  |  |  | 31 |  | 1 |  | 1 |  |  |  | 8 |
-| core |  |  |  |  | 12 |  |  |  |  |  |  |  |
-| data |  |  | 5 |  |  | 9 |  | 2 |  |  |  |  |
-| engine |  |  |  |  | 9 | 2 | 6 |  |  |  |  |  |
-| features | 2 |  | 1 | 330 | 49 | 44 | 2 | 895 |  | 5 | 62 | 38 |
-| main.tsx |  | 1 |  |  |  |  |  |  |  |  |  |  |
-| shell |  |  |  | 14 |  |  |  | 8 |  | 15 | 4 |  |
-| ui |  |  |  | 16 | 5 | 1 | 3 | 1 |  |  | 8 |  |
+| from \ to | adapters | app | assets | components | core | data | engine | features | main.tsx | platform | shell | ui | utils |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| adapters | 1 |  |  |  | 6 |  |  |  |  |  |  |  |  |
+| app |  | 2 |  |  |  |  |  | 32 |  |  | 1 | 1 |  |
+| components |  |  |  | 31 |  | 1 |  | 1 |  |  |  |  | 8 |
+| core |  |  |  |  | 12 |  |  |  |  |  |  |  |  |
+| data |  |  | 5 |  |  | 9 |  | 2 |  |  |  |  |  |
+| engine |  |  |  |  | 9 | 2 | 6 |  |  |  |  |  |  |
+| features | 2 |  | 1 | 326 | 49 | 44 | 2 | 895 |  | 1 | 5 | 62 | 37 |
+| main.tsx |  | 1 |  |  |  |  |  |  |  | 1 |  |  |  |
+| platform |  |  |  |  |  |  |  |  |  | 5 |  |  |  |
+| shell |  |  |  | 14 |  |  |  | 8 |  | 1 | 15 | 4 |  |
+| ui |  |  |  | 16 | 5 | 1 | 3 | 1 |  |  |  | 8 |  |
 
 Breaks of the documented rule (core/adapters/engine import only core + data): **0**
 
@@ -95,35 +96,35 @@ Distinct feature pairs: **72**, imports: **193** (deep imports into another feat
 
 ## 5. Size and density
 
-Files over 300 lines: **2**. Lines over 160 characters: **2048** of 14423. Lines over 300 characters: **203**.
+Files over 300 lines: **12**. Lines over 160 characters: **250** of 34499. Lines over 300 characters: **9**.
 | largest files | lines | longest line |
 |---|---|---|
-| src/engine/Engine.ts | 432 | 440 |
-| src/adapters/sim.ts | 412 | 442 |
-| src/features/workflow-builder/model/store.ts | 194 | 307 |
-| src/features/map-editor/MapEditorPage.tsx | 190 | 448 |
-| src/core/lanes.ts | 185 | 413 |
-| src/engine/robotMesh.ts | 182 | 341 |
-| src/ui/Panels.tsx | 149 | 464 |
-| src/features/map-editor/canvas/MapCanvas.tsx | 132 | 373 |
-| src/features/bookings/BookTripPage.tsx | 129 | 388 |
-| src/engine/rulesLayer.ts | 118 | 277 |
-| src/features/workflow-builder/model/seed.ts | 118 | 236 |
-| src/app/AppRoot.tsx | 112 | 175 |
+| src/adapters/sim.ts | 1170 | 309 |
+| src/engine/Engine.ts | 1166 | 238 |
+| src/features/map-editor/MapEditorPage.tsx | 642 | 188 |
+| src/features/map-editor/canvas/MapCanvas.tsx | 507 | 194 |
+| src/features/workflow-builder/model/store.ts | 464 | 176 |
+| src/core/lanes.ts | 449 | 253 |
+| src/ui/Panels.tsx | 432 | 196 |
+| src/features/bookings/BookTripPage.tsx | 357 | 248 |
+| src/engine/robotMesh.ts | 326 | 218 |
+| src/engine/rulesLayer.ts | 319 | 153 |
+| src/features/workflow-builder/components/StationMap.tsx | 314 | 177 |
+| src/features/workflow-builder/model/seed.ts | 309 | 219 |
 | densest files (lines > 160 chars) | count |
 |---|---|
-| src/adapters/sim.ts | 107 |
-| src/engine/Engine.ts | 93 |
-| src/features/map-editor/MapEditorPage.tsx | 59 |
-| src/features/map-editor/canvas/MapCanvas.tsx | 36 |
-| src/features/workflow-builder/model/store.ts | 31 |
-| src/ui/Panels.tsx | 31 |
-| src/features/bookings/BookTripPage.tsx | 30 |
-| src/features/reports/model/metrics.ts | 28 |
-| src/core/lanes.ts | 27 |
-| src/engine/rulesLayer.ts | 27 |
-| src/features/workflow-builder/model/seed.ts | 27 |
-| src/features/workflow-builder/components/StationMap.tsx | 24 |
+| src/adapters/sim.ts | 25 |
+| src/features/workflow-builder/assets/nodeIcons.tsx | 14 |
+| src/core/lanes.ts | 7 |
+| src/ui/icons/figma-icons.tsx | 6 |
+| src/engine/Engine.ts | 5 |
+| src/features/workflow-builder/model/seed.ts | 5 |
+| src/features/map-editor/MapEditorPage.tsx | 4 |
+| src/features/map-editor/help.ts | 4 |
+| src/features/map-editor/model/roads.ts | 4 |
+| src/components/map/laneArrows.ts | 3 |
+| src/core/audit.ts | 3 |
+| src/data/robotTypes.ts | 3 |
 
 ## 6. Hard-coded data and risky patterns (outside tests)
 
@@ -135,7 +136,7 @@ Files over 300 lines: **2**. Lines over 160 characters: **2048** of 14423. Lines
 | plain-text passwords (`password:`) | 7 | 2 |
 | `any` type | 9 | 3 |
 | `eslint-disable` comments | 19 | 11 |
-| `console.*` calls | 2 | 2 |
+| `console.*` calls | 1 | 1 |
 | `window.__` dev handles | 10 | 10 |
 | `TODO` / `FIXME` | 0 | 0 |
 | `setTimeout` / `setInterval` | 46 | 35 |
