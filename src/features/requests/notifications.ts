@@ -1,7 +1,6 @@
 import type { NewNotification, NotificationSource } from '@/features/notifications/types';
 import type { PublicUser } from '@/features/auth/types';
-import { approversNow } from './model/mapping';
-import { canApprove, currentStep, type ApproversAt } from './model/rules';
+import { canApprove, currentStep } from './model/rules';
 import { requestsStore } from './model/store';
 import type { StatusEvent, TripRequest } from './model/types';
 
@@ -21,13 +20,13 @@ function updateText(r: TripRequest, e: StatusEvent): { title: string; body: stri
 }
 
 /** Everything the notifications of an operator are made of (pure): status changes of their own requests, and requests waiting for their approval. */
-export function requestNotifications(requests: TripRequest[], user: PublicUser, approversAt: ApproversAt = approversNow()): NewNotification[] {
+export function requestNotifications(requests: TripRequest[], user: PublicUser): NewNotification[] {
   const out: NewNotification[] = [];
   for (const r of requests) {
     if (r.requestedBy === user.username) r.history.forEach((e, i) => { if (i === 0) return; const t = updateText(r, e);       // the first event is the request itself
       out.push({ id: `req:${r.id}:${i}`, kind: 'trip', level: t.level, title: t.title, body: t.body, at: e.at, actions: [{ kind: 'requests' }] }); });
-    else if (canApprove(r, user, approversAt)) { const step = currentStep(r)!; const n = r.approvals.indexOf(step) + 1;
-      out.push({ id: `appr:${r.id}:${n}`, kind: 'approval', level: 'warn', title: `Approval needed: ${r.name} ×${r.qty}`, body: `${r.tripId} · ${r.id} · at ${step.stationId}${r.approvals.length > 1 ? ` (${n} of ${r.approvals.length})` : ''} · requested by ${r.requestedByName}`, at: r.history[r.history.length - 1]?.at ?? r.createdAt, actions: [{ kind: 'approvals' }] }); }
+    else if (canApprove(r, user)) { const step = currentStep(r)!; const n = r.approvals.indexOf(step) + 1;
+      out.push({ id: `appr:${r.id}:${n}`, kind: 'approval', level: 'warn', title: `Approval needed: ${r.name} ×${r.qty}`, body: `${r.tripId} · ${r.id}${r.approvals.length > 1 ? ` (${n} of ${r.approvals.length})` : ''} · requested by ${r.requestedByName}`, at: r.history[r.history.length - 1]?.at ?? r.createdAt, actions: [{ kind: 'approvals' }] }); }
   }
   return out;
 }

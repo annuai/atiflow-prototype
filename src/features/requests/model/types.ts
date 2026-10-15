@@ -3,8 +3,8 @@
  * from then on every request lives its own life: its own approval, its own trip, its own cancel.
  */
 export type RequestStatus = 'pending' | 'approved' | 'ongoing' | 'completed' | 'cancelled' | 'rejected' | 'failed';
-/** `by` is set once the step is approved. */
-export interface ApprovalStep { stationId: string; by?: string; at?: number }
+/** One approval: any one of `users` (usernames, never the requester) can give it. `by` (name) is set once it is approved. */
+export interface ApprovalStep { users: string[]; by?: string; at?: number }
 export interface StatusEvent { status: RequestStatus; at: number; /** name of the person (approver, requester) or 'Fleet' for the floor */ by?: string; note?: string }
 export interface TripRequest {
   id: string; groupId: string;
@@ -13,7 +13,7 @@ export interface TripRequest {
   code: string; name: string; group: string; qty: number;
   /** The stations of the workflow's flow and the leg from which the load is carried. */
   legs: string[]; loadFrom: number;
-  /** One approval per Confirm step of the workflow, in order: each is done by an operator mapped to that step's station. The trip starts only after all are done. */
+  /** One approval per Tablet Confirm step of the workflow, in order: each is done by one of that step's approval users. The trip starts only after all are done. */
   approvals: ApprovalStep[]; needsApproval: boolean;
   status: RequestStatus; history: StatusEvent[];
   requestedBy: string; requestedByName: string; createdAt: number;
@@ -26,7 +26,7 @@ export interface RequestableItem {
   code: string; name: string; group: string;
   /** Quantity of the workflow's Material step; `qtyEditable` = the person may change it ("Select quantity from Tablet"). */
   qty: number; qtyEditable: boolean;
-  /** Stations of the workflow's Confirm steps, in order (one approval each). */ approvalStations: string[]; needsApproval: boolean; legs: string[]; loadFrom: number;
+  /** The approval users of each Tablet Confirm step, in order (one approval each). */ approvalUsers: string[][]; needsApproval: boolean; legs: string[]; loadFrom: number;
 }
 /** A line of the cart (only exists while the person is choosing). */
 export interface CartLine { key: string; qty: number }

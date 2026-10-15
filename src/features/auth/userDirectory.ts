@@ -33,8 +33,7 @@ export const migrate = (list: UserRecord[]): UserRecord[] => list.map((u0) => {
 export function applySeedRevision(list: UserRecord[], savedRevision: number): UserRecord[] {
   if (savedRevision >= SEED_REVISION) return list;
   const added = SEED_USERS.filter((s) => (SEED_SINCE[s.username] ?? 0) > savedRevision && !list.some((u) => u.username === s.username));          // a starting user introduced after this list was saved
-  const stationsOf = (u: UserRecord) => { const s = SEED_USERS.find((x) => x.username === u.username)?.stations; return u.stations || !s ? u : { ...u, stations: s }; };          // a starting operator saved before stations existed gets the starting stations
-  return [...list, ...structuredClone(added)].map(stationsOf).map((u) => { const s = SEED_USERS.find((x) => x.username === u.username)?.custom; if (!s?.add.length && !s?.remove.length) return u;
+  return [...list, ...structuredClone(added)].map((u) => { const s = SEED_USERS.find((x) => x.username === u.username)?.custom; if (!s?.add.length && !s?.remove.length) return u;
     return { ...u, custom: { add: [...new Set([...(u.custom?.add ?? []), ...s.add])], remove: [...new Set([...(u.custom?.remove ?? []).filter((p) => !s.add.includes(p)), ...s.remove])] } }; });
 }
 const REVISION_KEY = 'atiflow.users.seedRevision';
@@ -47,11 +46,11 @@ function loadUsers(): UserRecord[] {
 const norm = (u: string) => u.trim().toLowerCase();
 export const toPublic = ({ password: _pw, ...u }: UserRecord): PublicUser => ({ ...u, name: `${u.firstName} ${u.lastName}`.trim(), avatar: u.avatar ?? AVATARS[u.username] });
 
-export type NewUser = Pick<UserRecord, 'username' | 'password' | 'firstName' | 'lastName' | 'email' | 'role'> & { title?: string; avatar?: string; fleets?: string[]; stations?: string[] };
+export type NewUser = Pick<UserRecord, 'username' | 'password' | 'firstName' | 'lastName' | 'email' | 'role'> & { title?: string; avatar?: string; fleets?: string[] };
 export interface UserDirectory {
   users: UserRecord[];
   add(input: NewUser): UserRecord;
-  update(username: string, patch: Partial<Pick<UserRecord, 'firstName' | 'lastName' | 'email' | 'title' | 'role' | 'custom' | 'fleets' | 'stations'>>): void;
+  update(username: string, patch: Partial<Pick<UserRecord, 'firstName' | 'lastName' | 'email' | 'title' | 'role' | 'custom' | 'fleets'>>): void;
   resetPassword(username: string, password: string): void;
   remove(username: string): void;
   /** Back to the starting users. */

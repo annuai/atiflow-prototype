@@ -12,9 +12,9 @@ export const SEED_USERS: UserRecord[] = [
   { username: 'arjun', password: '1234', firstName: 'Arjun', lastName: 'Singh', email: 'arjun@atimotors.com', role: 'supervisor', fleets: ['line-side', 'assembly'], title: 'Lead Supervisor' },
   { username: 'kavin', password: '1234', firstName: 'Kavin', lastName: '', email: 'kavin@atimotors.com', role: 'configurator', title: 'Ati Support Engineer' },
   { username: 'meera', password: '1234', firstName: 'Meera', lastName: '', email: 'meera@atimotors.com', role: 'configurator', custom: { add: ALL_PERMISSIONS.filter((p) => !presetOf('configurator').includes(p)), remove: [] }, title: 'System Integrator' },       // a configurator who also has every other module ticked
-  { username: 'rohan', password: '1234', firstName: 'Rohan', lastName: 'Mehta', email: 'rohan@atimotors.com', role: 'operator', custom: { add: [], remove: ['operator.approve'] }, fleets: ['line-side'], stations: ['STA-105', 'STA-107', 'STA-108', 'STA-110'], title: 'Line Operator' },
-  { username: 'sneha', password: '1234', firstName: 'Sneha', lastName: 'Rao', email: 'sneha@atimotors.com', role: 'operator', custom: { add: [], remove: ['operator.approve'] }, fleets: ['assembly'], stations: ['STA-113', 'STA-114'], title: 'Preparation Operator' },
-  { username: 'vikram', password: '1234', firstName: 'Vikram', lastName: 'Nair', email: 'vikram@atimotors.com', role: 'operator', fleets: ['line-side', 'assembly'], stations: ['STA-116', 'STA-117', 'STA-119', 'STA-121'], title: 'Store Operator' },
+  { username: 'rohan', password: '1234', firstName: 'Rohan', lastName: 'Mehta', email: 'rohan@atimotors.com', role: 'operator', custom: { add: [], remove: ['operator.approve'] }, fleets: ['line-side'], title: 'Line Operator' },
+  { username: 'sneha', password: '1234', firstName: 'Sneha', lastName: 'Rao', email: 'sneha@atimotors.com', role: 'operator', custom: { add: [], remove: ['operator.approve'] }, fleets: ['assembly'], title: 'Preparation Operator' },
+  { username: 'vikram', password: '1234', firstName: 'Vikram', lastName: 'Nair', email: 'vikram@atimotors.com', role: 'operator', fleets: ['line-side', 'assembly'], title: 'Store Operator' },
 ];
 /** The revision in which a starting user first existed: a saved directory older than that gets the user added once (see `applySeedRevision`). */
 export const SEED_SINCE: Record<string, number> = { rohan: 4, sneha: 4, vikram: 5 };

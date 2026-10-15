@@ -7,12 +7,12 @@ export const TABLET_REQUEST = 'Tablet';
 
 /** Every node of a flow, branches included, in reading order. */
 export function flatten(nodes: WfNode[]): WfNode[] { return nodes.flatMap((n) => [n, ...(n.br ? [...flatten(n.br.t), ...flatten(n.br.o)] : [])]); }
-/** The stations of the workflow's Confirm steps, in order: each is an approval, done by an operator mapped to that station. */
-export const confirmStations = (nodes: WfNode[]): string[] => flatten(nodes).filter((n) => n.t === 'confirm').map((n) => (Array.isArray(n.f.station) ? n.f.station[0] : (n.f.station as string))).filter(Boolean);
-/** A workflow with a Confirm step makes a request wait for approval. */
-export const needsApproval = (nodes: WfNode[]): boolean => confirmStations(nodes).length > 0;
-/** Where the material is delivered: the Drop Off stations of the main flow. Operators mapped to one of them are the requestors. */
-export const dropOffStations = (nodes: WfNode[]): string[] => nodes.filter((n) => n.t === 'station' && n.f.action === 'Drop Off').map((n) => (Array.isArray(n.f.station) ? n.f.station[0] : (n.f.station as string))).filter(Boolean);
+/** The approval users of each Tablet Confirm step, in order: each step is one approval, given by any one of its users. (Other operations are confirmed by the robot or its button, not in the app.) */
+export const confirmApprovers = (nodes: WfNode[]): string[][] => flatten(nodes).filter((n) => n.t === 'confirm' && n.f.op === 'Tablet').map((n) => (Array.isArray(n.f.users) ? (n.f.users as string[]) : []));
+/** A workflow with a Tablet Confirm step makes a request wait for approval. */
+export const needsApproval = (nodes: WfNode[]): boolean => confirmApprovers(nodes).length > 0;
+/** The users the Start step lists: they may request from this workflow. */
+export const requesters = (nodes: WfNode[]): string[] => { const u = nodes.find((n) => n.t === 'start')?.f.users; return Array.isArray(u) ? (u as string[]) : []; };
 
 /**
  * The stations a trip of this workflow drives to (the Station steps of the main flow, in order) and the leg from which the load is carried:
@@ -31,15 +31,15 @@ export function workflowLegs(nodes: WfNode[]): { legs: string[]; loadFrom: numbe
 /** How a workflow is started (the Start step's Request Type). */
 export const requestType = (nodes: WfNode[]): string => (nodes.find((n) => n.t === 'start')?.f.request as string) ?? '';
 
-export interface Operator { username: string; /** fleet ids the person sees */ fleets: string[]; /** stations the person is responsible for */ stations: string[] }
+export interface Operator { username: string; /** fleet ids the person sees */ fleets: string[] }
 /**
- * Workflows an operator can request from: published, started from a Tablet, in a fleet assigned to the operator, and delivering to a station the operator is responsible for.
+ * Workflows an operator can request from: published, started from a Tablet, in a fleet assigned to the operator, and listing the operator in its Start step.
  * `fleetIdOf` turns the workflow's fleet name into the fleet id the assignment uses.
  */
 export function visibleWorkflows(workflows: Workflow[], who: Operator, fleetIdOf: (fleetName: string) => string | undefined): Workflow[] {
   return workflows.filter((w) => {
     if (!w.published || !w.fleet) return false; const id = fleetIdOf(w.fleet); if (!id || !who.fleets.includes(id)) return false;
-    return requestType(w.nodes) === TABLET_REQUEST && dropOffStations(w.nodes).some((s) => who.stations.includes(s));
+    return requestType(w.nodes) === TABLET_REQUEST && requesters(w.nodes).includes(who.username);
   });
 }
 
@@ -48,11 +48,11 @@ export function requestableItems(workflows: Workflow[], who: Operator, fleetIdOf
   const out: RequestableItem[] = [];
   for (const w of visibleWorkflows(workflows, who, fleetIdOf)) {
     const { legs, loadFrom } = workflowLegs(w.nodes); if (!legs.length) continue;
-    const approvalStations = confirmStations(w.nodes);
+    const approvalUsers = confirmApprovers(w.nodes);
     for (const n of w.nodes) {
       if (n.t !== 'material') continue; const code = n.f.code as string; const m = materials.find((x) => x.code === code); if (!code || !m) continue;
       const qty = Math.max(1, parseInt(String(n.f.qty), 10) || 1);
-      out.push({ key: `${w.id}:${n.id}`, workflowId: w.id, workflowName: w.name, fleet: w.fleet!, fleetLive: fleetLiveOf(w.fleet!), code, name: m.name, group: groups.find((g) => g.id === m.group)?.name ?? '', qty, qtyEditable: !!n.f.fromTablet, approvalStations, needsApproval: approvalStations.length > 0, legs, loadFrom });
+      out.push({ key: `${w.id}:${n.id}`, workflowId: w.id, workflowName: w.name, fleet: w.fleet!, fleetLive: fleetLiveOf(w.fleet!), code, name: m.name, group: groups.find((g) => g.id === m.group)?.name ?? '', qty, qtyEditable: !!n.f.fromTablet, approvalUsers, needsApproval: approvalUsers.length > 0, legs, loadFrom });
     }
   }
   return out;

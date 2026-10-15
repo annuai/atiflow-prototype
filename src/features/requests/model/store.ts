@@ -3,7 +3,9 @@ import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
 import { tripIds, tripNumber } from '@/core/tripIds';
 import { createDocument, localBackend } from '@/data/storage';
-import { canApprove, canCancel, currentStep, isAllowedNext, type ApproversAt, type Person } from './rules';
+import { can } from '@/features/access';
+import { toPublic, userDirectory } from '@/features/auth/userDirectory';
+import { canApprove, canCancel, currentStep, isAllowedNext, type Person } from './rules';
 import type { CartLine, RequestableItem, RequestStatus, TripRequest } from './types';
 
 /**
@@ -19,8 +21,8 @@ export interface RequestsState extends Saved {
   /** Make the requests of a cart. Each becomes its own request (pending when its workflow has a Confirm step, otherwise approved). Returns the order id. */
   submit(who: Requester, lines: { item: RequestableItem; qty: number }[], now?: number): string;
   /** Approve the step the request waits for (the next Confirm station, in turn); the request is approved when the last step is. */
-  approve(id: string, who: Person & { name: string }, approversAt: ApproversAt, now?: number): boolean;
-  reject(id: string, who: Person & { name: string }, approversAt: ApproversAt, reason?: string, now?: number): boolean;
+  approve(id: string, who: Person & { name: string }, now?: number): boolean;
+  reject(id: string, who: Person & { name: string }, reason?: string, now?: number): boolean;
   /** Cancel one request (never the others of its order). */
   cancel(id: string, who: Person & { name: string }, now?: number): boolean;
   /** The fleet reported something about the request. */
@@ -37,7 +39,9 @@ const push = (r: TripRequest, status: RequestStatus, at: number, by?: string, no
  * pick-up station, so it can still be decided). Without this a saved request would break the pages that read `approvals`.
  */
 export function normalise(list: TripRequest[]): TripRequest[] {
-  return list.map((r) => { const withTrip = r.tripId ? r : { ...r, tripId: tripIds.next() }; return Array.isArray(withTrip.approvals) ? withTrip : { ...withTrip, approvals: withTrip.status === 'pending' && withTrip.legs?.length ? [{ stationId: withTrip.legs[0] }] : [] }; });
+  // an approval step saved with a station (before approvals named users) can be decided by anyone who may approve
+  const legacy = () => userDirectory.getState().users.filter((u) => can(toPublic(u), 'operator.approve')).map((u) => u.username);
+  return list.map((r) => { const withTrip = r.tripId ? r : { ...r, tripId: tripIds.next() }; const approvals = Array.isArray(withTrip.approvals) ? withTrip.approvals.map((a) => (Array.isArray((a as Partial<typeof a>).users) ? a : { ...a, users: legacy() })) : withTrip.status === 'pending' && withTrip.legs?.length ? [{ users: legacy() }] : []; return { ...withTrip, approvals }; });
 }
 const boot = doc.load(); boot.requests = normalise(boot.requests); tripIds.ensureAtLeast(Math.max(0, ...boot.requests.map((r) => tripNumber(r.tripId))));        // saved requests keep their ids: new ones count on from them
 export const requestsStore = createStore<RequestsState>((set, get) => ({
@@ -46,19 +50,19 @@ export const requestsStore = createStore<RequestsState>((set, get) => ({
     const seq = get().seq + 1; const groupId = `ORD-${pad(seq)}`;
     const made: TripRequest[] = lines.map(({ item, qty }, i) => {
       const base: TripRequest = { id: `${groupId}-${i + 1}`, groupId, workflowId: item.workflowId, workflowName: item.workflowName, fleet: item.fleet, fleetLive: item.fleetLive, code: item.code, name: item.name, group: item.group, qty,
-        legs: item.legs, loadFrom: item.loadFrom, approvals: item.approvalStations.map((stationId) => ({ stationId })), needsApproval: item.needsApproval, status: 'pending', history: [], requestedBy: who.username, requestedByName: who.name, createdAt: now, tripId: tripIds.next() };
+        legs: item.legs, loadFrom: item.loadFrom, approvals: item.approvalUsers.map((users) => ({ users })), needsApproval: item.needsApproval, status: 'pending', history: [], requestedBy: who.username, requestedByName: who.name, createdAt: now, tripId: tripIds.next() };
       return item.needsApproval ? push(base, 'pending', now, who.name) : push(base, 'approved', now, 'No approval needed');
     });
     set({ seq, requests: [...get().requests, ...made] }); return groupId;
   },
-  approve(id, who, approversAt, now = Date.now()) {
-    const r = get().requests.find((x) => x.id === id); if (!r || !canApprove(r, who, approversAt)) return false;
+  approve(id, who, now = Date.now()) {
+    const r = get().requests.find((x) => x.id === id); if (!r || !canApprove(r, who)) return false;
     const step = currentStep(r)!; const approvals = r.approvals.map((a) => (a === step ? { ...a, by: who.name, at: now } : a)); const left = approvals.filter((a) => !a.by).length; const total = approvals.length;
-    const next = left ? { ...r, approvals, history: [...r.history, { status: 'pending' as const, at: now, by: who.name, note: `Approved at ${step.stationId} (${total - left} of ${total})` }] } : { ...push(r, 'approved', now, who.name, `${total} of ${total} approvals`), approvals, approvedBy: who.name };
+    const next = left ? { ...r, approvals, history: [...r.history, { status: 'pending' as const, at: now, by: who.name, note: `Approved (${total - left} of ${total})` }] } : { ...push(r, 'approved', now, who.name, `${total} of ${total} approvals`), approvals, approvedBy: who.name };
     set({ requests: get().requests.map((x) => (x.id === id ? next : x)) }); return true;
   },
-  reject(id, who, approversAt, reason, now = Date.now()) {
-    const r = get().requests.find((x) => x.id === id); if (!r || !canApprove(r, who, approversAt)) return false;
+  reject(id, who, reason, now = Date.now()) {
+    const r = get().requests.find((x) => x.id === id); if (!r || !canApprove(r, who)) return false;
     set({ requests: get().requests.map((x) => (x.id === id ? { ...push(x, 'rejected', now, who.name, reason), note: reason } : x)) }); return true;
   },
   cancel(id, who, now = Date.now()) {

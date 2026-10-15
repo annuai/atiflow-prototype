@@ -7,13 +7,13 @@ import { createNode, syncIds } from './factory';
 import { applySteps, parsePrompt } from './parsePrompt';
 import { defaultWorkflowName, workflowNameError } from './names';
 import { datasetStore, useDataset } from '@/data/dataset';
-import { blankWorkflow, isBlankDraft, isKept, seedWorkflows, upgradeToV5, upgradeToV6 } from './seed';
-import { approversNow } from '@/features/requests/model/mapping';
+import { prefillUsers } from './users';
+import { blankWorkflow, isBlankDraft, isKept, seedWorkflows, upgradeToV5, upgradeToV6, upgradeToV7 } from './seed';
 import { clampMain, insertNode, listByKey, locate, moveNode, removeNode, updateField, type Problem } from './tree';
 import { publishProblem } from './validate';
 import type { FieldValue, ListKey, NodeTypeId, WfNode, Workflow, Workflows } from './types';
 
-const KEY = 'atiflow.workflows.v6', KEY_V5 = 'atiflow.workflows.v5', KEY_V4 = 'atiflow.workflows.v4', KEY_V3 = 'atiflow.workflows.v3', KEY_V2 = 'atiflow.workflows.v2';
+const KEY = 'atiflow.workflows.v7', KEY_V6 = 'atiflow.workflows.v6', KEY_V5 = 'atiflow.workflows.v5', KEY_V4 = 'atiflow.workflows.v4', KEY_V3 = 'atiflow.workflows.v3', KEY_V2 = 'atiflow.workflows.v2';
 export interface SimState { status: 'idle' | 'running' | 'done'; step: string; progress: number; currentId: string | null; taken: Record<string, 't' | 'o'>; visited: string[]; hlStation: string | null }
 export const SIM_IDLE: SimState = { status: 'idle', step: '', progress: 0, currentId: null, taken: {}, visited: [], hlStation: null };
 interface History { undo: string[]; redo: string[] }
@@ -64,10 +64,12 @@ function load(): Saved {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null');
     const keep = (ws: Workflows): Workflows => Object.fromEntries(Object.entries(ws).filter(([, w]) => isKept(w)));       // unsaved workflows do not survive a reload
     if (raw?.workflows && typeof raw.workflows === 'object') { const workflows = keep(raw.workflows); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
+    const v6 = JSON.parse(localStorage.getItem(KEY_V6) ?? 'null');         // v6: Confirm steps had an approval station, operators were mapped to stations
+    if (v6?.workflows && typeof v6.workflows === 'object') { const workflows = prefillUsers(upgradeToV7(keep(v6.workflows))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
     const v5 = JSON.parse(localStorage.getItem(KEY_V5) ?? 'null');         // v5: requestors were listed on the Start step
-    if (v5?.workflows && typeof v5.workflows === 'object') { const workflows = upgradeToV6(keep(v5.workflows)); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
+    if (v5?.workflows && typeof v5.workflows === 'object') { const workflows = prefillUsers(upgradeToV7(upgradeToV6(keep(v5.workflows)))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
     const v4 = JSON.parse(localStorage.getItem(KEY_V4) ?? 'null');         // v4: placeholder User IDs and the "Request from Tablet" type
-    if (v4?.workflows && typeof v4.workflows === 'object') { const workflows = upgradeToV6(upgradeToV5(keep(v4.workflows))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
+    if (v4?.workflows && typeof v4.workflows === 'object') { const workflows = prefillUsers(upgradeToV7(upgradeToV6(upgradeToV5(keep(v4.workflows))))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
     const v3 = JSON.parse(localStorage.getItem(KEY_V3) ?? 'null');         // v3: no saved flag; built workflows with a fleet count as saved
     if (v3?.workflows && Array.isArray(v3.fleetNames)) {
       const workflows = Object.fromEntries(Object.entries(v3.workflows as Workflows).filter(([, w]) => w.fleet && w.nodes.length > 2).map(([id, w]) => [id, { ...w, saved: true }]));
@@ -140,9 +142,7 @@ export const wfStore = createStore<WfState>((set, get) => {
       if (t === 'aiot') { problem({ title: 'AIoT has no node card in the Figma file yet', body: 'Only the palette tile is designed, so it can’t be added to the canvas.' }); return; }
       const first = fleetMaterialCodes(fleetOf())[0] ?? '';      // new Material / If Logic nodes start on the fleet's first assigned material
       const firstStation = fleetStations(fleetOf())[0]?.id ?? '';       // new Station / If Logic nodes start on the fleet's first station of the map
-      const before = (() => { if (t !== 'confirm') return ''; const list = listByKey(get().nodes(), key) ?? []; const i = key === 'main' ? clampMain(list, at ?? list.length) : Math.min(at ?? list.length, list.length);          // a new Confirm step is approved where the step before it happens
-        for (let k = i - 1; k >= 0; k--) if (list[k].t === 'station') { const v = list[k].f.station; return Array.isArray(v) ? v[0] : String(v); } return ''; })();
-      const node = createNode(t, t === 'station' ? { station: key !== 'main' ? [firstStation] : firstStation } : t === 'material' ? { code: first } : t === 'confirm' ? { station: before } : undefined);
+      const node = createNode(t, t === 'station' ? { station: key !== 'main' ? [firstStation] : firstStation } : t === 'material' ? { code: first } : undefined);
       if (t === 'logic') { const [a = '', b = a] = fleetStations(fleetOf()).map((s) => s.id); node.f.material = first; node.f.station = a; if (a) { node.br!.t[0].f.station = [a]; node.br!.o[0].f.station = [b]; } }
       const r = insertNode(get().nodes(), node, key, at); if (problem(r.problem)) return;
       commit(r.nodes); set({ selected: node.id, justAdded: node.id });
@@ -172,7 +172,7 @@ export const wfStore = createStore<WfState>((set, get) => {
     },
     publish() {
       const { current } = get(); if (!current) return;
-      const p = publishProblem(get().nodes(), approversNow()); if (p) { notify.warning(p.title, p.body, 'publish'); return; }
+      const p = publishProblem(get().nodes()); if (p) { notify.warning(p.title, p.body, 'publish'); return; }
       patch(current, { published: true, saved: true });
       notify.success(`Workflow published to ${fleetOf()}`, `${get().nodes().length} nodes are live. Use Simulate to watch a test run on the map.`, 'publish');
     },
@@ -183,6 +183,8 @@ export const useWorkflow = <T,>(sel: (s: WfState) => T) => useStore(wfStore, sel
 /** Names of all fleets (re-renders only when the list changes). */
 export const useFleetNames = () => useDataset((s) => s.fleets.map((f) => f.name).join('|')).split('|').filter(Boolean);
 
+// a workflow list that was upgraded from an older version is saved in the new format straight away (not only after the next edit)
+try { if (localStorage.getItem(KEY) === null) localStorage.setItem(KEY, JSON.stringify({ workflows: wfStore.getState().workflows, current: null })); } catch { /* no storage (tests / private mode) */ }
 // persist workflows (not history/sim) shortly after any change
 let timer: ReturnType<typeof setTimeout> | undefined;
 wfStore.subscribe((s, p) => { if (s.workflows === p.workflows && s.current === p.current) return; clearTimeout(timer); timer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify({ workflows: s.workflows, current: s.current })); } catch { /* no storage (tests / private mode) */ } }, 250); });

@@ -11,6 +11,7 @@ import { addRoad, deleteRoad, roadAngle, updateRoad } from '../src/features/map-
 import { addStagingArea, cellCenter, cellRef, deleteStagingArea, totalCells, updateStagingArea } from '../src/features/map-editor/model/staging';
 import { addZone, boxPolygon, deleteZone, gatePolygon } from '../src/features/map-editor/model/zones';
 import { normaliseData } from '../src/features/map-editor/model/seed';
+import { emptyHistory, record, redo, undo } from '../src/features/map-editor/model/history';
 import { planTrip } from '../src/features/map-editor/model/simulate';
 import { ZONE_TYPES, zoneType, zoneTypesOf } from '../src/features/map-editor/model/zoneTypes';
 import { sampleWorkflows } from '../src/features/workflow-builder/model/seed';
@@ -151,5 +152,16 @@ describe('simulation: a robot drives from one station to another on the map\'s o
     expect(planTrip(d, 'line-side', a, a)).toEqual({ ok: false, reason: 'same' }); expect(planTrip(d, 'line-side', a, 'NOPE')).toEqual({ ok: false, reason: 'missing' });
     const lonely = addStation(d, 'line-side', { x: 1, y: 1 }); expect(planTrip(lonely.data, 'line-side', a, lonely.id)).toEqual({ ok: false, reason: 'no-route' });           // placed on no road
     expect(planTrip(d, 'asrs', a, b).ok).toBe(false);                                                                                             // another fleet's lanes are not used
+  });
+});
+
+describe('undo and redo of the draft', () => {
+  it('each change is a step; undo and redo walk through them; a new change drops the redo steps; quick changes with one key (a drag) are one step', () => {
+    let h = emptyHistory<number>(); h = record(h, 1, undefined, 0); h = record(h, 2, undefined, 10); expect(h.past).toEqual([1, 2]);
+    const u = undo(h, 3)!; expect([u.value, u.history.past, u.history.future]).toEqual([2, [1], [3]]); const r = redo(u.history, 2)!; expect([r.value, r.history.past, r.history.future]).toEqual([3, [1, 2], []]);
+    expect(undo(emptyHistory<number>(), 1)).toBeNull(); expect(redo(emptyHistory<number>(), 1)).toBeNull(); expect(record(u.history, 2, undefined, 20).future).toEqual([]);
+    let d = emptyHistory<number>(); d = record(d, 10, 'move:A', 0); d = record(d, 11, 'move:A', 100); d = record(d, 12, 'move:A', 200); expect(d.past).toEqual([10]);               // one drag, one step
+    d = record(d, 13, 'move:A', 5000); expect(d.past).toEqual([10, 13]); d = record(d, 14, 'move:B', 5100); expect(d.past).toEqual([10, 13, 14]);                               // later or another thing: a new step
+    let big = emptyHistory<number>(); for (let i = 0; i < 150; i++) big = record(big, i, undefined, i); expect(big.past).toHaveLength(100);
   });
 });

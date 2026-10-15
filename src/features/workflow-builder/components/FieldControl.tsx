@@ -5,7 +5,9 @@ import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
 import { useFleetMaterialCodes } from '@/features/master-data/model/selectors';
+import { TagMultiSelect } from '@/components/form/TagMultiSelect';
 import { selectFleet, useWorkflow, wfStore } from '../model/store';
+import { useEligibleUsers } from '../model/users';
 import { stationLabel, useFleetStations } from '../model/stations';
 import type { FieldSpec, WfNode } from '../model/types';
 
@@ -32,9 +34,17 @@ export function FieldControl({ node, spec, inBranch }: { node: WfNode; spec: Fie
   const label = typeof fd.label === 'function' ? fd.label(node) : fd.label; const value = node.f[fd.key]; const set = wfStore.getState().setField;
   const materialCodes = useFleetMaterialCodes(useWorkflow(selectFleet));
   const stations = useFleetStations(useWorkflow(selectFleet)); const names = Object.fromEntries(stations.map((s) => [s.id, stationLabel(s)]));
+  const fleet = useWorkflow(selectFleet); const userOpts = useEligibleUsers(fleet, fd.optsFrom === 'approvalUsers' ? 'operator.approve' : 'operator.request');
+  if (fd.showIf && !fd.showIf(node)) return null;
   const opts = fd.optsFrom === 'fleetMaterials' ? materialCodes : fd.optsFrom === 'fleetStations' ? stations.map((s) => s.id) : (fd.opts ?? []);
   const emptyHint = fd.optsFrom === 'fleetMaterials' && opts.length === 0 ? 'No materials assigned' : fd.optsFrom === 'fleetStations' && opts.length === 0 ? 'No stations on the map' : undefined;
 
+  if (fd.kind === 'users') {
+    const picked = (Array.isArray(value) ? value : []) as string[];
+    // a person who no longer qualifies stays on the step (shown by username) so the workflow is not silently changed
+    const options = [...userOpts, ...picked.filter((u) => !userOpts.some((o) => o.id === u)).map((u) => ({ id: u, label: u }))];
+    return <div className="wf-field" data-no-pan><TagMultiSelect label={label} options={options} value={picked} onChange={(ids) => set(node.id, fd.key, ids)} placeholder={userOpts.length ? 'Search users' : 'No users with access to this fleet'} /></div>;
+  }
   if (fd.kind === 'check') return (
     <div className="wf-field row"><span className="wf-label">{label}</span>
       <Checkbox size="sm" aria-label={label} isSelected={!!value} onChange={(v) => set(node.id, fd.key, v)} /></div>

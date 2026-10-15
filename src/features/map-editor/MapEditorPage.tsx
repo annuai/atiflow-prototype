@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/base/buttons/button';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
@@ -30,6 +30,7 @@ import { ROBOT_TYPES } from '@/data/robotTypes';
 import { ZoneForm, ZonesPanel } from './components/ZonesPanel';
 import { copy } from './copy';
 import { cellStatesFromMasterData } from './model/cellStates';
+import { emptyHistory, record, redo as redoStep, undo as undoStep, type History } from './model/history';
 import { addRoad, deleteRoad, renameRoad, updateRoad } from './model/roads';
 import { seedMapData } from './model/seed';
 import { addStagingArea, deleteStagingArea, updateStagingArea } from './model/staging';
@@ -62,8 +63,16 @@ export function MapEditorPage() {
   const taken = useMemo(() => base?.nav.stations.map((s) => s.id) ?? [], [base]);
   const takenAreas = useMemo(() => Object.values(allMaps).flatMap((h) => h.versions.flatMap((v) => v.data.stagingAreas.map((a) => a.id))), [allMaps]);          // an area id means one area in every map
   const usedBy = (sid: string) => workflowsUsing(Object.values(workflows), fleetName, sid);
-  const edit = (fn: (d: MapData) => MapData) => mapVersionsStore.getState().updateDraft(id, fn);
-  useEffect(() => { setSelection(null); setDrawing([]); trip.stop(); setSimError(''); }, [current?.id]);
+  const hist = useRef<History<MapData>>(emptyHistory()); const [, bump] = useState(0);
+  const liveDraft = () => draftOf(mapVersionsStore.getState().byMap[id])?.data;
+  /** Change the draft; every change is an undo step (changes with the same `key` in quick succession, such as dragging, are one step). */
+  const edit = (fn: (d: MapData) => MapData, key?: string) => {
+    const cur = liveDraft(); if (!cur) return; const next = fn(cur); if (next === cur) return;
+    hist.current = record(hist.current, cur, key, Date.now()); mapVersionsStore.getState().updateDraft(id, () => next); bump((n) => n + 1);
+  };
+  const undo = () => { const cur = liveDraft(); const r = cur && undoStep(hist.current, cur); if (!r) return; hist.current = r.history; mapVersionsStore.getState().updateDraft(id, () => r.value); setDrawing([]); bump((n) => n + 1); };
+  const redo = () => { const cur = liveDraft(); const r = cur && redoStep(hist.current, cur); if (!r) return; hist.current = r.history; mapVersionsStore.getState().updateDraft(id, () => r.value); setDrawing([]); bump((n) => n + 1); };
+  useEffect(() => { setSelection(null); setDrawing([]); trip.stop(); setSimError(''); hist.current = emptyHistory(); }, [current?.id]);
 
   /** Arm a drawing tool: the module's panel opens and the next click on the map draws (with this choice, which is remembered for the module). Tools stay armed until Esc or Select. */
   const arm = (m: Module, choice: string = choices[m]) => {
@@ -85,7 +94,9 @@ export function MapEditorPage() {
     else if (tool.kind === 'zone' && drawing.length >= 3) { const r = addZone(data, tool.type, drawing); edit(() => r.data); setDrawing([]); setSelection({ kind: 'zone', id: r.id }); }
   };
   useEffect(() => {
-    const key = (e: KeyboardEvent) => { const t = e.target as HTMLElement; if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable) return; if (e.key === 'Escape' && tool.kind !== 'select') cancel(); else if (e.key === 'Enter' && drawMode(tool) === 'many') finish(); };
+    const key = (e: KeyboardEvent) => { const t = e.target as HTMLElement; if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable) return;
+      if ((e.metaKey || e.ctrlKey) && isDraft && mode === 'design' && (e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) { e.preventDefault(); (e.key.toLowerCase() === 'y' || e.shiftKey) ? redo() : undo(); return; }
+      if (e.key === 'Escape' && tool.kind !== 'select') cancel(); else if (e.key === 'Enter' && drawMode(tool) === 'many') finish(); };
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
   });                                                                                                           // (re-registered each render: it reads the current drawing and tool)
   if (!map) return <Navigate to="/configurator/maps" replace />;
@@ -133,7 +144,7 @@ export function MapEditorPage() {
   return (
     <div className="content">
       <div className="builder md-card">
-        <EditorHeader mode={mode} onMode={changeMode} mapId={map.id} name={map.name} state={state} isDraft={!!isDraft} canEdit onHistory={() => setHistoryOpen(true)} onPublish={() => setPublishOpen(true)} onEdit={startDraft} />
+        <EditorHeader canUndo={!!isDraft && mode === 'design' && hist.current.past.length > 0} canRedo={!!isDraft && mode === 'design' && hist.current.future.length > 0} showHistory={!!isDraft && mode === 'design'} onUndo={undo} onRedo={redo} mode={mode} onMode={changeMode} mapId={map.id} name={map.name} state={state} isDraft={!!isDraft} canEdit onHistory={() => setHistoryOpen(true)} onPublish={() => setPublishOpen(true)} onEdit={startDraft} />
         {!isDraft && (
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-secondary bg-warning-primary px-4 py-2.5 text-sm text-secondary"><span>{copy.banner.published(current.number!)}</span>
             {draft ? <Button size="sm" color="secondary" onPress={() => setViewing('draft')}>{copy.historyPanel.open}</Button> : <Button size="sm" color="primary" onPress={startDraft}>{copy.banner.edit}</Button>}</div>)}
@@ -142,7 +153,7 @@ export function MapEditorPage() {
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <div className="relative min-h-[360px] min-w-0 flex-1">
             <MapCanvas site={base.site} data={data} tool={tool} editable={!!isDraft && mode === 'design'} selection={selection} canSelect={(s) => mode === 'design' || s.kind === 'station'} onSelect={mode === 'simulation' ? simPick : pick} overlay={mode === 'simulation' ? (vp) => <SimLayer vp={vp} marks={simMarks} /> : undefined} drawing={drawing} onPoint={onPoint} onFinish={finish}
-              onMove={(kind, sid, to) => edit((m) => (kind === 'station' ? moveStation(m, sid, to) : updateStagingArea(m, sid, { x: Math.round(to.x * 100) / 100, y: Math.round(to.y * 100) / 100 })))} />
+              onMove={(kind, sid, to) => edit((m) => (kind === 'station' ? moveStation(m, sid, to) : updateStagingArea(m, sid, { x: Math.round(to.x * 100) / 100, y: Math.round(to.y * 100) / 100 })), `move:${kind}:${sid}`)} />
             {mode === 'design' && tool.kind !== 'select' && <DrawHint text={hintText} showFinish={drawMode(tool) === 'many'} canFinish={drawing.length >= minPoints(tool)} onFinish={finish} onCancel={cancel} cancelLabel={drawing.length ? copy.hint.cancel : copy.hint.done} />}
             {mode === 'design' && <ModuleToolbar tool={tool} choices={choices} onSelect={selectTool} onTool={arm} />}
           </div>

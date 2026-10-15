@@ -4,7 +4,7 @@ import type { MapData, MapStation } from './types';
 /** Pure edits of the stations of a map (the draft). Each returns a NEW MapData and never touches the published versions. */
 /** What a station is for on the floor. Pick-up / drop-off / buffer are not types: what happens at a station comes from the workflow, so those three all show as a plain Station. */
 export const STATION_TYPES: { id: StationType; label: string; color: string }[] = [
-  { id: 'drop', label: 'Station', color: '#f59e0b' }, { id: 'asrs', label: 'ASRS', color: '#14b8a6' }, { id: 'charge', label: 'Charging', color: '#22c55e' }, { id: 'park', label: 'Parking', color: '#64748b' },
+  { id: 'drop', label: 'Station', color: '#f59e0b' }, { id: 'asrs', label: 'ASRS', color: '#14b8a6' }, { id: 'charge', label: 'Charging', color: '#3b82f6' }, { id: 'park', label: 'Parking', color: '#64748b' },
 ];
 export const plainType = (t: StationType): StationType => (t === 'pick' || t === 'buffer' ? 'drop' : t);
 export const stationColor = (t: StationType) => STATION_TYPES.find((x) => x.id === plainType(t))?.color ?? '#64748b';

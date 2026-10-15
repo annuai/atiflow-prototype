@@ -33,7 +33,7 @@ export function parsePrompt(text: string, materialCodes: string[] = []): WfNode[
     if (pendingTrue && logic && isStation(s)) { logic.br!.t = [stationFrom(s, true)]; pendingTrue = false; continue; }
     pendingTrue = false;
     if (/\b(wait|pause|hold|idle)\b/.test(s)) { const m = s.match(/(\d+(?:\.\d+)?)\s*(h|hr|hour|m|min|minute|s|sec|second)/); steps.push(createNode('wait', { time: m ? fmtTime(Math.round(+m[1]), m[2]) : '00:01:00' })); continue; }
-    if (/\b(confirm|dispatch|scan|approve|weigh)/.test(s)) { const op = /scan|barcode/.test(s) ? 'Barcode Scan' : /tablet/.test(s) ? 'Tablet' : /weigh/.test(s) ? 'Weight Sensor' : 'Dispatch Button'; steps.push(createNode('confirm', { op })); continue; }
+    if (/\b(confirm|dispatch|scan|approve)/.test(s)) { const op = /scan|barcode/.test(s) ? 'Barcode Scan' : /tablet/.test(s) ? 'Tablet' : 'Dispatch Button'; steps.push(createNode('confirm', { op })); continue; }
     if (/\b(container|tote)\b/.test(s)) { steps.push(createNode('container')); continue; }
     if (/\b(material|mat-|kit|quantity|qty)/.test(s) || materialCodes.some((c) => canon(s).includes(canon(c)))) {
       const q = s.match(/(\d+)\s*(units?|pcs|pieces|x)\b/) ?? s.match(/(?:qty|quantity)\s*(?:of\s*)?(\d+)/);

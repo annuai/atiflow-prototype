@@ -9,11 +9,13 @@ export interface WfNode {
 /** Where a node list lives: the main flow, or one branch of an If Logic node ("<nodeId>:t" / "<nodeId>:o"). */
 export type ListKey = 'main' | string;
 
-export type FieldKind = 'select' | 'multi' | 'check' | 'input' | 'cond';
+export type FieldKind = 'select' | 'multi' | 'check' | 'input' | 'cond' | 'users';
 export interface FieldSpec {
   key: string; label: string | ((n: WfNode) => string); kind?: FieldKind; opts?: string[];
   /** Options come from outside the registry. `fleetMaterials` = materials assigned to the open fleet in Master Data; `fleetStations` = the work stations of the fleet's map. */
-  optsFrom?: 'fleetMaterials' | 'fleetStations';
+  optsFrom?: 'fleetMaterials' | 'fleetStations' | 'requestUsers' | 'approvalUsers';
+  /** The field is only there when this is true (e.g. the Start step lists users only for a Tablet request). */
+  showIf?: (n: WfNode) => boolean;
   /** Render label and control on one row. */
   row?: boolean;
   /** Overrides applied when the node sits inside a branch (e.g. Station uses S-numbers there). */

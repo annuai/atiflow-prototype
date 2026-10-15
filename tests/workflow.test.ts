@@ -95,7 +95,8 @@ describe('fleets and workflows in the store', () => {
     const { wfStore } = await import('../src/features/workflow-builder/model/store');
     const a = wfStore.getState().startWorkflow('Assembly Fleet'); wfStore.getState().discardUnsaved(); expect(wfStore.getState().workflows[a]).toBeUndefined(); expect(wfStore.getState().current).toBeNull();
     const b = wfStore.getState().startWorkflow('Assembly Fleet'); wfStore.getState().saveDraft(); wfStore.getState().discardUnsaved(); expect(wfStore.getState().workflows[b]).toMatchObject({ saved: true });
-    wfStore.getState().openWorkflow(b); wfStore.getState().addNode('wait'); wfStore.getState().publish(); expect(wfStore.getState().workflows[b]).toMatchObject({ published: true, saved: true });
+    wfStore.getState().openWorkflow(b); wfStore.getState().addNode('wait'); wfStore.getState().publish(); expect(wfStore.getState().workflows[b].published).toBeFalsy();          // a Tablet workflow needs request users first
+    wfStore.getState().setField(wfStore.getState().nodes()[0].id, 'users', ['rohan']); wfStore.getState().publish(); expect(wfStore.getState().workflows[b]).toMatchObject({ published: true, saved: true });
     const c = wfStore.getState().startWorkflow(); wfStore.getState().saveDraft(); wfStore.getState().discardUnsaved(); expect(wfStore.getState().workflows[c]).toBeUndefined();   // no fleet -> cannot be saved
     const seed = Object.values(wfStore.getState().workflows).find((w) => w.id === 'w-line-side-1')!; wfStore.getState().openWorkflow(seed.id); wfStore.getState().discardUnsaved(); expect(wfStore.getState().workflows[seed.id]).toBeDefined();   // seeds are saved
   });

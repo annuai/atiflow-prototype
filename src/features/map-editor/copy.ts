@@ -1,7 +1,7 @@
 /** Every user-facing string of the Map Editor. */
 export const copy = {
   title: 'Map Editor', draft: 'Draft', published: (n: number) => `Published v${n}`, viewing: (n: number) => `Viewing v${n}`,
-  design: 'Design', simulation: 'Simulation', history: 'Version history', publish: 'Publish map', editAsDraft: 'Edit as draft', discard: 'Discard draft',
+  undo: 'Undo (Ctrl+Z)', redo: 'Redo (Ctrl+Shift+Z)', design: 'Design', simulation: 'Simulation', history: 'Version history', publish: 'Publish map', editAsDraft: 'Edit as draft', discard: 'Discard draft',
   tabs: { stations: 'Stations', routes: 'Routes', exclusive: 'Exclusive zones', zones: 'Zones' },
   renameMap: { label: 'Map name', tooltip: 'Rename map' },
   sim: {
