@@ -19,6 +19,8 @@ export interface TripRequest {
   requestedBy: string; requestedByName: string; createdAt: number;
   /** Given when the request is made (before approval), so it can be followed from the start; the robot is known once one takes it. */
   tripId: string; robotId?: string; approvedBy?: string; note?: string;
+  /** 'route' = a saved route (a workflow with no material: the robot just visits its stations, quantity 0, `name` is the workflow). Missing = a material request. */ kind?: 'route';
+  /** Only a robot of this type (catalog id) takes it; any robot of the fleet when missing. */ robotType?: string;
 }
 /** What can be requested: one material of one workflow. */
 export interface RequestableItem {
@@ -27,6 +29,7 @@ export interface RequestableItem {
   /** Quantity of the workflow's Material step; `qtyEditable` = the person may change it ("Select quantity from Tablet"). */
   qty: number; qtyEditable: boolean;
   /** The approval users of each Tablet Confirm step, in order (one approval each). */ approvalUsers: string[][]; needsApproval: boolean; legs: string[]; loadFrom: number;
+  /** 'route' = a saved route (no material, quantity 1 in the cart, 0 on the request). */ kind?: 'route'; robotType?: string;
 }
 /** A line of the cart (only exists while the person is choosing). */
 export interface CartLine { key: string; qty: number }

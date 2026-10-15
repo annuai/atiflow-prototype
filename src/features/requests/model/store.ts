@@ -49,7 +49,7 @@ export const requestsStore = createStore<RequestsState>((set, get) => ({
   submit(who, lines, now = Date.now()) {
     const seq = get().seq + 1; const groupId = `ORD-${pad(seq)}`;
     const made: TripRequest[] = lines.map(({ item, qty }, i) => {
-      const base: TripRequest = { id: `${groupId}-${i + 1}`, groupId, workflowId: item.workflowId, workflowName: item.workflowName, fleet: item.fleet, fleetLive: item.fleetLive, code: item.code, name: item.name, group: item.group, qty,
+      const base: TripRequest = { id: `${groupId}-${i + 1}`, groupId, workflowId: item.workflowId, workflowName: item.workflowName, fleet: item.fleet, fleetLive: item.fleetLive, code: item.code, name: item.name, group: item.group, qty: item.kind === 'route' ? 0 : qty, ...(item.kind ? { kind: item.kind } : {}), ...(item.robotType ? { robotType: item.robotType } : {}),
         legs: item.legs, loadFrom: item.loadFrom, approvals: item.approvalUsers.map((users) => ({ users })), needsApproval: item.needsApproval, status: 'pending', history: [], requestedBy: who.username, requestedByName: who.name, createdAt: now, tripId: tripIds.next() };
       return item.needsApproval ? push(base, 'pending', now, who.name) : push(base, 'approved', now, 'No approval needed');
     });

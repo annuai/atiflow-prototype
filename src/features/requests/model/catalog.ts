@@ -1,3 +1,4 @@
+import { ROBOT_TYPES } from '@/data/robotTypes';
 import type { Material, MaterialGroup } from '@/features/master-data/model/types';
 import type { WfNode, Workflow } from '@/features/workflow-builder/model/types';
 import type { RequestableItem } from './types';
@@ -41,6 +42,25 @@ export function visibleWorkflows(workflows: Workflow[], who: Operator, fleetIdOf
     if (!w.published || !w.fleet) return false; const id = fleetIdOf(w.fleet); if (!id || !who.fleets.includes(id)) return false;
     return requestType(w.nodes) === TABLET_REQUEST && requesters(w.nodes).includes(who.username);
   });
+}
+
+/** A saved route (Ati's "Tier 0" operation, a word operators never see): a workflow with no Material step, only a robot visiting stations. */
+export const isRouteWorkflow = (nodes: WfNode[]): boolean => !flatten(nodes).some((n) => n.t === 'material');
+/** The catalog id of a robot type named on the Start step (undefined for a name that is not in the catalog: any robot of the fleet may do it). */
+export const robotTypeIdOf = (label: unknown): string | undefined => ROBOT_TYPES.find((t) => t.label === label)?.id;
+
+/**
+ * The simple trips an operator can run: the visible workflows (same rules as materials: published, Tablet, their fleet, listed in Start) that have no Material step and visit at least one station; every other node is allowed.
+ * Each is an item like a material but without quantity; its approvals are the Tablet Confirm steps, as for materials.
+ */
+export function routeItems(workflows: Workflow[], who: Operator, fleetIdOf: (n: string) => string | undefined, fleetLiveOf: (n: string) => string): RequestableItem[] {
+  const out: RequestableItem[] = [];
+  for (const w of visibleWorkflows(workflows, who, fleetIdOf)) {
+    if (!isRouteWorkflow(w.nodes)) continue; const { legs } = workflowLegs(w.nodes); if (legs.length < 1) continue;
+    const approvalUsers = confirmApprovers(w.nodes); const robot = w.nodes.find((n) => n.t === 'start')?.f.robot;
+    out.push({ key: `route:${w.id}`, workflowId: w.id, workflowName: w.name, fleet: w.fleet!, fleetLive: fleetLiveOf(w.fleet!), code: '', name: w.name, group: '', qty: 1, qtyEditable: false, approvalUsers, needsApproval: approvalUsers.length > 0, legs, loadFrom: legs.length, kind: 'route', robotType: robotTypeIdOf(robot) });
+  }
+  return out;
 }
 
 /** The materials an operator can request: every Material step of a visible workflow, with the name and group from Master Data. A code that is not in Master Data any more is left out. */

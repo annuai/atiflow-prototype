@@ -9,6 +9,11 @@ export const copy = {
     booked: (trip: string) => `Trip ${trip} booked`, bookedHint: 'A robot is being sent. Follow it in History.', noRobots: 'No robots on this fleet', noRobotsHint: 'This fleet has no robot on the floor right now, so a trip cannot be booked.',
     noStations: 'No stations on the map', noStationsHint: 'This fleet\'s map has no stations to book trips between.', loading: 'Loading the map…',
   },
+  routes: {
+    title: 'Trips', anyRobot: 'Any robot', subtitle: 'Trips your team has set up. Tap Book trip to send a robot.', book: 'Book trip', approval: 'Needs approval',
+    custom: { title: 'Custom trip', hint: 'Choose a robot and any two stations.', cta: 'Book a custom trip' }, back: 'Trips',
+    booked: (trip: string) => `Trip ${trip} booked`, sent: (trip: string) => `Trip ${trip} sent for approval`, sentHint: 'Another operator approves it, then a robot is sent. Follow it in History.',
+  },
   history: {
     title: 'History', subtitle: 'Your requests, your approvals and the trips you booked, in one list.',
     filters: { all: 'All', request: 'Requests', approval: 'Approvals', trip: 'Booked trips' }, kinds: { request: 'Request', approval: 'Approval', trip: 'Booked trip' },

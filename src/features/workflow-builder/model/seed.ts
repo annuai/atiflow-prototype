@@ -2,6 +2,7 @@ import { createNode, createStart } from './factory';
 import { defaultWorkflowName } from './names';
 import type { WfNode, Workflow, Workflows } from './types';
 import { FLEET_NAME } from '@/data/fleets';
+import { DEFAULT_ROBOT_TYPE, ROBOT_TYPE_LABELS } from '@/data/robotTypes';
 
 /** Starting workflows: one per seed fleet. */
 export function seedWorkflows(): Workflows {
@@ -42,6 +43,35 @@ export function sampleWorkflows(): Workflow[] {
     createNode('station', { action: 'Drop Off', station: s.drop }),
     createNode('end')] }));
 }
+/**
+ * Published sample workflows with NO material: a robot just runs from station to station (saved routes for the operator tablet). One needs a Tablet approval (vikram), the others none.
+ * They also show that Empty Container and other nodes can sit in such a workflow.
+ */
+const ROUTES: { id: string; name: string; fleet: string; robot: string; stations: string[]; requesters: string[]; approvers?: string[]; container?: boolean }[] = [
+  { id: 'w-route-1', name: 'Store run to Workstations', fleet: FLEET_NAME.lineSide, robot: 'Sherpa XT Lite', stations: ['STA-116', 'STA-107', 'STA-110'], requesters: ['rohan'] },
+  { id: 'w-route-2', name: 'Pallet Mover shuttle: Store to Workstation 3', fleet: FLEET_NAME.lineSide, robot: 'Pallet Mover', stations: ['STA-117', 'STA-105'], requesters: ['rohan'], approvers: ['vikram'], container: true },
+  { id: 'w-route-3', name: 'Preparation round', fleet: FLEET_NAME.assembly, robot: 'Sherpa XT Lite', stations: ['STA-116', 'STA-113', 'STA-114'], requesters: ['sneha'] },
+];
+export function routeSampleWorkflows(): Workflow[] {
+  return ROUTES.map((r) => ({ id: r.id, name: r.name, fleet: r.fleet, published: true, saved: true, nodes: [
+    createStart({ trigger: 'Manual', request: 'Tablet', robot: r.robot, users: r.requesters }),
+    ...(r.container ? [createNode('container')] : []),
+    ...r.stations.map((st, i) => createNode('station', { action: i === 0 ? 'Pick Up' : 'Drop Off', station: st })),
+    ...(r.approvers ? [createNode('confirm', { op: 'Tablet', users: r.approvers })] : []),
+    createNode('end')] }));
+}
+/**
+ * The Start step's Robot Type is a robot of the catalog. A value saved earlier that is not one (the old list had names such as "Sherpa Hitch" that match no robot) becomes the default robot,
+ * so a trip never waits for a robot type that does not exist.
+ */
+export function normaliseRobots(workflows: Workflows): Workflows {
+  const fix = (n: WfNode): WfNode => (n.t === 'start' && !ROBOT_TYPE_LABELS.includes(n.f.robot as string) ? { ...n, f: { ...n.f, robot: DEFAULT_ROBOT_TYPE.label } } : n);
+  const out: Workflows = {}; for (const [id, w] of Object.entries(workflows)) out[id] = w.nodes.some((n) => fix(n) !== n) ? { ...w, nodes: w.nodes.map(fix) } : w; return out;
+}
+/** Adds the sample routes that are missing (a list saved before they existed). */
+export function withRouteSamples(workflows: Workflows): Workflows {
+  const out = { ...workflows }; for (const w of routeSampleWorkflows()) if (!out[w.id]) out[w.id] = w; return out;
+}
 /** Workflows saved before requests existed: "Request from Tablet" became "Tablet". The sample workflows are added when missing. */
 export function upgradeToV5(workflows: Workflows): Workflows {
   const out: Workflows = {};
@@ -73,7 +103,7 @@ export function upgradeToV7(workflows: Workflows): Workflows {
   });
   const out: Workflows = {}; for (const [id, w] of Object.entries(workflows)) out[id] = { ...w, nodes: fix(w.nodes) };
   for (const s of sampleWorkflows()) out[s.id] = s;
-  return out;
+  return withRouteSamples(out);
 }
 
 let counter = 1;

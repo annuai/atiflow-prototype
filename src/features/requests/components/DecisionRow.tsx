@@ -11,7 +11,7 @@ export function DecisionRow({ d, now }: { d: Decision; now: number }) {
   return (
     <li className="flex flex-wrap items-center gap-3 rounded-xl border border-secondary bg-primary p-3">
       <div className="min-w-0 flex-1 basis-60">
-        <p className="font-semibold text-primary"><span className="text-secondary">{d.tripId}</span> · {d.code} · {d.name} <span className="font-normal text-tertiary">×{d.qty}</span></p>
+        <p className="font-semibold text-primary"><span className="text-secondary">{d.tripId}</span> · {d.code && `${d.code} · `}{d.name}{d.qty > 0 && <span className="font-normal text-tertiary"> ×{d.qty}</span>}</p>
         <p className="text-sm text-secondary">{copy.approve.decision.line(copy.approve.decision[d.outcome], d.by, d.step)}{d.note ? ` · ${d.note}` : ''}</p>
         <p className="text-xs text-tertiary">{time} · {timeAgo(d.at, now)} · {copy.approve.decision.requested(d.requestedByName)} · {d.requestId}</p>
       </div>

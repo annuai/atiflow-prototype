@@ -8,7 +8,7 @@ import { applySteps, parsePrompt } from './parsePrompt';
 import { defaultWorkflowName, workflowNameError } from './names';
 import { datasetStore, useDataset } from '@/data/dataset';
 import { prefillUsers } from './users';
-import { blankWorkflow, isBlankDraft, isKept, seedWorkflows, upgradeToV5, upgradeToV6, upgradeToV7 } from './seed';
+import { blankWorkflow, isBlankDraft, isKept, seedWorkflows, upgradeToV5, upgradeToV6, upgradeToV7, withRouteSamples, normaliseRobots } from './seed';
 import { clampMain, insertNode, listByKey, locate, moveNode, removeNode, updateField, type Problem } from './tree';
 import { publishProblem } from './validate';
 import type { FieldValue, ListKey, NodeTypeId, WfNode, Workflow, Workflows } from './types';
@@ -59,17 +59,18 @@ export const selectFleet = (s: WfState) => (s.current ? (s.workflows[s.current]?
 export const workflowsOfFleet = (workflows: Workflows, fleet: string) => Object.values(workflows).filter((w) => w.fleet === fleet);
 
 type Saved = { workflows: Workflows; current: string | null };
-function load(): Saved {
+function load(): Saved { const s = loadSaved(); return { ...s, workflows: normaliseRobots(s.workflows) }; }          // whatever was loaded: robot names that match no robot become the default robot
+function loadSaved(): Saved {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null');
     const keep = (ws: Workflows): Workflows => Object.fromEntries(Object.entries(ws).filter(([, w]) => isKept(w)));       // unsaved workflows do not survive a reload
-    if (raw?.workflows && typeof raw.workflows === 'object') { const workflows = keep(raw.workflows); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
+    if (raw?.workflows && typeof raw.workflows === 'object') { const workflows = normaliseRobots(withRouteSamples(keep(raw.workflows))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
     const v6 = JSON.parse(localStorage.getItem(KEY_V6) ?? 'null');         // v6: Confirm steps had an approval station, operators were mapped to stations
-    if (v6?.workflows && typeof v6.workflows === 'object') { const workflows = prefillUsers(upgradeToV7(keep(v6.workflows))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
+    if (v6?.workflows && typeof v6.workflows === 'object') { const workflows = normaliseRobots(prefillUsers(upgradeToV7(keep(v6.workflows)))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
     const v5 = JSON.parse(localStorage.getItem(KEY_V5) ?? 'null');         // v5: requestors were listed on the Start step
-    if (v5?.workflows && typeof v5.workflows === 'object') { const workflows = prefillUsers(upgradeToV7(upgradeToV6(keep(v5.workflows)))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
+    if (v5?.workflows && typeof v5.workflows === 'object') { const workflows = normaliseRobots(prefillUsers(upgradeToV7(upgradeToV6(keep(v5.workflows))))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
     const v4 = JSON.parse(localStorage.getItem(KEY_V4) ?? 'null');         // v4: placeholder User IDs and the "Request from Tablet" type
-    if (v4?.workflows && typeof v4.workflows === 'object') { const workflows = prefillUsers(upgradeToV7(upgradeToV6(upgradeToV5(keep(v4.workflows))))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
+    if (v4?.workflows && typeof v4.workflows === 'object') { const workflows = normaliseRobots(prefillUsers(upgradeToV7(upgradeToV6(upgradeToV5(keep(v4.workflows)))))); Object.values(workflows).forEach((w) => syncIds(w.nodes)); return { workflows, current: null }; }
     const v3 = JSON.parse(localStorage.getItem(KEY_V3) ?? 'null');         // v3: no saved flag; built workflows with a fleet count as saved
     if (v3?.workflows && Array.isArray(v3.fleetNames)) {
       const workflows = Object.fromEntries(Object.entries(v3.workflows as Workflows).filter(([, w]) => w.fleet && w.nodes.length > 2).map(([id, w]) => [id, { ...w, saved: true }]));
@@ -183,8 +184,8 @@ export const useWorkflow = <T,>(sel: (s: WfState) => T) => useStore(wfStore, sel
 /** Names of all fleets (re-renders only when the list changes). */
 export const useFleetNames = () => useDataset((s) => s.fleets.map((f) => f.name).join('|')).split('|').filter(Boolean);
 
-// a workflow list that was upgraded from an older version is saved in the new format straight away (not only after the next edit)
-try { if (localStorage.getItem(KEY) === null) localStorage.setItem(KEY, JSON.stringify({ workflows: wfStore.getState().workflows, current: null })); } catch { /* no storage (tests / private mode) */ }
+// the list as loaded (upgraded from an older version, old robot names replaced, sample routes added) is saved straight away, not only after the next edit
+try { localStorage.setItem(KEY, JSON.stringify({ workflows: wfStore.getState().workflows, current: null })); } catch { /* no storage (tests / private mode) */ }
 // persist workflows (not history/sim) shortly after any change
 let timer: ReturnType<typeof setTimeout> | undefined;
 wfStore.subscribe((s, p) => { if (s.workflows === p.workflows && s.current === p.current) return; clearTimeout(timer); timer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify({ workflows: s.workflows, current: s.current })); } catch { /* no storage (tests / private mode) */ } }, 250); });

@@ -23,8 +23,8 @@ function RequestRow({ r, who, now, onCancel }: { r: TripRequest; who: Person; no
     <li className="rounded-xl bg-secondary">
       <div className="flex flex-wrap items-center gap-3 p-3">
         <button type="button" className="flex min-w-0 flex-1 basis-56 items-center gap-3 text-left" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-          <span className="min-w-0 flex-1"><span className="block font-semibold text-primary">{r.name} <span className="font-normal text-tertiary">×{r.qty}</span></span>
-            <span className="block text-sm text-tertiary">{r.tripId && <><b className="font-semibold text-secondary">{r.tripId}</b> · </>}{r.code} · {r.workflowName}{r.robotId ? ` · ${r.robotId}` : ''}</span></span>
+          <span className="min-w-0 flex-1"><span className="block font-semibold text-primary">{r.name}{r.qty > 0 && <span className="font-normal text-tertiary"> ×{r.qty}</span>}</span>
+            <span className="block text-sm text-tertiary">{r.tripId && <><b className="font-semibold text-secondary">{r.tripId}</b> · </>}{r.code && `${r.code} · `}{r.workflowName}{r.robotId ? ` · ${r.robotId}` : ''}</span></span>
           {open ? <ChevronUp className="size-5 shrink-0 text-fg-quaternary" /> : <ChevronDown className="size-5 shrink-0 text-fg-quaternary" />}
         </button>
         <RequestStatusBadge status={r.status} size="lg" />

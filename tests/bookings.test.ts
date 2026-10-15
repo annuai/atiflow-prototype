@@ -5,6 +5,10 @@ import type { NavGraph, OrderUpdate, SiteLayout, TransportOrder } from '../src/c
 import { bookingError, canCancelBooking } from '../src/features/bookings/model/rules';
 import { bookingsStore } from '../src/features/bookings/model/store';
 import type { BookingInput } from '../src/features/bookings/model/types';
+import { routeItems, robotTypeIdOf, isRouteWorkflow } from '../src/features/requests/model/catalog';
+import { requestsStore } from '../src/features/requests/model/store';
+import { normaliseRobots, routeSampleWorkflows, sampleWorkflows } from '../src/features/workflow-builder/model/seed';
+import { createNode, createStart } from '../src/features/workflow-builder/model/factory';
 import { historyEntries } from '../src/features/operator-history/entries';
 import type { TripRequest } from '../src/features/requests/model/types';
 import { SEED_USERS } from '../src/features/auth/users';
@@ -61,5 +65,36 @@ describe('the consolidated history', () => {
 describe('access', () => {
   it('Book trip and History are in the operator preset (so every operator has them) and not for supervisors', () => {
     const op = (n: string) => toPublic(SEED_USERS.find((u) => u.username === n)!); expect(can(op('rohan'), 'operator.book-trip')).toBe(true); expect(can(op('sneha'), 'operator.history')).toBe(true); expect(can(op('arjun'), 'operator.book-trip')).toBe(false);
+  });
+});
+
+describe('saved routes (workflows with no material)', () => {
+  const fleetIdOf = (n: string) => ({ 'Line Side Fleet': 'line-side', 'Assembly Fleet': 'assembly' } as Record<string, string>)[n]; const fleetLiveOf = (n: string) => (n === 'Assembly Fleet' ? 'asrs' : 'line-side');
+  const who = (username: string, fleets: string[]) => ({ username, fleets }); const all = [...routeSampleWorkflows(), ...sampleWorkflows()];
+  it('a route is a published Tablet workflow with no Material step and at least one station, offered to the people listed in Start on their fleet', () => {
+    const r = routeItems(all, who('rohan', ['line-side']), fleetIdOf, fleetLiveOf); expect(r.map((i) => i.workflowId)).toEqual(['w-route-1', 'w-route-2']); // the material workflows are not routes
+    expect(r[0]).toMatchObject({ kind: 'route', qtyEditable: false, robotType: 'sherpa-xt-lite', legs: ['STA-116', 'STA-107', 'STA-110'], loadFrom: 3, needsApproval: false }); expect(r[1]).toMatchObject({ robotType: 'pallet-mover', needsApproval: true, approvalUsers: [['vikram']] });
+    expect(routeItems(all, who('sneha', ['assembly']), fleetIdOf, fleetLiveOf).map((i) => i.workflowId)).toEqual(['w-route-3']); expect(routeItems(all, who('vikram', ['line-side', 'assembly']), fleetIdOf, fleetLiveOf)).toEqual([]);
+    expect(routeItems(all, who('rohan', ['assembly']), fleetIdOf, fleetLiveOf)).toEqual([]);                                            // not on his fleet
+  });
+  it('a workflow with a Material step, no station, or not published is not a trip; every other node (Empty Container, Wait, If Logic, any Confirm) is allowed, and one station is enough', () => {
+    const base = routeSampleWorkflows()[0]; const withMat = { ...base, nodes: [...base.nodes.slice(0, 1), createNode('material', { code: 'DCP-1001' }), ...base.nodes.slice(1)] }; expect(isRouteWorkflow(withMat.nodes)).toBe(false);
+    const none = { ...base, nodes: [createStart({ request: 'Tablet', users: ['rohan'] }), createNode('end')] }; const one = { ...base, nodes: [createStart({ request: 'Tablet', users: ['rohan'] }), createNode('station', { station: 'STA-116' }), createNode('end')] }; const draft = { ...base, published: false };
+    const rich = { ...base, nodes: [...base.nodes.slice(0, 1), createNode('container'), createNode('wait'), createNode('logic'), createNode('confirm', { op: 'Dispatch Button' }), ...base.nodes.slice(1)] };
+    const ids = (ws: typeof all) => routeItems(ws, who('rohan', ['line-side']), fleetIdOf, fleetLiveOf).map((i) => i.workflowId); expect(ids([withMat])).toEqual([]); expect(ids([none])).toEqual([]); expect(ids([one])).toEqual(['w-route-1']); expect(ids([draft])).toEqual([]); expect(ids([rich])).toEqual(['w-route-1']);
+    expect(robotTypeIdOf('Sherpa Hitch')).toBeUndefined(); expect(robotTypeIdOf('Pallet Mover')).toBe('pallet-mover');
+  });
+  it('booking a route makes a request with no quantity: approved at once, or pending when a Tablet Confirm needs approval', () => {
+    requestsStore.getState().reset(); const [a, b] = routeItems(all, who('rohan', ['line-side']), fleetIdOf, fleetLiveOf);
+    requestsStore.getState().submit({ username: 'rohan', name: 'Rohan Mehta' }, [{ item: a, qty: 1 }], 1000); requestsStore.getState().submit({ username: 'rohan', name: 'Rohan Mehta' }, [{ item: b, qty: 1 }], 2000);
+    const rs = requestsStore.getState().requests; expect(rs.map((r) => [r.kind, r.qty, r.status, r.robotType])).toEqual([['route', 0, 'approved', 'sherpa-xt-lite'], ['route', 0, 'pending', 'pallet-mover']]); expect(rs[0].name).toBe('Store run to Workstations'); requestsStore.getState().reset();
+  });
+});
+
+describe('robot types saved in workflows', () => {
+  it('a Start step whose robot is not in the catalog (the old "Sherpa Hitch") becomes the default robot; real robots and other nodes are untouched', () => {
+    const w = (robot: string) => ({ id: 'w', name: 'x', fleet: 'Line Side Fleet', saved: true, nodes: [createStart({ robot }), createNode('end')] });
+    expect(normaliseRobots({ w: w('Sherpa Hitch') }).w.nodes[0].f.robot).toBe('Sherpa XT Lite'); expect(normaliseRobots({ w: w('Pallet Mover') }).w.nodes[0].f.robot).toBe('Pallet Mover'); expect(normaliseRobots({ w: w('Sherpa XT') }).w.nodes[0].f.robot).toBe('Sherpa XT');
+    const ok = { w: w('Sherpa XT Lite') }; expect(normaliseRobots(ok).w).toBe(ok.w);
   });
 });

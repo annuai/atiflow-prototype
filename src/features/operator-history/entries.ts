@@ -13,8 +13,8 @@ export interface HistoryEntry {
  */
 export function historyEntries(requests: TripRequest[], bookings: BookedTrip[], me: { username: string; name: string }): HistoryEntry[] {
   const out: HistoryEntry[] = [];
-  for (const r of requests) if (r.requestedBy === me.username) out.push({ key: `req:${r.id}`, kind: 'request', at: r.history.at(-1)?.at ?? r.createdAt, title: `${r.name} ×${r.qty}`, subtitle: `${r.tripId} · ${r.code} · ${r.workflowName}`, tripId: r.tripId, status: r.status });
-  for (const d of decisions(requests, me)) out.push({ key: `dec:${d.key}`, kind: 'approval', at: d.at, title: `${d.outcome === 'approved' ? 'Approved' : 'Rejected'} · ${d.name} ×${d.qty}`, subtitle: `${d.tripId} · requested by ${d.requestedByName}${d.step ? ` · approval ${d.step}` : ''}${d.note ? ` · ${d.note}` : ''}`, tripId: d.tripId, status: d.status, outcome: d.outcome });
+  for (const r of requests) if (r.requestedBy === me.username) out.push({ key: `req:${r.id}`, kind: 'request', at: r.history.at(-1)?.at ?? r.createdAt, title: r.qty > 0 ? `${r.name} ×${r.qty}` : r.name, subtitle: `${r.tripId} · ${r.code ? `${r.code} · ` : ''}${r.workflowName}`, tripId: r.tripId, status: r.status });
+  for (const d of decisions(requests, me)) out.push({ key: `dec:${d.key}`, kind: 'approval', at: d.at, title: `${d.outcome === 'approved' ? 'Approved' : 'Rejected'} · ${d.qty > 0 ? `${d.name} ×${d.qty}` : d.name}`, subtitle: `${d.tripId} · requested by ${d.requestedByName}${d.step ? ` · approval ${d.step}` : ''}${d.note ? ` · ${d.note}` : ''}`, tripId: d.tripId, status: d.status, outcome: d.outcome });
   for (const t of bookings) if (t.bookedBy === me.username) out.push({ key: `trip:${t.id}`, kind: 'trip', at: t.history.at(-1)?.at ?? t.createdAt, title: `${t.fromName} → ${t.toName}`, subtitle: `${t.tripId} · ${t.robotLabel}${t.robotId ? ` · ${t.robotId}` : ''}`, tripId: t.tripId, status: t.status, bookingId: t.id });
   return out.sort((a, b) => b.at - a.at || a.key.localeCompare(b.key));
 }

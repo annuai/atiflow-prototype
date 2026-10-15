@@ -7,7 +7,7 @@ import type { TripRequest } from './types';
  * Connects the requests to the fleet: approved requests become transport orders for the floor, the floor's reports come back as statuses.
  * Running while any operator page is on screen (one shared run). If the floor restarts, orders that were not finished are handed over again.
  */
-const orderOf = (r: TripRequest) => ({ id: r.id, tripId: r.tripId, fleetId: r.fleetLive, legs: r.legs, loadFrom: r.loadFrom, payload: { kind: r.name, qty: r.qty } });
+const orderOf = (r: TripRequest) => ({ id: r.id, tripId: r.tripId, fleetId: r.fleetLive, legs: r.legs, loadFrom: r.loadFrom, payload: { kind: r.name, qty: r.qty }, ...(r.robotType ? { robotModel: r.robotType } : {}) });          // a saved route carries nothing (loadFrom = after its last station)
 const handedOver = new Set<string>();
 
 function handOverAll() {

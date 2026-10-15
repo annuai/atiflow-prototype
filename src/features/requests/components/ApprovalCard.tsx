@@ -10,7 +10,7 @@ export function ApprovalCard({ r, now, onApprove, onReject }: { r: TripRequest; 
   const step = currentStep(r); const index = step ? r.approvals.indexOf(step) + 1 : 0;
   return (
     <article className="flex flex-col gap-3 rounded-2xl border border-secondary bg-primary p-4 shadow-xs">
-      <header><h3 className="text-lg font-semibold leading-snug text-primary">{r.name} <span className="font-normal text-tertiary">×{r.qty}</span></h3><p className="font-mono text-sm text-tertiary">{r.code}</p></header>
+      <header><h3 className="text-lg font-semibold leading-snug text-primary">{r.name}{r.qty > 0 && <span className="font-normal text-tertiary"> ×{r.qty}</span>}</h3>{r.code && <p className="font-mono text-sm text-tertiary">{r.code}</p>}</header>
       <div className="flex flex-wrap items-center gap-2">{r.group && <Badge size="md" color="gray">{r.group}</Badge>}<Badge size="md" color="warning">{r.tripId}</Badge><Badge size="md" color="gray">{r.id}</Badge></div>
       {step && <p className="text-sm font-medium text-secondary">{copy.approve.step(index, r.approvals.length)}</p>}
       <p className="text-sm text-secondary">{copy.approve.requestedBy(r.requestedByName, timeAgo(r.createdAt, now))}</p>
