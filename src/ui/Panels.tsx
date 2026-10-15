@@ -16,7 +16,7 @@ import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 import { ZoomBar } from './ZoomBar';
 import { ProgressBar } from '@/components/base/progress-indicators/progress-indicators';
-import { ChevronDown, ChevronRight, Home01, Minus, Plus, Users01, ChevronUp, XClose } from '@untitledui/icons';
+import { ChevronDown, ChevronRight, Home01, Users01, ChevronUp, XClose } from '@untitledui/icons';
 import type { NavGraph, RobotTelemetry } from '../core/types';
 import { locateTarget } from '@/features/live-floor/locate';
 

@@ -1,5 +1,5 @@
 import { Server01 } from '@untitledui/icons';
-import { EmptyState, NoResults } from '@/components/data/EmptyState';
+import { EmptyState } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { Flag01 } from '@untitledui/icons';
 import { Checkbox } from '@/components/base/checkbox/checkbox';

@@ -97,7 +97,7 @@ export function MapEditorPage() {
   };
   useEffect(() => {
     const key = (e: KeyboardEvent) => { const t = e.target as HTMLElement; if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable) return;
-      if ((e.metaKey || e.ctrlKey) && isDraft && mode === 'design' && (e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) { e.preventDefault(); (e.key.toLowerCase() === 'y' || e.shiftKey) ? redo() : undo(); return; }
+      if ((e.metaKey || e.ctrlKey) && isDraft && mode === 'design' && (e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) { e.preventDefault(); if (e.key.toLowerCase() === 'y' || e.shiftKey) redo(); else undo(); return; }
       if (e.key === 'Escape' && tool.kind !== 'select') cancel(); else if (e.key === 'Enter' && drawMode(tool) === 'many') finish(); };
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
   });                                                                                                           // (re-registered each render: it reads the current drawing and tool)

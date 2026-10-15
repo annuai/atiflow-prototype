@@ -59,7 +59,7 @@ export function useConfiguratorNav(): NavModel {
 
 /** Top-bar search for every configurator page: fleets, robots, hardware (open their page) and, on the builder, the nodes of the open workflow. */
 export function configuratorHits(q: string): SearchHit[] {
-  const ql = q.toLowerCase(); const s = wfStore.getState(); const d = deviceStore.getState();
+  const ql = q.toLowerCase(); const d = deviceStore.getState();
   const devices = (['robot', 'hardware'] as const).filter((id) => canNow(`configurator.${id === 'robot' ? 'robots' : 'hardware'}`)).flatMap((id) => d[id].filter((x) => (nameOf(x) + ' ' + KINDS[id].typeOf(x)).toLowerCase().includes(ql)).slice(0, 5)
     .map((x) => ({ kind: KINDS[id].singular, title: nameOf(x), sub: KINDS[id].typeOf(x), to: `${WORKFLOWS_PATH}/${KINDS[id].route}/${encodeURIComponent(nameOf(x))}` })));
   return [

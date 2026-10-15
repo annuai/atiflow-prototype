@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Download01, LifeBuoy01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { EmptyState } from '@/components/data/EmptyState';
@@ -26,7 +26,7 @@ const download = (name: string, text: string) => { const a = document.createElem
 
 /** Robots that call for help, for the person on the floor: take a call, go to the robot, fix it, resolve it. The same page for supervisors and operators (each in their own shell). */
 export function ActionCenterPage() {
-  const operator = useLocation().pathname.startsWith('/operator'); const navigate = useNavigate(); const { user, can } = useAccess(); const me = user?.name ?? '';
+  const navigate = useNavigate(); const { user, can } = useAccess(); const me = user?.name ?? '';
   useActionCenterRunning(); const { active, log, mine, open } = useCalls(); const phase = useLoadPhase(!useFeedReady());
   const [tab, setTab] = useState<Tab>('open'); const [expanded, setExpanded] = useState<string | null>(null); const [resolving, setResolving] = useState<Call | null>(null); const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const t = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(t); }, []);

@@ -13,7 +13,6 @@ const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies(
 const src = await io.read(inp); const mats = src.getRoot().listMaterials();
 // gather world-space triangles per group
 const groups = {}; // name -> {pos:[], idx:[]}
-const W = cfg.worldRot; // optional [axisMap]
 function add(g, p, wm, a, ind){ const G = groups[g] ??= {pos:[], idx:[]}; const base = G.pos.length/3; const v=[0,0,0];
   for(let i=0;i<a.getCount();i++){ a.getElement(i,v); G.pos.push(wm[0]*v[0]+wm[4]*v[1]+wm[8]*v[2]+wm[12], wm[1]*v[0]+wm[5]*v[1]+wm[9]*v[2]+wm[13], wm[2]*v[0]+wm[6]*v[1]+wm[10]*v[2]+wm[14]); }
   const n = ind ? ind.getCount() : a.getCount(); for(let i=0;i<n;i++) G.idx.push(base + (ind ? ind.getScalar(i) : i)); }
@@ -40,7 +39,7 @@ const out = new Document(); const buf = out.createBuffer(); const scene = out.cr
 // transform: axis map -> engine frame (+X forward, +Y up, Z across), metres, ground at y=0, centred on footprint
 const fwd = cfg.forward, up = cfg.up; // e.g. "-z", "+y"
 const ax = s => ({i:'xyz'.indexOf(s[1]), s: s[0]==='-'?-1:1});
-const F = ax(fwd), U = ax(up); const R = [0,1,2].find(i=>i!==F.i && i!==U.i); const cross = (F.i+1)%3===U.i ? 1 : -1; // handedness fix
+const F = ax(fwd), U = ax(up); const R = [0,1,2].find(i=>i!==F.i && i!==U.i);
 // right-handed: X=fwd, Y=up, Z = X cross Y => compute across axis sign so determinant +1
 function det(sf,su,sr){ const m=[[0,0,0],[0,0,0],[0,0,0]]; m[0][F.i]=sf; m[1][U.i]=su; m[2][R]=sr; return m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]); }
 const sr = det(F.s,U.s,1) > 0 ? 1 : -1;
@@ -50,7 +49,7 @@ const colorOf = cfg.colors;
 for (const [name, G] of Object.entries(groups)) {
   const P = new Float32Array(G.pos.length);
   for (let i=0;i<G.pos.length;i+=3){ const p=[G.pos[i],G.pos[i+1],G.pos[i+2]]; P[i]=(p[F.i]-cF)*F.s*k; P[i+1]=(p[U.i]-base)*U.s*k; P[i+2]=(p[R]-cR)*sr*k; }
-  const idx = new Uint32Array(G.idx); const flip = false;
+  const idx = new Uint32Array(G.idx);
   const acc = out.createAccessor().setType('VEC3').setArray(P).setBuffer(buf); const ia = out.createAccessor().setType('SCALAR').setArray(idx).setBuffer(buf);
   const mat = out.createMaterial(name).setBaseColorFactor(colorOf[name] ?? (name.startsWith('mat') ? mats[+name.slice(3)].getBaseColorFactor() : [0.5,0.5,0.5,1])).setRoughnessFactor(0.6).setMetallicFactor(0);
   const prim = out.createPrimitive().setAttribute('POSITION', acc).setIndices(ia).setMaterial(mat);

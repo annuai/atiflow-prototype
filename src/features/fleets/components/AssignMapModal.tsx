@@ -1,5 +1,5 @@
 import { MapThumbnail } from '@/features/maps/components/MapThumbnail';
-import { EmptyState, NoResults } from '@/components/data/EmptyState';
+import { EmptyState } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { Map01 } from '@untitledui/icons';
 import { Radio, RadioGroup } from 'react-aria-components';

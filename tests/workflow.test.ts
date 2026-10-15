@@ -1,4 +1,5 @@
 import { datasetStore } from '../src/data/dataset';
+import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { blankWorkflow, isBlankDraft, seedWorkflows } from '../src/features/workflow-builder/model/seed';
 import { createNode } from '../src/features/workflow-builder/model/factory';
@@ -117,7 +118,7 @@ describe('workflow names', () => {
 });
 
 describe('stations come from the fleet\'s map', () => {
-  const nav = JSON.parse(require('node:fs').readFileSync('public/sites/ecc/nav.json', 'utf8'));
+  const nav = JSON.parse(readFileSync('public/sites/ecc/nav.json', 'utf8'));
   it('a fleet offers the work stations of its lane map (never parking or chargers); the Assembly fleet has its own area plus the shared east strip', async () => {
     const { fleetStations } = await import('../src/features/workflow-builder/model/stations'); const map = { site: {} as never, nav };
     const line = fleetStations('Line Side Fleet', map).map((s) => s.id), asm = fleetStations('Assembly Fleet', map).map((s) => s.id);

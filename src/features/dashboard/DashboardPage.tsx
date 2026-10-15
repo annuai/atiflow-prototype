@@ -6,7 +6,7 @@ import { Button } from '@/components/base/buttons/button';
 import { useLoadPhase } from '@/components/skeleton/Skeleton';
 import { useApp } from '@/core/store';
 import { useAuth } from '@/features/auth/authStore';
-import { LIVE_FLOOR_PATH, liveHits, useLiveNav } from '@/features/live-floor/liveNav';
+import { LIVE_FLOOR_PATH } from '@/features/live-floor/liveNav';
 import { notify } from '@/ui/toast';
 import { ActivityCard } from './components/ActivityCard';
 import { BatteryCard } from './components/BatteryCard';

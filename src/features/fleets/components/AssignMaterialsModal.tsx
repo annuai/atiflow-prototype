@@ -1,5 +1,5 @@
 import { Package } from '@untitledui/icons';
-import { EmptyState, NoResults } from '@/components/data/EmptyState';
+import { EmptyState } from '@/components/data/EmptyState';
 import { useMemo, useState } from 'react';
 import { PackagePlus } from '@untitledui/icons';
 import { SearchPrefixFilter } from '@/components/data/SearchPrefixFilter';

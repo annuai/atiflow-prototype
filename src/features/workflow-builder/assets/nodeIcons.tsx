@@ -35,7 +35,7 @@ export const AntennaIcon = ({ size = 24, ...rest }: P) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" {...rest}><path d="M17.5 8C17.5 8 19 9.5 19 12C19 14.5 17.5 16 17.5 16" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M20.5 5C20.5 5 23 7.5 23 12C23 16.5 20.5 19 20.5 19" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M6.5 8C6.5 8 5 9.5 5 12C5 14.5 6.5 16 6.5 16" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3.5 5C3.5 5 1 7.5 1 12C1 16.5 3.5 19 3.5 19" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" fill="#262626" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
 );
 
-export const ArrowIcon = ({ size = 28, ...rest }: P) => (
+export const ArrowIcon = ({ size: _size = 28, ...rest }: P) => (
   <svg width="28" height="14" viewBox="0 0 30 15" fill="none" aria-hidden="true" {...rest}><path d="M1 6.36328C0.447715 6.36328 0 6.811 0 7.36328C0 7.91557 0.447715 8.36328 1 8.36328V7.36328V6.36328ZM29.7071 8.07039C30.0976 7.67986 30.0976 7.0467 29.7071 6.65617L23.3431 0.292213C22.9526 -0.0983109 22.3195 -0.0983109 21.9289 0.292213C21.5384 0.682738 21.5384 1.3159 21.9289 1.70643L27.5858 7.36328L21.9289 13.0201C21.5384 13.4107 21.5384 14.0438 21.9289 14.4343C22.3195 14.8249 22.9526 14.8249 23.3431 14.4343L29.7071 8.07039ZM1 7.36328V8.36328H29V7.36328V6.36328H1V7.36328Z" fill="#1AB2A7"/></svg>
 );
 
@@ -47,22 +47,22 @@ export const Menu12Icon = ({ size = 12, ...rest }: P) => (
   <svg width={size} height={size} viewBox="0 0 12 12" fill="none" {...rest}><path fillRule="evenodd" clipRule="evenodd" d="M1.125 2.5C1.125 2.29289 1.29289 2.125 1.5 2.125H10.5C10.7071 2.125 10.875 2.29289 10.875 2.5C10.875 2.70711 10.7071 2.875 10.5 2.875H1.5C1.29289 2.875 1.125 2.70711 1.125 2.5Z" fill="black"/><path fillRule="evenodd" clipRule="evenodd" d="M1.125 6C1.125 5.79289 1.29289 5.625 1.5 5.625H10.5C10.7071 5.625 10.875 5.79289 10.875 6C10.875 6.20711 10.7071 6.375 10.5 6.375H1.5C1.29289 6.375 1.125 6.20711 1.125 6Z" fill="black"/><path fillRule="evenodd" clipRule="evenodd" d="M1.125 9.5C1.125 9.29289 1.29289 9.125 1.5 9.125H10.5C10.7071 9.125 10.875 9.29289 10.875 9.5C10.875 9.70711 10.7071 9.875 10.5 9.875H1.5C1.29289 9.875 1.125 9.70711 1.125 9.5Z" fill="black"/></svg>
 );
 
-export const CheckIcon = ({ size = 10, ...rest }: P) => (
+export const CheckIcon = ({ size: _size = 10, ...rest }: P) => (
   <svg width="10" height="10" viewBox="0 0 12 12" fill="none" {...rest}><path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/></svg>
 );
 
-export const Plus16Icon = ({ size = 16, ...rest }: P) => (
+export const Plus16Icon = ({ size: _size = 16, ...rest }: P) => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" {...rest}><path d="M7.99992 3.33398V12.6673M3.33325 8.00065H12.6666" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
 );
 
-export const Plus20Icon = ({ size = 20, ...rest }: P) => (
+export const Plus20Icon = ({ size: _size = 20, ...rest }: P) => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" {...rest}><path d="M10.0001 4.16602V15.8327M4.16675 9.99935H15.8334" stroke="#A3A3A3" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/></svg>
 );
 
-export const OkIcon = ({ size = 16, ...rest }: P) => (
+export const OkIcon = ({ size: _size = 16, ...rest }: P) => (
   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" {...rest}><path d="M6.25008 9.99935L8.75008 12.4993L13.7501 7.49935M18.3334 9.99935C18.3334 14.6017 14.6025 18.3327 10.0001 18.3327C5.39771 18.3327 1.66675 14.6017 1.66675 9.99935C1.66675 5.39698 5.39771 1.66602 10.0001 1.66602C14.6025 1.66602 18.3334 5.39698 18.3334 9.99935Z" stroke="#4DC3BA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
 );
 
-export const ErrIcon = ({ size = 16, ...rest }: P) => (
+export const ErrIcon = ({ size: _size = 16, ...rest }: P) => (
   <svg width="16" height="16" viewBox="0 0 12 12" fill="none" {...rest}><path fillRule="evenodd" clipRule="evenodd" d="M4.32049 4.32062C4.46694 4.17417 4.70438 4.17417 4.85082 4.32062L5.99987 5.46967L7.14892 4.32062C7.29537 4.17417 7.5328 4.17417 7.67925 4.32062C7.8257 4.46707 7.8257 4.70451 7.67925 4.85095L6.5302 6L7.67925 7.14905C7.8257 7.29549 7.8257 7.53293 7.67925 7.67938C7.5328 7.82583 7.29537 7.82583 7.14892 7.67938L5.99987 6.53033L4.85082 7.67938C4.70438 7.82583 4.46694 7.82583 4.32049 7.67938C4.17405 7.53293 4.17405 7.2955 4.32049 7.14905L5.46954 6L4.32049 4.85095C4.17405 4.7045 4.17405 4.46707 4.32049 4.32062Z" fill="#DC2626"/><path fillRule="evenodd" clipRule="evenodd" d="M6 1.375C3.44568 1.375 1.375 3.44568 1.375 6C1.375 8.55432 3.44568 10.625 6 10.625C8.55432 10.625 10.625 8.55432 10.625 6C10.625 3.44568 8.55432 1.375 6 1.375ZM0.625 6C0.625 3.03147 3.03147 0.625 6 0.625C8.96853 0.625 11.375 3.03147 11.375 6C11.375 8.96853 8.96853 11.375 6 11.375C3.03147 11.375 0.625 8.96853 0.625 6Z" fill="#DC2626"/></svg>
 );

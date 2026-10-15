@@ -2,16 +2,18 @@ import { createStore } from 'zustand/vanilla';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
 import { tripIds, tripNumber } from '@/core/tripIds';
-import { createDocument, localBackend } from '@/data/storage';
+import { createValidatedDocument, localBackend } from '@/data/storage';
+import { log } from '@/platform';
 import { isAllowedNext } from '@/features/requests/model/rules';
 import type { RequestStatus } from '@/features/requests/model/types';
 import { bookingError, canCancelBooking } from './rules';
+import { BookingsDocumentSchema } from './schema';
 import type { BookedTrip, BookingInput } from './types';
 
 /** Every booked trip (history included), saved in this browser (`StorageBackend`: a server later = another backend). Handing trips to the fleet and taking updates back is `bridge.ts`. */
 interface Saved { trips: BookedTrip[]; seq: number }
 const KEY = 'atiflow.bookings.v1';
-const doc = createDocument<Saved>(localBackend(KEY), () => ({ trips: [], seq: 0 }), (v): v is Saved => !!v && Array.isArray((v as Saved).trips) && typeof (v as Saved).seq === 'number');
+const doc = createValidatedDocument({ backend: localBackend(KEY), schema: BookingsDocumentSchema, seed: (): Saved => ({ trips: [], seq: 0 }), onInvalid: (why) => log.child('bookings').warn(`saved trips ignored: ${why}`) });
 
 export interface BookingsState extends Saved {
   /** Book a trip: it gets its trip id now and waits for a robot (Approved). Returns the trip, or null with nothing booked when the booking is not valid. */

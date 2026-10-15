@@ -1,5 +1,5 @@
 import { Server01 } from '@untitledui/icons';
-import { EmptyState, NoResults } from '@/components/data/EmptyState';
+import { EmptyState } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { Badge } from '@/components/base/badges/badges';
 import { DataTable, type Column } from '@/components/data/DataTable';

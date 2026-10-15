@@ -57,7 +57,7 @@ export class FleetSim {
   constructor(nav: NavGraph, private siteId: string, count = 14, seed = 7, roster?: RosterEntry[], private opts: SimOptions = {}) {
     this.graph = new LaneGraph(nav); this.rand = rng(seed); this.faultRand = rng(seed ^ 0x9e3779b9);
     nav.trafficZones.forEach((z) => this.zones.set(z.id, { occ: new Set(), waiters: new Set() }));
-    const used = new Set<string>(); const xAt = (x: number, y: number) => this.graph.intersections.near(x, y);
+    const used = new Set<string>();
     for (let i = 0; i < (roster ? roster.length : count); i++) {
       const fleet = roster ? roster[i].fleetId : nav.fleets[i % nav.fleets.length].id;
       const spot = (s: NavGraph['stations'][number]) => this.graph.nodes.get(s.nodeId)!;
@@ -190,7 +190,7 @@ export class FleetSim {
       for (const q of mine) for (let i = 0; i < plan.pts.length; i++) if (plan.cum[i] >= q.s - 0.3 && plan.cum[i] <= q.exitS + 0.3 && plan.laneAt[i]) set.add(plan.laneAt[i]!); x.lanes = [...set]; }
     // Where to wait: at the usual distance before the first permit, but never inside the area of some other intersection (a waiting robot there would be in the way of the robots that hold it).
     out.forEach((e, i) => {
-      const floor = i ? out[i - 1].exitS + 0.5 : 0; let q = Math.max(0, e.s - HOLD); const free = (x: number) => { const a = pointAt(plan, Math.max(0, x)), r = pointAt(plan, Math.max(0, x - 1)); return !this.graph.intersections.near(a.x, a.y).length && !this.graph.intersections.near(r.x, r.y).length; };
+      const floor = i ? out[i - 1].exitS + 0.5 : 0; const q = Math.max(0, e.s - HOLD); const free = (x: number) => { const a = pointAt(plan, Math.max(0, x)), r = pointAt(plan, Math.max(0, x - 1)); return !this.graph.intersections.near(a.x, a.y).length && !this.graph.intersections.near(r.x, r.y).length; };
       let h = q; while (h > floor && !free(h)) h -= 0.3; e.hold = free(h) || h > floor ? Math.max(0, h) : q;
     });
     return out;
@@ -230,7 +230,7 @@ export class FleetSim {
   private takeEntry(b: Bot, e: Entry): { ok: boolean; zone: string | null } {
     const nav = this.graph.nav; const holding = b.locks.size > 0 || b.holds.size > 0;      // a robot that already holds permits is never held back by the queue: it must be able to finish and give them back
     if (b.ticketFor !== e) { b.ticketFor = e; b.ticket = this.time; }
-    const xs = this.graph.intersections; const waits = new Set<string>();
+    const waits = new Set<string>();
     const clash = (_id: string, mine: string[] | undefined, other: string[] | undefined) => !(mine?.length && other?.length && mine.every((a) => other.includes(a)));      // only robots on the very same lanes may share an intersection (they just follow each other)
     const cap = (id: string) => nav.trafficZones.find((z) => z.id === id)!.capacity;
     const zoneFull = (id: string) => this.zones.get(id)!.occ.size >= cap(id);

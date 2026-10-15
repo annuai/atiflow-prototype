@@ -9,7 +9,7 @@ import { defaultWorkflowName, workflowNameError } from './names';
 import { datasetStore, useDataset } from '@/data/dataset';
 import { prefillUsers } from './users';
 import { blankWorkflow, isBlankDraft, isKept, seedWorkflows, upgradeToV5, upgradeToV6, upgradeToV7, withRouteSamples, normaliseRobots } from './seed';
-import { clampMain, insertNode, listByKey, locate, moveNode, removeNode, updateField, type Problem } from './tree';
+import { insertNode, locate, moveNode, removeNode, updateField, type Problem } from './tree';
 import { publishProblem } from './validate';
 import type { FieldValue, ListKey, NodeTypeId, WfNode, Workflow, Workflows } from './types';
 

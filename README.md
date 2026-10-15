@@ -14,6 +14,7 @@ npm install
 npm run dev      # http://localhost:5173 (also served on the LAN)
 npm test         # vitest: nav, rules, simulator, auth, workflows, devices, master data, fleets
 npm run build    # type check + production build
+npm run check    # everything CI runs: types, lint ratchet, import rules, format, tests
 ```
 
 ## Sign in
@@ -65,3 +66,8 @@ Open a site with `?site=<id>`. The fleet areas, forbidden zones and traffic zone
 - Features without a design show a "isn't part of this prototype" toast.
 
 `CLAUDE.md` is the detailed architecture and decision log; read it before changing the system.
+
+## Engineering
+
+Quality gates, import rules, runtime configuration (`public/config.json` and `VITE_*` variables), logging and error reporting are described in [`docs/architecture/foundations.md`](docs/architecture/foundations.md). The architecture audit and the plan for wiring real systems (Fleet Manager, Deployment Manager) are in [`docs/architecture/audit.md`](docs/architecture/audit.md); decisions are in [`docs/adr`](docs/adr). Deploy: it is a static single-page app (`npm run build`, serve `dist/` with a fallback to `index.html`, put environment settings in `config.json` next to it).
+

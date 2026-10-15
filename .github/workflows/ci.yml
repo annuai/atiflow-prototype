@@ -1,0 +1,25 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - name: Types
+        run: npm run typecheck
+      - name: Lint (errors fail; warnings may not grow)
+        run: npm run lint:ratchet
+      - name: Import rules (new layer violations fail)
+        run: npm run check:imports
+      - name: Formatting
+        run: npm run format:check
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npx vite build

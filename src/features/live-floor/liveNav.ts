@@ -15,7 +15,7 @@ export const DASHBOARD_PATH = '/supervisor/dashboard', LIVE_FLOOR_PATH = '/super
 
 /** Sidebar content of the supervisor area: Dashboard and Live Floor are pages (the URL decides which one is highlighted); the fleet items filter the Live Floor. */
 export function useLiveNav(): NavModel {
-  const fleets = useVisibleFleets().map((f) => ({ id: f.liveId ?? f.id, name: f.name })), navSel = useApp((s) => s.navSel), events = useApp((s) => s.events);
+  const fleets = useVisibleFleets().map((f) => ({ id: f.liveId ?? f.id, name: f.name })), navSel = useApp((s) => s.navSel);
   const navigate = useNavigate(); const path = useLocation().pathname; const onLive = path === LIVE_FLOOR_PATH;
   const st = store.getState(); const unread = useUnreadCount();
   const pick = (sel: string, fleet: string) => () => { st.setNav(sel); st.setFleet(fleet); if (!onLive) navigate(LIVE_FLOOR_PATH); };

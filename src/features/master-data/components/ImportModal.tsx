@@ -28,7 +28,7 @@ export function useImportFlow() {
 interface Props { flow: FlowState; dispatch(a: Parameters<typeof flowReducer>[1]): void; source?: MaterialSource }
 
 export function ImportModal({ flow, dispatch, source = mockErp }: Props) {
-  const materials = useMasterData((s) => s.materials); const groups = useMasterData((s) => s.groups);
+  const materials = useMasterData((s) => s.materials);
   const job = useImportJob((s) => s);
   // state that must survive Back / Continue
   const [picked, setPicked] = useState<{ codes: Set<string>; rows: Map<string, ErpRow> }>({ codes: new Set(), rows: new Map() });

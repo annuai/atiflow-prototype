@@ -7,7 +7,7 @@ export type ParseOutcome = { ok: true; rows: IncomingMaterial[] } | { ok: false;
 /** Minimal RFC-4180 CSV reader: quoted cells, escaped quotes, CRLF, BOM. */
 export function parseCsv(text: string): string[][] {
   const out: string[][] = []; let row: string[] = []; let cell = ''; let quoted = false;
-  const src = text.replace(/^﻿/, '');
+  const src = text.replace(/^\uFEFF/, '');
   for (let i = 0; i < src.length; i++) {
     const ch = src[i];
     if (quoted) { if (ch === '"') { if (src[i + 1] === '"') { cell += '"'; i++; } else quoted = false; } else cell += ch; }

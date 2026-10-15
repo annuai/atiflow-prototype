@@ -1,0 +1,6 @@
+{
+  "environment": "development",
+  "dataMode": "dummy",
+  "logLevel": "info",
+  "features": {}
+}

@@ -7,7 +7,7 @@ import { Input } from '@/components/base/input/input';
 import { Label } from '@/components/base/input/label';
 import { FormField } from '@/components/form/FormField';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
-import { assignableRoles, can, canDeleteUser, isFleetScoped, isCustomised, roleById, ROLES, USERS_PATH, type AccessProfile, type RoleId } from '@/features/access';
+import { assignableRoles, canDeleteUser, isFleetScoped, isCustomised, roleById, ROLES, USERS_PATH, type AccessProfile, type RoleId } from '@/features/access';
 import { useAuth } from '@/features/auth/authStore';
 import { toPublic, userDirectory, useUsers } from '@/features/auth/userDirectory';
 import { notify } from '@/ui/toast';

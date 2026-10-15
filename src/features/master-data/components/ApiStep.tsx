@@ -1,4 +1,4 @@
-import { EmptyState, NoResults } from '@/components/data/EmptyState';
+import { NoResults } from '@/components/data/EmptyState';
 import { useEffect, useMemo, useState } from 'react';
 import { SearchPrefixFilter } from '@/components/data/SearchPrefixFilter';
 import { copy } from '../copy';

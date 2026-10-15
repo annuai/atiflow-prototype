@@ -1,4 +1,4 @@
-import { EmptyState, NoResults } from '@/components/data/EmptyState';
+import { NoResults } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Plus, SearchLg } from '@untitledui/icons';

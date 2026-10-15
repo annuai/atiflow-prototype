@@ -24,7 +24,7 @@ export function WorkflowCanvas({ mapOpen, setMapOpen, docked }: { mapOpen: boole
   // keyboard: Delete removes the selected node; Ctrl/Cmd+Z undo, +Shift redo
   useEffect(() => {
     const k = (e: KeyboardEvent) => { const typing = (e.target as HTMLElement).closest('input, textarea, [role=combobox], [role=listbox]'); const s = wfStore.getState();
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); e.shiftKey ? s.redo() : s.undo(); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); if (e.shiftKey) s.redo(); else s.undo(); }
       else if ((e.key === 'Delete' || e.key === 'Backspace') && s.selected && !typing) { e.preventDefault(); s.removeNode(s.selected); } };
     document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k);
   }, []);

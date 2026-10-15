@@ -215,7 +215,7 @@ export class Engine {
   applyFilter(fleetId: string, query: string) {
     void query;                                                  // the bottom search box locates a robot or station; it no longer hides the others
     this.rules?.setFleet(fleetId);
-    this.robots.forEach((r, id) => { const t = r.t; r.group.visible = store.getState().layers.robots && (!t || ((fleetId === 'all' || t.fleetId === fleetId))); });
+    this.robots.forEach((r) => { const t = r.t; r.group.visible = store.getState().layers.robots && (!t || ((fleetId === 'all' || t.fleetId === fleetId))); });
   }
   private onSelect() {
     const id = store.getState().selectedId; this.robots.forEach((r, k) => (r.halo.visible = k === id));
@@ -273,7 +273,7 @@ export class Engine {
   private applyWalkLook() { this.camera.rotation.set(this.walk.pitch, this.walk.yaw, 0, 'YXZ'); }
   private onLock = () => { if (!document.pointerLockElement && this.mode === 'walk') store.getState().setCameraMode('orbit'); };
   private onLook = (e: MouseEvent) => { if (this.mode !== 'walk' || !document.pointerLockElement) return; this.walk.yaw -= e.movementX * 0.0022; this.walk.pitch = Math.max(-1.2, Math.min(1.2, this.walk.pitch - e.movementY * 0.0022)); this.applyWalkLook(); };
-  private onKey = (e: KeyboardEvent) => { if ((e.target as HTMLElement)?.tagName === 'INPUT') return; e.type === 'keydown' ? this.keys.add(e.code) : this.keys.delete(e.code); if (e.code === 'Escape' && this.mode === 'follow') store.getState().setCameraMode('orbit'); };
+  private onKey = (e: KeyboardEvent) => { if ((e.target as HTMLElement)?.tagName === 'INPUT') return; if (e.type === 'keydown') this.keys.add(e.code); else this.keys.delete(e.code); if (e.code === 'Escape' && this.mode === 'follow') store.getState().setCameraMode('orbit'); };
   flyTo(pos: THREE.Vector3, target: THREE.Vector3, dur = 1) { if (this.fovAnim) this.fovAnim.F1 = (pos.distanceTo(target) / this.kTarget) * Math.tan(THREE.MathUtils.degToRad(FOV_3D / 2)); this.fly = { t: 0, dur, p0: this.camera.position.clone(), p1: pos, t0: this.controls.target.clone(), t1: target }; }
   home() { store.getState().setZone(null); store.getState().select(null); store.getState().setCameraMode('orbit'); this.flyTo(this.homePos.clone(), this.homeTarget.clone()); }
   zoomBy(f: number) { const o = this.camera.position.clone().sub(this.controls.target).multiplyScalar(f); const L = THREE.MathUtils.clamp(o.length(), this.controls.minDistance, this.controls.maxDistance); this.camera.position.copy(this.controls.target).add(o.setLength(L)); }

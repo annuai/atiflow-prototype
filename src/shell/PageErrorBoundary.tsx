@@ -1,12 +1,13 @@
 import { Component, type ReactNode } from 'react';
 import { AlertCircle } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
+import { reportError } from '@/platform';
 
 /** A page that fails to draw must not leave a blank screen: say so, and offer to try again. (Keyed by the page, so moving to another page starts fresh.) */
 export class PageErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
-  componentDidCatch(error: unknown) { console.error('Page failed to draw', error); }
+  componentDidCatch(error: unknown) { reportError(error, { where: 'page' }); }
   render() {
     if (!this.state.failed) return this.props.children;
     return (

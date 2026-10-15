@@ -1,7 +1,7 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Globe01, Link03 } from '@untitledui/icons';
 import { Tabs } from '@/components/application/tabs/tabs';
-import { configuratorHits, useConfiguratorNav, SETTINGS_PATH } from '@/features/configurator/configuratorNav';
+import { SETTINGS_PATH } from '@/features/configurator/configuratorNav';
 import { ConnectionsPanel } from './components/ConnectionsPanel';
 import { GeneralPanel } from './components/GeneralPanel';
 import { copy } from './copy';

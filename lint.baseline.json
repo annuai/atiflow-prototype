@@ -1,0 +1,15 @@
+{
+  "total": 97,
+  "rules": {
+    "@typescript-eslint/no-explicit-any": 1,
+    "complexity": 4,
+    "no-console": 1,
+    "no-restricted-globals": 32,
+    "react-hooks/exhaustive-deps": 10,
+    "react-hooks/globals": 2,
+    "react-hooks/purity": 5,
+    "react-hooks/refs": 25,
+    "react-hooks/set-state-in-effect": 15,
+    "react-hooks/use-memo": 2
+  }
+}

@@ -1,5 +1,5 @@
 import { Grid01 } from '@untitledui/icons';
-import { EmptyState, NoResults } from '@/components/data/EmptyState';
+import { EmptyState } from '@/components/data/EmptyState';
 import { useEffect, useMemo, useState } from 'react';
 import { useFleetOptions } from '@/components/data/FleetSelect';
 import { useFleets } from '@/features/fleets/model/store';

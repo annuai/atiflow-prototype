@@ -9,7 +9,7 @@ import { SettingsRow } from '@/components/data/SettingsRow';
 import { useVisibleFleets } from '@/features/access/useFleetScope';
 import { WORKSPACES, can } from '@/features/access';
 import { useAuth } from '@/features/auth/authStore';
-import { liveHits, useLiveNav, SUPERVISOR_SETTINGS_PATH } from '@/features/live-floor/liveNav';
+import { SUPERVISOR_SETTINGS_PATH } from '@/features/live-floor/liveNav';
 import { notify } from '@/ui/toast';
 import { copy } from './copy';
 import { preferencesStore, useMyPreferences } from './data/store';

@@ -1,0 +1,13 @@
+dist
+node_modules
+public
+package-lock.json
+*.md
+*.svg
+tools/dwg-import
+src/components/base
+src/components/application
+src/components/foundations
+src/components/shared-assets
+.dependency-cruiser-known-violations.json
+lint.baseline.json

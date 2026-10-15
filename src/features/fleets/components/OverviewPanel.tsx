@@ -1,7 +1,7 @@
 import { MapThumbnail } from '@/features/maps/components/MapThumbnail';
 import type { FC } from 'react';
 import { Cube01, Server01 } from '@untitledui/icons';
-import { EmptyState, NoResults } from '@/components/data/EmptyState';
+import { EmptyState } from '@/components/data/EmptyState';
 import { useState, type ReactNode } from 'react';
 import { Map01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';

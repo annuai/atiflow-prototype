@@ -71,7 +71,7 @@ export class LaneGraph {
   private curves = new Map<string, Vec2[]>();
   /** The curve from the (cut) end of lane `a` to the (cut) start of lane `b`, end points excluded. Cached. */
   private turn(a: Lane, b: Lane): Vec2[] {
-    const key = a.id + '>' + b.id; let c = this.curves.get(key); if (c) return c;
+    const key = a.id + '>' + b.id; const c = this.curves.get(key); if (c) return c;
     const pa = this.piece(a, false, true), pb = this.piece(b, true, false); const ea = pointAtArc(pa, polyLen(pa)), sb = pointAtArc(pb, 0);
     return this.curves.set(key, turnCurve(ea.p, ea.d, sb.p, sb.d)).get(key)!;
   }

@@ -4,7 +4,7 @@ import type { Report } from './types';
 
 /** Pure functions over a report: the change against the period before, what changed most, and the one-line verdict. */
 const AVAILABILITY_TARGET = 85;       // % of the fleet that must be available (the board's definition of charging availability)
-const WORSE_AT = 10, CRITICAL_AT = 25, BETTER_AT = 5;       // % moves that count as slipping / seriously slipping / improving
+const WORSE_AT = 10, CRITICAL_AT = 25;       // % moves that count as slipping / seriously slipping / improving
 
 /** Change against the previous period; `improved` says whether it moved to the better side of ITS metric (null = no meaningful change or nothing to compare). */
 export function change(m: MetricDef, current: number | null, previous: number | null): { pct: number; improved: boolean | null } | null {

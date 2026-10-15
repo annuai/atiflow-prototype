@@ -1,7 +1,6 @@
 import { EmptyState } from '@/components/data/EmptyState';
 import { useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
-import { FeaturedIcon } from '@/components/foundations/featured-icon/featured-icon';
 import { CheckCircle, Play, ReverseLeft, ReverseRight, Stop } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';

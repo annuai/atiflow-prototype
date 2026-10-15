@@ -6,15 +6,13 @@ import { loadRobotModels } from '@/engine/robotMesh';
 import { myPrefsNow } from '@/features/preferences/data/store';
 import { handle } from '@/ui/engineHandle';
 import { CameraModes, ZoomControl, FleetList, RobotPanel, RobotMini, StationPanel, MapLegend } from '@/ui/Panels';
-import { Button } from '@/components/base/buttons/button';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
-import { Input } from '@/components/base/input/input';
 import { useLoadPhase } from '@/components/skeleton/Skeleton';
 import { LiveFloorSkeleton } from './LiveFloorSkeleton';
 import { FleetSelect } from '@/components/data/FleetSelect';
 import { useVisibleFleets } from '@/features/access/useFleetScope';
 import { WalkPad } from '@/ui/WalkPad'; import { useCoarse } from '@/ui/useCoarse';
-import { Send01, SearchLg, Stars02, XClose } from '@untitledui/icons';
+import { XClose } from '@untitledui/icons';
 import { LocateBox } from './LocateBox';
 import { feed } from './liveFeed';
 import { locateTarget } from './locate';
@@ -23,7 +21,7 @@ import { locateTarget } from './locate';
 export function LiveFloorPage() {
   const routeState = useLocation().state;                       // the Dashboard can send us here to locate a robot or station
   const holder = useRef<HTMLDivElement>(null); const [view, setView] = useState({ x: 0, y: 0, yaw: 0, zoomPct: 100 }); const [ready, setReady] = useState(false); const [fleetOpen, setFleetOpen] = useState(() => window.innerWidth > 1100);
-  const manyFleets = useVisibleFleets().length > 1; const fleets = useApp((s) => s.fleets), fleetId = useApp((s) => s.fleetId), mode = useApp((s) => s.cameraMode), site = useApp((s) => s.site), zoneId = useApp((s) => s.activeZoneId), q = useApp((s) => s.query);
+  const manyFleets = useVisibleFleets().length > 1; const fleetId = useApp((s) => s.fleetId), mode = useApp((s) => s.cameraMode), site = useApp((s) => s.site), zoneId = useApp((s) => s.activeZoneId), q = useApp((s) => s.query);
   useEffect(() => {
     let dead = false; const eng = new Engine(holder.current!); handle.engine = eng; eng.onView = setView;
     const offReset = feed.onReset(() => eng.clearRobots()); const release = feed.acquire(); let live = false; const off = feed.onBatch((b) => { if (live) eng.updateRobots(b); });
