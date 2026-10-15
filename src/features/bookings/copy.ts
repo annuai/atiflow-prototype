@@ -2,7 +2,7 @@
 export const copy = {
   book: {
     title: 'Book a trip', subtitle: 'Call a robot from one station to another. It goes straight to the fleet.',
-    stepOf: (n: number, total: number) => `Step ${n} of ${total}`, changeRobot: 'Change robot', stationsHint: 'Where should it go?', robot: 'Robot', robotHint: 'Which robot do you want to call?', available: (n: number) => (n === 1 ? '1 robot' : `${n} robots`),
+    stepOf: (n: number, total: number) => `Step ${n} of ${total}`, changeRobot: 'Change robot', changeRobotHint: 'Tap to change the robot', stationsHint: 'Where should it go?', robot: 'Robot', robotHint: 'Which robot do you want to call?', total: (n: number) => (n === 1 ? '1 robot' : `${n} robots`), free: (n: number) => `${n} free now`,
     fleet: 'Fleet', start: 'Start station', end: 'End station', pick: 'Select a station', swap: 'Swap start and end', mapTitle: 'Or tap the stations on the map',
     mapHint: (step: 'start' | 'end' | 'done') => (step === 'start' ? 'Tap the start station' : step === 'end' ? 'Now tap the end station' : 'Tap a station to start over'),
     submit: 'Book trip', summary: (robot: string, a: string, b: string) => `${robot}: ${a} → ${b}`,

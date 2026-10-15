@@ -13,6 +13,7 @@ import { addZone, boxPolygon, deleteZone, gatePolygon } from '../src/features/ma
 import { normaliseData } from '../src/features/map-editor/model/seed';
 import { emptyHistory, record, redo, undo } from '../src/features/map-editor/model/history';
 import { locateTarget } from '../src/features/map-editor/model/locate';
+import { pinchStep } from '../src/components/map/useTouchGestures';
 import { planTrip } from '../src/features/map-editor/model/simulate';
 import { ZONE_TYPES, zoneType, zoneTypesOf } from '../src/features/map-editor/model/zoneTypes';
 import { sampleWorkflows } from '../src/features/workflow-builder/model/seed';
@@ -173,5 +174,14 @@ describe('locate on the map', () => {
     const a = locateTarget(d, { kind: 'staging', id: d.stagingAreas[0].id })!; expect(a.span).toBeGreaterThan(5); const r = locateTarget(d, { kind: 'road', id: d.roads[0].id })!; expect(r.span).toBeGreaterThan(0);
     const z = d.zones.find((q) => q.type === 'exclusive')!; const zt = locateTarget(d, { kind: 'zone', id: z.id })!; const xs = z.polygon.map((p) => p[0]); expect(zt.x).toBeCloseTo((Math.min(...xs) + Math.max(...xs)) / 2);
     expect(locateTarget(d, { kind: 'station', id: 'NOPE' })).toBeNull(); expect(locateTarget(d, { kind: 'zone', id: 'NOPE' })).toBeNull();
+  });
+});
+
+describe('two-finger gestures on a map', () => {
+  it('spreading the fingers zooms in, pinching zooms out, moving both pans; fingers on the same spot do not divide by zero', () => {
+    const a = pinchStep([{ x: 0, y: 0 }, { x: 100, y: 0 }], [{ x: -50, y: 0 }, { x: 150, y: 0 }]); expect(a.scale).toBeCloseTo(2); expect([a.mid.x, a.dx, a.dy]).toEqual([50, 0, 0]);
+    expect(pinchStep([{ x: 0, y: 0 }, { x: 100, y: 0 }], [{ x: 25, y: 0 }, { x: 75, y: 0 }]).scale).toBeCloseTo(0.5);
+    const p = pinchStep([{ x: 0, y: 0 }, { x: 100, y: 0 }], [{ x: 10, y: 20 }, { x: 110, y: 20 }]); expect(p.scale).toBe(1); expect([p.dx, p.dy]).toEqual([10, 20]);
+    expect(pinchStep([{ x: 5, y: 5 }, { x: 5, y: 5 }], [{ x: 0, y: 0 }, { x: 9, y: 9 }]).scale).toBe(1);
   });
 });

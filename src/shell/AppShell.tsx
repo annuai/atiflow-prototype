@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'motion/react';
 import { Scrim } from '@/components/motion/Scrim';
@@ -21,6 +21,8 @@ export function AppShell({ useNavModel, searchPlaceholder, getHits, onAi, childr
   const items = workspacesOf(user).map((w) => ({ id: w.id, label: w.name, hint: w.built ? undefined : 'Coming soon', disabled: !w.built }));
   const switchTo = (id: string) => { const home = workspaceHome(user, id as WorkspaceId); if (home) navigate(home); };
   const [navOpen, setNavOpen] = useState(false); const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sb-collapsed') === '1');
+  // the menu drawer shuts whenever the page changes, however it changed (menu, Back / Forward, search, a link): an open drawer's dim layer covers the page and swallows every touch, which looked like "the page does not scroll"
+  useEffect(() => { setNavOpen(false); }, [pathname]);
   const logout = () => { authStore.getState().logout(); navigate('/login', { replace: true }); };
   return (
     <div className="app">

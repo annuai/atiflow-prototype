@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Home01, Minus, Plus } from '@untitledui/icons';
 import { laneArrowPath } from '@/components/map/laneArrows';
+import { gestureBusy, isCoarse, useTouchGestures } from '@/components/map/useTouchGestures';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import type { SiteLayout } from '@/core/types';
 import { nearestNode } from '../model/roads';
@@ -47,9 +48,11 @@ export function MapCanvas({ site, data, tool, editable, selection, canSelect, on
   }), [data.stagingAreas, vp.X, vp.Y]);                                                                      // eslint-disable-line react-hooks/exhaustive-deps
 
   const mode = drawMode(tool); const snap = (p: P): P => { if (tool.kind !== 'road') return p; const n = nearestNode(data.nodes, p[0], p[1], 12 * vp.u); return n ? [n.x, n.y] : p; };
+  const touch = useTouchGestures(vp.box, { zoomAt: vp.zoomAt, panBy: vp.panBy });
   const pan = useRef<{ x: number; y: number; moved: boolean } | null>(null); const dragging = useRef<{ kind: 'station' | 'staging'; id: string; dx: number; dy: number } | null>(null);
   const onDown = (e: React.PointerEvent) => { pan.current = { x: e.clientX, y: e.clientY, moved: false }; (e.currentTarget as Element).setPointerCapture(e.pointerId); };
   const onMove_ = (e: React.PointerEvent) => {
+    if (touch.current.pinching) { if (pan.current) { pan.current.x = e.clientX; pan.current.y = e.clientY; pan.current.moved = true; } return; }          // two fingers: the pinch handles it
     const at = vp.toSite(e.clientX, e.clientY); setCursor(snap([at.x, at.y]));
     if (dragging.current) { const d = dragging.current; onMove(d.kind, d.id, { x: at.x + d.dx, y: at.y + d.dy }); return; }
     const p = pan.current; if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; if (!p.moved && Math.hypot(dx, dy) < 4) return; p.moved = true; p.x = e.clientX; p.y = e.clientY; vp.panBy(dx, dy);
@@ -59,6 +62,7 @@ export function MapCanvas({ site, data, tool, editable, selection, canSelect, on
     return null;
   };
   const onUp = (e: React.PointerEvent) => {
+    if (gestureBusy(touch.current)) { pan.current = null; dragging.current = null; return; }          // a finger lifting after a pinch is not a tap
     const p = pan.current; pan.current = null; const was = dragging.current; dragging.current = null; if (was) return;
     if (!p || p.moved) return;
     if (mode !== 'none') { if (editable) { const at = vp.toSite(e.clientX, e.clientY); onPoint(snap([at.x, at.y])); } return; }
@@ -93,7 +97,7 @@ export function MapCanvas({ site, data, tool, editable, selection, canSelect, on
           </g>))}
         <path d={lanes} fill="none" stroke="#14b8a6" strokeOpacity={0.5} strokeWidth={1} vectorEffect="non-scaling-stroke" pointerEvents="none" />
         <path d={arrows} fill="#0f766e" fillOpacity={0.85} pointerEvents="none" />
-        {roadLines.map((r) => <polyline key={r.id} data-hit={`road:${r.id}`} points={r.pts} fill="none" stroke={sel('road', r.id) ? '#0f766e' : 'transparent'} strokeWidth={sel('road', r.id) ? 4 : 12} strokeOpacity={sel('road', r.id) ? 0.55 : 1} strokeLinecap="round" vectorEffect="non-scaling-stroke" style={{ pointerEvents: 'stroke' }} />)}
+        {roadLines.map((r) => <polyline key={r.id} data-hit={`road:${r.id}`} points={r.pts} fill="none" stroke={sel('road', r.id) ? '#0f766e' : 'transparent'} strokeWidth={sel('road', r.id) ? 4 : isCoarse ? 26 : 12} strokeOpacity={sel('road', r.id) ? 0.55 : 1} strokeLinecap="round" vectorEffect="non-scaling-stroke" style={{ pointerEvents: 'stroke' }} />)}
         <path d={layers.walls} fill="none" stroke="#52525b" strokeWidth={1.2} strokeLinecap="round" vectorEffect="non-scaling-stroke" pointerEvents="none" />
         {preview && (preview.kind === 'line'
           ? <polyline points={poly(preview.pts)} fill="none" stroke={preview.color} strokeWidth={2.5} strokeDasharray="6 4" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" pointerEvents="none" />
@@ -105,7 +109,7 @@ export function MapCanvas({ site, data, tool, editable, selection, canSelect, on
           return (
             <g key={s.id} transform={`translate(${vp.X(n.x)} ${vp.Y(n.y)}) scale(${vp.u})`} data-hit={`station:${s.id}`} style={{ cursor: editable && mode === 'none' ? 'move' : 'pointer' }} onPointerEnter={() => setHover(s.id)} onPointerLeave={() => setHover(null)}
               onPointerDown={(e) => startDrag(e, 'station', s.id, n.x, n.y)} onPointerUp={(e) => { e.stopPropagation(); dragging.current = null; }}>
-              <title>{`${s.name} · ${s.id}`}</title><circle r={14} fill="transparent" data-hit={`station:${s.id}`} />
+              <title>{`${s.name} · ${s.id}`}</title><circle r={isCoarse ? 22 : 14} fill="transparent" data-hit={`station:${s.id}`} />
               {sl && <circle r={13} fill="#5eead4" fillOpacity={0.35} />}{sl && <circle r={10} fill="none" stroke="#0d9488" strokeWidth={1.8} />}
               <circle r={6} fill={col} stroke="#fff" strokeWidth={1.8} />
               {(sl || hover === s.id || showLabels) && <text x={11} y={4} fontSize={11} fontWeight={600} fill="#1f2937" paintOrder="stroke" stroke="#fff" strokeWidth={3} strokeLinejoin="round">{s.name}</text>}
@@ -117,7 +121,7 @@ export function MapCanvas({ site, data, tool, editable, selection, canSelect, on
         {overlay?.(vp)}
       </svg>
       {cursor && <span className="pointer-events-none absolute bottom-3 left-3 rounded-md bg-primary/90 px-2 py-1 text-xs tabular-nums text-secondary shadow-xs ring-1 ring-secondary" aria-live="off">X: {cursor[0].toFixed(2)} &nbsp; Y: {cursor[1].toFixed(2)}</span>}
-      <div className="absolute right-3 bottom-3 flex flex-col gap-1 rounded-lg bg-primary p-1 shadow-sm ring-1 ring-secondary" onPointerDown={(e) => e.stopPropagation()}>
+      <div className="map-zoom absolute right-3 bottom-3 flex flex-col gap-1 rounded-lg bg-primary p-1 shadow-sm ring-1 ring-secondary" onPointerDown={(e) => e.stopPropagation()}>
         <ButtonUtility size="sm" color="tertiary" icon={Plus} tooltip="Zoom in" aria-label="Zoom in" onPress={() => vp.zoomAt(1.5)} />
         <ButtonUtility size="sm" color="tertiary" icon={Minus} tooltip="Zoom out" aria-label="Zoom out" onPress={() => vp.zoomAt(1 / 1.5)} />
         <ButtonUtility size="sm" color="tertiary" icon={Home01} tooltip="Fit the whole map" aria-label="Fit the whole map" onPress={vp.reset} />

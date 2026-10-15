@@ -1,4 +1,5 @@
 import { laneArrowPath } from '@/components/map/laneArrows';
+import { gestureBusy, isCoarse, useTouchGestures } from '@/components/map/useTouchGestures';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Minus, Plus, Home01 } from '@untitledui/icons';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
@@ -39,14 +40,17 @@ export function StationMap({ site, nav, usable, highlighted, pickable, onPick, d
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const onDown = (e: React.PointerEvent) => { drag.current = { x: e.clientX, y: e.clientY, moved: false }; };
   const onMove = (e: React.PointerEvent) => {
-    const d = drag.current; if (!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; if (!d.moved && Math.hypot(dx, dy) < 4) return;
+    const d = drag.current; if (!d) return; if (touch.current.pinching) { d.x = e.clientX; d.y = e.clientY; d.moved = true; return; }          // two fingers: the pinch handles it
+     const dx = e.clientX - d.x, dy = e.clientY - d.y; if (!d.moved && Math.hypot(dx, dy) < 4) return;
     if (!d.moved) (e.currentTarget as Element).setPointerCapture(e.pointerId); d.moved = true; d.x = e.clientX; d.y = e.clientY; const k = vw / size.w; setC((o) => clampC(o.x - dx * k, o.y - dy * k));
   };
   const onUp = () => { setTimeout(() => { drag.current = null; }); };
+  const panBy = (dx: number, dy: number) => { const k = vw / size.w; setC((o) => clampC(o.x - dx * k, o.y - dy * k)); };
   const zoomAt = (factor: number, px?: number, py?: number) => {
     const nz = Math.min(MAX_ZOOM, Math.max(1, z * factor)); if (nz === z) return; const r = box.current!.getBoundingClientRect(); const fx = px === undefined ? 0.5 : (px - r.left) / r.width, fy = py === undefined ? 0.5 : (py - r.top) / r.height;
     const wx = vx + vw * fx, wy = vy + vh * fy, nvw = (size.w * fit) / nz, nvh = (size.h * fit) / nz; setZ(nz); setC(clampC(wx - nvw * (fx - 0.5), wy - nvh * (fy - 0.5)));
   };
+  const touch = useTouchGestures(box, { zoomAt, panBy });          // two fingers pinch-zoom and pan (the buttons and wheel stay)
   const onWheel = (e: React.WheelEvent) => { e.preventDefault(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY); };
   useEffect(() => { const el = box.current; if (!el) return; const stop = (e: WheelEvent) => e.preventDefault(); el.addEventListener('wheel', stop, { passive: false }); return () => el.removeEventListener('wheel', stop); }, []);
   const reset = () => { setZ(1); setC({ x: W / 2, y: H / 2 }); };
@@ -57,10 +61,10 @@ export function StationMap({ site, nav, usable, highlighted, pickable, onPick, d
     const n = nav.nodes.find((q) => q.id === s.nodeId)!; const ok = usable.has(s.id), hl = highlighted.includes(s.id), click = pickable && ok; const col = TYPE_COLOR[s.type] ?? '#64748b'; const x = n.x - minX, y = maxY - n.y;
     return (
       <g key={s.id} transform={`translate(${x} ${y}) scale(${u})`} opacity={ok || hl ? 1 : 0.35} style={{ cursor: click ? 'pointer' : 'default' }} onPointerEnter={() => setHover(s.id)} onPointerLeave={() => setHover(null)}
-        onClick={() => { if (click && !drag.current?.moved) onPick(s.id); }} role={click ? 'button' : undefined} aria-label={click ? `Pick ${s.id} ${s.name}` : undefined} data-station={s.id}>
+        onClick={() => { if (click && !drag.current?.moved && !gestureBusy(touch.current)) onPick(s.id); }} role={click ? 'button' : undefined} aria-label={click ? `Pick ${s.id} ${s.name}` : undefined} data-station={s.id}>
         <title>{`${s.id} · ${s.name}${ok ? '' : ' (not on this fleet’s map)'}`}</title>
         {hl && <circle r={12} fill="#5eead4" opacity={0.35} />}{hl && <circle r={9} fill="none" stroke="#14b8a6" strokeWidth={1.6} />}
-        <circle r={9} fill="transparent" />
+        <circle r={isCoarse ? 18 : 9} fill="transparent" />
         <circle r={4.5} fill={col} stroke="#fff" strokeWidth={1.4} />
         {(hl || click || hover === s.id || z >= 2.2) && <text x={8} y={3.5} fontSize={10} fontWeight={600} fill="#1f2937" paintOrder="stroke" stroke="#fff" strokeWidth={2.4}>{s.id.replace('STA-', '')}</text>}
       </g>
@@ -86,7 +90,7 @@ export function StationMap({ site, nav, usable, highlighted, pickable, onPick, d
           </g>
         )}
       </svg>
-      <div className="absolute right-2 bottom-2 flex flex-col gap-1 rounded-lg bg-primary/90 p-1 shadow-sm ring-1 ring-secondary" data-no-pan onPointerDown={(e) => e.stopPropagation()}>
+      <div className="map-zoom absolute right-2 bottom-2 flex flex-col gap-1 rounded-lg bg-primary/90 p-1 shadow-sm ring-1 ring-secondary" data-no-pan onPointerDown={(e) => e.stopPropagation()}>
         <ButtonUtility size="xs" color="tertiary" icon={Plus} tooltip="Zoom in" aria-label="Zoom in" onPress={() => zoomAt(1.5)} />
         <ButtonUtility size="xs" color="tertiary" icon={Minus} tooltip="Zoom out" aria-label="Zoom out" onPress={() => zoomAt(1 / 1.5)} />
         <ButtonUtility size="xs" color="tertiary" icon={Home01} tooltip="Fit the whole map" aria-label="Fit the whole map" onPress={reset} />

@@ -225,3 +225,10 @@ body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; touc
 @media (max-width: 720px) { .md-body { padding: 12px; } }
 /* A card grid on a phone is ONE column; without this its track grows to the widest content (a nowrap row inside a card) and the card sticks out of the screen. */
 .md-body .grid > * { min-width: 0; }
+
+/* maps on a touchscreen: zoom buttons and the drawing tool bar get finger-sized targets */
+@media (pointer: coarse) {
+  .map-zoom button { min-width: 44px; min-height: 44px; }
+  .map-tools { max-width: calc(100vw - 16px); overflow-x: auto; }
+  .map-tools button { min-width: 44px; min-height: 48px; }
+}

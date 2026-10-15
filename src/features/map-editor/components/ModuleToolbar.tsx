@@ -24,7 +24,7 @@ const tile = (on: boolean) => cx('grid size-10 cursor-pointer place-items-center
 export function ModuleToolbar({ tool, choices, onSelect, onTool }: { tool: Tool; choices: Record<Module, string>; onSelect(): void; onTool(m: Module, choice: string): void }) {
   const active = moduleOfTool(tool);
   return (
-    <nav className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl bg-primary p-2 shadow-lg ring-1 ring-secondary" aria-label="Tools" onPointerDown={(e) => e.stopPropagation()}>
+    <nav className="map-tools absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl bg-primary p-2 shadow-lg ring-1 ring-secondary" aria-label="Tools" onPointerDown={(e) => e.stopPropagation()}>
       <Tooltip title={copy.tools.select} description={helpText('tool.select')} placement="top" delay={500}>
         <AriaButton aria-label={copy.tools.select} aria-current={tool.kind === 'select'} onPress={onSelect} className={tile(tool.kind === 'select')}><Cursor01 className="size-5" /></AriaButton>
       </Tooltip>

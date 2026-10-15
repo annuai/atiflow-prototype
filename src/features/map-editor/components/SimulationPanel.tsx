@@ -21,7 +21,7 @@ export function SimulationPanel({ data, choice, onChoice, state, error, onRun, o
       <p className="text-sm text-tertiary">{t.intro}</p>
       <div className="flex items-end gap-3">
         <Select label={t.robot} size="sm" isDisabled={running} selectedKey={choice.type} onSelectionChange={(k) => set({ type: String(k) })} items={ROBOT_TYPES.map((r) => ({ id: r.label, label: r.label }))} className="min-w-0 flex-1">{(item) => <Select.Item {...item} />}</Select>
-        <div className="grid h-14 w-20 shrink-0 place-items-center rounded-lg bg-secondary p-1.5"><img src={robotTypeByLabel(choice.type).illustration} alt="" className="max-h-full max-w-full object-contain" /></div>
+        <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary p-1.5"><img src={robotTypeByLabel(choice.type).illustration} alt="" className="size-full object-contain" /></div>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
