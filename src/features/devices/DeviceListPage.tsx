@@ -11,7 +11,7 @@ import { nameOf } from './model/validate';
 import { AddDeviceModal } from './components/AddDeviceModal';
 import { DeviceEmptyState } from './components/DeviceEmptyState';
 import { DeviceTable } from './components/DeviceTable';
-import './devices.css';
+import '@/ui/detailPages.css';
 
 /** Robots list / Hardware list. Same layout as the Workflow Builder page (title block + one card); everything kind-specific comes from `kind`. */
 export function DeviceListPage({ kind }: { kind: DeviceKind }) {

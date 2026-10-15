@@ -1,13 +1,13 @@
 import { store } from '@/core/store';
 import { StatsTracker } from '@/core/stats';
 import { MeasurementLog } from '@/core/measurements';
-import { MockSimulator } from '@/adapters/mock';
+import { services } from '@/services';
 import { datasetStore } from '@/data/dataset';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { robotRecords, robotsOnFloor } from '@/data/robots';
 import { scopeKey } from '@/features/access';
-import { visibleLiveIds } from '@/features/access/useFleetScope';
-import { authStore } from '@/features/auth/authStore';
+import { visibleLiveIds } from '@/features/auth';
+import { authStore } from '@/features/auth';
 import type { RosterEntry } from '@/adapters/sim';
 import type {
   FleetEvent,
@@ -126,7 +126,7 @@ async function start() {
   if (adapter || refs === 0) return;
   const roster = rosterFrom(nav);
   rosterKey = rosterSignature(roster);
-  adapter = new MockSimulator(nav, site.siteId, 14, 7, roster);
+  adapter = services().fleetFeed.connect({ siteId: site.siteId, nav, roster });
   adapter.onEvent?.((e) => {
     const ids = visibleLiveIds();
     if (!ids || fleetsOf(e).some((f) => ids.has(f))) measurements.event(e);

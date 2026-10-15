@@ -1,7 +1,6 @@
 import { datasetStore } from '@/data/dataset';
-import { masterDataStore } from '@/features/master-data/model/store';
-import { fleetNameError } from '@/features/workflow-builder/model/names';
-import { wfStore } from '@/features/workflow-builder/model/store';
+import { masterDataStore } from '@/features/master-data';
+import { fleetNameError, wfStore } from '@/features/workflow-builder';
 import { fleetsStore } from './store';
 
 /**

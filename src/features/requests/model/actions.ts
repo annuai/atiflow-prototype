@@ -1,4 +1,4 @@
-import { feed } from '@/features/live-floor/liveFeed';
+import { feed } from '@/features/live-floor';
 import { notify } from '@/ui/toast';
 import { takeBack } from './bridge';
 import { canCancel, type Person } from './rules';

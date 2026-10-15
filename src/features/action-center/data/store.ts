@@ -1,11 +1,12 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister } from '@/data/persist';
 import { useEffect, useState } from 'react';
 import { useStore } from 'zustand';
 import { store } from '@/core/store';
 import { services } from '@/services';
-import { visibleLiveIds } from '@/features/access/useFleetScope';
-import { feed } from '@/features/live-floor/liveFeed';
-import { myPrefsNow } from '@/features/preferences/data/store';
+import { visibleLiveIds } from '@/features/auth';
+import { feed } from '@/features/live-floor';
+import { myPrefsNow } from '@/features/preferences';
 import { ActionCenterEngine, type ActionState } from '../model/engine';
 import type { Call } from '../model/types';
 
@@ -18,11 +19,12 @@ export const engine = new ActionCenterEngine(services().actionLog.read() ?? [], 
   actionCenter.setState(s);
 });
 actionCenter.setState(engine.state);
+const persist = createPersister('action center log', (v: Call[]) => services().actionLog.save(v), { delayMs: 200 });
 let saved = engine.state.log;
 actionCenter.subscribe((s) => {
   if (s.log !== saved) {
     saved = s.log;
-    void services().actionLog.save(s.log);
+    persist.queue(s.log);
   }
 });
 services().actionLog.subscribe((log) => {

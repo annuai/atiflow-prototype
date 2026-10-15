@@ -1,6 +1,6 @@
 import { Select } from '@/components/base/select/select';
 import { fleetDirectory } from '@/data/fleetDirectory';
-import { useVisibleFleets } from '@/features/access/useFleetScope';
+import { useVisibleFleets } from './useFleetScope';
 
 export interface FleetOption {
   id: string;

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Bell01, Home02 } from '@untitledui/icons';
 import { Tabs } from '@/components/application/tabs/tabs';
@@ -6,10 +7,10 @@ import { Button } from '@/components/base/buttons/button';
 import { Select } from '@/components/base/select/select';
 import { Toggle } from '@/components/base/toggle/toggle';
 import { SettingsRow } from '@/components/data/SettingsRow';
-import { useVisibleFleets } from '@/features/access/useFleetScope';
 import { WORKSPACES, can } from '@/features/access';
-import { useAuth } from '@/features/auth/authStore';
-import { SUPERVISOR_SETTINGS_PATH } from '@/features/live-floor/liveNav';
+import { useVisibleFleets } from '@/features/auth';
+import { useAuth } from '@/features/auth';
+import { SUPERVISOR_SETTINGS_PATH } from '@/features/live-floor';
 import { notify } from '@/ui/toast';
 import { copy } from './copy';
 import { preferencesStore, useMyPreferences } from './data/store';
@@ -105,61 +106,63 @@ export function PreferencesPage() {
           </Tabs>
           <div className="md-body">
             <div className="flex max-w-4xl flex-col">
-              {active.id === 'alerts' && (
-                <>
-                  <SettingsRow label={copy.alerts.notify} hint={copy.alerts.notifyHint}>
-                    <div className="flex flex-col gap-3">
-                      {toggle('blocked')}
-                      {toggle('fault')}
-                      {toggle('stuck')}
-                      {toggle('battery')}
-                    </div>
-                  </SettingsRow>
-                  {secs(copy.alerts.notifyAfter, 'notifyAfterS', copy.alerts.notifyAfterHint)}
-                  {secs(copy.alerts.warn, 'waitWarnS', copy.alerts.warnHint)}
-                  {secs(copy.alerts.urgent, 'waitUrgentS')}
-                  <SettingsRow label={copy.alerts.batteryLow} hint={copy.alerts.batteryLowHint}>
-                    <Select
-                      aria-label={copy.alerts.batteryLow}
-                      selectedKey={String(d.alerts.batteryLow)}
-                      onSelectionChange={(k) => setAlerts({ batteryLow: +String(k) })}
-                      items={opts(BATTERY_OPTIONS, (n) => `${n}%`)}
-                    >
-                      {(i) => <Select.Item {...i} />}
-                    </Select>
-                  </SettingsRow>
-                </>
-              )}
-              {active.id === 'start' && (
-                <>
-                  <SettingsRow label={copy.start.page} hint={copy.start.pageHint}>
-                    <Select
-                      aria-label={copy.start.page}
-                      selectedKey={d.startPage}
-                      onSelectionChange={(k) => setD({ ...d, startPage: String(k) })}
-                      items={[
-                        { id: 'last', label: copy.start.last },
-                        ...pages.map((f) => ({ id: f.landing!, label: f.label })),
-                      ]}
-                    >
-                      {(i) => <Select.Item {...i} />}
-                    </Select>
-                  </SettingsRow>
-                  <SettingsRow label={copy.start.fleet} hint={copy.start.fleetHint}>
-                    <Select
-                      aria-label={copy.start.fleet}
-                      selectedKey={d.defaultFleet}
-                      onSelectionChange={(k) => setD({ ...d, defaultFleet: String(k) })}
-                      items={[
-                        { id: 'all', label: copy.start.allFleets },
-                        ...fleets.map((f) => ({ id: f.liveId!, label: f.name })),
-                      ]}
-                    >
-                      {(i) => <Select.Item {...i} />}
-                    </Select>
-                  </SettingsRow>
-                </>
-              )}
+              <TabPanelMotion tabKey={active.id} className="flex flex-col">
+                {active.id === 'alerts' && (
+                  <>
+                    <SettingsRow label={copy.alerts.notify} hint={copy.alerts.notifyHint}>
+                      <div className="flex flex-col gap-3">
+                        {toggle('blocked')}
+                        {toggle('fault')}
+                        {toggle('stuck')}
+                        {toggle('battery')}
+                      </div>
+                    </SettingsRow>
+                    {secs(copy.alerts.notifyAfter, 'notifyAfterS', copy.alerts.notifyAfterHint)}
+                    {secs(copy.alerts.warn, 'waitWarnS', copy.alerts.warnHint)}
+                    {secs(copy.alerts.urgent, 'waitUrgentS')}
+                    <SettingsRow label={copy.alerts.batteryLow} hint={copy.alerts.batteryLowHint}>
+                      <Select
+                        aria-label={copy.alerts.batteryLow}
+                        selectedKey={String(d.alerts.batteryLow)}
+                        onSelectionChange={(k) => setAlerts({ batteryLow: +String(k) })}
+                        items={opts(BATTERY_OPTIONS, (n) => `${n}%`)}
+                      >
+                        {(i) => <Select.Item {...i} />}
+                      </Select>
+                    </SettingsRow>
+                  </>
+                )}
+                {active.id === 'start' && (
+                  <>
+                    <SettingsRow label={copy.start.page} hint={copy.start.pageHint}>
+                      <Select
+                        aria-label={copy.start.page}
+                        selectedKey={d.startPage}
+                        onSelectionChange={(k) => setD({ ...d, startPage: String(k) })}
+                        items={[
+                          { id: 'last', label: copy.start.last },
+                          ...pages.map((f) => ({ id: f.landing!, label: f.label })),
+                        ]}
+                      >
+                        {(i) => <Select.Item {...i} />}
+                      </Select>
+                    </SettingsRow>
+                    <SettingsRow label={copy.start.fleet} hint={copy.start.fleetHint}>
+                      <Select
+                        aria-label={copy.start.fleet}
+                        selectedKey={d.defaultFleet}
+                        onSelectionChange={(k) => setD({ ...d, defaultFleet: String(k) })}
+                        items={[
+                          { id: 'all', label: copy.start.allFleets },
+                          ...fleets.map((f) => ({ id: f.liveId!, label: f.name })),
+                        ]}
+                      >
+                        {(i) => <Select.Item {...i} />}
+                      </Select>
+                    </SettingsRow>
+                  </>
+                )}
+              </TabPanelMotion>
               <div className="flex flex-wrap justify-between gap-3 pt-5">
                 <Button
                   size="md"

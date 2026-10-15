@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { sampleWorkflows, seedWorkflows, upgradeToV7 } from '../src/features/workflow-builder/model/seed';
+import { seedWorkflows, upgradeToV7 } from '../src/features/workflow-builder/model/seed';
+import { sampleWorkflows } from '../src/fixtures/workflows';
 import { createNode, createStart } from '../src/features/workflow-builder/model/factory';
 import { publishProblem } from '../src/features/workflow-builder/model/validate';
 import {
@@ -15,7 +16,7 @@ import { eligibleUsers, prefillUsers } from '../src/features/workflow-builder/mo
 import { decisions } from '../src/features/requests/model/decisions';
 import { normalise, requestsStore } from '../src/features/requests/model/store';
 import { requestNotifications } from '../src/features/requests/notifications';
-import { seedGroups, seedMaterials } from '../src/features/master-data/model/seed';
+import { seedGroups, seedMaterials } from '../src/fixtures/masterData';
 import { SEED_USERS } from '../src/fixtures/users';
 import { toPublic } from '../src/features/auth/userDirectory';
 import type { Workflow } from '../src/features/workflow-builder/model/types';

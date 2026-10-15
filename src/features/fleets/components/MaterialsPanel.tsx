@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
-import type { PickerRow } from '@/features/master-data/components/MaterialPicker';
-import { useMasterData } from '@/features/master-data/model/store';
+import { type PickerRow, useMasterData } from '@/features/master-data';
 import { copy } from '../copy';
 import { AssignMaterialsModal } from './AssignMaterialsModal';
 import { FleetMaterials } from './FleetMaterials';
@@ -34,25 +34,27 @@ export function MaterialsPanel({ fleet }: { fleet: string }) {
   );
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      {sub === 'all' ? (
-        <FleetMaterials
-          key={epoch}
-          fleet={fleet}
-          materials={materials}
-          total={materials.length}
-          toolbarLeft={tabs}
-          onAssign={() => setAssigning(true)}
-          onGroup={setGrouping}
-        />
-      ) : (
-        <FleetStationGroups
-          fleet={fleet}
-          materials={materials}
-          masterGroups={masterGroups}
-          toolbarLeft={tabs}
-          onAdd={() => setGrouping([])}
-        />
-      )}
+      <TabPanelMotion tabKey={sub} fill>
+        {sub === 'all' ? (
+          <FleetMaterials
+            key={epoch}
+            fleet={fleet}
+            materials={materials}
+            total={materials.length}
+            toolbarLeft={tabs}
+            onAssign={() => setAssigning(true)}
+            onGroup={setGrouping}
+          />
+        ) : (
+          <FleetStationGroups
+            fleet={fleet}
+            materials={materials}
+            masterGroups={masterGroups}
+            toolbarLeft={tabs}
+            onAdd={() => setGrouping([])}
+          />
+        )}
+      </TabPanelMotion>
       <AssignMaterialsModal fleet={fleet} isOpen={assigning} onOpenChange={setAssigning} />
       <GroupMaterialsModal
         fleet={fleet}

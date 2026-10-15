@@ -4,8 +4,9 @@ import { useAuth } from '@/features/auth/authStore';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { KINDS } from '@/features/devices/model/kinds';
 import { wfStore } from '@/features/workflow-builder/model/store';
-import { notificationApi } from '@/features/notifications';
+import { notificationApi } from '@/features/notifications/notificationApi';
 import { NotificationsProvider } from '@/features/notifications/NotificationsProvider';
+import { PersistenceNotice } from '@/shell/PersistenceNotice';
 import { AppToaster } from '@/ui/toast';
 import { NoAccessPage } from '@/features/access/NoAccessPage';
 import { ShellLayout } from '@/shell/ShellLayout';
@@ -30,6 +31,9 @@ const DeviceListPage = lazy(() =>
   import('@/features/devices/DeviceListPage').then((m) => ({ default: m.DeviceListPage })),
 );
 const MapsPage = lazy(() => import('@/features/maps/MapsPage').then((m) => ({ default: m.MapsPage })));
+const FleetsIndexPage = lazy(() =>
+  import('@/features/fleets/FleetsIndexPage').then((m) => ({ default: m.FleetsIndexPage })),
+);
 const FleetPage = lazy(() => import('@/features/fleets/FleetPage').then((m) => ({ default: m.FleetPage })));
 const MasterDataPage = lazy(() =>
   import('@/features/master-data/MasterDataPage').then((m) => ({ default: m.MasterDataPage })),
@@ -97,6 +101,7 @@ export function AppRoot() {
     <BrowserRouter>
       <NotificationsProvider api={notificationApi}>
         <AppToaster />
+        <PersistenceNotice />
         <PageMemory />
         <Routes>
           <Route path="/login" element={<LoginRoute />} />
@@ -148,6 +153,7 @@ export function AppRoot() {
               </Route>
             ))}
             <Route path="/configurator/master-data/:tab?" element={<MasterDataPage />} />
+            <Route path="/configurator/fleets" element={<FleetsIndexPage />} />
             <Route path="/configurator/fleets/:name/:tab?" element={<FleetPage />} />
             <Route path="/configurator/notifications" element={<NotificationsPage />} />
             <Route path="/configurator/users" element={<UsersPage />} />

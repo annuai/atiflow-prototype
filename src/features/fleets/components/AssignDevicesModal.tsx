@@ -4,10 +4,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/base/badges/badges';
 import { DataTable, type Column } from '@/components/data/DataTable';
 import { ModalShell } from '@/components/modal/ModalShell';
-import { StatusBadge } from '@/features/devices/components/StatusBadge';
-import { deviceStore, useDevices } from '@/features/devices/model/store';
-import type { Device, DeviceKind } from '@/features/devices/model/types';
-import { nameOf } from '@/features/devices/model/validate';
+import { StatusBadge, deviceStore, useDevices, type Device, type DeviceKind, nameOf } from '@/features/devices';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 

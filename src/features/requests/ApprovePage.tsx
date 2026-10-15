@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { CheckCircle, ClockRewind } from '@untitledui/icons';
 import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
@@ -60,42 +61,44 @@ export function ApprovePage() {
               ]}
             />
           </div>
-          {tab === 'waiting' ? (
-            !waiting.length ? (
+          <TabPanelMotion tabKey={tab} fill>
+            {tab === 'waiting' ? (
+              !waiting.length ? (
+                <EmptyState
+                  icon={CheckCircle}
+                  tone="positive"
+                  title={copy.approve.empty.title}
+                  subtext={copy.approve.empty.hint}
+                  size="lg"
+                />
+              ) : (
+                <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">
+                  {waiting.map((r) => (
+                    <ApprovalCard
+                      key={r.id}
+                      r={r}
+                      now={now}
+                      onApprove={() => approve(r)}
+                      onReject={() => setRejecting(r)}
+                    />
+                  ))}
+                </div>
+              )
+            ) : !history.length ? (
               <EmptyState
-                icon={CheckCircle}
-                tone="positive"
-                title={copy.approve.empty.title}
-                subtext={copy.approve.empty.hint}
+                icon={ClockRewind}
+                title={copy.approve.empty.history}
+                subtext={copy.approve.empty.historyHint}
                 size="lg"
               />
             ) : (
-              <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">
-                {waiting.map((r) => (
-                  <ApprovalCard
-                    key={r.id}
-                    r={r}
-                    now={now}
-                    onApprove={() => approve(r)}
-                    onReject={() => setRejecting(r)}
-                  />
+              <ul className="flex flex-col gap-2">
+                {history.slice(0, 100).map((d) => (
+                  <DecisionRow key={d.key} d={d} now={now} />
                 ))}
-              </div>
-            )
-          ) : !history.length ? (
-            <EmptyState
-              icon={ClockRewind}
-              title={copy.approve.empty.history}
-              subtext={copy.approve.empty.historyHint}
-              size="lg"
-            />
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {history.slice(0, 100).map((d) => (
-                <DecisionRow key={d.key} d={d} now={now} />
-              ))}
-            </ul>
-          )}
+              </ul>
+            )}
+          </TabPanelMotion>
         </div>
       </div>
       <RejectSheet

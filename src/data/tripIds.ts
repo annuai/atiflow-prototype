@@ -1,10 +1,19 @@
-import { services } from '@/services';
+import type { TripIdCounter } from '@/services/ports';
 /**
  * THE source of trip ids (TRP-001, TRP-002...). A request gets its trip id the moment it is made (before approval), the simulator takes the same ids for its own trips,
  * so an id is unique across both and a supervisor can search any of them. The counter lives behind the `tripIds` service (the dummy one keeps it in the browser so ids keep counting after a reload; a fleet manager owns it later).
  */
 let seq: number | null = null;
-const counter = () => services().tripIds;
+/** Where the counter is kept: installed by `setServices` (the services' `tripIds`); until then (tests that never install services) it lives in memory. */
+let source: TripIdCounter = (() => {
+  let n = 0;
+  return { read: () => n, write: (v: number) => void (n = v) };
+})();
+export function installTripIdCounter(next: TripIdCounter) {
+  source = next;
+  seq = null; // read again from the new source
+}
+const counter = () => source;
 const current = () => (seq ??= counter().read()); // read on first use, so the services chosen at start-up are the ones used
 const save = () => counter().write(current());
 export const formatTripId = (n: number) => `TRP-${String(n).padStart(3, '0')}`;

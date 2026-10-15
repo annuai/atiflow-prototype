@@ -1,4 +1,4 @@
-import type { SettingsData } from './types';
+import type { SettingsData } from '@/features/settings/model/types';
 
 const HOUR = 3_600_000;
 /** Starting values (example data, like the rest of the prototype). Fleet Manager is set up and was synced 18 hours ago; the MES addresses are not set yet. */

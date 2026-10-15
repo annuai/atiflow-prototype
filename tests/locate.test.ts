@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findTargets } from '../src/features/live-floor/locate';
+import { findTargets } from '../src/ui/locate';
 import type { RobotTelemetry, Station } from '../src/core/types';
 
 const robot = (id: string) => ({ id, state: 'moving' }) as RobotTelemetry;

@@ -43,5 +43,8 @@ features   never import app/ (the route table); no import cycles; src never impo
 5. New saved data gets a zod schema and `createValidatedDocument`.
 6. Keep lines under 120 columns (Prettier does it) and files under 400 lines (lint warns).
 
+## Operation-shaped ports
+Not every port is a saved document: `services().robotOps` (robot configuration, calibration, firmware) is a set of asynchronous operations that may fail, the shape a real robot API has. Screens use it through hooks (`features/robot-ops/data`) and handle loading, progress and errors already. See CLAUDE.md section 60.
+
 ## Phase 2: service ports and dummy adapters (done)
 `src/services/ports.ts` lists what the app asks of the outside world; `src/services/dummy` answers it from typed fixtures and browser storage; `src/services/index.ts` chooses per service from `dataMode`. Behind ports: users, auth (credentials separate from profiles), session, workflows, requests, bookings, trip ids, dataset, fleet profiles, master data, map names and versions, settings, preferences, notification cache, action log and per-device interface choices. Not behind a port: the live telemetry feed (it is the `TelemetryAdapter` contract already) and the starting data of some stores (still owned by their features). See CLAUDE.md section 59.

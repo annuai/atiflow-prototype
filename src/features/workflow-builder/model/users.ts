@@ -1,9 +1,7 @@
 import { useMemo } from 'react';
-import { can } from '@/features/access';
+import { can, fleetScope } from '@/features/access';
 import { useDataset } from '@/data/dataset';
-import { fleetScope } from '@/features/access/fleetScope';
-import type { UserRecord } from '@/features/auth/types';
-import { toPublic, userDirectory, useUsers } from '@/features/auth/userDirectory';
+import { type UserRecord, toPublic, userDirectory, useUsers } from '@/features/auth';
 import { datasetStore } from '@/data/dataset';
 import type { WfNode, Workflows } from './types';
 

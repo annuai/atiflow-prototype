@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Key01 } from '@untitledui/icons';
 import { FormField } from '@/components/form/FormField';
 import { ModalShell } from '@/components/modal/ModalShell';
-import { userDirectory } from '@/features/auth/userDirectory';
+import { userDirectory } from '@/features/auth';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { passwordError } from '../model/validate';

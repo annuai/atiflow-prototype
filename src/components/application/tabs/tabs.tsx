@@ -4,6 +4,7 @@ import type { TabListProps as AriaTabListProps, TabProps as AriaTabProps, TabRen
 import { Tab as AriaTab, TabList as AriaTabList, TabPanel as AriaTabPanel, Tabs as AriaTabs, TabsContext, useSlottedContext } from "react-aria-components";
 import { Badge } from "@/components/base/badges/badges";
 import { cx } from "@/utils/cx";
+import { useTabIndicator } from "@/components/motion/useTabIndicator";
 import { isReactComponent } from "@/utils/is-react-component";
 
 type Orientation = "horizontal" | "vertical";
@@ -39,12 +40,14 @@ const getTabStyles = ({ isFocusVisible, isSelected, isHovered }: AriaTabRenderPr
     underline: cx(
         "rounded-none border-b-2 border-transparent outline-focus-ring *:data-icon:text-fg-quaternary",
         isFocusVisible && "outline-2 -outline-offset-2",
-        (isSelected || isHovered) && "border-fg-brand-primary_alt text-brand-secondary *:data-icon:text-fg-brand-secondary_hover",
+        isHovered && !isSelected && "border-fg-brand-primary_alt",
+        (isSelected || isHovered) && "text-brand-secondary *:data-icon:text-fg-brand-secondary_hover",
     ),
     line: cx(
         "rounded-none border-l-2 border-transparent outline-focus-ring *:data-icon:text-fg-quaternary",
         isFocusVisible && "outline-2 -outline-offset-2",
-        (isSelected || isHovered) && "border-fg-brand-primary_alt text-brand-secondary *:data-icon:text-fg-brand-secondary_hover",
+        isHovered && !isSelected && "border-fg-brand-primary_alt",
+        (isSelected || isHovered) && "text-brand-secondary *:data-icon:text-fg-brand-secondary_hover",
     ),
 });
 
@@ -109,11 +112,14 @@ export const TabList = <T extends Orientation>({
     const context = useSlottedContext(TabsContext);
 
     const orientation = orientationProp ?? context?.orientation ?? "horizontal";
+    const slides = type === "underline" || type === "line";
+    const listRef = useTabIndicator(orientation === "vertical" ? "y" : "x");
 
     return (
         <TabListContext.Provider value={{ size, type, orientation, fullWidth }}>
             <AriaTabList
                 {...otherProps}
+                ref={slides ? listRef : undefined}
                 className={(state) =>
                     cx(
                         "group flex",
@@ -129,6 +135,14 @@ export const TabList = <T extends Orientation>({
                         orientation === "horizontal" &&
                             type === "underline" &&
                             "relative before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-border-secondary",
+
+                        // The line under the chosen tab: drawn from the CSS variables `useTabIndicator` writes, so one line glides from tab to tab
+                        slides &&
+                            "relative after:pointer-events-none after:absolute after:z-10 after:bg-fg-brand-primary_alt after:content-['']",
+                        slides &&
+                            "data-tab-animate:after:[transition-property:translate,width,height] data-tab-animate:after:[transition-duration:var(--tab-ms)] data-tab-animate:after:[transition-timing-function:var(--tab-ease)]",
+                        slides && orientation === "horizontal" && "after:bottom-0 after:left-0 after:h-0.5 after:[width:var(--tab-size,0px)] after:[translate:var(--tab-pos,0px)_0]",
+                        slides && orientation === "vertical" && "after:left-0 after:top-0 after:w-0.5 after:[height:var(--tab-size,0px)] after:[translate:0_var(--tab-pos,0px)]",
 
                         typeof className === "function" ? className(state) : className,
                     )

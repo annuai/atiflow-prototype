@@ -10,6 +10,9 @@ import type { SettingsData } from '@/features/settings/model/types';
 import type { Preferences } from '@/features/preferences/model/types';
 import type { AppNotification } from '@/features/notifications/types';
 import type { Call } from '@/features/action-center/model/types';
+import type { ConfigValues, RobotOpsService } from '@/features/robot-ops/model/types';
+import type { NavGraph, TelemetryAdapter } from '@/core/types';
+import type { RosterEntry } from '@/adapters/sim';
 
 /**
  * The service ports: the only things the app uses to get and keep data. Each has a DUMMY implementation (src/services/dummy: typed fixtures plus browser storage) and, later, an HTTP
@@ -51,6 +54,8 @@ export interface SessionService {
 }
 /** The saved workflows, or null when none were saved yet (the store then starts from the sample workflows). */
 export interface WorkflowService extends DocumentRepository<Workflows | null> {
+  /** Dummy-data only: the starting workflows (fixtures) for a browser that has nothing saved. A real API has none: the builder starts from what the API returns. */
+  starter?(): Workflows;
   /** Dummy-data only: workflows saved by an older version of the app under another key, for the store's upgrade steps. A real API has no such thing. */
   readLegacy?(): { version: 2 | 3 | 4 | 5 | 6; data: unknown } | null;
 }
@@ -58,6 +63,8 @@ export type RequestService = DocumentRepository<RequestsDocument>;
 export type BookingService = DocumentRepository<BookingsDocument>;
 /** Where the trip-id counter (TRP-001, TRP-002...) is kept. A fleet manager owns it later. */
 export interface TripIdCounter {
+  /** Fetch the counter from its source before the app starts (the dummy one needs nothing). */
+  hydrate?(): Promise<void>;
   read(): number;
   write(n: number): void;
 }
@@ -67,7 +74,10 @@ export interface TripIdCounter {
  * store then starts from its fixtures). The dummy adapters keep it in browser storage and check it with a schema; a real adapter is the API that owns the data.
  */
 export interface SavedState<T> {
-  read(): T | null;
+  /** What is known right now (synchronous: the stores start from it; valid after `hydrate()` has finished at start-up). Never null: with nothing stored yet the dummy returns its starting data (fixtures), an API returns an empty document. */
+  read(): T;
+  /** Fetch or re-read the source of truth into what `read()` returns. Called once at start-up by `hydrateServices`, before the app loads. Resolves with the fresh value. */
+  hydrate(): Promise<T>;
   save(value: T): Promise<void>;
   /** Changes made elsewhere (another tab, a server push). */
   subscribe(listener: (value: T) => void): () => void;
@@ -99,7 +109,33 @@ export interface DevicePrefs {
   set(key: string, value: string): void;
 }
 
+/** What the dummy robot service remembers per robot (the real one asks the robot): its configuration changes, calibration times and firmware state. */
+export interface RobotOpsDocument {
+  [robot: string]: {
+    config?: ConfigValues;
+    calibration?: Partial<Record<'sensor' | 'steering', number | null>>;
+    software?: {
+      installed: string | null;
+      lastCheckedAt: number | null;
+      lastUpdatedAt: number | null;
+      history: { version: string; at: number; notes: string; result: 'success' | 'failed' }[];
+    };
+  };
+}
+export type RobotOpsStateService = SavedState<RobotOpsDocument>;
+export type { RobotOpsService };
+
+/**
+ * Where live robot data comes from. `connect` returns the telemetry source for a site: the DUMMY runs the traffic simulator inside the page (the "dummy Fleet Manager"); the real
+ * adapter connects to the Fleet Manager and translates its payloads into `RobotTelemetry`, `FleetEvent` and `OrderUpdate` (the contract in `core/types.ts`).
+ */
+export interface FleetFeedService {
+  connect(site: { siteId: string; nav: NavGraph; roster: RosterEntry[] }): TelemetryAdapter;
+}
+
 export interface Services {
+  fleetFeed: FleetFeedService;
+  robotOps: RobotOpsService;
   dataset: DatasetService;
   fleetProfiles: FleetProfileService;
   masterData: MasterDataService;

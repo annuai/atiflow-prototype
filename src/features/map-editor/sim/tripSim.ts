@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Vec2 } from '@/core/types';
-import { pointAlong } from '@/features/workflow-builder/sim/runner';
+import { pointAlong } from '@/features/workflow-builder';
 import type { TripPlan } from '../model/simulate';
 
 /** What the simulation tells the map: the route being driven and driven already, and where the robot is. (Same idea as the workflow builder's simulation.) */

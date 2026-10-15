@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LayersThree01 } from '@untitledui/icons';
 import { FormField } from '@/components/form/FormField';
 import { ModalShell } from '@/components/modal/ModalShell';
-import { MaterialPicker, type PickerRow } from '@/features/master-data/components/MaterialPicker';
+import { MaterialPicker, type PickerRow } from '@/features/master-data';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { freeStations, validateGroupForm } from '../model/logic';

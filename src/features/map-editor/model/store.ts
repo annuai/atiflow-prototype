@@ -1,4 +1,5 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { normaliseData } from './seed';
@@ -142,11 +143,10 @@ export const mapVersionsStore = createStore<MapVersionsState>((set, get) => ({
 export const useMapVersions = <T>(sel: (s: MapVersionsState) => T) => useStore(mapVersionsStore, sel);
 
 let saved = mapVersionsStore.getState().byMap;
-let timer: ReturnType<typeof setTimeout> | undefined;
+const persist = createPersister('map versions', (v: Saved) => services().mapVersions.save(v), { delayMs: 400 });
 mapVersionsStore.subscribe((s) => {
   if (s.byMap === saved) return;
   saved = s.byMap;
-  clearTimeout(timer);
-  timer = setTimeout(() => void services().mapVersions.save(s.byMap), 400);
+  persist.queue(s.byMap);
 });
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __mapVersions: mapVersionsStore });

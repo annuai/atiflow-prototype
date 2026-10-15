@@ -1,6 +1,6 @@
 import { ROBOT_TYPES } from '@/data/robotTypes';
-import type { Material, MaterialGroup } from '@/features/master-data/model/types';
-import type { WfNode, Workflow } from '@/features/workflow-builder/model/types';
+import { type Material, type MaterialGroup } from '@/features/master-data';
+import { type WfNode, type Workflow } from '@/features/workflow-builder';
 import type { RequestableItem } from './types';
 
 /** The request type a workflow must have to be started from the operator tablet. */

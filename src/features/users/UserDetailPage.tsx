@@ -18,10 +18,9 @@ import {
   type AccessProfile,
   type RoleId,
 } from '@/features/access';
-import { useAuth } from '@/features/auth/authStore';
-import { toPublic, userDirectory, useUsers } from '@/features/auth/userDirectory';
+import { useAuth, toPublic, userDirectory, useUsers } from '@/features/auth';
 import { notify } from '@/ui/toast';
-import '@/features/devices/devices.css';
+import '@/ui/detailPages.css';
 import { PermissionMatrix } from './components/PermissionMatrix';
 import { FleetPicker } from './components/FleetPicker';
 import { ResetPasswordDialog } from './components/ResetPasswordDialog';

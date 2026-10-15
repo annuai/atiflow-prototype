@@ -4,7 +4,7 @@ import { FormField } from '@/components/form/FormField';
 import type { FieldDef } from '@/components/form/types';
 import { ModalShell } from '@/components/modal/ModalShell';
 import { assignableRoles, isFleetScoped, roleById, ROLES, type RoleId } from '@/features/access';
-import { userDirectory, usernameTaken } from '@/features/auth/userDirectory';
+import { userDirectory, usernameTaken } from '@/features/auth';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { AvatarUpload } from './AvatarUpload';

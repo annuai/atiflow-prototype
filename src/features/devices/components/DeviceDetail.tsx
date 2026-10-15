@@ -1,19 +1,26 @@
-import { Tool01 } from '@untitledui/icons';
-import { EmptyState } from '@/components/data/EmptyState';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GamingPad01, RefreshCcw03, Rows01, Settings02, Trash01 } from '@untitledui/icons';
 import { Tabs } from '@/components/application/tabs/tabs';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
-import { useFleetNames } from '@/features/workflow-builder/model/store';
+import { useFleetNames } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
 import { deviceStore } from '../model/store';
 import { nameOf } from '../model/validate';
 import type { Device, DeviceKind, FieldValue } from '../model/types';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { FormField } from '@/components/form/FormField';
-import { fleetPath } from '@/features/fleets/paths';
+import { fleetPath, FLEETS_PATH } from '@/features/fleets';
+import {
+  CalibrationTab,
+  ConfigurationTab,
+  SoftwareUpdateTab,
+  type EditFooter,
+  type RobotRef,
+} from '@/features/robot-ops';
+import { robotTypeByLabel } from '@/data/robotTypes';
 import { DetailBreadcrumb, type Crumb } from './DetailBreadcrumb';
 import { StatusBadge } from './StatusBadge';
 
@@ -38,7 +45,11 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
   const viaFleet = !!from && from === fleet;
   const back = viaFleet ? fleetPath(fleet) : `/configurator/${kind.route}`;
   const trail: Crumb[] = viaFleet
-    ? [{ label: 'Fleets' }, { label: fleet, onPress: () => navigate(back) }, { label: name }]
+    ? [
+        { label: 'Fleets', onPress: () => navigate(FLEETS_PATH) },
+        { label: fleet, onPress: () => navigate(back) },
+        { label: name },
+      ]
     : [{ label: kind.plural, onPress: () => navigate(back) }, { label: name }];
   const value = (key: string) => (key in draft ? draft[key] : (device.values[key] ?? ''));
   const fields = kind.fields
@@ -62,6 +73,49 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
     notify.success(`${name} removed`, undefined, 'device-removed');
   };
   const tabs = kind.detail.tabs;
+  const robot: RobotRef = {
+    name,
+    type: robotTypeByLabel(device.values.sherpaType).id,
+    firmware: String(device.values.firmware ?? ''),
+  };
+  const online = device.status === 'online';
+  /** The buttons at the bottom of the Details and Configuration tabs: Remove / Unassign on the left, then Edit (or Cancel / Save while editing). */
+  const footer = (f: EditFooter): ReactNode => (
+    <div className="mt-auto flex flex-wrap items-center justify-end gap-3 pt-2">
+      {!f.editing && (
+        <Button
+          color="tertiary-destructive"
+          size="md"
+          iconLeading={Trash01}
+          className="mr-auto"
+          onPress={() => setConfirm(true)}
+        >
+          Remove {kind.singular.toLowerCase()}
+        </Button>
+      )}
+      {f.editing ? (
+        <>
+          <Button color="secondary" size="md" isDisabled={f.busy} onPress={f.onCancel}>
+            Cancel
+          </Button>
+          <Button color="primary" size="md" isLoading={f.busy} onPress={f.onSave}>
+            Save Changes
+          </Button>
+        </>
+      ) : (
+        <>
+          {fleet && (
+            <Button color="secondary" size="md" onPress={unassign}>
+              Unassign from {fleet}
+            </Button>
+          )}
+          <Button color="primary" size="md" isDisabled={f.disabled} onPress={f.onEdit}>
+            {f.editLabel}
+          </Button>
+        </>
+      )}
+    </div>
+  );
   return (
     <>
       <div className="flex shrink-0 flex-wrap items-end justify-between gap-4 px-1 sm:min-h-[140px] sm:flex-nowrap">
@@ -109,76 +163,57 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
           <div className="mt-6 h-px w-full bg-border-secondary" />
         )}
 
-        <div className="flex flex-1 flex-col gap-6 pt-6 sm:gap-8">
-          {tab === 'Details' ? (
-            <>
-              <div>
-                <h2 className="text-lg font-semibold text-primary">{kind.detail.heading}</h2>
-                <p className="text-sm text-tertiary">{kind.detail.description}</p>
-              </div>
-              <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
-                {fields.map((f) => {
-                  const d = detailOf(f);
-                  const editable = !!d.editable && editing;
-                  return (
-                    <FormField
-                      key={f.key}
-                      def={f}
-                      label={d.label ?? f.label}
-                      display={d.display}
-                      value={value(f.key)}
-                      disabled={!editable}
-                      fleets={fleets}
-                      onChange={(v) => setDraft((o) => ({ ...o, [f.key]: v }))}
-                    />
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <EmptyState framed icon={Tool01} title={tab} subtext="This tab isn’t part of this prototype yet." />
-          )}
-          <div className="mt-auto flex flex-wrap items-center justify-end gap-3 pt-2">
-            {!editing && (
-              <Button
-                color="tertiary-destructive"
-                size="md"
-                iconLeading={Trash01}
-                className="mr-auto"
-                onPress={() => setConfirm(true)}
-              >
-                Remove {kind.singular.toLowerCase()}
-              </Button>
-            )}
-            {editing ? (
+        <div className="flex flex-1 flex-col pt-6">
+          <TabPanelMotion tabKey={tab} className="flex flex-1 flex-col gap-6 sm:gap-8">
+            {tab === 'Details' ? (
               <>
-                <Button
-                  color="secondary"
-                  size="md"
-                  onPress={() => {
+                <div>
+                  <h2 className="text-lg font-semibold text-primary">{kind.detail.heading}</h2>
+                  <p className="text-sm text-tertiary">{kind.detail.description}</p>
+                </div>
+                <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
+                  {fields.map((f) => {
+                    const d = detailOf(f);
+                    const editable = !!d.editable && editing;
+                    return (
+                      <FormField
+                        key={f.key}
+                        def={f}
+                        label={d.label ?? f.label}
+                        display={d.display}
+                        value={value(f.key)}
+                        disabled={!editable}
+                        fleets={fleets}
+                        onChange={(v) => setDraft((o) => ({ ...o, [f.key]: v }))}
+                      />
+                    );
+                  })}
+                </div>
+                {footer({
+                  editing,
+                  busy: false,
+                  disabled: false,
+                  editLabel: 'Edit Details',
+                  onEdit: () => setEditing(true),
+                  onSave: save,
+                  onCancel: () => {
                     setEditing(false);
                     setDraft({});
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button color="primary" size="md" onPress={save}>
-                  Save Changes
-                </Button>
+                  },
+                })}
               </>
+            ) : tab === 'Configuration' ? (
+              <ConfigurationTab robot={robot} renderFooter={footer} />
+            ) : tab === 'Calibration' ? (
+              <CalibrationTab robot={robot} online={online} />
             ) : (
-              <>
-                {fleet && (
-                  <Button color="secondary" size="md" onPress={unassign}>
-                    Unassign from {fleet}
-                  </Button>
-                )}
-                <Button color="primary" size="md" onPress={() => setEditing(true)}>
-                  Edit Details
-                </Button>
-              </>
+              <SoftwareUpdateTab
+                robot={robot}
+                online={online}
+                onInstalled={(version) => deviceStore.getState().update(kind.id, name, { firmware: version })}
+              />
             )}
-          </div>
+          </TabPanelMotion>
         </div>
         <ConfirmDialog
           isOpen={confirm}

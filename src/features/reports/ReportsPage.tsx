@@ -4,7 +4,7 @@ import { AlertCircle, ChevronDown, ChevronUp, RefreshCcw01 } from '@untitledui/i
 import { BadgeWithDot } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { StatusStrip } from '@/components/data/StatusStrip';
-import { feed } from '@/features/live-floor/liveFeed';
+import { feed } from '@/features/live-floor';
 import { AllKpis } from './components/AllKpis';
 import { RangeBar } from './components/RangeBar';
 import { Scorecard } from './components/Scorecard';

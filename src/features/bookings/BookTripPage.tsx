@@ -8,16 +8,17 @@ import { useApp } from '@/core/store';
 import { useFleetDirectory } from '@/data/fleetDirectory';
 import { robotsOnFloor, useRobotRecords } from '@/data/robots';
 import { ROBOT_TYPES, robotTypeById, robotTypeByLabel } from '@/data/robotTypes';
-import { useAuth } from '@/features/auth/authStore';
-import { routeItems } from '@/features/requests/model/catalog';
-import { useRequestsRunning } from '@/features/requests/model/bridge';
-import { requestsStore } from '@/features/requests/model/store';
-import type { RequestableItem } from '@/features/requests/model/types';
-import { fleetIdOf, fleetLiveOf } from '@/features/requests/model/useOperator';
-import { useWorkflow } from '@/features/workflow-builder/model/store';
-import { useOperator } from '@/features/requests/model/useOperator';
-import { StationMap } from '@/features/workflow-builder/components/StationMap';
-import { fleetStations, stationLabel, useMapData } from '@/features/workflow-builder/model/stations';
+import { useAuth } from '@/features/auth';
+import {
+  routeItems,
+  useRequestsRunning,
+  requestsStore,
+  type RequestableItem,
+  fleetIdOf,
+  fleetLiveOf,
+  useOperator,
+} from '@/features/requests';
+import { useWorkflow, StationMap, fleetStations, stationLabel, useMapData } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
 import { RobotTile } from './components/RobotTile';
 import { RouteCard } from './components/RouteCard';

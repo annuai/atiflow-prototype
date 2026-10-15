@@ -1,12 +1,11 @@
 import { Grid01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/data/EmptyState';
 import { useEffect, useMemo, useState } from 'react';
-import { useFleetOptions } from '@/components/data/FleetSelect';
-import { useFleets } from '@/features/fleets/model/store';
-import { useMaps } from '@/features/maps/model/maps';
-import { seedMapData } from '@/features/map-editor/model/seed';
-import { mapVersionsStore, useMapVersions } from '@/features/map-editor/model/store';
-import { useMapData } from '@/features/workflow-builder/model/stations';
+import { useFleetOptions } from '@/features/auth';
+import { useFleets } from '@/features/fleets';
+import { useMaps } from '@/features/maps';
+import { seedMapData, mapVersionsStore, useMapVersions } from '@/features/map-editor';
+import { useMapData } from '@/features/workflow-builder';
 import { Badge, BadgeWithDot } from '@/components/base/badges/badges';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 import { ProgressBar } from '@/components/base/progress-indicators/progress-indicators';

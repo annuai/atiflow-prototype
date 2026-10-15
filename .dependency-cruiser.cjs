@@ -12,7 +12,10 @@ module.exports = {
       comment: 'core/ is plain TypeScript: no React, no Three.js, and nothing from the layers above it.',
       from: { path: '^src/core/' },
       to: {
-        path: ['^src/(engine|ui|features|shell|app|components|adapters)/', '^node_modules/(react|react-dom|three)/'],
+        path: [
+          '^src/(engine|ui|features|shell|app|components|adapters|services)/',
+          '^node_modules/(react|react-dom|three)/',
+        ],
       },
     },
     {
@@ -83,7 +86,14 @@ module.exports = {
       from: { path: '^src/', pathNot: '^src/(services/|main\\.tsx)' },
       to: { path: '^src/services/dummy/' },
     },
-    { name: 'no-circular', severity: 'error', comment: 'No import cycles.', from: {}, to: { circular: true } },
+    {
+      name: 'no-circular',
+      severity: 'error',
+      comment:
+        'No import cycles that exist at run time. A cycle that goes through a type-only import (`import type`, or names that are only types) disappears when compiled, so it is not reported.',
+      from: {},
+      to: { circular: true, viaOnly: { dependencyTypesNot: ['type-only'] } },
+    },
     {
       name: 'src-does-not-use-dev-dependencies',
       severity: 'error',

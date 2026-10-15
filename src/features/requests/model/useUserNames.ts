@@ -1,4 +1,4 @@
-import { toPublic, useUsers } from '@/features/auth/userDirectory';
+import { toPublic, useUsers } from '@/features/auth';
 
 /** A person's name for a username (the username itself when the person is not in the list any more). */
 export function useUserNames(): (username: string) => string {

@@ -1,6 +1,6 @@
 import { datasetStore } from '@/data/dataset';
 import { robotRecords, robotsOnFloor } from '@/data/robots';
-import { feed, measurements } from '@/features/live-floor/liveFeed';
+import { feed, measurements } from '@/features/live-floor';
 import { buildReport } from '../model/kpis';
 import { previousRange, startOfDay } from '../model/range';
 import type { ReportSource } from '../model/types';

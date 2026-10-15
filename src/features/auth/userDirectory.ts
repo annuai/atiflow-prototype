@@ -1,4 +1,5 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister, persistOnce } from '@/data/persist';
 import { useStore } from 'zustand';
 import { roleById } from '@/features/access';
 import { services } from '@/services';
@@ -43,7 +44,7 @@ export const userDirectory = createStore<UserDirectory>((set, get) => ({
       username: norm(input.username),
       title: input.title?.trim() || roleById(input.role).label,
     };
-    void services().auth.setPassword(u.username, password);
+    void persistOnce('password', () => services().auth.setPassword(u.username, password));
     set({ users: [...get().users, u] });
     return u;
   },
@@ -51,10 +52,10 @@ export const userDirectory = createStore<UserDirectory>((set, get) => ({
     set({ users: get().users.map((u) => (u.username === username ? { ...u, ...patch } : u)) });
   },
   resetPassword(username, password) {
-    void services().auth.setPassword(username, password);
+    void persistOnce('password', () => services().auth.setPassword(username, password));
   },
   remove(username) {
-    void services().auth.removeCredentials(username);
+    void persistOnce('credentials', () => services().auth.removeCredentials(username));
     set({ users: get().users.filter((u) => u.username !== username) });
   },
   reset() {
@@ -65,8 +66,9 @@ export const useUsers = <T>(sel: (s: UserDirectory) => T) => useStore(userDirect
 export const usernameTaken = (username: string) =>
   userDirectory.getState().users.some((u) => u.username === norm(username));
 
+const persist = createPersister('users', (v: UserRecord[]) => services().users.save(v));
 userDirectory.subscribe((s, p) => {
-  if (s.users !== p.users) void services().users.save(s.users);
+  if (s.users !== p.users) persist.queue(s.users);
 });
 // another tab (e.g. a configurator changed this user's access) saved the directory: take it over
 services().users.subscribe((users) => userDirectory.setState({ users }));

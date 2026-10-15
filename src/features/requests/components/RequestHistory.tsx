@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { ChevronDown, ChevronUp, ClipboardCheck } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { EmptyState } from '@/components/data/EmptyState';
@@ -121,32 +122,34 @@ export function RequestHistory({
           ]}
         />
       </div>
-      {!groups.length ? (
-        <EmptyState
-          icon={ClipboardCheck}
-          title={
-            requests.length ? copy.history.empty[filter === 'active' ? 'active' : 'past'] : copy.history.empty.title
-          }
-          subtext={requests.length ? undefined : copy.history.empty.hint}
-          size="lg"
-        />
-      ) : (
-        groups.map((g) => (
-          <section key={g.groupId} className="rounded-2xl border border-secondary bg-primary p-4 shadow-xs">
-            <header className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="text-md font-semibold text-primary">{g.groupId}</h3>
-              <p className="text-sm text-tertiary">
-                {copy.history.order(g.requests.length)} · {time(g.createdAt)} · {timeAgo(g.createdAt, now)}
-              </p>
-            </header>
-            <ul className="flex flex-col gap-2">
-              {g.requests.map((r) => (
-                <RequestRow key={r.id} r={r} who={who} now={now} onCancel={() => setCancelling(r)} />
-              ))}
-            </ul>
-          </section>
-        ))
-      )}
+      <TabPanelMotion tabKey={filter} className="flex flex-col gap-4">
+        {!groups.length ? (
+          <EmptyState
+            icon={ClipboardCheck}
+            title={
+              requests.length ? copy.history.empty[filter === 'active' ? 'active' : 'past'] : copy.history.empty.title
+            }
+            subtext={requests.length ? undefined : copy.history.empty.hint}
+            size="lg"
+          />
+        ) : (
+          groups.map((g) => (
+            <section key={g.groupId} className="rounded-2xl border border-secondary bg-primary p-4 shadow-xs">
+              <header className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="text-md font-semibold text-primary">{g.groupId}</h3>
+                <p className="text-sm text-tertiary">
+                  {copy.history.order(g.requests.length)} · {time(g.createdAt)} · {timeAgo(g.createdAt, now)}
+                </p>
+              </header>
+              <ul className="flex flex-col gap-2">
+                {g.requests.map((r) => (
+                  <RequestRow key={r.id} r={r} who={who} now={now} onCancel={() => setCancelling(r)} />
+                ))}
+              </ul>
+            </section>
+          ))
+        )}
+      </TabPanelMotion>
       <ConfirmDialog
         isOpen={!!cancelling}
         onOpenChange={(o) => !o && setCancelling(null)}

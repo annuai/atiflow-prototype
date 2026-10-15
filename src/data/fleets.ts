@@ -1,4 +1,4 @@
-import seed from './dataset.json';
+import seed from '@/fixtures/dataset.json';
 
 /** A fleet of the site. The list itself is part of the shared dataset (`dataset.ts`); read it through `fleetDirectory`. */
 export interface FleetRecord {

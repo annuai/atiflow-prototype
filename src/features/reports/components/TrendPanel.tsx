@@ -1,4 +1,5 @@
 import { Card, CardTitle } from '@/components/data/Card';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { copy } from '../copy';
 import { METRICS, TREND_METRICS } from '../model/metrics';
@@ -42,17 +43,19 @@ export function TrendPanel({
           />
         </div>
       </CardTitle>
-      {real < 2 ? (
-        <p className="grid h-52 place-items-center text-sm text-tertiary">{copy.trend.collecting}</p>
-      ) : (
-        <TrendChart
-          metric={m}
-          points={points}
-          daily={daily}
-          target={metric === 'chargingAvailability' ? AVAILABILITY_TARGET : undefined}
-          height={208}
-        />
-      )}
+      <TabPanelMotion tabKey={metric}>
+        {real < 2 ? (
+          <p className="grid h-52 place-items-center text-sm text-tertiary">{copy.trend.collecting}</p>
+        ) : (
+          <TrendChart
+            metric={m}
+            points={points}
+            daily={daily}
+            target={metric === 'chargingAvailability' ? AVAILABILITY_TARGET : undefined}
+            height={208}
+          />
+        )}
+      </TabPanelMotion>
     </Card>
   );
 }

@@ -121,7 +121,7 @@ export async function runSimulation(nodes: WfNode[]) {
   async function visit(n: WfNode): Promise<void> {
     if (tok !== token) throw CANCEL;
     S().setSim({ currentId: n.id });
-    const f = n.f as Record<string, any>;
+    const f = n.f as Record<string, string>; // (the fields this simulation reads are all plain text)
     switch (n.t) {
       case 'start':
         say(`Start: ${f.trigger} trigger, ${f.robot}, ${f.request}`);

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useNow } from '@/hooks/use-now';
 import { Badge } from '@/components/base/badges/badges';
 import { lastUpdated } from '@/utils/timeAgo';
 import { copy } from '../copy';
@@ -8,6 +9,7 @@ import type { FleetMap } from '../model/types';
 
 /** One map: preview, version + routing chip, name, the fleets that run on it and its station count. */
 export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
+  const now = useNow();
   const row = (label: string, value: string, muted?: boolean) => (
     <div className="flex items-baseline justify-between gap-4 text-sm">
       <span className="text-xs tracking-wide text-tertiary uppercase">{label}</span>
@@ -43,7 +45,7 @@ export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
           title={new Date(map.updatedAt).toLocaleString()}
         >
           <span className="text-xs tracking-wide text-tertiary uppercase">{copy.card.updated}</span>
-          <span className="text-right font-medium text-primary">{lastUpdated(map.updatedAt, Date.now())}</span>
+          <span className="text-right font-medium text-primary">{lastUpdated(map.updatedAt, now)}</span>
         </div>
       </div>
     </article>

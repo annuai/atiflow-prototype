@@ -12,11 +12,12 @@ import {
   validateGroupForm,
 } from '../src/features/fleets/model/logic';
 import { SYSTEM_MAPS as MAPS, mapById } from '../src/features/maps/model/maps';
-import { EMPTY_PROFILE, SEED_PROFILES } from '../src/features/fleets/model/seed';
+import { SEED_PROFILES } from '../src/fixtures/fleetProfiles';
+import { EMPTY_PROFILE } from '../src/features/fleets/model/store';
 import { workflowSummary } from '../src/features/fleets/model/workflows';
 import { fleetPath } from '../src/features/fleets/paths';
 import { KINDS } from '../src/features/devices/model/kinds';
-import { seedGroups, seedMaterials } from '../src/features/master-data/model/seed';
+import { seedGroups, seedMaterials } from '../src/fixtures/masterData';
 import { assignToFleet, unassignFromFleet } from '../src/features/master-data/model/logic';
 import { createNode, createStart } from '../src/features/workflow-builder/model/factory';
 

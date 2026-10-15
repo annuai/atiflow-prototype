@@ -1,4 +1,4 @@
-import { flatten, requestType, TABLET_REQUEST } from '@/features/requests/model/catalog';
+import { flatten, requestType, TABLET_REQUEST } from '@/features/requests';
 import type { Problem } from './tree';
 import type { WfNode } from './types';
 

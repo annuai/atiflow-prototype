@@ -69,5 +69,5 @@ Open a site with `?site=<id>`. The fleet areas, forbidden zones and traffic zone
 
 ## Engineering
 
-Quality gates, import rules, runtime configuration (`public/config.json` and `VITE_*` variables), logging and error reporting are described in [`docs/architecture/foundations.md`](docs/architecture/foundations.md). The architecture audit and the plan for wiring real systems (Fleet Manager, Deployment Manager) are in [`docs/architecture/audit.md`](docs/architecture/audit.md); decisions are in [`docs/adr`](docs/adr). Deploy: it is a static single-page app (`npm run build`, serve `dist/` with a fallback to `index.html`, put environment settings in `config.json` next to it).
+Quality gates, import rules, runtime configuration (`public/config.json` and `VITE_*` variables), logging and error reporting are described in [`docs/architecture/foundations.md`](docs/architecture/foundations.md). The architecture audit and the plan for wiring real systems (Fleet Manager, Deployment Manager) are in [`docs/architecture/audit.md`](docs/architecture/audit.md); decisions are in [`docs/adr`](docs/adr). Deploy: it is a static single-page app; see [`docs/deploy.md`](docs/deploy.md) (Dockerfile with nginx, environment variables, headers, other hosts).
 

@@ -2,7 +2,7 @@ import { useStore } from 'zustand';
 import { datasetStore, type DatasetData } from './dataset';
 import { robotTypeByLabel, type RobotType } from './robotTypes';
 import type { FleetRecord } from './fleets';
-import type { DeviceStatus } from '@/features/devices/model/types';
+type DeviceStatus = 'online' | 'offline';
 
 /**
  * The one reading of a robot, derived from the shared dataset. The Robots page, the fleet pages, the Live Floor roster and the Dashboard all go

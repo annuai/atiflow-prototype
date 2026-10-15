@@ -6,7 +6,7 @@ import type {
   TelemetryAdapter,
   TransportOrder,
 } from '../core/types';
-import { tripIds } from '../core/tripIds';
+import { tripIds } from '../data/tripIds';
 import { FleetSim, type RosterEntry } from './sim';
 
 /** Default adapter until a live feed exists: drives FleetSim in real time (with rare faults switched on, so reliability figures have something to show). */

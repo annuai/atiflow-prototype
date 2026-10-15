@@ -30,7 +30,7 @@ import { locateTarget } from '../src/features/map-editor/model/locate';
 import { pinchStep } from '../src/components/map/useTouchGestures';
 import { planTrip } from '../src/features/map-editor/model/simulate';
 import { ZONE_TYPES, zoneType, zoneTypesOf } from '../src/features/map-editor/model/zoneTypes';
-import { sampleWorkflows } from '../src/features/workflow-builder/model/seed';
+import { sampleWorkflows } from '../src/fixtures/workflows';
 
 const site = JSON.parse(readFileSync('public/sites/ecc/site.json', 'utf8')) as SiteLayout,
   nav = JSON.parse(readFileSync('public/sites/ecc/nav.json', 'utf8')) as NavGraph;

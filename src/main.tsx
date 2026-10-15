@@ -2,10 +2,15 @@ import { createRoot } from 'react-dom/client';
 import './styles/globals.css'; // Tailwind + Untitled UI theme first, so the dashboard's own CSS wins conflicts
 import './ui/tokens.css';
 import './ui/app.css';
+import { BootFailure } from './shell/BootFailure';
 import { installGlobalErrorHandlers, loadConfig, log } from './platform';
-import { createServices, setServices } from './services';
+import { createServices, hydrateServices, setServices } from './services';
 
-/** Start-up: read the runtime configuration, report uncaught errors, choose the services (dummy or API) from it, then load and draw the app. */
+/**
+ * Start-up, in this order: read the runtime configuration, report uncaught errors, choose the services (dummy or API) from the configuration, LOAD THEIR DATA, and only then load and
+ * draw the app (its stores start from what the services already hold). If the data cannot be loaded a retry screen is drawn instead of the app.
+ */
+const root = createRoot(document.getElementById('root')!);
 async function start() {
   const config = await loadConfig({
     env: import.meta.env,
@@ -17,8 +22,13 @@ async function start() {
     onProblem: (m) => log.warn(m),
   });
   installGlobalErrorHandlers(window);
-  setServices(createServices(config)); // before any app module loads: stores read their data from the services when they start
+  const services = setServices(createServices(config));
+  const { failed } = await hydrateServices(services);
+  if (failed.length) {
+    root.render(<BootFailure failed={failed} onRetry={() => void start()} />);
+    return;
+  }
   const { AppRoot } = await import('./app/AppRoot');
-  createRoot(document.getElementById('root')!).render(<AppRoot />);
+  root.render(<AppRoot />);
 }
 void start();

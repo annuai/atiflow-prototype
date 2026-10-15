@@ -1,4 +1,5 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { Rows01, Settings02 } from '@untitledui/icons';
 import { Tabs } from '@/components/application/tabs/tabs';
 import { copy } from './copy';
@@ -43,7 +44,9 @@ export function MasterDataPage() {
             />
           </Tabs>
           <div className="md-body">
-            <active.Panel />
+            <TabPanelMotion tabKey={active.id} fill>
+              <active.Panel />
+            </TabPanelMotion>
           </div>
         </div>
       </div>

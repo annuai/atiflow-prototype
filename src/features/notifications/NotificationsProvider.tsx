@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { useStore } from 'zustand';
-import { useAuth } from '@/features/auth/authStore';
+import { useAuth } from '@/features/auth';
 import { createNotificationStore, type NotificationState, type NotificationStore } from './store';
 import type { NotificationApi } from './types';
 

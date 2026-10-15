@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNow } from '@/hooks/use-now';
 import { Edit05, RefreshCcw01, Zap } from '@untitledui/icons';
 import { BadgeWithDot } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
@@ -16,7 +17,7 @@ export function ConnectionCard({ def, onEdit }: { def: ConnectionDef; onEdit(): 
   const [busy, setBusy] = useState<'test' | 'sync' | null>(null);
   const status = statusOf(def, state);
   const ok = status.status === 'connected';
-  const now = Date.now();
+  const now = useNow();
   const test = async () => {
     setBusy('test');
     const r = await settingsStore.getState().test(def.id);

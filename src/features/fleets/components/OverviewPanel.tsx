@@ -1,19 +1,21 @@
-import { MapThumbnail } from '@/features/maps/components/MapThumbnail';
+import { MapThumbnail } from '@/features/maps';
 import type { FC } from 'react';
 import { Cube01, Server01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/data/EmptyState';
 import { useState, type ReactNode } from 'react';
-import { Map01 } from '@untitledui/icons';
+import { Link } from 'react-router-dom';
+import { Map01, Trash01 } from '@untitledui/icons';
+import { Dropdown } from '@/components/base/dropdown/dropdown';
+import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
+import { can } from '@/features/access';
+import { useAuth } from '@/features/auth';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
-import { KINDS } from '@/features/devices/model/kinds';
-import { deviceStore, useDevices } from '@/features/devices/model/store';
-import type { DeviceKind } from '@/features/devices/model/types';
-import { nameOf } from '@/features/devices/model/validate';
+import { KINDS, deviceStore, useDevices, type DeviceKind, nameOf } from '@/features/devices';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { useMap } from '../model/maps';
-import { profileOf, useFleets } from '../model/store';
+import { fleetsStore, profileOf, useFleets } from '../model/store';
 import { AssignMapModal } from './AssignMapModal';
 import { AssignDevicesModal } from './AssignDevicesModal';
 import { DeviceCard } from './DeviceCard';
@@ -53,7 +55,11 @@ function Section({
 
 /** Fleet overview: assigned map, assigned robots (tiles) and hardware (rows). Assign / unassign here updates the Robots and Hardware pages too. */
 export function OverviewPanel({ fleet }: { fleet: string }) {
-  const map = useMap(useFleets((s) => profileOf(s.profiles, fleet).mapId));
+  const profile = useFleets((s) => profileOf(s.profiles, fleet));
+  const map = useMap(profile.mapId);
+  const user = useAuth((s) => s.user);
+  const canEditMaps = !!user && can(user, 'configurator.maps');
+  const [unassigningMap, setUnassigningMap] = useState(false);
   const [assigning, setAssigning] = useState<DeviceKind | null>(null);
   const [assigningMap, setAssigningMap] = useState(false);
   const robots = useDevices((s) => s.robot).filter((d) => d.values.fleet === fleet);
@@ -68,16 +74,36 @@ export function OverviewPanel({ fleet }: { fleet: string }) {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-primary">{copy.overview.map}</h2>
         {map ? (
-          <div className="flex overflow-hidden rounded-xl border border-secondary bg-primary shadow-xs">
+          <div className="relative flex overflow-hidden rounded-xl border border-secondary bg-primary shadow-xs transition hover:shadow-md">
             <MapThumbnail fleetLive={map.fleetLive} className="hidden h-32 w-52 shrink-0 sm:block" />
-            <div className="relative flex min-w-0 flex-1 flex-col justify-center gap-3 p-5">
-              <div className="absolute top-3 right-3">
+            <div className="flex min-w-0 flex-1 flex-col justify-center gap-3 p-5">
+              <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
                 <Button size="sm" color="secondary" onPress={() => setAssigningMap(true)}>
                   {copy.overview.changeMap}
                 </Button>
+                <Dropdown.Root>
+                  <Dropdown.DotsButton aria-label={copy.overview.mapMenu} />
+                  <Dropdown.Popover className="w-48">
+                    <Dropdown.Menu onAction={() => setUnassigningMap(true)}>
+                      <Dropdown.Item id="unassign" icon={Trash01} label={copy.overview.unassignMap} />
+                    </Dropdown.Menu>
+                  </Dropdown.Popover>
+                </Dropdown.Root>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="truncate text-xl font-semibold text-primary">{map.name}</p>
+                <p className="truncate text-xl font-semibold text-primary">
+                  {canEditMaps ? (
+                    <Link
+                      to={`/configurator/maps/${encodeURIComponent(map.id)}`}
+                      aria-label={copy.overview.openInEditor(map.name)}
+                      className="outline-focus-ring after:absolute after:inset-0 focus-visible:after:outline-2"
+                    >
+                      {map.name}
+                    </Link>
+                  ) : (
+                    map.name
+                  )}
+                </p>
                 <Badge size="sm" type="pill-color" color="brand">
                   {map.tag}
                 </Badge>
@@ -144,6 +170,18 @@ export function OverviewPanel({ fleet }: { fleet: string }) {
         </div>
       </Section>
       <AssignMapModal fleet={fleet} isOpen={assigningMap} onOpenChange={setAssigningMap} />
+      <ConfirmDialog
+        isOpen={unassigningMap}
+        onOpenChange={setUnassigningMap}
+        title={copy.overview.unassignMapTitle(fleet)}
+        description={copy.overview.unassignMapBody(profile.groups.length)}
+        confirmLabel={copy.overview.unassignMap}
+        onConfirm={() => {
+          fleetsStore.getState().unassignMap(fleet);
+          const d = copy.overview.mapUnassigned(map?.name ?? 'The map', fleet);
+          notify.success(d.title, d.body, 'map-unassigned');
+        }}
+      />
       <AssignDevicesModal
         kind={assigning ?? KINDS.robot}
         fleet={fleet}

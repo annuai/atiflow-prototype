@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createValidatedDocument, localBackend, sessionBackend, type StorageBackend } from '@/data/storage';
-import seedDataset from '@/data/dataset.json';
+import seedDataset from '@/fixtures/dataset.json';
 import { ALL_PERMISSIONS, isFleetScoped, presetOf } from '@/features/access';
 import type { UserRecord } from '@/features/auth/types';
 import { SEED_CREDENTIALS, SEED_REVISION, SEED_SINCE, SEED_USERS } from '@/fixtures/users';

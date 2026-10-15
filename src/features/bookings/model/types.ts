@@ -1,4 +1,4 @@
-import type { RequestStatus, StatusEvent } from '@/features/requests/model/types';
+import { type RequestStatus, type StatusEvent } from '@/features/requests';
 
 /**
  * A custom trip an operator booked: a robot of the chosen type drives from a start station to an end station. No material, no approval, no stops: it goes straight to the fleet

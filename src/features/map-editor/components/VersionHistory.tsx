@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNow } from '@/hooks/use-now';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { ClockRewind } from '@untitledui/icons';
@@ -32,7 +33,7 @@ export function VersionHistory({
   const published = publishedOf(history);
   const [restoring, setRestoring] = useState<number | null>(null);
   const [discarding, setDiscarding] = useState(false);
-  const now = Date.now();
+  const now = useNow();
   const row = (key: string, active: boolean, head: React.ReactNode, sub: string, actions: React.ReactNode) => (
     <li
       key={key}

@@ -3,7 +3,7 @@ import { DeviceDetail } from './components/DeviceDetail';
 import { useDevices } from './model/store';
 import { findDevice } from './model/validate';
 import type { DeviceKind } from './model/types';
-import './devices.css';
+import '@/ui/detailPages.css';
 
 /** One robot / hardware. An unknown name (e.g. after removing it) goes back to the list. */
 export function DeviceDetailPage({ kind }: { kind: DeviceKind }) {

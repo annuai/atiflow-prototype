@@ -1,6 +1,6 @@
 import { LaneGraph, pointAt, type PathPlan } from '../core/lanes';
 import { angleDiff, pointInPoly } from '../core/geom';
-import type { TripIdSource } from '../core/tripIds';
+import type { TripIdSource } from '../data/tripIds';
 import type {
   FleetEvent,
   NavGraph,

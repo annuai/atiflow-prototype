@@ -1,10 +1,13 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister } from './persist';
 import { useStore } from 'zustand';
-import seedJson from './dataset.json';
 import { services } from '@/services';
 import type { FleetRecord } from './fleets';
 import type { DatasetData } from './datasetTypes';
-import type { Device, DeviceKindId, FieldValue } from '@/features/devices/model/types';
+import type { DatasetDevice as Device } from './datasetTypes';
+
+type DeviceKindId = 'robot' | 'hardware';
+type FieldValue = string | string[];
 
 /**
  * THE shared dataset: fleets, robots and hardware. Configurator pages, the Live Floor, the Dashboard and the simulator all read it from here,
@@ -27,7 +30,6 @@ export interface DatasetState extends DatasetData {
 }
 
 const COLORS = ['#14b8a6', '#f59e0b', '#6366f1', '#ec4899', '#22c55e', '#0ea5e9', '#a855f7'];
-const seed = (): DatasetData => structuredClone(seedJson) as DatasetData;
 const isDataset = (v: unknown): v is DatasetData => {
   const d = v as DatasetData;
   return !!d && d.version === 1 && Array.isArray(d.fleets) && Array.isArray(d.robot) && Array.isArray(d.hardware);
@@ -45,7 +47,7 @@ export const datasetDoc = {
   },
   reset(): DatasetData {
     services().dataset.clear();
-    return seed();
+    return services().dataset.read();
   },
 };
 
@@ -57,7 +59,7 @@ const slug = (s: string) =>
     .replace(/^-|-$/g, '') || 'fleet';
 
 export const datasetStore = createStore<DatasetState>((set, get) => ({
-  ...(services().dataset.read() ?? seed()),
+  ...services().dataset.read(),
   addFleet(name) {
     const { fleets } = get();
     let id = slug(name);
@@ -87,14 +89,12 @@ export const datasetStore = createStore<DatasetState>((set, get) => ({
 }));
 export const useDataset = <T>(sel: (s: DatasetState) => T) => useStore(datasetStore, sel);
 
-let timer: ReturnType<typeof setTimeout> | undefined;
+const persist = createPersister('fleets, robots and hardware', (v: DatasetData) => services().dataset.save(v), {
+  delayMs: 250,
+});
 datasetStore.subscribe((s, p) => {
   if (s.fleets === p.fleets && s.robot === p.robot && s.hardware === p.hardware) return;
-  clearTimeout(timer);
-  timer = setTimeout(
-    () => void services().dataset.save({ version: 1, fleets: s.fleets, robot: s.robot, hardware: s.hardware }),
-    250,
-  );
+  persist.queue({ version: 1, fleets: s.fleets, robot: s.robot, hardware: s.hardware });
 });
 // another tab (e.g. a configurator editing robots while a supervisor watches the floor) saved the dataset: take it over, so every window shows the same robots
 services().dataset.subscribe((data) => datasetStore.setState({ ...data }));

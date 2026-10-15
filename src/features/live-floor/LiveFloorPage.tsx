@@ -4,20 +4,19 @@ import { useLocation } from 'react-router-dom';
 import { store, useApp } from '@/core/store';
 import { Engine } from '@/engine/Engine';
 import { loadRobotModels } from '@/engine/robotMesh';
-import { myPrefsNow } from '@/features/preferences/data/store';
+import { myPrefsNow } from '@/features/preferences';
 import { handle } from '@/ui/engineHandle';
 import { CameraModes, ZoomControl, FleetList, RobotPanel, RobotMini, StationPanel, MapLegend } from '@/ui/Panels';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { useLoadPhase } from '@/components/skeleton/Skeleton';
 import { LiveFloorSkeleton } from './LiveFloorSkeleton';
-import { FleetSelect } from '@/components/data/FleetSelect';
-import { useVisibleFleets } from '@/features/access/useFleetScope';
+import { FleetSelect, useVisibleFleets } from '@/features/auth';
 import { WalkPad } from '@/ui/WalkPad';
 import { useCoarse } from '@/ui/useCoarse';
 import { XClose } from '@untitledui/icons';
 import { LocateBox } from './LocateBox';
 import { feed } from './liveFeed';
-import { locateTarget } from './locate';
+import { locateTarget } from '@/ui/locate';
 
 /** Supervisor home: the 3D live floor. Content only; chrome comes from AppShell. */
 export function LiveFloorPage() {

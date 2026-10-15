@@ -1,7 +1,8 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { Globe01, Link03 } from '@untitledui/icons';
 import { Tabs } from '@/components/application/tabs/tabs';
-import { SETTINGS_PATH } from '@/features/configurator/configuratorNav';
+import { SETTINGS_PATH } from '@/features/configurator';
 import { ConnectionsPanel } from './components/ConnectionsPanel';
 import { GeneralPanel } from './components/GeneralPanel';
 import { copy } from './copy';
@@ -43,7 +44,9 @@ export function SettingsPage() {
             />
           </Tabs>
           <div className="md-body">
-            <active.Panel />
+            <TabPanelMotion tabKey={active.id} fill>
+              <active.Panel />
+            </TabPanelMotion>
           </div>
         </div>
       </div>

@@ -10,10 +10,12 @@ import type { SavedState } from '../ports';
 export function createSavedState<S extends z.ZodType>(opts: {
   key: string;
   schema: S;
+  /** the starting data of the dummy, returned while nothing valid is stored */
+  seed: () => z.infer<S>;
   backend?: (key: string) => StorageBackend;
 }): SavedState<z.infer<S>> {
   type T = z.infer<S>;
-  const { key, schema, backend = localBackend } = opts;
+  const { key, schema, seed, backend = localBackend } = opts;
   const b = backend(key);
   const parse = (text: string): T | null => {
     try {
@@ -27,11 +29,13 @@ export function createSavedState<S extends z.ZodType>(opts: {
     }
     return null;
   };
+  const read = (): T => {
+    const raw = b.read();
+    return (raw ? parse(raw) : null) ?? seed();
+  };
   return {
-    read() {
-      const raw = b.read();
-      return raw ? parse(raw) : null;
-    },
+    read,
+    hydrate: async () => read(),
     save: async (value) => b.write(JSON.stringify(value)),
     subscribe(listener) {
       if (typeof window === 'undefined') return () => {};

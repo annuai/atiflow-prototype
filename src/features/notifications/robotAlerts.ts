@@ -1,7 +1,6 @@
 import type { RobotTelemetry } from '@/core/types';
 import type { NewNotification } from './types';
-import { DEFAULT_ALERTS } from '@/features/preferences/model/defaults';
-import type { AlertPrefs } from '@/features/preferences/model/types';
+import { DEFAULT_ALERTS, type AlertPrefs } from '@/features/preferences';
 
 export const STUCK_AFTER_S = 90,
   BATTERY_LOW = 25,

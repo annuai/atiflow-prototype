@@ -1,18 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { ClockRewind } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
-import { copy } from '@/features/bookings/copy';
-import { useBookingsRunning } from '@/features/bookings/model/bridge';
-import { cancelBooking } from '@/features/bookings/model/actions';
-import { canCancelBooking } from '@/features/bookings/model/rules';
-import { useBookings } from '@/features/bookings/model/store';
-import { RequestStatusBadge } from '@/features/requests/components/RequestStatusBadge';
-import { useRequestsRunning } from '@/features/requests/model/bridge';
-import { useRequests } from '@/features/requests/model/store';
-import { useOperator } from '@/features/requests/model/useOperator';
+import { copy, useBookingsRunning, cancelBooking, canCancelBooking, useBookings } from '@/features/bookings';
+import { RequestStatusBadge, useRequestsRunning, useRequests, useOperator } from '@/features/requests';
 import { timeAgo } from '@/utils/timeAgo';
 import { historyEntries, type HistoryKind } from './entries';
 
@@ -57,60 +51,62 @@ export function OperatorHistoryPage() {
               }))}
             />
           </div>
-          {!shown.length ? (
-            <EmptyState
-              icon={ClockRewind}
-              title={all.length ? h.none : h.empty.title}
-              subtext={h.empty.hint}
-              size="lg"
-            />
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {shown.slice(0, 200).map((e) => {
-                const trip = e.bookingId ? trips.find((t) => t.id === e.bookingId) : undefined;
-                const when = new Date(e.at).toLocaleString([], {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-                return (
-                  <li
-                    key={e.key}
-                    className="flex flex-wrap items-center gap-3 rounded-xl border border-secondary bg-primary p-3"
-                  >
-                    <div className="min-w-0 flex-1 basis-60">
-                      <p className="flex flex-wrap items-center gap-2 font-semibold text-primary">
-                        <Badge size="sm" type="pill-color" color={KIND_COLOR[e.kind]}>
-                          {h.kinds[e.kind]}
+          <TabPanelMotion tabKey={filter} fill>
+            {!shown.length ? (
+              <EmptyState
+                icon={ClockRewind}
+                title={all.length ? h.none : h.empty.title}
+                subtext={h.empty.hint}
+                size="lg"
+              />
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {shown.slice(0, 200).map((e) => {
+                  const trip = e.bookingId ? trips.find((t) => t.id === e.bookingId) : undefined;
+                  const when = new Date(e.at).toLocaleString([], {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+                  return (
+                    <li
+                      key={e.key}
+                      className="flex flex-wrap items-center gap-3 rounded-xl border border-secondary bg-primary p-3"
+                    >
+                      <div className="min-w-0 flex-1 basis-60">
+                        <p className="flex flex-wrap items-center gap-2 font-semibold text-primary">
+                          <Badge size="sm" type="pill-color" color={KIND_COLOR[e.kind]}>
+                            {h.kinds[e.kind]}
+                          </Badge>
+                          <span>{e.title}</span>
+                        </p>
+                        <p className="text-sm text-secondary">{e.subtitle}</p>
+                        <p className="text-xs text-tertiary">
+                          {when} · {timeAgo(e.at, now)}
+                        </p>
+                      </div>
+                      {e.outcome && (
+                        <Badge size="lg" type="pill-color" color={e.outcome === 'approved' ? 'success' : 'error'}>
+                          {e.outcome === 'approved' ? 'Approved' : 'Rejected'}
                         </Badge>
-                        <span>{e.title}</span>
-                      </p>
-                      <p className="text-sm text-secondary">{e.subtitle}</p>
-                      <p className="text-xs text-tertiary">
-                        {when} · {timeAgo(e.at, now)}
-                      </p>
-                    </div>
-                    {e.outcome && (
-                      <Badge size="lg" type="pill-color" color={e.outcome === 'approved' ? 'success' : 'error'}>
-                        {e.outcome === 'approved' ? 'Approved' : 'Rejected'}
-                      </Badge>
-                    )}
-                    {e.outcome ? (
-                      e.status !== e.outcome && <RequestStatusBadge status={e.status} size="lg" />
-                    ) : (
-                      <RequestStatusBadge status={e.status} size="lg" />
-                    )}
-                    {trip && canCancelBooking(trip, me) && (
-                      <Button size="lg" color="secondary" onPress={() => cancelBooking(trip.id, me)}>
-                        {h.cancel}
-                      </Button>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                      )}
+                      {e.outcome ? (
+                        e.status !== e.outcome && <RequestStatusBadge status={e.status} size="lg" />
+                      ) : (
+                        <RequestStatusBadge status={e.status} size="lg" />
+                      )}
+                      {trip && canCancelBooking(trip, me) && (
+                        <Button size="lg" color="secondary" onPress={() => cancelBooking(trip.id, me)}>
+                          {h.cancel}
+                        </Button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </TabPanelMotion>
         </div>
       </div>
     </div>

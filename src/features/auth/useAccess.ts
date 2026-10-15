@@ -1,7 +1,7 @@
-import { authStore, useAuth } from '@/features/auth/authStore';
-import { canManageUsers, can, type PermissionId } from '.';
+import { canManageUsers, can, type PermissionId } from '@/features/access';
+import { authStore, useAuth } from './authStore';
 
-/** What the signed-in user may do, for components (re-renders when their role or access changes). Imported directly (not from the index) because it reads the auth store. */
+/** What the signed-in user may do, for components (re-renders when their role or access changes). Lives in `auth` (not `access`) because it reads the signed-in user: `access` stays pure policy. */
 export function useAccess() {
   const user = useAuth((s) => s.user);
   return {

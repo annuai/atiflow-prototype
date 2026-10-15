@@ -1,4 +1,4 @@
-import type { FleetProfile } from './types';
+import type { FleetProfile } from '@/features/fleets/model/types';
 import { FLEET_NAME } from '@/data/fleets';
 
 /** Starting profile per fleet name. Fleets created later start with no map and no groups. */
@@ -18,4 +18,3 @@ export const SEED_PROFILES: Record<string, FleetProfile> = {
     ],
   },
 };
-export const EMPTY_PROFILE: FleetProfile = { mapId: null, groups: [] };

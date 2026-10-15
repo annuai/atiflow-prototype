@@ -1,5 +1,5 @@
-import { flatten } from '@/features/requests/model/catalog';
-import type { Workflow } from '@/features/workflow-builder/model/types';
+import { flatten } from '@/features/requests';
+import { type Workflow } from '@/features/workflow-builder';
 
 /** The names of the published workflows of a fleet that use a station (a Station step or an If Logic station). */
 export function workflowsUsing(

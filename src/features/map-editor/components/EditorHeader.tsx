@@ -4,7 +4,7 @@ import { Button } from '@/components/base/buttons/button';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { InlineNameEdit } from '@/components/form/InlineNameEdit';
-import { renameMap } from '@/features/maps/model/maps';
+import { renameMap } from '@/features/maps';
 import { copy } from '../copy';
 
 /** The editor's top bar (Figma "Header Bar"): title, map name with its state, Design | Simulation, version history and Publish. */

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Skeleton } from '@/components/skeleton/Skeleton';
 import type { NavGraph, SiteLayout } from '@/core/types';
-import { useMapData } from '@/features/workflow-builder/model/stations';
+import { useMapData } from '@/features/workflow-builder';
 import { cx } from '@/utils/cx';
 
 const pts = (p: [number, number][]) => p.map((q) => q.join(',')).join(' ');

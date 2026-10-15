@@ -4,7 +4,7 @@ import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
-import { useFleets } from '@/features/fleets/model/store';
+import { useFleets } from '@/features/fleets';
 import { copy } from './copy';
 import { GenerateMapModal } from './components/GenerateMapModal';
 import { ImportMapModal } from './components/ImportMapModal';

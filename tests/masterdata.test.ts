@@ -20,7 +20,7 @@ import {
   validateGroup,
   validateMaterial,
 } from '../src/features/master-data/model/logic';
-import { seedAreas, seedGroups, seedMaterials } from '../src/features/master-data/model/seed';
+import { seedAreas, seedGroups, seedMaterials } from '../src/fixtures/masterData';
 import { searchCatalogue } from '../src/features/master-data/sources/mockCatalog';
 import { parsePrompt, resolveMaterial } from '../src/features/workflow-builder/model/parsePrompt';
 import { fleetsUsingMaterial } from '../src/features/workflow-builder/model/usage';

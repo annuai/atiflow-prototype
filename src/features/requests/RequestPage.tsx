@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { useSearchParams } from 'react-router-dom';
 import { SearchLg, ShoppingCart01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
-import { useMasterData } from '@/features/master-data/model/store';
-import { useWorkflow } from '@/features/workflow-builder/model/store';
+import { useMasterData } from '@/features/master-data';
+import { useWorkflow } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
 import { cx } from '@/utils/cx';
 import { CartSheet } from './components/CartSheet';
@@ -88,62 +89,64 @@ export function RequestPage() {
               ]}
             />
           </div>
-          {tab === 'history' ? (
-            <RequestHistory requests={mine} who={me} now={now} />
-          ) : (
-            <>
-              <Input
-                size="md"
-                wrapperClassName="shrink-0"
-                aria-label={copy.request.search}
-                placeholder={copy.request.search}
-                icon={SearchLg}
-                value={q}
-                onChange={setQ}
-              />
-              {groupNames.length > 1 && (
-                <div className="-mx-1 flex shrink-0 gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Group">
-                  {['all', ...groupNames].map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => setGroup(g)}
-                      className={cx(
-                        'h-11 shrink-0 rounded-full border px-4 text-sm font-medium',
-                        group === g
-                          ? 'border-brand bg-brand-secondary text-brand-secondary'
-                          : 'border-primary bg-primary text-secondary',
-                      )}
-                    >
-                      {g === 'all' ? copy.request.allGroups : g}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {!items.length ? (
-                <EmptyState
-                  icon={ShoppingCart01}
-                  title={copy.request.empty.title}
-                  subtext={copy.request.empty.hint}
-                  size="lg"
+          <TabPanelMotion tabKey={tab} fill>
+            {tab === 'history' ? (
+              <RequestHistory requests={mine} who={me} now={now} />
+            ) : (
+              <>
+                <Input
+                  size="md"
+                  wrapperClassName="shrink-0"
+                  aria-label={copy.request.search}
+                  placeholder={copy.request.search}
+                  icon={SearchLg}
+                  value={q}
+                  onChange={setQ}
                 />
-              ) : !shown.length ? (
-                <NoResults subtext={copy.request.empty.noMatch} />
-              ) : (
-                <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
-                  {shown.map((i) => (
-                    <MaterialCard
-                      key={i.key}
-                      item={i}
-                      line={cart.find((l) => l.key === i.key)}
-                      onAdd={(qty) => setCart((c) => setLine(c, i.key, qty))}
-                      onRemove={() => setCart((c) => dropLine(c, i.key))}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+                {groupNames.length > 1 && (
+                  <div className="-mx-1 flex shrink-0 gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Group">
+                    {['all', ...groupNames].map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setGroup(g)}
+                        className={cx(
+                          'h-11 shrink-0 rounded-full border px-4 text-sm font-medium',
+                          group === g
+                            ? 'border-brand bg-brand-secondary text-brand-secondary'
+                            : 'border-primary bg-primary text-secondary',
+                        )}
+                      >
+                        {g === 'all' ? copy.request.allGroups : g}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {!items.length ? (
+                  <EmptyState
+                    icon={ShoppingCart01}
+                    title={copy.request.empty.title}
+                    subtext={copy.request.empty.hint}
+                    size="lg"
+                  />
+                ) : !shown.length ? (
+                  <NoResults subtext={copy.request.empty.noMatch} />
+                ) : (
+                  <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
+                    {shown.map((i) => (
+                      <MaterialCard
+                        key={i.key}
+                        item={i}
+                        line={cart.find((l) => l.key === i.key)}
+                        onAdd={(qty) => setCart((c) => setLine(c, i.key, qty))}
+                        onRemove={() => setCart((c) => dropLine(c, i.key))}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </TabPanelMotion>
         </div>
         {tab === 'new' && cartItems.length > 0 && (
           <div className="flex items-center justify-between gap-3 border-t border-secondary bg-primary px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">

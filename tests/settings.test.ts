@@ -3,7 +3,7 @@ import { canOpen } from '../src/features/access';
 import { CONNECTIONS, connectionById } from '../src/features/settings/model/connections';
 import { statusOf } from '../src/features/settings/model/status';
 import { connectionErrors, fieldError } from '../src/features/settings/model/validate';
-import { seedSettings } from '../src/features/settings/model/seed';
+import { seedSettings } from '../src/fixtures/settings';
 import { mockTester, setConnectionTester } from '../src/features/settings/data/tester';
 import { settingsStore } from '../src/features/settings/data/store';
 

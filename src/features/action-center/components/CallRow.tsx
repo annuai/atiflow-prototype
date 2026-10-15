@@ -11,9 +11,9 @@ import {
 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
-import { FleetName } from '@/components/data/FleetSelect';
+import { FleetName } from '@/features/auth';
 import { useApp } from '@/core/store';
-import { fmtDuration } from '@/features/dashboard/data/derive';
+import { fmtDuration } from '@/features/dashboard';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
 import type { Call, CallKind } from '../model/types';

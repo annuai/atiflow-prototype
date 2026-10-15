@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { log } from '@/platform';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { ROBOT_TYPES, DEFAULT_ROBOT_TYPE, type RobotTypeId } from '../data/robotTypes';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -165,7 +166,7 @@ export function loadRobotModels(): Promise<void> {
         });
         loaded[key] = scene;
       } catch (e) {
-        console.warn(`robot model ${file} not loaded, using the procedural body`, e);
+        log.child('robot-models').warn(`robot model ${file} not loaded, using the procedural body`, e);
       }
     }),
   ).then(() => undefined);

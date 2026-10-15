@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { CheckCircle, Truck01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
@@ -72,26 +73,28 @@ export function TripsCard({
           />
         )}
       </CardTitle>
-      {!list.length ? (
-        tab === 'running' || tv ? (
-          <EmptyState icon={Truck01} title={copy.trips.empty} subtext={copy.trips.emptyHint} size="sm" />
+      <TabPanelMotion tabKey={tab}>
+        {!list.length ? (
+          tab === 'running' || tv ? (
+            <EmptyState icon={Truck01} title={copy.trips.empty} subtext={copy.trips.emptyHint} size="sm" />
+          ) : (
+            <EmptyState
+              icon={CheckCircle}
+              title={copy.trips.emptyRecent}
+              subtext={copy.trips.emptyRecentHint}
+              size="sm"
+            />
+          )
         ) : (
-          <EmptyState
-            icon={CheckCircle}
-            title={copy.trips.emptyRecent}
-            subtext={copy.trips.emptyRecentHint}
-            size="sm"
-          />
-        )
-      ) : (
-        <ul className={cx('flex min-h-0 flex-col gap-2 overflow-y-auto', !tv && 'max-h-[24rem]')}>
-          {list.map((t) => (
-            <li key={t.id + (t.done ? 'd' : '')}>
-              <Row t={t} tv={tv} onLocate={onLocate} />
-            </li>
-          ))}
-        </ul>
-      )}
+          <ul className={cx('flex min-h-0 flex-col gap-2 overflow-y-auto', !tv && 'max-h-[24rem]')}>
+            {list.map((t) => (
+              <li key={t.id + (t.done ? 'd' : '')}>
+                <Row t={t} tv={tv} onLocate={onLocate} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </TabPanelMotion>
     </Card>
   );
 }

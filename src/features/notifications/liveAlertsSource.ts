@@ -1,7 +1,7 @@
 import { store } from '@/core/store';
 import { fleetDirectory } from '@/data/fleetDirectory';
-import { feed } from '@/features/live-floor/liveFeed';
-import { myPrefsNow } from '@/features/preferences/data/store';
+import { feed } from '@/features/live-floor';
+import { myPrefsNow } from '@/features/preferences';
 import { RobotAlertWatcher } from './robotAlerts';
 import type { NotificationSource } from './types';
 

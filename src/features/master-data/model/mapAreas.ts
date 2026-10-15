@@ -1,5 +1,4 @@
-import type { MapHistory } from '@/features/map-editor/model/types';
-import { latestOf } from '@/features/map-editor/model/store';
+import { type MapHistory, latestOf } from '@/features/map-editor';
 import type { CellState, StagingArea } from './types';
 
 /**

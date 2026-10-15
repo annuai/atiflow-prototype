@@ -6,18 +6,13 @@ import master from '@/ui/icons/master-data.svg';
 import fleetI from '@/ui/icons/fleet.svg';
 import bell from '@/ui/icons/bell.svg';
 import gear from '@/ui/icons/settings.svg';
-import { useUnreadCount } from '@/features/notifications/NotificationsProvider';
-import { useVisibleFleets } from '@/features/access/useFleetScope';
-import { useActionCenterRunning } from '@/features/action-center/data/store';
-import { useCalls } from '@/features/action-center/data/useCalls';
-import { canNow, useAccess } from '@/features/access/useAccess';
+import { useUnreadCount } from '@/features/notifications';
+import { useVisibleFleets, canNow, useAccess } from '@/features/auth';
+import { useActionCenterRunning, useCalls } from '@/features/action-center';
 import type { NavModel, SearchHit } from '@/shell/types';
 
-export const DASHBOARD_PATH = '/supervisor/dashboard',
-  LIVE_FLOOR_PATH = '/supervisor/livefloor',
-  REPORTS_PATH = '/supervisor/reports',
-  SUPERVISOR_SETTINGS_PATH = '/supervisor/settings',
-  ACTION_CENTER_PATH = '/supervisor/action-center';
+import { ACTION_CENTER_PATH, DASHBOARD_PATH, LIVE_FLOOR_PATH, REPORTS_PATH, SUPERVISOR_SETTINGS_PATH } from './paths';
+export { ACTION_CENTER_PATH, DASHBOARD_PATH, LIVE_FLOOR_PATH, REPORTS_PATH, SUPERVISOR_SETTINGS_PATH };
 
 /** Sidebar content of the supervisor area: Dashboard and Live Floor are pages (the URL decides which one is highlighted); the fleet items filter the Live Floor. */
 export function useLiveNav(): NavModel {

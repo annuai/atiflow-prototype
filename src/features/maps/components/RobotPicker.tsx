@@ -5,9 +5,7 @@ import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { Label } from '@/components/base/input/label';
-import { useDevices } from '@/features/devices/model/store';
-import { KINDS } from '@/features/devices/model/kinds';
-import { nameOf } from '@/features/devices/model/validate';
+import { useDevices, KINDS, nameOf } from '@/features/devices';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
 

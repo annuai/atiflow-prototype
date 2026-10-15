@@ -1,9 +1,9 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { cellKey, toggleBlocked } from './areas';
 import { assignToFleet, ensureGroup, mergeMaterials, unassignFromFleet } from './logic';
-import { seedAreas, seedGroups, seedMaterials } from './seed';
 import type { IncomingMaterial, Material, MaterialGroup, StagingArea } from './types';
 
 export interface MasterDataState {
@@ -22,13 +22,7 @@ export interface MasterDataState {
   toggleCell(area: StagingArea, row: number, col: number): void;
 }
 
-function load(): Pick<MasterDataState, 'materials' | 'groups' | 'areas'> {
-  const saved = services().masterData.read();
-  if (saved) return saved;
-  const now = Date.now();
-  const groups = seedGroups(now);
-  return { groups, materials: seedMaterials(now, groups), areas: seedAreas() };
-}
+const load = (): Pick<MasterDataState, 'materials' | 'groups' | 'areas'> => services().masterData.read();
 
 export const masterDataStore = createStore<MasterDataState>((set, get) => ({
   ...load(),
@@ -75,12 +69,12 @@ export const masterDataStore = createStore<MasterDataState>((set, get) => ({
 }));
 export const useMasterData = <T>(sel: (s: MasterDataState) => T) => useStore(masterDataStore, sel);
 
-let timer: ReturnType<typeof setTimeout> | undefined;
+const persist = createPersister(
+  'master data',
+  (v: Pick<MasterDataState, 'materials' | 'groups' | 'areas'>) => services().masterData.save(v),
+  { delayMs: 250 },
+);
 masterDataStore.subscribe((s, p) => {
   if (s.materials === p.materials && s.groups === p.groups && s.areas === p.areas) return;
-  clearTimeout(timer);
-  timer = setTimeout(
-    () => void services().masterData.save({ materials: s.materials, groups: s.groups, areas: s.areas }),
-    250,
-  );
+  persist.queue({ materials: s.materials, groups: s.groups, areas: s.areas });
 });

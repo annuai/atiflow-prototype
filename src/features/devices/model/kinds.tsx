@@ -1,6 +1,6 @@
 import { Camera01, StopSquare, Truck01, VolumeMax } from '@untitledui/icons';
 import type { Device, DeviceKind, FieldDef } from './types';
-import DATASET from '@/data/dataset.json';
+import DATASET from '@/fixtures/dataset.json';
 import { ROBOT_TYPE_LABELS, robotTypeByLabel } from '@/data/robotTypes';
 
 /** Hardware type -> icon. The Figma file only has a placeholder square for these (annotation: "need appropriate icons"), so these are Untitled icons. */

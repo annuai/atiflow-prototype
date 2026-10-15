@@ -1,5 +1,5 @@
 import { Avatar } from '@/components/base/avatar/avatar';
-import type { PublicUser } from '@/features/auth/types';
+import { type PublicUser } from '@/features/auth';
 
 /** The user's picture, or their initials when they have none. */
 export function UserAvatar({

@@ -5,7 +5,7 @@ import { Input } from '@/components/base/input/input';
 import { useApp } from '@/core/store';
 import { notify } from '@/ui/toast';
 import { cx } from '@/utils/cx';
-import { findTargets, locateTarget, type LocateHit } from './locate';
+import { findTargets, locateTarget, type LocateHit } from '@/ui/locate';
 
 /** Bottom search box of the Live Floor: type a robot or station id, pick (or press Enter) and the camera flies there and selects it. */
 export function LocateBox({ legendClosed, onOpenLegend }: { legendClosed: boolean; onOpenLegend(): void }) {

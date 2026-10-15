@@ -1,11 +1,12 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister } from '@/data/persist';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
-import { tripIds, tripNumber } from '@/core/tripIds';
+import { tripIds, tripNumber } from '@/data/tripIds';
 import { services } from '@/services';
 import type { RequestsDocument } from './schema';
 import { can } from '@/features/access';
-import { toPublic, userDirectory } from '@/features/auth/userDirectory';
+import { toPublic, userDirectory } from '@/features/auth';
 import { canApprove, canCancel, currentStep, isAllowedNext, type Person } from './rules';
 import type { CartLine, RequestableItem, RequestStatus, TripRequest } from './types';
 
@@ -178,11 +179,12 @@ export const requestsStore = createStore<RequestsState>((set, get) => ({
 }));
 export const useRequests = <T>(sel: (s: RequestsState) => T) => useStore(requestsStore, sel);
 
+const persist = createPersister('requests', (v: Saved) => services().requests.save(v as RequestsDocument));
 let saved = requestsStore.getState().requests;
 requestsStore.subscribe((s) => {
   if (s.requests !== saved) {
     saved = s.requests;
-    void services().requests.save({ requests: s.requests, seq: s.seq });
+    persist.queue({ requests: s.requests, seq: s.seq });
   }
 });
 // another tab (another operator on the same browser) changed the requests: take them over

@@ -1,4 +1,4 @@
-import { MapThumbnail } from '@/features/maps/components/MapThumbnail';
+import { MapThumbnail, useMaps } from '@/features/maps';
 import { EmptyState } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { Map01 } from '@untitledui/icons';
@@ -8,7 +8,6 @@ import { ModalShell } from '@/components/modal/ModalShell';
 import { notify } from '@/ui/toast';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
-import { useMaps } from '@/features/maps/model/maps';
 import { fleetsStore, profileOf, useFleets } from '../model/store';
 
 function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean): void }) {

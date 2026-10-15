@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createServices, setServices, services } from '../src/services';
+import { SEED_PROFILES } from '../src/fixtures/fleetProfiles';
+import { createServices, hydrateServices, setServices, services } from '../src/services';
 import { createDummyServices } from '../src/services/dummy';
 import { BOOKINGS_KEY } from '../src/services/dummy/bookings';
 import { REQUESTS_KEY } from '../src/services/dummy/requests';
@@ -67,22 +68,22 @@ describe('dummy services', () => {
 });
 
 describe('saved-state services (dummy)', () => {
-  it('read null until something valid is saved; save then read round-trips; clear forgets', async () => {
+  it('read returns the starting data until something valid is saved; save then read round-trips; clear goes back to the starting data', async () => {
     const { svc } = build();
-    expect(svc.fleetProfiles.read()).toBeNull();
+    expect(svc.fleetProfiles.read()).toEqual(SEED_PROFILES);
     await svc.fleetProfiles.save({ 'Line Side Fleet': { mapId: 'm1', groups: [] } });
     expect(svc.fleetProfiles.read()).toEqual({ 'Line Side Fleet': { mapId: 'm1', groups: [] } });
     svc.fleetProfiles.clear();
-    expect(svc.fleetProfiles.read()).toBeNull();
+    expect(svc.fleetProfiles.read()).toEqual(SEED_PROFILES);
   });
   it('data that does not match is ignored and logged, never erased', () => {
     const seen: string[] = [];
     setLogSinks([(r) => seen.push(r.message)]);
     const bad = JSON.stringify({ materials: 'x' });
     const { svc, data } = build({ [MASTERDATA_KEY]: bad, [DATASET_KEY]: '{"version":2}', [ACTIONLOG_KEY]: 'nope' });
-    expect(svc.masterData.read()).toBeNull();
-    expect(svc.dataset.read()).toBeNull();
-    expect(svc.actionLog.read()).toBeNull();
+    expect(svc.masterData.read().materials.length).toBeGreaterThan(0); // the starting data, not the bad text
+    expect(svc.dataset.read().version).toBe(1);
+    expect(svc.actionLog.read()).toEqual([]);
     expect(data.get(MASTERDATA_KEY)).toBe(bad);
     expect(seen.filter((m) => m.includes('ignored'))).toHaveLength(3);
   });
@@ -92,7 +93,7 @@ describe('saved-state services (dummy)', () => {
     await svc.notificationCache.forUser('arjun').save([note]);
     expect(data.has(notificationsKey('arjun'))).toBe(true);
     expect(svc.notificationCache.forUser('arjun').read()).toHaveLength(1);
-    expect(svc.notificationCache.forUser('kavin').read()).toBeNull();
+    expect(svc.notificationCache.forUser('kavin').read()).toEqual([]);
   });
   it('device preferences are plain per-device values', () => {
     const { svc } = build();
@@ -101,7 +102,7 @@ describe('saved-state services (dummy)', () => {
     expect(svc.device.get('sb-collapsed')).toBe('1');
   });
   it('a saved user without fleets is given every fleet, including ones added after the start', async () => {
-    const seed = (await import('../src/data/dataset.json')).default;
+    const seed = (await import('../src/fixtures/dataset.json')).default;
     const { users } = createDummyServices({
       backend: memoryStorage({
         [DATASET_KEY]: JSON.stringify({
@@ -114,6 +115,17 @@ describe('saved-state services (dummy)', () => {
       }).backend,
     });
     expect(users.snapshot().find((u) => u.username === 'zed')?.fleets).toContain('new-fleet');
+  });
+});
+
+describe('live feed service (dummy)', () => {
+  it('connects a telemetry source for a site: the simulator, which reports robots and can take orders', async () => {
+    const svc = createDummyServices({ backend: memoryStorage().backend });
+    const nav = (await import('../public/sites/ecc/nav.json')).default as never;
+    const adapter = svc.fleetFeed.connect({ siteId: 'ecc', nav, roster: [] });
+    expect(typeof adapter.connect).toBe('function');
+    expect(typeof adapter.onTelemetry).toBe('function');
+    expect(typeof adapter.submitOrder).toBe('function');
   });
 });
 
@@ -132,5 +144,32 @@ describe('the composition root', () => {
     const mine = createDummyServices({ backend: memoryStorage().backend });
     setServices(mine);
     expect(services()).toBe(mine);
+  });
+});
+
+describe('hydrateServices (start-up loading)', () => {
+  it('loads every port and reports nothing failed with the dummy services', async () => {
+    const svc = createDummyServices({ backend: memoryStorage().backend });
+    expect(await hydrateServices(svc)).toEqual({ failed: [] });
+  });
+  it('a port that cannot load is named, the others still load, and the error is reported', async () => {
+    const calls: string[] = [];
+    const svc = createDummyServices({ backend: memoryStorage().backend });
+    svc.dataset.hydrate = async () => {
+      throw new Error('fleet manager unreachable');
+    };
+    const real = svc.masterData.hydrate;
+    svc.masterData.hydrate = async () => (calls.push('master data'), real());
+    const seen: string[] = [];
+    const { setErrorReporter } = await import('../src/platform');
+    setErrorReporter({ capture: (_e, ctx) => void seen.push(String(ctx?.where)) });
+    expect(await hydrateServices(svc)).toEqual({ failed: ['fleets, robots and hardware'] });
+    expect(calls).toEqual(['master data']);
+    expect(seen).toEqual(['hydrate:fleets, robots and hardware']);
+  });
+  it('a port that never answers is given up on after the time limit', async () => {
+    const svc = createDummyServices({ backend: memoryStorage().backend });
+    svc.settings.hydrate = () => new Promise(() => {});
+    expect(await hydrateServices(svc, 20)).toEqual({ failed: ['settings'] });
   });
 });

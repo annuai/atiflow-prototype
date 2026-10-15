@@ -1,10 +1,10 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister } from '@/data/persist';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
-import { tripIds, tripNumber } from '@/core/tripIds';
+import { tripIds, tripNumber } from '@/data/tripIds';
 import { services } from '@/services';
-import { isAllowedNext } from '@/features/requests/model/rules';
-import type { RequestStatus } from '@/features/requests/model/types';
+import { isAllowedNext, type RequestStatus } from '@/features/requests';
 import { bookingError, canCancelBooking } from './rules';
 import type { BookedTrip, BookingInput } from './types';
 
@@ -101,12 +101,15 @@ export const bookingsStore = createStore<BookingsState>((set, get) => ({
 }));
 export const useBookings = <T>(sel: (s: BookingsState) => T) => useStore(bookingsStore, sel);
 
-let timer: ReturnType<typeof setTimeout> | undefined;
+const persist = createPersister(
+  'booked trips',
+  (v: { trips: BookedTrip[]; seq: number }) => services().bookings.save(v),
+  { delayMs: 150 },
+);
 let saved = bookingsStore.getState();
 bookingsStore.subscribe((s) => {
   if (s.trips === saved.trips && s.seq === saved.seq) return;
   saved = s;
-  clearTimeout(timer);
-  timer = setTimeout(() => void services().bookings.save({ trips: s.trips, seq: s.seq }), 150);
+  persist.queue({ trips: s.trips, seq: s.seq });
 });
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __bookings: bookingsStore });

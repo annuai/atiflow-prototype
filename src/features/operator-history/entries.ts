@@ -1,6 +1,5 @@
-import { decisions } from '@/features/requests/model/decisions';
-import type { RequestStatus, TripRequest } from '@/features/requests/model/types';
-import type { BookedTrip } from '@/features/bookings/model/types';
+import { decisions, type RequestStatus, type TripRequest } from '@/features/requests';
+import { type BookedTrip } from '@/features/bookings';
 
 export type HistoryKind = 'request' | 'approval' | 'trip';
 export interface HistoryEntry {

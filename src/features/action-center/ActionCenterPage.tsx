@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { useNavigate } from 'react-router-dom';
 import { Download01, LifeBuoy01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
@@ -6,9 +7,9 @@ import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { StatusStrip, type StatusSummary } from '@/components/data/StatusStrip';
 import { fleetDirectory } from '@/data/fleetDirectory';
-import { useAccess } from '@/features/access/useAccess';
-import { fmtDuration } from '@/features/dashboard/data/derive';
-import { LIVE_FLOOR_PATH } from '@/features/live-floor/liveNav';
+import { useAccess } from '@/features/auth';
+import { fmtDuration } from '@/features/dashboard';
+import { LIVE_FLOOR_PATH } from '@/features/live-floor';
 import { notify } from '@/ui/toast';
 import { CallRow, ageS } from './components/CallRow';
 import { ResolveDialog } from './components/ResolveDialog';
@@ -107,39 +108,41 @@ export function ActionCenterPage() {
                     ]}
                   />
                 </div>
-                {tab === 'log' ? (
-                  log.length ? (
-                    <ResolvedLog rows={log} />
+                <TabPanelMotion tabKey={tab} className="flex flex-col gap-4">
+                  {tab === 'log' ? (
+                    log.length ? (
+                      <ResolvedLog rows={log} />
+                    ) : (
+                      <Empty title={copy.empty.log} hint={copy.empty.logHint} />
+                    )
+                  ) : !list.length ? (
+                    <Empty title={empty[0]} hint={empty[1]} />
                   ) : (
-                    <Empty title={copy.empty.log} hint={copy.empty.logHint} />
-                  )
-                ) : !list.length ? (
-                  <Empty title={empty[0]} hint={empty[1]} />
-                ) : (
-                  <ul className="flex flex-col gap-3">
-                    {list.map((c) => (
-                      <CallRow
-                        key={c.id}
-                        call={c}
-                        now={now}
-                        me={me}
-                        expanded={expanded === c.id}
-                        onToggle={() => setExpanded(expanded === c.id ? null : c.id)}
-                        canLocate={canLocate}
-                        onLocate={() => navigate(LIVE_FLOOR_PATH, { state: { locate: c.robots[0] } })}
-                        onTake={() => {
-                          engine.acknowledge(c.id, me);
-                          notify.success(copy.taken, `${c.id} · ${c.title}`, 'ac-take');
-                        }}
-                        onRelease={() => {
-                          engine.release(c.id);
-                          notify.info(copy.released, undefined, 'ac-take');
-                        }}
-                        onResolve={() => setResolving(c)}
-                      />
-                    ))}
-                  </ul>
-                )}
+                    <ul className="flex flex-col gap-3">
+                      {list.map((c) => (
+                        <CallRow
+                          key={c.id}
+                          call={c}
+                          now={now}
+                          me={me}
+                          expanded={expanded === c.id}
+                          onToggle={() => setExpanded(expanded === c.id ? null : c.id)}
+                          canLocate={canLocate}
+                          onLocate={() => navigate(LIVE_FLOOR_PATH, { state: { locate: c.robots[0] } })}
+                          onTake={() => {
+                            engine.acknowledge(c.id, me);
+                            notify.success(copy.taken, `${c.id} · ${c.title}`, 'ac-take');
+                          }}
+                          onRelease={() => {
+                            engine.release(c.id);
+                            notify.info(copy.released, undefined, 'ac-take');
+                          }}
+                          onResolve={() => setResolving(c)}
+                        />
+                      ))}
+                    </ul>
+                  )}
+                </TabPanelMotion>
               </>
             )}
           </div>

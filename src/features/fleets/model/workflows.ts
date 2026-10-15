@@ -1,4 +1,4 @@
-import type { WfNode, Workflow } from '@/features/workflow-builder/model/types';
+import { type WfNode, type Workflow } from '@/features/workflow-builder';
 
 export interface WorkflowRow {
   id: string;

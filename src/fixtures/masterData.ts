@@ -1,5 +1,5 @@
-import { buildArea, type AreaSpec } from './areas';
-import type { Material, MaterialGroup, StagingArea } from './types';
+import { buildArea, type AreaSpec } from '@/features/master-data/model/areas';
+import type { Material, MaterialGroup, StagingArea } from '@/features/master-data/model/types';
 import { FLEET_NAME } from '@/data/fleets';
 
 const MIN = 60_000,

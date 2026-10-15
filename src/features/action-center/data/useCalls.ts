@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useAuth } from '@/features/auth/authStore';
+import { useAuth } from '@/features/auth';
 import { inScope, useActionState } from './store';
 import type { Call } from '../model/types';
 

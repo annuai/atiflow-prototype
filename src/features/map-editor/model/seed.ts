@@ -1,5 +1,5 @@
 import type { NavGraph, SiteLayout } from '@/core/types';
-import type { FleetMap } from '@/features/maps/model/types';
+import { type FleetMap } from '@/features/maps';
 import { roadsFromLanes } from './roads';
 import type { MapData, MapZone, StagingAreaDef } from './types';
 

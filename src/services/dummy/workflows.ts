@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createValidatedDocument, localBackend, type StorageBackend } from '@/data/storage';
 import type { Workflows } from '@/features/workflow-builder/model/types';
 import { log } from '@/platform';
+import { seedWorkflows } from '@/features/workflow-builder/model/seed';
 import type { WorkflowService } from '../ports';
 import { createDocumentRepository } from './repository';
 
@@ -36,6 +37,7 @@ export function createDummyWorkflows(backend: (key: string) => StorageBackend = 
     save: (value) => repo.save({ workflows: value as z.infer<typeof SavedSchema>['workflows'], current: null }),
     subscribe: (listener) => repo.subscribe((v) => listener(asWorkflows(v))),
     resetToSeed: () => asWorkflows(repo.resetToSeed?.() ?? { workflows: null }),
+    starter: () => seedWorkflows(),
     readLegacy() {
       for (const [version, key] of LEGACY) {
         const raw = backend(key).read();

@@ -1,7 +1,8 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
-import { authStore, useAuth } from '@/features/auth/authStore';
+import { authStore, useAuth } from '@/features/auth';
 import { DEFAULT_PREFERENCES, withDefaults } from '../model/defaults';
 import type { Preferences } from '../model/types';
 
@@ -20,8 +21,11 @@ export const preferencesStore = createStore<PreferencesState>((set, get) => ({
     set({ byUser: rest });
   },
 }));
+const persist = createPersister('preferences', (v: Record<string, Partial<Preferences>>) =>
+  services().preferences.save(v),
+);
 preferencesStore.subscribe((s, p) => {
-  if (s.byUser !== p.byUser) void services().preferences.save(s.byUser);
+  if (s.byUser !== p.byUser) persist.queue(s.byUser);
 });
 
 export const prefsOf = (username: string | null | undefined): Preferences =>

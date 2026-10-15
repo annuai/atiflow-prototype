@@ -1,4 +1,5 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import type { FleetMap } from './types';
@@ -46,6 +47,7 @@ const withNames = (maps: FleetMap[]) => {
   return maps.map((m) => (n[m.id] ? { ...m, name: n[m.id] } : m));
 };
 
+const namePersist = createPersister('map names', (v: Record<string, string>) => services().mapNames.save(v));
 export const mapsStore = createStore<{ maps: FleetMap[] }>(() => ({ maps: withNames(SYSTEM_MAPS) }));
 /** The text of a refused map name ('' = fine): not empty, not used by another map (ignoring case). */
 export const mapNameError = (id: string, name: string): string => {
@@ -61,7 +63,7 @@ export function renameMap(id: string, name: string): string {
   if (e) return e;
   const n = name.trim();
   mapsStore.setState({ maps: mapsStore.getState().maps.map((m) => (m.id === id ? { ...m, name: n } : m)) });
-  void services().mapNames.save({ ...savedNames(), [id]: n });
+  namePersist.queue({ ...savedNames(), [id]: n });
   return '';
 }
 export const useMaps = () => useStore(mapsStore, (s) => s.maps);

@@ -2,9 +2,7 @@ import { Link } from 'react-router-dom';
 import { Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { RowMenu } from '@/components/data/RowMenu';
-import { StatusBadge } from '@/features/devices/components/StatusBadge';
-import type { Device, DeviceKind } from '@/features/devices/model/types';
-import { nameOf } from '@/features/devices/model/validate';
+import { StatusBadge, type Device, type DeviceKind, nameOf } from '@/features/devices';
 import { copy } from '../copy';
 
 interface Props {
@@ -12,7 +10,8 @@ interface Props {
   device: Device;
   layout: 'tile' | 'row';
   /** Fleet page the card is shown on: the linked page shows Fleets > fleet > item in its breadcrumb. */ fleet: string;
-  onUnassign(): void;
+  /** Without it the card has no menu (robots that belong to no fleet). */
+  onUnassign?(): void;
 }
 
 /**
@@ -32,7 +31,7 @@ export function DeviceCard({ kind, device, layout, fleet, onUnassign }: Props) {
       {name}
     </Link>
   );
-  const menu = (
+  const menu = onUnassign && (
     <RowMenu
       label={copy.overview.menu}
       onAction={onUnassign}
@@ -49,7 +48,7 @@ export function DeviceCard({ kind, device, layout, fleet, onUnassign }: Props) {
             {kind.typeOf(device)}
           </Badge>
         </div>
-        <div className="relative z-10">{menu}</div>
+        {menu && <div className="relative z-10">{menu}</div>}
       </div>
     );
   }
@@ -59,7 +58,7 @@ export function DeviceCard({ kind, device, layout, fleet, onUnassign }: Props) {
         <div className="absolute top-2 left-2">
           <StatusBadge status={device.status} type="pill-color" />
         </div>
-        <div className="absolute top-2 right-2 z-10">{menu}</div>
+        {menu && <div className="absolute top-2 right-2 z-10">{menu}</div>}
         {kind.thumb(device)}
       </div>
       <div className="flex items-center justify-between gap-2 p-3">

@@ -1,5 +1,5 @@
-import type { NewNotification, NotificationSource } from '@/features/notifications/types';
-import type { PublicUser } from '@/features/auth/types';
+import { type NewNotification, type NotificationSource } from '@/features/notifications';
+import { type PublicUser } from '@/features/auth';
 import { canApprove, currentStep } from './model/rules';
 import { requestsStore } from './model/store';
 import type { StatusEvent, TripRequest } from './model/types';

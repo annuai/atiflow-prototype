@@ -8,8 +8,7 @@ import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { RowMenu } from '@/components/data/RowMenu';
 import { DataTable, type Column } from '@/components/data/DataTable';
-import { isKept } from '@/features/workflow-builder/model/seed';
-import { useWorkflow, wfStore, workflowsOfFleet } from '@/features/workflow-builder/model/store';
+import { isKept, useWorkflow, wfStore, workflowsOfFleet } from '@/features/workflow-builder';
 import { workflowSummary, type WorkflowRow } from '../model/workflows';
 import { copy } from '../copy';
 

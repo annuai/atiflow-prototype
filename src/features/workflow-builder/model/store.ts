@@ -1,8 +1,9 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister } from '@/data/persist';
 import { useStore } from 'zustand';
 import { notify } from '@/ui/toast';
 import { services } from '@/services';
-import { fleetMaterialCodes } from '@/features/master-data/model/selectors';
+import { fleetMaterialCodes } from '@/features/master-data';
 import { fleetStations } from './stations';
 import { createNode, syncIds } from './factory';
 import { applySteps, parsePrompt } from './parsePrompt';
@@ -434,13 +435,11 @@ export const useFleetNames = () =>
     .filter(Boolean);
 
 // the list as loaded (upgraded from an older version, old robot names replaced, sample routes added) is saved straight away, not only after the next edit
-void services().workflows.save(wfStore.getState().workflows);
+const persist = createPersister('workflows', (v: Workflows) => services().workflows.save(v), { delayMs: 250 });
+persist.queue(wfStore.getState().workflows);
 // persist workflows (not history/sim) shortly after any change
-let timer: ReturnType<typeof setTimeout> | undefined;
 wfStore.subscribe((s, p) => {
-  if (s.workflows === p.workflows) return;
-  clearTimeout(timer);
-  timer = setTimeout(() => void services().workflows.save(s.workflows), 250);
+  if (s.workflows !== p.workflows) persist.queue(s.workflows);
 });
 
 if (import.meta.env.DEV && typeof window !== 'undefined') Object.assign(window, { __wf: wfStore }); // dev-only handle for console testing

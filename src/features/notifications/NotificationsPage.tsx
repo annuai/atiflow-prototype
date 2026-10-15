@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
-import {
-  OPERATOR_ACTION_CENTER_PATH,
-  OPERATOR_APPROVE_PATH,
-  OPERATOR_REQUEST_PATH,
-} from '@/features/action-center/operatorNav';
-import { LIVE_FLOOR_PATH } from '@/features/live-floor/liveNav';
+import { OPERATOR_ACTION_CENTER_PATH, OPERATOR_APPROVE_PATH, OPERATOR_REQUEST_PATH } from '@/features/action-center';
+import { LIVE_FLOOR_PATH } from '@/features/live-floor';
 import { NotificationItem } from './components/NotificationItem';
 import { copy } from './copy';
 import { useNotificationStore, useNotifications } from './NotificationsProvider';
@@ -68,29 +65,31 @@ export function NotificationsPage() {
         </div>
         <div className="builder md-card">
           <div className="md-body flex flex-col gap-3 !px-5 !py-5 sm:!px-6">
-            {!shown.length ? (
-              <EmptyState
-                icon={Bell01}
-                title={tab === 'unread' && items.length ? copy.emptyUnread : copy.emptyAll}
-                subtext={copy.emptyAllHint[role]}
-                size="lg"
-              />
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {shown.map((n) => (
-                  <NotificationItem
-                    key={n.id}
-                    n={n}
-                    now={now}
-                    onOpen={() => st.markRead(n.id)}
-                    onAction={(a) => {
-                      st.markRead(n.id);
-                      run(a);
-                    }}
-                  />
-                ))}
-              </ul>
-            )}
+            <TabPanelMotion tabKey={tab} className="flex flex-col gap-3">
+              {!shown.length ? (
+                <EmptyState
+                  icon={Bell01}
+                  title={tab === 'unread' && items.length ? copy.emptyUnread : copy.emptyAll}
+                  subtext={copy.emptyAllHint[role]}
+                  size="lg"
+                />
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {shown.map((n) => (
+                    <NotificationItem
+                      key={n.id}
+                      n={n}
+                      now={now}
+                      onOpen={() => st.markRead(n.id)}
+                      onAction={(a) => {
+                        st.markRead(n.id);
+                        run(a);
+                      }}
+                    />
+                  ))}
+                </ul>
+              )}
+            </TabPanelMotion>
           </div>
         </div>
       </div>

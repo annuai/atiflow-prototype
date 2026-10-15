@@ -1,22 +1,29 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ClipboardCheck, ClockRewind, LifeBuoy01, Route, ShoppingCart01 } from '@untitledui/icons';
 import bell from '@/ui/icons/bell.svg';
-import { useAccess } from '@/features/access/useAccess';
-import { useUnreadCount } from '@/features/notifications/NotificationsProvider';
-import { canApprove } from '@/features/requests/model/rules';
-import { useRequestsRunning } from '@/features/requests/model/bridge';
-import { useRequests } from '@/features/requests/model/store';
-import { useOperator } from '@/features/requests/model/useOperator';
+import { useAccess } from '@/features/auth';
+import { useUnreadCount } from '@/features/notifications';
+import { canApprove, useRequestsRunning, useRequests, useOperator } from '@/features/requests';
 import type { NavModel, SearchHit } from '@/shell/types';
 import { useActionCenterRunning } from './data/store';
 import { useCalls } from './data/useCalls';
 
-export const OPERATOR_ACTION_CENTER_PATH = '/operator/action-center',
-  OPERATOR_NOTIFICATIONS_PATH = '/operator/notifications',
-  OPERATOR_REQUEST_PATH = '/operator/request',
-  OPERATOR_APPROVE_PATH = '/operator/approve',
-  OPERATOR_BOOK_PATH = '/operator/book',
-  OPERATOR_HISTORY_PATH = '/operator/history';
+import {
+  OPERATOR_ACTION_CENTER_PATH,
+  OPERATOR_NOTIFICATIONS_PATH,
+  OPERATOR_REQUEST_PATH,
+  OPERATOR_APPROVE_PATH,
+  OPERATOR_BOOK_PATH,
+  OPERATOR_HISTORY_PATH,
+} from './paths';
+export {
+  OPERATOR_ACTION_CENTER_PATH,
+  OPERATOR_NOTIFICATIONS_PATH,
+  OPERATOR_REQUEST_PATH,
+  OPERATOR_APPROVE_PATH,
+  OPERATOR_BOOK_PATH,
+  OPERATOR_HISTORY_PATH,
+};
 /** Sidebar of the operator area: Request, Book trip, Approve, History and the Action Center (each only when the person may open it), and Notifications. */
 export function useOperatorNav(): NavModel {
   const navigate = useNavigate();

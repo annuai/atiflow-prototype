@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import type { NavGraph, SiteLayout, Station } from '@/core/types';
-import { feed } from '@/features/live-floor/liveFeed';
+import { feed } from '@/features/live-floor';
 import type { WfNode } from './types';
 
 /**

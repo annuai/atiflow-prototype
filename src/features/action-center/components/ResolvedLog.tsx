@@ -1,7 +1,7 @@
 import { Badge } from '@/components/base/badges/badges';
 import { DataTable, type Column } from '@/components/data/DataTable';
-import { FleetName } from '@/components/data/FleetSelect';
-import { fmtDuration } from '@/features/dashboard/data/derive';
+import { FleetName } from '@/features/auth';
+import { fmtDuration } from '@/features/dashboard';
 import { copy } from '../copy';
 import type { Call } from '../model/types';
 

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { store } from '@/core/store';
-import { visibleFleets } from '@/features/access/useFleetScope';
-import { feed } from '@/features/live-floor/liveFeed';
-import { myPrefsNow } from '@/features/preferences/data/store';
+import { visibleFleets } from '@/features/auth';
+import { feed } from '@/features/live-floor';
+import { myPrefsNow } from '@/features/preferences';
 import { DashboardEngine } from './engine';
 import type { DashboardInput, DashboardSnapshot, DashboardSource } from './types';
 

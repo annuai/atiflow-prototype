@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { feed } from '@/features/live-floor/liveFeed';
+import { feed } from '@/features/live-floor';
 import { requestsStore } from './store';
 import type { TripRequest } from './types';
 

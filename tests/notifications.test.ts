@@ -135,6 +135,7 @@ const memCache = () => {
   const doc = (u: string) =>
     ({
       read: () => mem.get(u) ?? null,
+      hydrate: async () => mem.get(u) ?? null,
       save: async (v: AppNotification[]) => void mem.set(u, v),
       subscribe: () => () => {},
       clear: () => void mem.delete(u),

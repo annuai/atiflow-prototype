@@ -3,7 +3,7 @@ import { EmptyState } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { PackagePlus } from '@untitledui/icons';
 import { ModalShell } from '@/components/modal/ModalShell';
-import { MaterialPicker, type PickerRow } from '@/features/master-data/components/MaterialPicker';
+import { MaterialPicker, type PickerRow } from '@/features/master-data';
 import { copy } from '../copy';
 import { fleetsStore } from '../model/store';
 

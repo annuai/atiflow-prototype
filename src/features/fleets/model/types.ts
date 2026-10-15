@@ -1,4 +1,4 @@
-export type { FleetMap, MapStation } from '@/features/maps/model/types';
+export type { FleetMap, MapStation } from '@/features/maps';
 
 /** Materials stocked at one station of the fleet's map. One group per station. */
 export interface StationGroup {

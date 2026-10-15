@@ -1,4 +1,4 @@
-import { STATUS } from '@/features/requests/model/status';
+import { STATUS } from '@/features/requests';
 import type { BookingInput, BookedTrip } from './types';
 
 /** What is wrong with a booking (pure): '' = fine. */

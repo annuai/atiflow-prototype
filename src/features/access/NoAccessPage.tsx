@@ -2,7 +2,7 @@ import { EmptyState } from '@/components/data/EmptyState';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Lock01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
-import { authStore, useAuth } from '@/features/auth/authStore';
+import { authStore, useAuth } from '@/features/auth';
 
 /** Shown to a signed-in user whose access has no page to open yet (for example a line supervisor or an operator). */
 export function NoAccessPage() {

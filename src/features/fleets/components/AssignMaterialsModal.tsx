@@ -4,9 +4,14 @@ import { useMemo, useState } from 'react';
 import { PackagePlus } from '@untitledui/icons';
 import { SearchPrefixFilter } from '@/components/data/SearchPrefixFilter';
 import { ModalShell } from '@/components/modal/ModalShell';
-import { MaterialPicker, type PickerRow } from '@/features/master-data/components/MaterialPicker';
-import { filterByPrefix, filterMaterials } from '@/features/master-data/model/logic';
-import { masterDataStore, useMasterData } from '@/features/master-data/model/store';
+import {
+  MaterialPicker,
+  type PickerRow,
+  filterByPrefix,
+  filterMaterials,
+  masterDataStore,
+  useMasterData,
+} from '@/features/master-data';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 

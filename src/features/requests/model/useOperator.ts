@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { fleetScope } from '@/features/access';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { useDataset } from '@/data/dataset';
-import { useAuth } from '@/features/auth/authStore';
+import { useAuth } from '@/features/auth';
 
 /** The signed-in person as the request rules see them: username, name and the fleet ids they work on (every fleet for someone who is not fleet-scoped). */
 export function useOperator(): { username: string; name: string; fleets: string[] } {

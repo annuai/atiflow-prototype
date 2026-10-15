@@ -10,9 +10,14 @@ import type {
   MasterDataService,
   NotificationCacheService,
   PreferenceService,
+  RobotOpsStateService,
   SettingsService,
 } from '../ports';
 import { createSavedState } from './savedState';
+import seedDataset from '@/fixtures/dataset.json';
+import { SEED_PROFILES } from '@/fixtures/fleetProfiles';
+import { seedAreas, seedGroups, seedMaterials } from '@/fixtures/masterData';
+import { seedSettings } from '@/fixtures/settings';
 
 /**
  * The saved-state adapters (dummy: browser storage, same keys the app has always used). The schemas check the ENVELOPE of each document (the fields every reader depends on); the finer
@@ -31,6 +36,7 @@ export const MAPVERSIONS_KEY = 'atiflow.mapversions.v1';
 export const SETTINGS_KEY = 'atiflow.settings.v1';
 export const PREFERENCES_KEY = 'atiflow.preferences.v1';
 export const ACTIONLOG_KEY = 'atiflow.actioncenter.v1';
+export const ROBOTOPS_KEY = 'atiflow.robotops.v1';
 export const notificationsKey = (username: string) => `atiflow.notifications.v1.${username}`;
 
 export const createDummyDataset = (backend?: Backend): DatasetService =>
@@ -43,6 +49,7 @@ export const createDummyDataset = (backend?: Backend): DatasetService =>
       robot: z.array(device),
       hardware: z.array(device),
     }),
+    seed: () => structuredClone(seedDataset) as never, // (the envelope schema is looser than the types)
   }) as unknown as DatasetService;
 
 export const createDummyFleetProfiles = (backend?: Backend): FleetProfileService =>
@@ -50,6 +57,7 @@ export const createDummyFleetProfiles = (backend?: Backend): FleetProfileService
     key: FLEETS_KEY,
     backend,
     schema: z.record(z.string(), z.object({ mapId: z.string().nullable(), groups: z.array(item) }).passthrough()),
+    seed: () => structuredClone(SEED_PROFILES) as never,
   }) as unknown as FleetProfileService;
 
 export const createDummyMasterData = (backend?: Backend): MasterDataService =>
@@ -57,10 +65,15 @@ export const createDummyMasterData = (backend?: Backend): MasterDataService =>
     key: MASTERDATA_KEY,
     backend,
     schema: z.object({ materials: z.array(item), groups: z.array(item), areas: z.array(item) }),
+    seed: () => {
+      const now = Date.now();
+      const groups = seedGroups(now);
+      return { groups, materials: seedMaterials(now, groups), areas: seedAreas() } as never;
+    },
   }) as unknown as MasterDataService;
 
 export const createDummyMapNames = (backend?: Backend): MapNameService =>
-  createSavedState({ key: MAPNAMES_KEY, backend, schema: z.record(z.string(), z.string()) });
+  createSavedState({ key: MAPNAMES_KEY, backend, schema: z.record(z.string(), z.string()), seed: () => ({}) });
 
 export const createDummyMapVersions = (backend?: Backend): MapVersionService =>
   createSavedState({
@@ -72,6 +85,7 @@ export const createDummyMapVersions = (backend?: Backend): MapVersionService =>
         versions: z.array(z.object({ id: z.string(), mapId: z.string(), status: z.string() }).passthrough()),
       }),
     ),
+    seed: () => ({}),
   }) as unknown as MapVersionService;
 
 export const createDummySettings = (backend?: Backend): SettingsService =>
@@ -83,6 +97,7 @@ export const createDummySettings = (backend?: Backend): SettingsService =>
       connections: z.object({ 'fleet-manager': item, mes: item }).passthrough(),
       general: item,
     }),
+    seed: () => seedSettings() as never,
   }) as unknown as SettingsService;
 
 export const createDummyPreferences = (backend?: Backend): PreferenceService =>
@@ -90,6 +105,7 @@ export const createDummyPreferences = (backend?: Backend): PreferenceService =>
     key: PREFERENCES_KEY,
     backend,
     schema: z.record(z.string(), rec),
+    seed: () => ({}),
   }) as unknown as PreferenceService;
 
 export const createDummyNotificationCache = (backend?: Backend): NotificationCacheService => ({
@@ -98,6 +114,7 @@ export const createDummyNotificationCache = (backend?: Backend): NotificationCac
       key: notificationsKey(username),
       backend,
       schema: z.array(z.object({ id: z.string(), title: z.string(), at: z.number() }).passthrough()),
+      seed: () => [],
     }) as never,
 });
 
@@ -106,6 +123,7 @@ export const createDummyActionLog = (backend?: Backend): ActionLogService =>
     key: ACTIONLOG_KEY,
     backend,
     schema: z.array(z.object({ id: z.string() }).passthrough()),
+    seed: () => [],
   }) as unknown as never;
 
 /** Per-device interface choices under their own keys. */
@@ -113,3 +131,11 @@ export const createDummyDevicePrefs = (backend: Backend = localBackend): DeviceP
   get: (key) => backend(key).read(),
   set: (key, value) => backend(key).write(value),
 });
+
+export const createDummyRobotOpsState = (backend?: Backend): RobotOpsStateService =>
+  createSavedState({
+    key: ROBOTOPS_KEY,
+    backend,
+    schema: z.record(z.string(), z.object({}).passthrough()),
+    seed: () => ({}),
+  }) as unknown as RobotOpsStateService;

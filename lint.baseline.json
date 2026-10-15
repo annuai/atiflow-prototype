@@ -1,13 +1,11 @@
 {
-  "total": 72,
+  "total": 67,
   "rules": {
-    "@typescript-eslint/no-explicit-any": 1,
     "complexity": 4,
     "max-lines": 7,
-    "no-console": 1,
     "react-hooks/exhaustive-deps": 10,
     "react-hooks/globals": 2,
-    "react-hooks/purity": 5,
+    "react-hooks/purity": 2,
     "react-hooks/refs": 25,
     "react-hooks/set-state-in-effect": 15,
     "react-hooks/use-memo": 2

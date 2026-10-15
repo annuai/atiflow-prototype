@@ -4,7 +4,7 @@ import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
-import { useFleetMaterialCodes } from '@/features/master-data/model/selectors';
+import { useFleetMaterialCodes } from '@/features/master-data';
 import { TagMultiSelect } from '@/components/form/TagMultiSelect';
 import { selectFleet, useWorkflow, wfStore } from '../model/store';
 import { useEligibleUsers } from '../model/users';

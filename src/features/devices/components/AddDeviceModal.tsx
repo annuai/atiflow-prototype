@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FormField } from '@/components/form/FormField';
 import { ModalShell } from '@/components/modal/ModalShell';
-import { useFleetNames } from '@/features/workflow-builder/model/store';
+import { useFleetNames } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
 import { deviceStore, useDevices } from '../model/store';
 import { blankValues, validateNew } from '../model/validate';

@@ -1,6 +1,6 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { services } from '@/services';
-import type { PublicUser } from '@/features/auth/types';
+import { type PublicUser } from '@/features/auth';
 import { NotificationCenter } from './center';
 import type { AppNotification, NewNotification, NotificationApi } from './types';
 

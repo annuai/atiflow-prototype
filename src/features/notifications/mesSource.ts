@@ -1,4 +1,4 @@
-import { masterDataStore } from '@/features/master-data/model/store';
+import { masterDataStore } from '@/features/master-data';
 import type { NewNotification, NotificationSource } from './types';
 
 const MIN = 60_000;

@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { useStore } from 'zustand';
 import { datasetStore } from '@/data/dataset';
 import type { FleetRecord } from '@/data/fleets';
-import { authStore, useAuth } from '@/features/auth/authStore';
-import { fleetScope } from './fleetScope';
+import { fleetScope } from '@/features/access';
+import { authStore, useAuth } from './authStore';
 
 /** The fleets the signed-in user may see (everything for a configurator). Pages, sidebars, dropdowns and the live feed all read this one rule. */
 export const visibleFleets = (): FleetRecord[] => {

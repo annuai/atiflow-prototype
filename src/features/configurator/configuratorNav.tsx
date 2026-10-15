@@ -13,16 +13,13 @@ import fleetI from '@/ui/icons/fleet.svg';
 import plusI from '@/ui/icons/plus-square.svg';
 import bellI from '@/ui/icons/bell.svg';
 import gearI from '@/ui/icons/settings.svg';
-import { KINDS } from '@/features/devices/model/kinds';
-import { deviceStore } from '@/features/devices/model/store';
-import { nameOf } from '@/features/devices/model/validate';
-import { fleetPath } from '@/features/fleets/paths';
-import { builderNodeHits } from '@/features/workflow-builder/builderNav';
+import { KINDS, deviceStore, nameOf } from '@/features/devices';
+import { fleetPath, FLEETS_PATH } from '@/features/fleets';
+import { builderNodeHits, useFleetNames, wfStore } from '@/features/workflow-builder';
 import { datasetStore } from '@/data/dataset';
-import { useUnreadCount } from '@/features/notifications/NotificationsProvider';
-import { useFleetNames, wfStore } from '@/features/workflow-builder/model/store';
-import { canNow, useAccess } from '@/features/access/useAccess';
+import { useUnreadCount } from '@/features/notifications';
 import { USERS_PATH } from '@/features/access';
+import { canNow, useAccess } from '@/features/auth';
 
 export const SETTINGS_PATH = '/configurator/settings';
 export const WORKFLOWS_PATH = '/configurator'; // "Workflows": opens a new workflow; /configurator/workflows/<id> shows one
@@ -142,13 +139,22 @@ export function useConfiguratorNav(): NavModel {
           {
             id: 'fleets',
             label: 'Fleets',
-            items: names.map((n) => ({
-              id: n,
-              label: n,
-              icon: fleetI,
-              active: pathname.startsWith(fleetPath(n, '')),
-              onSelect: () => navigate(fleetPath(n)),
-            })),
+            items: [
+              {
+                id: 'all-fleets',
+                label: 'All fleets',
+                icon: fleetI,
+                active: pathname === FLEETS_PATH,
+                onSelect: () => navigate(FLEETS_PATH),
+              },
+              ...names.map((n) => ({
+                id: n,
+                label: n,
+                icon: fleetI,
+                active: pathname.startsWith(fleetPath(n, '')),
+                onSelect: () => navigate(fleetPath(n)),
+              })),
+            ],
             extra: <NewFleet />,
           },
         ]

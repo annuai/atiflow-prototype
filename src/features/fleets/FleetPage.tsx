@@ -1,13 +1,13 @@
 import { useRef } from 'react';
+import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { useDataset } from '@/data/dataset';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Dataflow03, LayoutGrid01, Package, Settings02 } from '@untitledui/icons';
 import { Tabs } from '@/components/application/tabs/tabs';
 import { Badge } from '@/components/base/badges/badges';
-import { useDevices } from '@/features/devices/model/store';
-import { useMasterData } from '@/features/master-data/model/store';
-import { isKept } from '@/features/workflow-builder/model/seed';
-import { useWorkflow, workflowsOfFleet } from '@/features/workflow-builder/model/store';
+import { useDevices } from '@/features/devices';
+import { useMasterData } from '@/features/master-data';
+import { isKept, useWorkflow, workflowsOfFleet } from '@/features/workflow-builder';
 import { InlineNameEdit } from '@/components/form/InlineNameEdit';
 import { notify } from '@/ui/toast';
 import { copy } from './copy';
@@ -92,8 +92,10 @@ export function FleetPage() {
               items={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id], icon: t.icon, badge: counts[t.id] }))}
             />
           </Tabs>
-          <div className="md-body" key={`${name}/${active.id}`}>
-            <active.Panel fleet={name} />
+          <div className="md-body">
+            <TabPanelMotion tabKey={`${name}/${active.id}`} fill>
+              <active.Panel fleet={name} />
+            </TabPanelMotion>
           </div>
         </div>
       </div>

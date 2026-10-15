@@ -1,8 +1,8 @@
 import { createStore } from 'zustand/vanilla';
+import { createPersister } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { connectionById } from '../model/connections';
-import { seedSettings } from '../model/seed';
 import type { ConnectionId, GeneralSettings, SettingsData, TestResult } from '../model/types';
 import { connectionTester } from './tester';
 
@@ -16,7 +16,7 @@ export interface SettingsState extends SettingsData {
   reset(): void;
 }
 export const settingsStore = createStore<SettingsState>((set, get) => ({
-  ...(services().settings.read() ?? seedSettings()),
+  ...services().settings.read(),
   saveConnection(id, values) {
     const c = get().connections[id];
     set({ connections: { ...get().connections, [id]: { ...c, values, lastTest: undefined } } });
@@ -37,12 +37,13 @@ export const settingsStore = createStore<SettingsState>((set, get) => ({
   },
   reset() {
     services().settings.clear();
-    set({ ...seedSettings() });
+    set({ ...services().settings.read() });
   },
 }));
 export const useSettings = <T>(sel: (s: SettingsState) => T) => useStore(settingsStore, sel);
+const persist = createPersister('settings', (v: SettingsData) => services().settings.save(v));
 settingsStore.subscribe((s, p) => {
   if (s.connections !== p.connections || s.general !== p.general)
-    void services().settings.save({ version: 1, connections: s.connections, general: s.general });
+    persist.queue({ version: 1, connections: s.connections, general: s.general });
 });
 if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __settings: settingsStore });

@@ -1,6 +1,6 @@
 import { liveAlertsSource } from './liveAlertsSource';
 import { mesSource } from './mesSource';
-import { requestUpdatesSource } from '@/features/requests/notifications';
+import { requestUpdatesSource } from '@/features/requests';
 import type { SourcesByAudience } from './types';
 
 /** Which sources feed which workspace's audience: the page is the same for everyone, the notifications are not. Add a workspace here to give it its own. */
