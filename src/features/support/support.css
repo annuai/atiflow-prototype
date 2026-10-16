@@ -1,0 +1,91 @@
+/* Ati Support window: a card at the top right, under the Go to Support button; it moves left while the Ati AI panel is docked (the dock sets html.ai-docked). */
+.sup-pop {
+  position: fixed;
+  right: 20px;
+  top: 76px; /* just under the Go to Support button in the top bar */
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  height: min(560px, calc(100dvh - 96px));
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--color-bg-primary, #fff);
+  border: 1px solid var(--color-border-secondary, #e5e5e5);
+  box-shadow: 0 20px 40px rgba(15, 23, 32, 0.28);
+  animation: sup-in 0.18s ease-out;
+  transition: right 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+html.ai-docked .sup-pop {
+  right: calc(380px + 40px);
+}
+.sup-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--color-fg-secondary, #525252);
+  cursor: pointer;
+}
+.sup-icon:hover {
+  background: var(--color-bg-primary_hover, #fafafa);
+}
+.sup-icon:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #1570ef);
+}
+.sup-dot {
+  animation: sup-bounce 1s infinite ease-in-out;
+}
+.sup-ring {
+  animation: sup-pulse 1.4s ease-out infinite;
+}
+@keyframes sup-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+@keyframes sup-bounce {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+@keyframes sup-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(9, 146, 80, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 22px rgba(9, 146, 80, 0);
+  }
+}
+/* small screens: the card is a full-screen sheet */
+@media (max-width: 640px) {
+  .sup-pop {
+    inset: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100dvh;
+    border-radius: 0;
+  }
+  html.ai-docked .sup-pop {
+    right: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sup-pop,
+  .sup-dot,
+  .sup-ring {
+    animation: none;
+  }
+}

@@ -668,3 +668,21 @@
     animation: none;
   }
 }
+
+.ai-support {
+  display: block;
+  margin: 6px auto 0;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--sb-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ai-support:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}

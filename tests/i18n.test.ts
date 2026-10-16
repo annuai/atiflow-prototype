@@ -3,7 +3,7 @@ import { ALL_PERMISSIONS, WORKSPACES } from '@/features/access';
 import { CATALOGS, LANGUAGES, chooseLocale, localized, setLocale, toLocale, type LocaleId } from '@/i18n';
 
 /** Product names and acronyms that stay in Latin script in every language. */
-const KEEP_LATIN = /^(Fleet Manager|MTBF|ASRS|KPI|SLA|MES|API)$/;
+const KEEP_LATIN = /^(Fleet Manager|MTBF|ASRS|KPI|SLA|MES|API|Ati Support|Ati AI)$/;
 const SCRIPT: Record<LocaleId, RegExp | null> = {
   en: null,
   hi: /[ऀ-ॿ]/,

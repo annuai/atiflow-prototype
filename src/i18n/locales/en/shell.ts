@@ -5,8 +5,6 @@ export const shell = {
   forward: 'Forward',
   search: 'Search',
   support: 'Go to Support',
-  supportToast: 'Reach the AtiFlow support desk from the full app.',
-  supportTitle: 'Support',
   ai: 'Ati AI',
   aiToast: 'Ati AI isn’t part of this prototype',
   logout: 'Log out',

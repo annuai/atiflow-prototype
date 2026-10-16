@@ -58,6 +58,7 @@ export const messages: Messages<typeof ai> = {
     '7d': 'ಕಳೆದ 7 ದಿನ',
     '30d': 'ಕಳೆದ 30 ದಿನ',
   },
+  askSupport: 'ಸಪೋರ್ಟ್‌ನ್ನು ಕೇಳಿ',
   typing: 'Ati AI ಬರೆಯುತ್ತಿದೆ',
   footer: 'AI ತಪ್ಪುಗಳನ್ನು ಮಾಡಬಹುದು. ಮುಖ್ಯ ಕ್ರಿಯೆಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.',
   blocks: {

@@ -7,8 +7,6 @@ export const messages: Messages<typeof shell> = {
   forward: 'ಮುಂದೆ',
   search: 'ಹುಡುಕಿ',
   support: 'ಬೆಂಬಲಕ್ಕೆ ಹೋಗಿ',
-  supportToast: 'AtiFlow ಬೆಂಬಲ ಡೆಸ್ಕ್ ಅನ್ನು ಪೂರ್ಣ ಆ್ಯಪ್‌ನಿಂದ ಸಂಪರ್ಕಿಸಿ.',
-  supportTitle: 'ಬೆಂಬಲ',
   ai: 'ಅತಿ AI',
   aiToast: 'ಅತಿ AI ಈ ಪ್ರೊಟೊಟೈಪ್‌ನ ಭಾಗವಲ್ಲ',
   logout: 'ಲಾಗ್ ಔಟ್',

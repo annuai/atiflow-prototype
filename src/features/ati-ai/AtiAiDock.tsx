@@ -48,6 +48,11 @@ export function AtiAiDock() {
     window.addEventListener('keydown', on);
     return () => window.removeEventListener('keydown', on);
   }, []);
+  useEffect(() => {
+    // the Ati Support window moves left of the panel while it is docked beside the page
+    document.documentElement.classList.toggle('ai-docked', open && !drawer);
+    return () => document.documentElement.classList.remove('ai-docked');
+  }, [open, drawer]);
   const close = () => atiAiStore.getState().setOpen(false);
   if (!roles.length) return null;
   const body = mounted && <AtiAiPanel open={open} onClose={close} />;

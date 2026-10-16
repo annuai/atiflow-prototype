@@ -6,6 +6,7 @@ import { Scrim } from '@/components/motion/Scrim';
 import { workspaceById, workspaceHome, workspaceOfPath, workspacesOf, type WorkspaceId } from '@/features/access';
 import { authStore, useAuth } from '@/features/auth/authStore';
 import { AtiAiDock, atiAiStore } from '@/features/ati-ai';
+import { SupportWidget, toggleSupport, useSupportUnread } from '@/features/support';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import type { NavModel, SearchHit } from './types';
@@ -20,6 +21,7 @@ interface Props {
 /** Common chrome for every signed-in page: sidebar (workspace title, a switcher when the user has several workspaces, account menu), topbar, mobile drawer. Pages only supply content + nav/search data. */
 export function AppShell({ useNavModel, searchPlaceholder, getHits, children }: Props) {
   const user = useAuth((s) => s.user)!;
+  const supportUnread = useSupportUnread();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const current = workspaceOfPath(pathname); // the workspace this page belongs to: its title heads the sidebar
@@ -72,10 +74,13 @@ export function AppShell({ useNavModel, searchPlaceholder, getHits, children }: 
           searchPlaceholder={searchPlaceholder}
           getHits={getHits}
           onAi={() => atiAiStore.getState().toggle()}
+          onSupport={toggleSupport}
+          supportUnread={supportUnread}
         />
         {children}
       </div>
       <AtiAiDock />
+      <SupportWidget />
     </div>
   );
 }

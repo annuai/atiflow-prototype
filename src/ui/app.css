@@ -1485,3 +1485,35 @@ body {
     min-height: 48px;
   }
 }
+
+/* the Go to Support button shows how many replies from support wait to be read */
+.tb-support {
+  position: relative;
+  display: inline-flex;
+}
+.tb-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  border: 2px solid #fff;
+  pointer-events: none;
+}
+.tb-badge > span {
+  display: block;
+  line-height: 1;
+  transform: translateY(0.5px); /* the font's digits sit a little high in their line box */
+}

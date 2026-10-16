@@ -2,6 +2,7 @@ import { Button as AriaButton } from 'react-aria-components';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown } from '@untitledui/icons';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
+import { openSupport } from '@/features/support';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { INSIGHTS } from '../service/supervisor';
@@ -139,7 +140,31 @@ export function AtiAiPanel({ open, onClose }: { open: boolean; onClose(): void }
         />
       </div>
       <Composer role={role} busy={busy} focusKey={open} onSend={(text) => send({ text })} />
-      <p className="ai-foot">{copy.footer}</p>
+      <p className="ai-foot">
+        {copy.footer}
+        <button
+          type="button"
+          className="ai-support"
+          onClick={() =>
+            openSupport({
+              context: {
+                aiSummary: messages
+                  .slice(-6)
+                  .map(
+                    (m) =>
+                      `${m.from === 'user' ? 'Person' : 'Ati AI'}: ${m.blocks
+                        .map((b) => (b.type === 'text' ? b.text : b.type === 'confirmation_card' ? b.title : ''))
+                        .filter(Boolean)
+                        .join(' ')}`,
+                  )
+                  .join('\n'),
+              },
+            })
+          }
+        >
+          {copy.askSupport}
+        </button>
+      </p>
     </aside>
   );
 }

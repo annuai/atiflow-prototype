@@ -56,6 +56,7 @@ export const ai = {
     '7d': 'Last 7 days',
     '30d': 'Last 30 days',
   },
+  askSupport: 'Ask support',
   typing: 'Ati AI is typing',
   footer: 'AI can make mistakes. Check important actions.',
   blocks: {

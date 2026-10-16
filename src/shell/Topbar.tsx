@@ -16,9 +16,11 @@ interface Props {
   getHits: (q: string) => SearchHit[];
   onAi?: () => void;
   onSupport?: () => void;
+  /** replies from support the person has not read yet */
+  supportUnread?: number;
 }
 /** Generic top app bar (Figma node 837:5352). Pages provide search behaviour and the left-hand buttons. */
-export function Topbar({ onMenu, searchPlaceholder, getHits, onAi, onSupport }: Props) {
+export function Topbar({ onMenu, searchPlaceholder, getHits, onAi, onSupport, supportUnread = 0 }: Props) {
   const navigate = useNavigate();
   const h = useHistoryNav();
   const [q, setQ] = useState('');
@@ -77,15 +79,16 @@ export function Topbar({ onMenu, searchPlaceholder, getHits, onAi, onSupport }: 
         )}
       </div>
       <div className="tb-spacer" />
-      <Button
-        aria-label={copy.support}
-        size="sm"
-        color="secondary"
-        iconLeading={HeadsetHelp}
-        onPress={onSupport ?? (() => notify.info(copy.supportTitle, copy.supportToast, 'support'))}
-      >
-        <span className="tb-text">{copy.support}</span>
-      </Button>
+      <span className="tb-support">
+        <Button aria-label={copy.support} size="sm" color="secondary" iconLeading={HeadsetHelp} onPress={onSupport}>
+          <span className="tb-text">{copy.support}</span>
+        </Button>
+        {supportUnread > 0 && (
+          <span className="tb-badge" role="status" aria-label={String(supportUnread)}>
+            <span>{supportUnread}</span>
+          </span>
+        )}
+      </span>
       <Button
         aria-label={copy.ai}
         size="sm"
