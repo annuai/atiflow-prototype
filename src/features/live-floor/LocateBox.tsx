@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Map01, Send01, SearchLg, Stars02 } from '@untitledui/icons';
+import { Map01, Send01, SearchLg } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { useApp } from '@/core/store';
@@ -72,9 +72,6 @@ export function LocateBox({ legendClosed, onOpenLegend }: { legendClosed: boolea
             ))}
           </ul>
         )}
-        <span className="ai">
-          <Stars02 className="size-4" />
-        </span>
         <Input
           size="sm"
           icon={SearchLg}

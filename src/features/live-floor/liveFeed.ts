@@ -1,4 +1,5 @@
 import { store } from '@/core/store';
+import { handle } from '@/ui/engineHandle';
 import { StatsTracker } from '@/core/stats';
 import { MeasurementLog } from '@/core/measurements';
 import { services } from '@/services';
@@ -10,6 +11,7 @@ import { visibleLiveIds } from '@/features/auth';
 import { authStore } from '@/features/auth';
 import type { RosterEntry } from '@/adapters/sim';
 import type {
+  ChargeResult,
   FleetEvent,
   NavGraph,
   OrderUpdate,
@@ -160,7 +162,17 @@ function stop() {
   store.setState({ robots: {}, traffic: {}, events: [], violations: 0 });
 }
 
+/** Commands to robots on the floor. */
+const robotCommands = {
+  /** Send a robot to the nearest free charger (the fleet refuses a robot that is on a work trip, offline, in error or already charging). */
+  sendToCharger(id: string): ChargeResult {
+    return adapter?.sendToCharger?.(id) ?? { ok: false, reason: 'not-running' };
+  },
+};
+handle.sendToCharger = robotCommands.sendToCharger; // the robot window (ui layer) reaches it through the handle
+
 export const feed = {
+  robots: robotCommands,
   /** Requests for transport trips (see `TransportOrder`): handed to the running fleet; updates come back as robots take them and finish. */
   orders: {
     /** false when the floor is not running yet (it is handed over when it starts, see `onStart`) or the fleet refused the order. */

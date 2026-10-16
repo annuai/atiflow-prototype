@@ -108,13 +108,13 @@ export function InfoPanel({ title, subtitle, pill, chips, stats, alerts, actions
         </div>
       ))}
       {actions && (
-        <div className="row">
-          {actions.map((a) => (
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          {actions.map((a, i) => (
             <Button
               key={a.label}
               size="sm"
               color="secondary"
-              className="flex-1"
+              className={i < 2 ? 'flex-1' : 'basis-full'}
               isDisabled={a.disabled}
               onPress={a.onClick}
             >

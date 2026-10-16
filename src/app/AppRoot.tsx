@@ -14,6 +14,7 @@ import { LocaleSync } from './LocaleSync';
 import { PageTitle } from '@/shell/PageTitle';
 import { AppToaster } from '@/ui/toast';
 import { NoAccessPage } from '@/features/access/NoAccessPage';
+import { enterableWorkspaces } from '@/features/access';
 import { ShellLayout } from '@/shell/ShellLayout';
 import { RequireAccess } from './guards';
 import { landingFor, rememberPage } from './lastPage';
@@ -28,6 +29,7 @@ const DashboardPage = lazy(() =>
 const ActionCenterPage = lazy(() =>
   import('@/features/action-center/ActionCenterPage').then((m) => ({ default: m.ActionCenterPage })),
 );
+const SearchPage = lazy(() => import('@/features/search/ui/SearchPage').then((m) => ({ default: m.SearchPage })));
 const ReportsPage = lazy(() => import('@/features/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })));
 const DeviceDetailPage = lazy(() =>
   import('@/features/devices/DeviceDetailPage').then((m) => ({ default: m.DeviceDetailPage })),
@@ -97,6 +99,13 @@ function PageViews() {
   useEffect(() => metrics.track('page_view', { path: pageKey(pathname) }), [pathname]);
   return null;
 }
+/** `/search?q=...` (a link that does not say which workspace): opens the search page of the workspace the person works in. */
+function SearchRedirect() {
+  const user = useAuth((st) => st.user);
+  const { search } = useLocation();
+  const ws = user ? (enterableWorkspaces(user)[0]?.id ?? null) : null;
+  return ws ? <Navigate to={`/${ws}/search${search}`} replace /> : <Navigate to="/login" replace />;
+}
 /** A page that moved: keeps the query (e.g. `?tv=1` of a wall display's bookmark). */
 function MovedTo({ to }: { to: string }) {
   const { search } = useLocation();
@@ -131,6 +140,7 @@ export function AppRoot() {
           <PageTitle />
           <Routes>
             <Route path="/login" element={<LoginRoute />} />
+            <Route path="/search" element={<SearchRedirect />} />
             <Route path="/supervisor" element={<RootRedirect />} />
             <Route path="/operator" element={<RootRedirect />} />
             <Route path="/supervisor/dashboard-new" element={<MovedTo to="/supervisor/dashboard" />} />
@@ -145,6 +155,7 @@ export function AppRoot() {
               <Route path="/supervisor/dashboard" element={<DashboardPage />} />
               <Route path="/supervisor/reports" element={<ReportsPage />} />
               <Route path="/supervisor/notifications" element={<NotificationsPage />} />
+              <Route path="/supervisor/search" element={<SearchPage />} />
               <Route path="/supervisor/action-center" element={<ActionCenterPage />} />
               <Route path="/supervisor/livefloor" element={<LiveFloorPage />} />
               <Route path="/supervisor/settings/:tab?" element={<PreferencesPage />} />
@@ -162,6 +173,7 @@ export function AppRoot() {
               <Route path="/operator/history" element={<OperatorHistoryPage />} />
               <Route path="/operator/action-center" element={<ActionCenterPage />} />
               <Route path="/operator/notifications" element={<NotificationsPage />} />
+              <Route path="/operator/search" element={<SearchPage />} />
               <Route path="/operator/settings/:tab?" element={<PreferencesPage />} />
             </Route>
             <Route
@@ -183,6 +195,7 @@ export function AppRoot() {
               <Route path="/configurator/fleets" element={<FleetsIndexPage />} />
               <Route path="/configurator/fleets/:name/:tab?" element={<FleetPage />} />
               <Route path="/configurator/notifications" element={<NotificationsPage />} />
+              <Route path="/configurator/search" element={<SearchPage />} />
               <Route path="/configurator/users" element={<UsersPage />} />
               <Route path="/configurator/users/:username" element={<UserDetailPage />} />
               <Route path="/configurator/settings/:tab?" element={<SettingsPage />} />

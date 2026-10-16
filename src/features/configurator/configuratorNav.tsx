@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
-import type { NavModel, SearchHit } from '@/shell/types';
+import type { NavModel } from '@/shell/types';
 import robotsI from '@/ui/icons/robots.svg';
 import mapsI from '@/ui/icons/maps.svg';
 import hardwareI from '@/ui/icons/hardware.svg';
@@ -13,13 +13,13 @@ import fleetI from '@/ui/icons/fleet.svg';
 import plusI from '@/ui/icons/plus-square.svg';
 import bellI from '@/ui/icons/bell.svg';
 import gearI from '@/ui/icons/settings.svg';
-import { KINDS, deviceStore, nameOf } from '@/features/devices';
+import { KINDS } from '@/features/devices';
 import { fleetPath, FLEETS_PATH } from '@/features/fleets';
-import { builderNodeHits, useFleetNames, wfStore } from '@/features/workflow-builder';
+import { useFleetNames, wfStore } from '@/features/workflow-builder';
 import { datasetStore } from '@/data/dataset';
 import { useUnreadCount } from '@/features/notifications';
 import { USERS_PATH } from '@/features/access';
-import { canNow, useAccess } from '@/features/auth';
+import { useAccess } from '@/features/auth';
 import { localized } from '@/i18n';
 
 const nav = localized('nav');
@@ -189,36 +189,4 @@ export function useConfiguratorNav(): NavModel {
         : []),
     ],
   };
-}
-
-/** Top-bar search for every configurator page: fleets, robots, hardware (open their page) and, on the builder, the nodes of the open workflow. */
-export function configuratorHits(q: string): SearchHit[] {
-  const ql = q.toLowerCase();
-  const d = deviceStore.getState();
-  const devices = (['robot', 'hardware'] as const)
-    .filter((id) => canNow(`configurator.${id === 'robot' ? 'robots' : 'hardware'}`))
-    .flatMap((id) =>
-      d[id]
-        .filter((x) => (nameOf(x) + ' ' + KINDS[id].typeOf(x)).toLowerCase().includes(ql))
-        .slice(0, 5)
-        .map((x) => ({
-          kind: KINDS[id].singular,
-          title: nameOf(x),
-          sub: KINDS[id].typeOf(x),
-          to: `${WORKFLOWS_PATH}/${KINDS[id].route}/${encodeURIComponent(nameOf(x))}`,
-        })),
-    );
-  return [
-    ...(canNow('configurator.fleets')
-      ? datasetStore
-          .getState()
-          .fleets.map((f) => f.name)
-          .filter((n) => n.toLowerCase().includes(ql))
-          .map((n) => ({ kind: nav.hits.fleet, title: n, to: fleetPath(n) }))
-      : []),
-    ...devices,
-    ...(window.location.pathname.startsWith(`${WORKFLOWS_PATH}/workflows/`) && canNow('configurator.workflows')
-      ? builderNodeHits(q)
-      : []),
-  ];
 }

@@ -1,33 +1,28 @@
 import { MotionConfig } from 'motion/react';
-import { operatorHits, useOperatorNav } from '@/features/action-center/operatorNav';
-import { configuratorHits, useConfiguratorNav } from '@/features/configurator/configuratorNav';
-import { liveHits, useLiveNav } from '@/features/live-floor/liveNav';
+import { useOperatorNav } from '@/features/action-center/operatorNav';
+import { useConfiguratorNav } from '@/features/configurator/configuratorNav';
+import { useLiveNav } from '@/features/live-floor/liveNav';
 import type { WorkspaceId } from '@/features/access';
 import { AppShell } from './AppShell';
 import { PageTransition } from './PageTransition';
-import type { NavModel, SearchHit } from './types';
+import type { NavModel } from './types';
 import { copy } from './copy';
 
-const SHELLS: Partial<
-  Record<WorkspaceId, { useNavModel: () => NavModel; getHits: (q: string) => SearchHit[]; placeholder: string }>
-> = {
+const SHELLS: Partial<Record<WorkspaceId, { useNavModel: () => NavModel; placeholder: string }>> = {
   configurator: {
     useNavModel: useConfiguratorNav,
-    getHits: configuratorHits,
     get placeholder() {
       return copy.searchConfigurator;
     },
   },
   supervisor: {
     useNavModel: useLiveNav,
-    getHits: liveHits,
     get placeholder() {
       return copy.searchSupervisor;
     },
   },
   operator: {
     useNavModel: useOperatorNav,
-    getHits: operatorHits,
     get placeholder() {
       return copy.searchOperator;
     },
@@ -43,7 +38,7 @@ export function ShellLayout({ workspace }: { workspace: WorkspaceId }) {
   const s = SHELLS[workspace]!;
   return (
     <MotionConfig reducedMotion="user">
-      <AppShell key={workspace} useNavModel={s.useNavModel} getHits={s.getHits} searchPlaceholder={s.placeholder}>
+      <AppShell key={workspace} useNavModel={s.useNavModel} searchPlaceholder={s.placeholder}>
         <PageTransition />
       </AppShell>
     </MotionConfig>

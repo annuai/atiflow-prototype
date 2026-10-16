@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { ClockRewind } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
@@ -29,7 +30,14 @@ export function OperatorHistoryPage() {
   const me = useOperator();
   const [filter, setFilter] = useState<Filter>('all');
   const [cancelling, setCancelling] = useState<TripRequest | null>(null);
-  const [opened, setOpened] = useState<string | null>(null);
+  const [opened, setOpened] = useState<string | null>(() => new URLSearchParams(window.location.search).get('open')); // search opens an item's details
+  const { search: urlSearch } = useLocation();
+  const [seenOpen, setSeenOpen] = useState(urlSearch);
+  if (seenOpen !== urlSearch) {
+    setSeenOpen(urlSearch);
+    const v = new URLSearchParams(urlSearch).get('open');
+    if (v) setOpened(v);
+  }
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = window.setInterval(() => setNow(Date.now()), 30_000);

@@ -2,6 +2,7 @@ import { LaneGraph, pointAt, type PathPlan } from '../core/lanes';
 import { angleDiff, pointInPoly } from '../core/geom';
 import type { TripIdSource } from '../data/tripIds';
 import type {
+  ChargeResult,
   FleetEvent,
   NavGraph,
   OrderUpdate,
@@ -99,6 +100,7 @@ interface Bot {
   energyKWh: number;
   kWh: number;
   faultUntil: number;
+  /** someone asked for this robot to go to a charger: its next trip is a charge trip */ chargeRequested: boolean;
   trip: Trip | null;
   task: RobotTelemetry['task'];
   payload: RobotTelemetry['payload'];
@@ -230,6 +232,7 @@ export class FleetSim {
         energyKWh: 0,
         kWh: roster?.[i].batteryKWh ?? 3,
         faultUntil: 0,
+        chargeRequested: false,
         trip: null,
         task: null,
         payload: null,
@@ -371,8 +374,8 @@ export class FleetSim {
   }
   /** A new trip: loaded out, empty back, or to a charger when the battery is low. Destinations are far from where the robot starts, with stops on the way. */
   private startTrip(b: Bot): boolean {
-    if (this.takeOrder(b)) return true;
-    const low = b.battery < 25;
+    if (!b.chargeRequested && this.takeOrder(b)) return true;
+    const low = b.battery < 25 || b.chargeRequested;
     const g = this.graph.nav;
     const park =
       !low &&
@@ -443,12 +446,31 @@ export class FleetSim {
       };
       if (this.startLeg(b)) {
         if (!kind) b.nextLoaded = !b.nextLoaded;
+        if (kind === 'charge') b.chargeRequested = false;
         return true;
       } // loaded trip out, empty trip back
       this.undoTripId();
     }
     b.trip = null;
+    if (b.chargeRequested && kind === 'charge') b.chargeRequested = false; // no charger could be reached: the request ends, work goes on
     return false;
+  }
+  /** "Send to charger": a trip that has started is never re-planned, so a robot on a work trip is refused; one on an empty return or parking trip goes when it ends; an idle one goes now. */
+  sendToCharger(id: string): ChargeResult {
+    const b = this.bots.find((x) => x.id === id);
+    if (!b) return { ok: false, reason: 'not-found' };
+    if (b.state === 'offline') return { ok: false, reason: 'offline' };
+    if (b.state === 'error' || this.time < b.faultUntil) return { ok: false, reason: 'error' };
+    if (b.state === 'charging' || b.trip?.kind === 'charge') return { ok: false, reason: 'already-charging' };
+    if (b.trip?.kind === 'transport') return { ok: false, reason: 'work-trip', tripId: b.trip.id };
+    if (!this.graph.nav.stations.some((q) => q.type === 'charge' && q.fleets.includes(b.fleetId)))
+      return { ok: false, reason: 'no-charger' };
+    b.chargeRequested = true;
+    if (!b.trip && (b.state === 'idle' || b.state === 'working')) {
+      b.timer = 0; // parked: plan the charge trip on the next step
+      return { ok: true, when: 'now' };
+    }
+    return { ok: true, when: 'after-trip' };
   }
   // ---- requested trips (orders): people ask for a material to be moved; a free robot of the fleet takes the oldest order
   /** Orders waiting for a robot (oldest first). */

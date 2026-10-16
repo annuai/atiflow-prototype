@@ -21,6 +21,7 @@ import { auth } from './auth';
 import { common } from './common';
 import { ai } from './ai';
 import { support } from './support';
+import { search } from './search';
 import { preferences } from './preferences';
 import { settings } from './settings';
 import { shell } from './shell';
@@ -53,4 +54,5 @@ export const catalog = {
   insights,
   ai,
   support,
+  search,
 };

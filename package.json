@@ -27,6 +27,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@untitledui/file-icons": "^0.0.9",
     "@untitledui/icons": "^0.0.23",
+    "minisearch": "^7.2.0",
     "motion": "^13.5.1",
     "react": "^19.3.0",
     "react-aria": "^3.53.1",

@@ -9,17 +9,16 @@ import { AtiAiDock, atiAiStore } from '@/features/ati-ai';
 import { SupportWidget, toggleSupport, useSupportUnread } from '@/features/support';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
-import type { NavModel, SearchHit } from './types';
+import type { NavModel } from './types';
 import { copy } from './copy';
 
 interface Props {
   useNavModel: () => NavModel;
   searchPlaceholder: string;
-  getHits: (q: string) => SearchHit[];
   children: ReactNode;
 }
 /** Common chrome for every signed-in page: sidebar (workspace title, a switcher when the user has several workspaces, account menu), topbar, mobile drawer. Pages only supply content + nav/search data. */
-export function AppShell({ useNavModel, searchPlaceholder, getHits, children }: Props) {
+export function AppShell({ useNavModel, searchPlaceholder, children }: Props) {
   const user = useAuth((s) => s.user)!;
   const supportUnread = useSupportUnread();
   const navigate = useNavigate();
@@ -72,7 +71,6 @@ export function AppShell({ useNavModel, searchPlaceholder, getHits, children }: 
         <Topbar
           onMenu={() => setNavOpen(true)}
           searchPlaceholder={searchPlaceholder}
-          getHits={getHits}
           onAi={() => atiAiStore.getState().toggle()}
           onSupport={toggleSupport}
           supportUnread={supportUnread}

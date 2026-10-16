@@ -41,7 +41,7 @@ const RAW: RawWorkspace[] = [
   {
     id: 'configurator',
     built: true,
-    shared: ['/configurator/notifications'],
+    shared: ['/configurator/notifications', '/configurator/search'],
     features: [
       { id: 'configurator.robots', landing: '/configurator/robots', routes: ['/configurator/robots'] },
       { id: 'configurator.maps', landing: '/configurator/maps', routes: ['/configurator/maps'] },
@@ -67,7 +67,7 @@ const RAW: RawWorkspace[] = [
   {
     id: 'supervisor',
     built: true,
-    shared: ['/supervisor/notifications'],
+    shared: ['/supervisor/notifications', '/supervisor/search'],
     features: [
       {
         id: 'supervisor.dashboard',
@@ -91,7 +91,7 @@ const RAW: RawWorkspace[] = [
   {
     id: 'operator',
     built: true,
-    shared: ['/operator/notifications'],
+    shared: ['/operator/notifications', '/operator/search'],
     features: [
       { id: 'operator.approve', landing: '/operator/approve', routes: ['/operator/approve'] },
       {

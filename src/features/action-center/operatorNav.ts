@@ -8,7 +8,7 @@ const names = localized('nav');
 import { useAccess } from '@/features/auth';
 import { useUnreadCount } from '@/features/notifications';
 import { canApprove, useRequestsRunning, useRequests, useOperator } from '@/features/requests';
-import type { NavModel, SearchHit } from '@/shell/types';
+import type { NavModel } from '@/shell/types';
 import { useActionCenterRunning } from './data/store';
 import { useCalls } from './data/useCalls';
 
@@ -98,4 +98,3 @@ export function useOperatorNav(): NavModel {
     ],
   };
 }
-export const operatorHits = (_q: string): SearchHit[] => [];

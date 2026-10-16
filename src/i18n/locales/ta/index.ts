@@ -5,6 +5,7 @@ import { messages as bookings } from './bookings';
 import { messages as common } from './common';
 import { messages as ai } from './ai';
 import { messages as support } from './support';
+import { messages as search } from './search';
 import { messages as dashboard } from './dashboard';
 import { messages as devices } from './devices';
 import { messages as fleets } from './fleets';
@@ -29,6 +30,7 @@ import { messages as workflow } from './workflow';
 export const catalog: Catalog = {
   ai,
   support,
+  search,
   actionCenter,
   auth,
   bookings,

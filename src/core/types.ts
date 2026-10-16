@@ -195,9 +195,20 @@ export interface TelemetryAdapter {
   onEvent?(cb: (e: FleetEvent) => void): void;
   /** Optional: transport orders (requests from people). `submitOrder` returns false when the order cannot be accepted; `cancelOrder` is false once a robot is on its way. */
   submitOrder?(o: TransportOrder): boolean;
+  /** Optional: send a robot to the nearest free charger of its fleet. Refused (with the reason) while it is on a work trip, offline, in error or already charging; a robot driving an empty return or parking trip goes when that ends. */
+  sendToCharger?(robotId: string): ChargeResult;
   cancelOrder?(id: string): boolean;
   onOrderUpdate?(cb: (u: OrderUpdate) => void): void;
 }
 
 export type CameraMode = 'orbit' | 'top' | 'walk' | 'follow';
 export type LayerKey = 'robots' | 'routes' | 'stations' | 'zones' | 'labels' | 'equipment' | 'alerts';
+
+/** The answer to "send this robot to a charger". */
+export type ChargeResult =
+  | { ok: true; when: 'now' | 'after-trip' }
+  | {
+      ok: false;
+      reason: 'not-found' | 'offline' | 'error' | 'already-charging' | 'work-trip' | 'no-charger' | 'not-running';
+      tripId?: string;
+    };

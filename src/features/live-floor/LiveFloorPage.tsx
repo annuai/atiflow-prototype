@@ -21,7 +21,7 @@ import { copy } from '@/ui/copy';
 
 /** Supervisor home: the 3D live floor. Content only; chrome comes from AppShell. */
 export function LiveFloorPage() {
-  const routeState = useLocation().state; // the Dashboard can send us here to locate a robot or station
+  const { state: routeState, search } = useLocation(); // the Dashboard can send us here to locate a robot or station; search sends `?focus=robot:AMR-003`
   const holder = useRef<HTMLDivElement>(null);
   const [view, setView] = useState({ x: 0, y: 0, yaw: 0, zoomPct: 100 });
   const [ready, setReady] = useState(false);
@@ -76,6 +76,19 @@ export function LiveFloorPage() {
       });
     }; // clean slate for the next visit
   }, []);
+  useEffect(() => {
+    // `?focus=robot:AMR-003` | `station:STA-113` | `zone:<id>` | `fleet:<id>`: a shareable address that flies the camera there once the scene is ready
+    const f = new URLSearchParams(search).get('focus');
+    if (!ready || !f) return;
+    const [kind, ...rest] = f.split(':');
+    const id = decodeURIComponent(rest.join(':'));
+    if (kind === 'robot' || kind === 'station') locateTarget(id);
+    else if (kind === 'zone') handle.engine?.focusZone(id);
+    else if (kind === 'fleet') {
+      store.getState().setFleet(id);
+      store.getState().setNav(`fleet:${id}`);
+    }
+  }, [ready, search]);
   useEffect(() => {
     handle.engine?.applyFilter(fleetId, q);
   }, [fleetId, q]);

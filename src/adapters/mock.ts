@@ -37,6 +37,9 @@ export class MockSimulator implements TelemetryAdapter {
   cancelOrder(id: string) {
     return this.sim.cancelOrder(id);
   }
+  sendToCharger(id: string) {
+    return this.sim.sendToCharger(id);
+  }
   connect() {
     this.last = performance.now();
     this.timer = window.setInterval(() => {

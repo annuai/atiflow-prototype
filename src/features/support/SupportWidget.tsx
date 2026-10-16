@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { FocusScope } from 'react-aria';
 import { ArrowLeft, XClose } from '@untitledui/icons';
 import { notify } from '@/ui/toast';
@@ -41,6 +42,15 @@ export function SupportWidget() {
   const net = useSupport((s) => internetUp(s));
   const devMenu = useSupport((s) => s.dev.menu);
   const status = useSupportStatus();
+  const { search } = useLocation();
+  useEffect(() => {
+    // search opens a ticket or a help article here: `?support=ATI-1038`
+    const id = new URLSearchParams(search).get('support');
+    if (!id) return;
+    if (id.startsWith('ATI-')) supportStore.getState().go('ticket', { ticketId: id });
+    else supportStore.getState().go('home');
+    supportStore.getState().setOpen(true);
+  }, [search]);
   const press = useRef<number>(0);
   useEffect(() => {
     void supportStore.getState().refresh();

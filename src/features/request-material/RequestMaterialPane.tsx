@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { SearchLg, ShoppingCart01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
@@ -46,7 +47,14 @@ export function RequestMaterialPane() {
   const items = useRequestableItems();
   const [cart, setCart] = useState<CartLine[]>([]);
   const [sheet, setSheet] = useState(false);
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(() => new URLSearchParams(window.location.search).get('add') ?? ''); // search: "Order" opens the list on that material
+  const { search: urlSearch } = useLocation();
+  const [seenAdd, setSeenAdd] = useState(urlSearch);
+  if (seenAdd !== urlSearch) {
+    setSeenAdd(urlSearch);
+    const v = new URLSearchParams(urlSearch).get('add');
+    if (v) setQ(v);
+  }
   const [group, setGroup] = useState('all');
   const groupNames = [...new Set(items.map((i) => i.group).filter(Boolean))].sort();
   const shown = items.filter(

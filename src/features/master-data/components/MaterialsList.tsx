@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Database01, Edit05, Flag01, PackagePlus, Plus, SearchLg } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
@@ -25,7 +26,14 @@ interface Props {
 export function MaterialsList({ onAddMore, onAdd }: Props) {
   const materials = useMasterData((s) => s.materials);
   const groups = useMasterData((s) => s.groups);
-  const [text, setText] = useState('');
+  const [text, setText] = useState(() => new URLSearchParams(window.location.search).get('code') ?? ''); // search opens the list on that material
+  const { search: urlSearch } = useLocation();
+  const [seenCode, setSeenCode] = useState(urlSearch);
+  if (seenCode !== urlSearch) {
+    setSeenCode(urlSearch);
+    const v = new URLSearchParams(urlSearch).get('code');
+    if (v) setText(v);
+  }
   const [group, setGroup] = useState(ALL);
   const [editing, setEditing] = useState<Material | null>(null);
   const [fleetsOf, setFleetsOf] = useState<Material | null>(null);

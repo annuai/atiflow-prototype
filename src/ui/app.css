@@ -506,16 +506,6 @@ img {
   gap: 12px;
   padding: 0 8px 0 10px;
 }
-.cmd .ai {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #e8f7f5;
-  color: #0f766e;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-}
 .zoom {
   right: 16px;
   bottom: 16px;

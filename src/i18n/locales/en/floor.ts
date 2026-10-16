@@ -73,6 +73,23 @@ export const floor = {
     headingTo: 'Heading to',
     tripProgress: 'Trip progress',
   },
+  charger: {
+    button: 'Send to charger',
+    title: (id: string) => `Send ${id} to a charger?`,
+    body: 'It drives to the nearest free charger and charges there. Nothing else about its work changes.',
+    confirm: 'Send to charger',
+    now: (id: string) => `${id} is heading to a charger`,
+    later: (id: string) => `${id} will go to a charger when its current trip ends`,
+    refused: {
+      'not-found': (id: string, _trip: string) => `${id} was not found`,
+      offline: (id: string, _trip: string) => `${id} is offline`,
+      error: (id: string, _trip: string) => `${id} has an error that needs attention first`,
+      'already-charging': (id: string, _trip: string) => `${id} is already charging or on its way to a charger`,
+      'work-trip': (id: string, trip: string) => `${id} is on a work trip (${trip}). Try again when it is done.`,
+      'no-charger': (id: string, _trip: string) => `There is no charger for ${id}'s fleet`,
+      'not-running': (id: string, _trip: string) => `The floor is not running, so ${id} cannot be sent`,
+    },
+  },
   mini: {
     minimised: (id: string) => `${id} (window minimised)`,
     open: (id: string) => `Open ${id}`,
