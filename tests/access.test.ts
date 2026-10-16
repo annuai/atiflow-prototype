@@ -53,7 +53,6 @@ describe('the access catalog: what exists to be permitted', () => {
       'Settings',
     ]);
     expect(WORKSPACES[2].features.map((f) => f.label)).toEqual([
-      'Request',
       'Approve',
       'Book trip',
       'History',
@@ -72,10 +71,10 @@ describe('the access catalog: what exists to be permitted', () => {
 });
 
 describe('roles are presets; a user can be customised on top', () => {
-  it('configurator = the seven configurator features and nothing else; supervisor = the four; operator = the six; and Meera (a configurator with everything ticked) holds every permission', () => {
+  it('configurator = the seven configurator features and nothing else; supervisor = the four; operator = the five; and Meera (a configurator with everything ticked) holds every permission', () => {
     expect([...effective(kavin)].sort()).toEqual(WORKSPACES[0].features.map((f) => f.id).sort());
     expect([...effective(arjun)].sort()).toEqual(WORKSPACES[1].features.map((f) => f.id).sort());
-    expect(presetOf('operator')).toHaveLength(6);
+    expect(presetOf('operator')).toHaveLength(5);
     expect([...effective(meera)].sort()).toEqual([...ALL_PERMISSIONS].sort());
     expect(isCustomised(meera)).toBe(true);
   });
@@ -158,7 +157,7 @@ describe('where a user lands', () => {
       custom: { add: [], remove: ['supervisor.dashboard' as const, 'supervisor.live-floor' as const] },
     };
     expect(landingPath(onlyReports)).toBe('/supervisor/reports');
-    expect(landingPath({ role: 'operator' })).toBe('/operator/request');
+    expect(landingPath({ role: 'operator' })).toBe('/operator/book');
     const onlyFleets = {
       role: 'configurator' as const,
       custom: {
@@ -330,7 +329,22 @@ describe("a saved directory gets a seed user's new starting access once", () => 
     expect(effective(out[0]).has('supervisor.settings')).toBe(true);
     expect(out[1]).toBe(saved[1]);
     expect(out.map((u) => u.username)).toEqual(['meera', 'kavin', 'rohan', 'sneha', 'vikram']);
-    expect(applySeedRevision(saved, 7)).toBe(saved);
+    expect(applySeedRevision(saved, 8)).toBe(saved);
+  });
+
+  it("turns Sneha's Approve back on once, for a list saved before it was given", () => {
+    const sneha = {
+      username: 'sneha',
+      firstName: 'S',
+      lastName: '',
+      email: 's@x.co',
+      role: 'operator' as const,
+      custom: { add: [], remove: ['operator.approve' as const] },
+      fleets: ['assembly'],
+      title: 'T',
+    };
+    expect(effective(applySeedRevision([sneha], 7)[0]).has('operator.approve')).toBe(true);
+    expect(effective(applySeedRevision([sneha], 8)[0]).has('operator.approve')).toBe(false); // a later removal is respected
   });
 });
 

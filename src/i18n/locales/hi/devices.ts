@@ -110,7 +110,7 @@ export const messages: Messages<typeof devices> = {
     step: (i, n) => `${n} में से ${i}`,
     cancelLate: { title: 'रोबोट पहले से रास्ते में है', body: 'यह अनुरोध अब रद्द नहीं किया जा सकता।' },
     cancelled: (name) => `${name} रद्द किया गया`,
-    tabsLabel: { request: 'अनुरोध', approve: 'मंज़ूरी', show: 'दिखाएँ', group: 'समूह', reason: 'कारण' },
+    tabsLabel: { approve: 'मंज़ूरी', group: 'समूह', reason: 'कारण' },
     cancel: 'रद्द करें',
     remove: 'हटाएँ',
     removeItem: (name) => `${name} हटाएँ`,

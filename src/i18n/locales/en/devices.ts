@@ -109,7 +109,7 @@ export const devices = {
     step: (i: number, n: number) => `${i} of ${n}`,
     cancelLate: { title: 'A robot is already on its way', body: 'This request can no longer be cancelled.' },
     cancelled: (name: string) => `${name} cancelled`,
-    tabsLabel: { request: 'Request', approve: 'Approve', show: 'Show', group: 'Group', reason: 'Reason' },
+    tabsLabel: { approve: 'Approve', group: 'Group', reason: 'Reason' },
     cancel: 'Cancel',
     remove: 'Remove',
     removeItem: (name: string) => `Remove ${name}`,

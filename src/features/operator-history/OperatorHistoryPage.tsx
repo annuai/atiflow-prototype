@@ -6,8 +6,17 @@ import { Button } from '@/components/base/buttons/button';
 import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { copy, useBookingsRunning, cancelBooking, canCancelBooking, useBookings } from '@/features/bookings';
-import { RequestStatusBadge, useRequestsRunning, useRequests, useOperator } from '@/features/requests';
+import {
+  RequestCancelDialog,
+  RequestStatusBadge,
+  canCancel,
+  useRequestsRunning,
+  useRequests,
+  useOperator,
+  type TripRequest,
+} from '@/features/requests';
 import { timeAgo } from '@/utils/timeAgo';
+import { HistoryDetail } from './HistoryDetail';
 import { t } from './text';
 import { historyEntries, type HistoryKind } from './entries';
 
@@ -19,6 +28,8 @@ export function OperatorHistoryPage() {
   useBookingsRunning();
   const me = useOperator();
   const [filter, setFilter] = useState<Filter>('all');
+  const [cancelling, setCancelling] = useState<TripRequest | null>(null);
+  const [opened, setOpened] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = window.setInterval(() => setNow(Date.now()), 30_000);
@@ -46,7 +57,7 @@ export function OperatorHistoryPage() {
               value={filter}
               onChange={setFilter}
               label={h.title}
-              items={(['all', 'request', 'approval', 'trip'] as Filter[]).map((k) => ({
+              items={(['all', 'request', 'trip', 'approval'] as Filter[]).map((k) => ({
                 id: k,
                 label: `${h.filters[k]} (${count(k)})`,
               }))}
@@ -64,6 +75,7 @@ export function OperatorHistoryPage() {
               <ul className="flex flex-col gap-2">
                 {shown.slice(0, 200).map((e) => {
                   const trip = e.bookingId ? trips.find((t) => t.id === e.bookingId) : undefined;
+                  const req = e.requestId ? requests.find((r) => r.id === e.requestId) : undefined;
                   const when = new Date(e.at).toLocaleString([], {
                     month: 'short',
                     day: 'numeric',
@@ -75,7 +87,12 @@ export function OperatorHistoryPage() {
                       key={e.key}
                       className="flex flex-wrap items-center gap-3 rounded-xl border border-secondary bg-primary p-3"
                     >
-                      <div className="min-w-0 flex-1 basis-60">
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 basis-60 rounded-lg text-left outline-focus-ring focus-visible:outline-2"
+                        aria-label={h.detail.open(e.title)}
+                        onClick={() => setOpened(e.key)}
+                      >
                         <p className="flex flex-wrap items-center gap-2 font-semibold text-primary">
                           <Badge size="sm" type="pill-color" color={KIND_COLOR[e.kind]}>
                             {h.kinds[e.kind]}
@@ -86,7 +103,7 @@ export function OperatorHistoryPage() {
                         <p className="text-xs text-tertiary">
                           {when} · {timeAgo(e.at, now)}
                         </p>
-                      </div>
+                      </button>
                       {e.outcome && (
                         <Badge size="lg" type="pill-color" color={e.outcome === 'approved' ? 'success' : 'error'}>
                           {t.history[e.outcome]}
@@ -96,6 +113,11 @@ export function OperatorHistoryPage() {
                         e.status !== e.outcome && <RequestStatusBadge status={e.status} size="lg" />
                       ) : (
                         <RequestStatusBadge status={e.status} size="lg" />
+                      )}
+                      {req && canCancel(req, me) && (
+                        <Button size="lg" color="secondary" onPress={() => setCancelling(req)}>
+                          {h.cancelRequest}
+                        </Button>
                       )}
                       {trip && canCancelBooking(trip, me) && (
                         <Button size="lg" color="secondary" onPress={() => cancelBooking(trip.id, me)}>
@@ -110,6 +132,18 @@ export function OperatorHistoryPage() {
           </TabPanelMotion>
         </div>
       </div>
+      {(() => {
+        const e = all.find((x) => x.key === opened);
+        return (
+          <HistoryDetail
+            title={e?.title ?? ''}
+            request={e?.requestId ? requests.find((r) => r.id === e.requestId) : undefined}
+            trip={e?.bookingId ? trips.find((t) => t.id === e.bookingId) : undefined}
+            onClose={() => setOpened(null)}
+          />
+        );
+      })()}
+      <RequestCancelDialog request={cancelling} who={me} onClose={() => setCancelling(null)} />
     </div>
   );
 }

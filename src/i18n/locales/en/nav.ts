@@ -35,7 +35,6 @@ export const nav = {
     'supervisor.live-floor': 'Live Floor',
     'supervisor.action-center': 'Action Center',
     'supervisor.settings': 'Settings',
-    'operator.request': 'Request',
     'operator.approve': 'Approve',
     'operator.book-trip': 'Book trip',
     'operator.history': 'History',

@@ -1,9 +1,8 @@
 /** Every user-facing string of the Request and Approve pages. */
 export const requests = {
   request: {
-    title: 'Request',
+    heading: 'Request Material',
     subtitle: 'Choose what you need. Add several materials to the cart and send them together.',
-    tabs: { new: 'New request', history: (n: number) => (n ? `Request history (${n})` : 'Request history') },
     search: 'Search by name or code',
     allGroups: 'All groups',
     empty: {
@@ -34,28 +33,13 @@ export const requests = {
     },
   },
   history: {
-    filters: { active: 'Active', past: 'Past', all: 'All' },
-    empty: {
-      title: 'No requests yet',
-      hint: 'What you request shows here with its status.',
-      active: 'Nothing is in progress',
-      past: 'No finished requests yet',
-    },
-    order: (n: number) => `${n} ${n === 1 ? 'request' : 'requests'}`,
-    cancel: 'Cancel',
     cancelTitle: (n: string) => `Cancel ${n}?`,
     cancelBody: 'Only this request is cancelled. The other materials of the same order are not affected.',
     cancelConfirm: 'Cancel request',
-    keep: 'Keep it',
-    waitingFor: (who: string, i: number, n: number) =>
-      n > 1 ? `Waiting for approval by ${who} (${i} of ${n})` : `Waiting for approval by ${who}`,
-    timeline: 'Timeline',
-    by: (n: string) => `by ${n}`,
   },
   approve: {
     title: 'Approve',
     subtitle: 'Requests that wait for your approval.',
-    tabs: { waiting: (n: number) => `Waiting (${n})`, history: 'History' },
     approve: 'Approve',
     reject: 'Reject',
     step: (i: number, n: number) => (n > 1 ? `Approval ${i} of ${n}` : 'Approval needed'),
@@ -63,15 +47,6 @@ export const requests = {
     empty: {
       title: 'Nothing waits for you',
       hint: 'When another operator asks for a material and you are one of the approval users of its Confirm step, it shows here.',
-      history: 'No approvals yet',
-      historyHint: 'Every approval and rejection you made, or could have made, is kept here.',
-    },
-    decision: {
-      approved: 'Approved',
-      rejected: 'Rejected',
-      line: (o: string, by: string, step?: string) => `${o}${step ? ` (${step})` : ''} by ${by}`,
-      requested: (n: string) => `requested by ${n}`,
-      now: (s: string) => `now ${s}`,
     },
     approved: (n: string) => `${n} approved`,
     rejected: (n: string) => `${n} rejected`,

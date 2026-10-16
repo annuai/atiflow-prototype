@@ -38,7 +38,6 @@ export const messages: Messages<typeof nav> = {
     'supervisor.live-floor': 'நேரடி தளம்',
     'supervisor.action-center': 'செயல் மையம்',
     'supervisor.settings': 'அமைப்புகள்',
-    'operator.request': 'கோரிக்கை',
     'operator.approve': 'ஒப்புதல்',
     'operator.book-trip': 'பயணம் முன்பதிவு',
     'operator.history': 'வரலாறு',

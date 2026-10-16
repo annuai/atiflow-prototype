@@ -117,12 +117,12 @@ describe('which workflows and materials an operator sees', () => {
   });
   it("the Start and Confirm steps offer the users who hold Request / Approve on the workflow's fleet", () => {
     const all = ['line-side', 'assembly'];
-    expect(eligibleUsers(SEED_USERS, 'line-side', 'operator.request', all).map((u) => u.id)).toEqual([
+    expect(eligibleUsers(SEED_USERS, 'line-side', 'operator.book-trip', all).map((u) => u.id)).toEqual([
       'meera',
       'rohan',
       'vikram',
     ]);
-    expect(eligibleUsers(SEED_USERS, 'assembly', 'operator.request', all).map((u) => u.id)).toEqual([
+    expect(eligibleUsers(SEED_USERS, 'assembly', 'operator.book-trip', all).map((u) => u.id)).toEqual([
       'meera',
       'sneha',
       'vikram',
@@ -131,7 +131,7 @@ describe('which workflows and materials an operator sees', () => {
       'meera',
       'vikram',
     ]);
-    expect(eligibleUsers(SEED_USERS, undefined, 'operator.request', all)).toEqual([]);
+    expect(eligibleUsers(SEED_USERS, undefined, 'operator.book-trip', all)).toEqual([]);
   });
 });
 

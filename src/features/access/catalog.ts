@@ -93,9 +93,12 @@ const RAW: RawWorkspace[] = [
     built: true,
     shared: ['/operator/notifications'],
     features: [
-      { id: 'operator.request', landing: '/operator/request', routes: ['/operator/request'] },
       { id: 'operator.approve', landing: '/operator/approve', routes: ['/operator/approve'] },
-      { id: 'operator.book-trip', landing: '/operator/book', routes: ['/operator/book'] },
+      {
+        id: 'operator.book-trip',
+        landing: '/operator/book',
+        routes: ['/operator/book', '/operator/request'], // the old Request address still opens (it redirects here)
+      },
       { id: 'operator.history', landing: '/operator/history', routes: ['/operator/history'] },
       {
         id: 'operator.action-center',

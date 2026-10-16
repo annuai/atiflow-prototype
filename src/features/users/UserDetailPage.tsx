@@ -55,7 +55,7 @@ export function UserDetailPage() {
     [resetting, setResetting] = useState(false),
     [deleting, setDeleting] = useState(false);
   // another person opened: start their form from their stored details
-  const [shownUser, setShownUser] = useState(user?.username);
+  const [shownUser, setShownUser] = useState<string>();
   if (user && shownUser !== user.username) {
     setShownUser(user.username);
     setDraft({

@@ -5,7 +5,7 @@ import { type UserRecord, toPublic, userDirectory, useUsers } from '@/features/a
 import { datasetStore } from '@/data/dataset';
 import type { WfNode, Workflows } from './types';
 
-export type UserPermission = 'operator.request' | 'operator.approve';
+export type UserPermission = 'operator.book-trip' | 'operator.approve';
 /**
  * The people a workflow's Start step (who may request) or Tablet Confirm step (who approves) can name (pure): users holding that permission whose fleets include the workflow's fleet
  * (a user who is not fleet-scoped counts for every fleet). `fleetId` undefined = no fleet chosen yet: nobody.
@@ -54,7 +54,7 @@ export function prefillUsers(
   const out: Workflows = {};
   for (const [id, w] of Object.entries(workflows)) {
     const fleetId = fleets.find((f) => f.name === w.fleet)?.id;
-    const req = eligibleUsers(users, fleetId, 'operator.request', ids).map((u) => u.id);
+    const req = eligibleUsers(users, fleetId, 'operator.book-trip', ids).map((u) => u.id);
     const app = eligibleUsers(users, fleetId, 'operator.approve', ids).map((u) => u.id);
     const empty = (n: WfNode) => !Array.isArray(n.f.users) || n.f.users.length === 0;
     const fix = (list: WfNode[]): WfNode[] =>

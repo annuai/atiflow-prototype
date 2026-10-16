@@ -3,7 +3,7 @@ import { createValidatedDocument, localBackend, sessionBackend, type StorageBack
 import seedDataset from '@/fixtures/dataset.json';
 import { ALL_PERMISSIONS, isFleetScoped, presetOf } from '@/features/access';
 import type { UserRecord } from '@/features/auth/types';
-import { SEED_CREDENTIALS, SEED_REVISION, SEED_SINCE, SEED_USERS } from '@/fixtures/users';
+import { SEED_CREDENTIALS, SEED_GRANTS, SEED_REVISION, SEED_SINCE, SEED_USERS } from '@/fixtures/users';
 import { log } from '@/platform';
 import type { AuthService, SessionService, UserService } from '../ports';
 
@@ -32,8 +32,12 @@ const UserSchema = z.object({
 const UsersSchema = z.array(UserSchema);
 const CredentialsSchema = z.record(z.string(), z.string());
 
-/** The operator permissions were renamed (Dispatch is now Approve) and Confirm was dropped: saved ticks follow. */
-const RENAMED: Record<string, string | null> = { 'operator.dispatch': 'operator.approve', 'operator.confirm': null };
+/** The operator permissions were renamed (Dispatch is now Approve), Confirm was dropped and Request became part of Book trip (one page for both): saved ticks follow. A person whose Request was switched off loses Book trip (the page now holds both). */
+const RENAMED: Record<string, string | null> = {
+  'operator.dispatch': 'operator.approve',
+  'operator.confirm': null,
+  'operator.request': 'operator.book-trip',
+};
 const renamePermissions = (u: UserRecord): UserRecord =>
   !u.custom
     ? u
@@ -75,7 +79,15 @@ export function applySeedRevision(list: UserRecord[], savedRevision: number): Us
   const added = SEED_USERS.filter(
     (s) => (SEED_SINCE[s.username] ?? 0) > savedRevision && !list.some((u) => u.username === s.username),
   ); // a starting user introduced after this list was saved
-  return [...list, ...structuredClone(added)].map((u) => {
+  return [...list, ...structuredClone(added)].map((saved) => {
+    const g = SEED_GRANTS[saved.username];
+    const u =
+      g && g.since > savedRevision && saved.custom
+        ? {
+            ...saved,
+            custom: { ...saved.custom, remove: saved.custom.remove.filter((p) => !g.permissions.includes(p)) },
+          }
+        : saved;
     const s = SEED_USERS.find((x) => x.username === u.username)?.custom;
     if (!s?.add.length && !s?.remove.length) return u;
     return {

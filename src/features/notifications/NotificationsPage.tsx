@@ -5,7 +5,7 @@ import { Bell01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { EmptyState } from '@/components/data/EmptyState';
 import { SegmentedTabs } from '@/components/data/SegmentedTabs';
-import { OPERATOR_ACTION_CENTER_PATH, OPERATOR_APPROVE_PATH, OPERATOR_REQUEST_PATH } from '@/features/action-center';
+import { OPERATOR_ACTION_CENTER_PATH, OPERATOR_APPROVE_PATH, OPERATOR_HISTORY_PATH } from '@/features/action-center';
 import { LIVE_FLOOR_PATH } from '@/features/live-floor';
 import { localized } from '@/i18n';
 import { NotificationItem } from './components/NotificationItem';
@@ -35,7 +35,7 @@ export function NotificationsPage() {
   const st = useNotificationStore().getState();
   const run = (a: NotificationAction) =>
     a.kind === 'requests'
-      ? navigate(`${OPERATOR_REQUEST_PATH}?tab=history`)
+      ? navigate(OPERATOR_HISTORY_PATH)
       : a.kind === 'approvals'
         ? navigate(OPERATOR_APPROVE_PATH)
         : role === 'operator'

@@ -98,9 +98,9 @@ describe('names of workspaces and features', () => {
       for (const p of ALL_PERMISSIONS)
         expect((CATALOGS[id].nav.features as Record<string, string>)[p], `${id} ${p}`).toBeTruthy();
     setLocale('hi');
-    expect(WORKSPACES[2].features[0].label).toBe(CATALOGS.hi.nav.features['operator.request']);
+    expect(WORKSPACES[2].features[0].label).toBe(CATALOGS.hi.nav.features['operator.approve']);
     expect(WORKSPACES[0].name).toBe(CATALOGS.hi.nav.workspaces.configurator.name);
     setLocale('en');
-    expect(WORKSPACES[2].features[0].label).toBe('Request');
+    expect(WORKSPACES[2].features[0].label).toBe('Approve');
   });
 });

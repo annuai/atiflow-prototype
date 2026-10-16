@@ -110,7 +110,7 @@ export const messages: Messages<typeof devices> = {
     step: (i, n) => `${n}-ൽ ${i}`,
     cancelLate: { title: 'റോബോട്ട് ഇതിനകം വരുന്ന വഴിയിലാണ്', body: 'ഈ അഭ്യർത്ഥന ഇനി റദ്ദാക്കാനാവില്ല.' },
     cancelled: (name) => `${name} റദ്ദാക്കി`,
-    tabsLabel: { request: 'അഭ്യർത്ഥന', approve: 'അംഗീകാരം', show: 'കാണിക്കുക', group: 'ഗ്രൂപ്പ്', reason: 'കാരണം' },
+    tabsLabel: { approve: 'അംഗീകാരം', group: 'ഗ്രൂപ്പ്', reason: 'കാരണം' },
     cancel: 'റദ്ദാക്കുക',
     remove: 'നീക്കം ചെയ്യുക',
     removeItem: (name) => `${name} നീക്കം ചെയ്യുക`,

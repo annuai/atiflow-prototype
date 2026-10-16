@@ -111,7 +111,7 @@ export const messages: Messages<typeof devices> = {
     step: (i, n) => `${i} / ${n}`,
     cancelLate: { title: 'ரோபோ ஏற்கனவே வந்துகொண்டிருக்கிறது', body: 'இந்தக் கோரிக்கையை இனி ரத்து செய்ய முடியாது.' },
     cancelled: (name) => `${name} ரத்து செய்யப்பட்டது`,
-    tabsLabel: { request: 'கோரிக்கை', approve: 'ஒப்புதல்', show: 'காட்டு', group: 'குழு', reason: 'காரணம்' },
+    tabsLabel: { approve: 'ஒப்புதல்', group: 'குழு', reason: 'காரணம்' },
     cancel: 'ரத்துசெய்',
     remove: 'நீக்கு',
     removeItem: (name) => `${name} ஐ நீக்கு`,

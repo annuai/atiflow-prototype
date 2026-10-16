@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
+import { OPERATOR_CARD_MIN_H } from '@/components/data/operatorCard';
 import { QuantityStepper } from '@/components/form/QuantityStepper';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
@@ -25,6 +26,7 @@ export function MaterialCard({
     <article
       className={cx(
         'flex flex-col gap-3 rounded-2xl border bg-primary p-4 shadow-xs',
+        OPERATOR_CARD_MIN_H,
         line ? 'border-brand ring-2 ring-brand/30' : 'border-secondary',
       )}
     >

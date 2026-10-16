@@ -53,7 +53,6 @@ const UserDetailPage = lazy(() =>
   import('@/features/users/UserDetailPage').then((m) => ({ default: m.UserDetailPage })),
 );
 const UsersPage = lazy(() => import('@/features/users/UsersPage').then((m) => ({ default: m.UsersPage })));
-const RequestPage = lazy(() => import('@/features/requests/RequestPage').then((m) => ({ default: m.RequestPage })));
 const BookTripPage = lazy(() => import('@/features/bookings/BookTripPage').then((m) => ({ default: m.BookTripPage })));
 const OperatorHistoryPage = lazy(() =>
   import('@/features/operator-history/OperatorHistoryPage').then((m) => ({ default: m.OperatorHistoryPage })),
@@ -103,6 +102,16 @@ function MovedTo({ to }: { to: string }) {
   const { search } = useLocation();
   return <Navigate to={to + search} replace />;
 }
+/** The old Request page: material requests are a tab of Book trip now, and the old "request history" link goes to the consolidated History. */
+function MovedRequest() {
+  const { search } = useLocation();
+  return (
+    <Navigate
+      to={new URLSearchParams(search).get('tab') === 'history' ? '/operator/history' : '/operator/book'}
+      replace
+    />
+  );
+}
 function RootRedirect() {
   const user = useAuth((s) => s.user);
   return <Navigate to={user ? landingFor(user) : '/login'} replace />;
@@ -147,7 +156,7 @@ export function AppRoot() {
                 </RequireAccess>
               }
             >
-              <Route path="/operator/request" element={<RequestPage />} />
+              <Route path="/operator/request" element={<MovedRequest />} />
               <Route path="/operator/book" element={<BookTripPage />} />
               <Route path="/operator/approve" element={<ApprovePage />} />
               <Route path="/operator/history" element={<OperatorHistoryPage />} />

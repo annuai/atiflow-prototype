@@ -10,7 +10,7 @@ const pages: [string, string][] = [
   ['arjun', '/supervisor/dashboard'],
   ['arjun', '/supervisor/reports'],
   ['arjun', '/supervisor/settings/alerts'],
-  ['rohan', '/operator/request'],
+  ['rohan', '/operator/book'],
   ['rohan', '/operator/approve'],
 ];
 for (const [user, path] of pages)

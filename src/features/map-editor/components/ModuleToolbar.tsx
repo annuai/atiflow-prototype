@@ -36,7 +36,7 @@ export const choiceLabel = (m: Module, id: string): string =>
 
 const tile = (on: boolean) =>
   cx(
-    'grid size-10 cursor-pointer place-items-center rounded-lg outline-focus-ring transition focus-visible:outline-2',
+    'flex size-10 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg outline-focus-ring transition focus-visible:outline-2 pointer-coarse:h-14 pointer-coarse:w-auto pointer-coarse:min-w-16 pointer-coarse:px-2',
     on ? 'bg-brand-solid text-white' : 'text-secondary hover:bg-primary_hover',
   );
 
@@ -70,6 +70,7 @@ export function ModuleToolbar({
           className={tile(tool.kind === 'select')}
         >
           <Cursor01 className="size-5" />
+          <span className="hidden text-[11px] leading-3 pointer-coarse:block">{copy.tools.select}</span>
         </AriaButton>
       </Tooltip>
       <span className="mx-1 h-6 w-px bg-border-secondary" aria-hidden />
@@ -91,12 +92,15 @@ export function ModuleToolbar({
                 className={tile(on)}
               >
                 <Icon className="size-5" />
+                <span className="hidden text-[11px] leading-3 whitespace-nowrap pointer-coarse:block">
+                  {copy.tabs[m]}
+                </span>
               </AriaButton>
             </Tooltip>
             <Dropdown.Root>
               <AriaButton
                 aria-label={`${copy.tabs[m]}: ${copy.tools.choose}`}
-                className="grid h-10 w-5 cursor-pointer place-items-center rounded-md text-fg-quaternary outline-focus-ring hover:bg-primary_hover hover:text-fg-quaternary_hover focus-visible:outline-2"
+                className="grid h-10 w-5 cursor-pointer place-items-center rounded-md pointer-coarse:h-14 pointer-coarse:w-9 text-fg-quaternary outline-focus-ring hover:bg-primary_hover hover:text-fg-quaternary_hover focus-visible:outline-2"
               >
                 <ChevronDown className="size-3.5" />
               </AriaButton>

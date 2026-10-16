@@ -43,7 +43,7 @@ const RAW_ROLES: RawRole[] = [
     id: 'operator',
     permissions: ofWorkspace('operator'),
     workspace: 'operator',
-    home: '/operator/request',
+    home: '/operator/book',
     manageUsers: false,
   },
 ];

@@ -110,7 +110,7 @@ export const messages: Messages<typeof devices> = {
     step: (i, n) => `${n} ರಲ್ಲಿ ${i}`,
     cancelLate: { title: 'ರೋಬೋಟ್ ಈಗಾಗಲೇ ದಾರಿಯಲ್ಲಿದೆ', body: 'ಈ ವಿನಂತಿಯನ್ನು ಇನ್ನು ರದ್ದುಮಾಡಲಾಗದು.' },
     cancelled: (name) => `${name} ರದ್ದಾಗಿದೆ`,
-    tabsLabel: { request: 'ವಿನಂತಿ', approve: 'ಅನುಮೋದನೆ', show: 'ತೋರಿಸಿ', group: 'ಗುಂಪು', reason: 'ಕಾರಣ' },
+    tabsLabel: { approve: 'ಅನುಮೋದನೆ', group: 'ಗುಂಪು', reason: 'ಕಾರಣ' },
     cancel: 'ರದ್ದುಮಾಡಿ',
     remove: 'ತೆಗೆದುಹಾಕಿ',
     removeItem: (name) => `${name} ತೆಗೆದುಹಾಕಿ`,

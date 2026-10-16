@@ -1432,6 +1432,16 @@ body {
     padding: 12px;
   }
 }
+/* A bar above a page card's scrolling body (a tab switch) uses the SAME side padding as the body, so its left edge lines up with the headings below it. */
+.md-bar {
+  flex: none;
+  padding: 16px 20px 0;
+}
+@media (max-width: 720px) {
+  .md-bar {
+    padding: 12px 12px 0;
+  }
+}
 /* A card grid on a phone is ONE column; without this its track grows to the widest content (a nowrap row inside a card) and the card sticks out of the screen. */
 .md-body .grid > * {
   min-width: 0;
@@ -1449,6 +1459,28 @@ body {
   }
   .map-tools button {
     min-width: 44px;
+    min-height: 48px;
+  }
+}
+
+/* Map Editor on a tablet: every control of the editor and of its dialogs is finger-sized (44 px). Only minimum sizes, so desktop and the controls' own looks are unchanged. */
+@media (pointer: coarse) {
+  .map-editor-open .map-editor button,
+  .map-editor-open [role='dialog'] button {
+    min-height: 44px;
+  }
+  .map-editor-open .map-editor input:not([type='checkbox']):not([type='radio']),
+  .map-editor-open [role='dialog'] input:not([type='checkbox']):not([type='radio']) {
+    min-height: 44px;
+  }
+  .map-editor-open .map-editor [role='checkbox'],
+  .map-editor-open .map-editor [role='radio'],
+  .map-editor-open [role='dialog'] [role='checkbox'],
+  .map-editor-open [role='dialog'] [role='radio'] {
+    min-height: 44px;
+    align-items: center;
+  }
+  .map-editor-open .map-editor aside li button {
     min-height: 48px;
   }
 }

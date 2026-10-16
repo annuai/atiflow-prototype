@@ -182,7 +182,7 @@ describe('saved routes (workflows with no material)', () => {
   const all = [...routeSampleWorkflows(), ...sampleWorkflows()];
   it('a route is a published Tablet workflow with no Material step and at least one station, offered to the people listed in Start on their fleet', () => {
     const r = routeItems(all, who('rohan', ['line-side']), fleetIdOf, fleetLiveOf);
-    expect(r.map((i) => i.workflowId)).toEqual(['w-route-1', 'w-route-2']); // the material workflows are not routes
+    expect(r.map((i) => i.workflowId)).toEqual(['w-route-1', 'w-route-2', 'w-route-4']); // the material workflows are not routes
     expect(r[0]).toMatchObject({
       kind: 'route',
       qtyEditable: false,

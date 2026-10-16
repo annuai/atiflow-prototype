@@ -39,7 +39,6 @@ export const messages: Messages<typeof nav> = {
     'supervisor.live-floor': 'ലൈവ് ഫ്ലോർ',
     'supervisor.action-center': 'ആക്ഷൻ സെന്റർ',
     'supervisor.settings': 'ക്രമീകരണങ്ങൾ',
-    'operator.request': 'അഭ്യർത്ഥന',
     'operator.approve': 'അംഗീകാരം',
     'operator.book-trip': 'ട്രിപ്പ് ബുക്ക് ചെയ്യുക',
     'operator.history': 'ചരിത്രം',

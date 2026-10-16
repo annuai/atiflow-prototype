@@ -47,6 +47,10 @@ import { PageTitleName } from '@/shell/PageTitle';
  */
 export function MapEditorPage() {
   const { id = '' } = useParams();
+  useEffect(() => {
+    document.documentElement.classList.add('map-editor-open'); // lets the touch sizes reach the editor's dialogs, which are drawn outside the page
+    return () => document.documentElement.classList.remove('map-editor-open');
+  }, []);
   const map = useMap(id);
   const user = useAuth((s) => s.user)!;
   const base = useMapData();
@@ -219,7 +223,7 @@ export function MapEditorPage() {
   };
   const editable = !!isDraft && mode === 'design';
   return (
-    <div className="content">
+    <div className="content map-editor">
       <PageTitleName name={map.name} />
       <div className="builder md-card">
         <EditorHeader

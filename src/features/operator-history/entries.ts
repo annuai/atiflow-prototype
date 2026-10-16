@@ -13,10 +13,11 @@ export interface HistoryEntry {
   /** where the request / trip stands now */ status: RequestStatus;
   /** only for approvals: what the person decided */ outcome?: 'approved' | 'rejected';
   /** a booked trip of the person, with the id to cancel it by */ bookingId?: string;
+  /** the request behind the entry (a request, a called saved trip or an approval): opens its details; only the person's own can be cancelled */ requestId?: string;
 }
 /**
  * The consolidated history of one person (pure): the requests they made, the approvals and rejections they made (or could have made), and the trips they booked, newest first.
- * Everything is read from the stores' own records, so it is as complete as they are. The individual pages (Request history, Approve history) keep their own lists.
+ * Everything is read from the stores' own records, so it is as complete as they are. The Approve page keeps its own approval history.
  */
 export function historyEntries(
   requests: TripRequest[],
@@ -28,12 +29,13 @@ export function historyEntries(
     if (r.requestedBy === me.username)
       out.push({
         key: `req:${r.id}`,
-        kind: 'request',
+        kind: r.kind === 'route' ? 'trip' : 'request', // a saved trip that was called is a booked trip, not a material request
         at: r.history.at(-1)?.at ?? r.createdAt,
         title: r.qty > 0 ? `${r.name} ×${r.qty}` : r.name,
         subtitle: `${r.tripId} · ${r.code ? `${r.code} · ` : ''}${r.workflowName}`,
         tripId: r.tripId,
         status: r.status,
+        requestId: r.id,
       });
   for (const d of decisions(requests, me))
     out.push({
@@ -45,6 +47,7 @@ export function historyEntries(
       tripId: d.tripId,
       status: d.status,
       outcome: d.outcome,
+      requestId: d.requestId,
     });
   for (const t of bookings)
     if (t.bookedBy === me.username)

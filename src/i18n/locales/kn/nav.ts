@@ -38,7 +38,6 @@ export const messages: Messages<typeof nav> = {
     'supervisor.live-floor': 'ಲೈವ್ ಫ್ಲೋರ್',
     'supervisor.action-center': 'ಆಕ್ಷನ್ ಸೆಂಟರ್',
     'supervisor.settings': 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
-    'operator.request': 'ವಿನಂತಿ',
     'operator.approve': 'ಅನುಮೋದನೆ',
     'operator.book-trip': 'ಟ್ರಿಪ್ ಬುಕ್ ಮಾಡಿ',
     'operator.history': 'ಇತಿಹಾಸ',

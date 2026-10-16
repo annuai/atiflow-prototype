@@ -22,8 +22,8 @@ describe('browser tab titles', () => {
       ['/supervisor/livefloor', 'Live Floor · Ati Flow'],
       ['/supervisor/action-center', 'Action Center · Ati Flow'],
       ['/supervisor/settings/alerts', 'Settings · Ati Flow'],
-      ['/operator/request', 'Request · Ati Flow'],
       ['/operator/approve', 'Approve · Ati Flow'],
+      ['/operator/request', 'Book trip · Ati Flow'], // the old Request address (it redirects to Book trip)
       ['/operator/book', 'Book trip · Ati Flow'],
       ['/operator/history', 'History · Ati Flow'],
       ['/operator/settings/language', 'Settings · Ati Flow'],

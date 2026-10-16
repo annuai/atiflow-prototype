@@ -163,7 +163,7 @@ export function SidePanel(p: SidePanelProps) {
   const { mode, module, data, simulation: sim } = p;
   return (
     <aside
-      className="flex max-h-[45%] min-h-[260px] w-full shrink-0 flex-col border-t border-secondary bg-primary lg:max-h-none lg:min-h-0 lg:w-[300px] lg:border-t-0 lg:border-l"
+      className="flex max-h-[45%] min-h-[260px] w-full shrink-0 flex-col border-t border-secondary bg-primary lg:max-h-none lg:min-h-0 lg:w-[300px] lg:pointer-coarse:w-[340px] lg:border-t-0 lg:border-l"
       aria-label={mode === 'simulation' ? copy.sim.title : module ? copy.panelTitle[module] : copy.noTool.title}
     >
       <h2 className="border-b border-secondary px-4 py-4 text-md font-semibold text-primary">{title(p)}</h2>

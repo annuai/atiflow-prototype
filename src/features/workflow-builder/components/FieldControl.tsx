@@ -82,7 +82,7 @@ export function FieldControl({ node, spec, inBranch }: { node: WfNode; spec: Fie
   const stations = useFleetStations(useWorkflow(selectFleet));
   const names = Object.fromEntries(stations.map((s) => [s.id, stationLabel(s)]));
   const fleet = useWorkflow(selectFleet);
-  const userOpts = useEligibleUsers(fleet, fd.optsFrom === 'approvalUsers' ? 'operator.approve' : 'operator.request');
+  const userOpts = useEligibleUsers(fleet, fd.optsFrom === 'approvalUsers' ? 'operator.approve' : 'operator.book-trip');
   if (fd.showIf && !fd.showIf(node)) return null;
   const opts =
     fd.optsFrom === 'fleetMaterials'

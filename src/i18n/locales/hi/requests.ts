@@ -3,9 +3,8 @@ import type { requests } from '../en/requests';
 
 export const messages: Messages<typeof requests> = {
   request: {
-    title: 'अनुरोध',
+    heading: 'सामग्री अनुरोध',
     subtitle: 'चुनें कि आपको क्या चाहिए। कार्ट में कई सामग्रियाँ जोड़ें और उन्हें साथ भेजें।',
-    tabs: { new: 'नया अनुरोध', history: (n) => (n ? `अनुरोध इतिहास (${n})` : 'अनुरोध इतिहास') },
     search: 'नाम या कोड से खोजें',
     allGroups: 'सभी समूह',
     empty: {
@@ -36,28 +35,13 @@ export const messages: Messages<typeof requests> = {
     },
   },
   history: {
-    filters: { active: 'सक्रिय', past: 'पिछले', all: 'सभी' },
-    empty: {
-      title: 'अभी कोई अनुरोध नहीं',
-      hint: 'आप जो अनुरोध करेंगे, वह अपने स्टेटस के साथ यहाँ दिखेगा।',
-      active: 'कुछ भी जारी नहीं है',
-      past: 'अभी कोई अनुरोध पूरा नहीं हुआ',
-    },
-    order: (n) => `${n} अनुरोध`,
-    cancel: 'रद्द करें',
     cancelTitle: (n) => `${n} रद्द करें?`,
     cancelBody: 'सिर्फ़ यही अनुरोध रद्द होगा। उसी ऑर्डर की बाकी सामग्रियों पर कोई असर नहीं पड़ेगा।',
     cancelConfirm: 'अनुरोध रद्द करें',
-    keep: 'रहने दें',
-    waitingFor: (who, i, n) =>
-      n > 1 ? `${who} की मंज़ूरी का इंतज़ार (${n} में से ${i})` : `${who} की मंज़ूरी का इंतज़ार`,
-    timeline: 'समय-रेखा',
-    by: (n) => `${n} द्वारा`,
   },
   approve: {
     title: 'मंज़ूरी',
     subtitle: 'वे अनुरोध जो आपकी मंज़ूरी का इंतज़ार कर रहे हैं।',
-    tabs: { waiting: (n) => `इंतज़ार में (${n})`, history: 'इतिहास' },
     approve: 'मंज़ूर करें',
     reject: 'अस्वीकार करें',
     step: (i, n) => (n > 1 ? `मंज़ूरी ${n} में से ${i}` : 'मंज़ूरी चाहिए'),
@@ -65,15 +49,6 @@ export const messages: Messages<typeof requests> = {
     empty: {
       title: 'आपके इंतज़ार में कुछ नहीं',
       hint: 'जब कोई दूसरा ऑपरेटर किसी सामग्री का अनुरोध करे और आप उसके कन्फ़र्म चरण के मंज़ूरी उपयोगकर्ताओं में हों, तो वह यहाँ दिखेगा।',
-      history: 'अभी कोई मंज़ूरी नहीं',
-      historyHint: 'आपकी दी या दे सकने वाली हर मंज़ूरी और अस्वीकृति यहाँ रखी जाती है।',
-    },
-    decision: {
-      approved: 'मंज़ूर',
-      rejected: 'अस्वीकृत',
-      line: (o, by, step) => `${by} द्वारा ${o}${step ? ` (${step})` : ''}`,
-      requested: (n) => `${n} ने अनुरोध किया`,
-      now: (s) => `अब ${s}`,
     },
     approved: (n) => `${n} मंज़ूर हुआ`,
     rejected: (n) => `${n} अस्वीकृत हुआ`,

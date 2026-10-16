@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ClipboardCheck, ClockRewind, LifeBuoy01, Route, ShoppingCart01 } from '@untitledui/icons';
+import { ClipboardCheck, ClockRewind, LifeBuoy01, Route } from '@untitledui/icons';
 import bell from '@/ui/icons/bell.svg';
 import gear from '@/ui/icons/settings.svg';
 import { localized } from '@/i18n';
@@ -15,7 +15,6 @@ import { useCalls } from './data/useCalls';
 import {
   OPERATOR_ACTION_CENTER_PATH,
   OPERATOR_NOTIFICATIONS_PATH,
-  OPERATOR_REQUEST_PATH,
   OPERATOR_APPROVE_PATH,
   OPERATOR_BOOK_PATH,
   OPERATOR_HISTORY_PATH,
@@ -25,7 +24,6 @@ export {
   OPERATOR_SETTINGS_PATH,
   OPERATOR_ACTION_CENTER_PATH,
   OPERATOR_NOTIFICATIONS_PATH,
-  OPERATOR_REQUEST_PATH,
   OPERATOR_APPROVE_PATH,
   OPERATOR_BOOK_PATH,
   OPERATOR_HISTORY_PATH,
@@ -54,9 +52,6 @@ export function useOperatorNav(): NavModel {
         id: 'ops',
         label: names.groups.operations,
         items: [
-          ...(can('operator.request')
-            ? [item('request', names.features['operator.request'], ShoppingCart01, OPERATOR_REQUEST_PATH)]
-            : []),
           ...(can('operator.book-trip')
             ? [item('book', names.features['operator.book-trip'], Route, OPERATOR_BOOK_PATH)]
             : []),

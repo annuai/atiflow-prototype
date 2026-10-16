@@ -4,6 +4,7 @@ export { useCalls } from './data/useCalls';
 export {
   OPERATOR_ACTION_CENTER_PATH,
   OPERATOR_APPROVE_PATH,
-  OPERATOR_REQUEST_PATH,
+  OPERATOR_BOOK_PATH,
+  OPERATOR_HISTORY_PATH,
   OPERATOR_SETTINGS_PATH,
 } from './paths';

@@ -193,6 +193,14 @@ const ROUTES: {
     stations: ['STA-116', 'STA-113', 'STA-114'],
     requesters: ['sneha'],
   },
+  {
+    id: 'w-route-4',
+    name: 'Full Line Side replenishment round: store to every workstation',
+    fleet: FLEET_NAME.lineSide,
+    robot: 'Sherpa XT Lite',
+    stations: ['STA-116', 'STA-117', 'STA-107', 'STA-105', 'STA-110', 'STA-108'],
+    requesters: ['rohan'],
+  },
 ];
 export function routeSampleWorkflows(): Workflow[] {
   return ROUTES.map((r) => ({
