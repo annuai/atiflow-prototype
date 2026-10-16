@@ -12,6 +12,7 @@ import { messages as mapEditor } from './mapEditor';
 import { messages as maps } from './maps';
 import { messages as masterData } from './masterData';
 import { messages as misc } from './misc';
+import { messages as materials } from './materials';
 import { messages as nav } from './nav';
 import { messages as notifications } from './notifications';
 import { messages as preferences } from './preferences';
@@ -38,6 +39,7 @@ export const catalog: Catalog = {
   masterData,
   misc,
   nav,
+  materials,
   notifications,
   preferences,
   reports,

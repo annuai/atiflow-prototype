@@ -15,6 +15,7 @@ import { reports } from './reports';
 import { requests } from './requests';
 import { robotOps } from './robotOps';
 import { users } from './users';
+import { materials } from './materials';
 import { nav } from './nav';
 import { auth } from './auth';
 import { common } from './common';
@@ -42,6 +43,7 @@ export const catalog = {
   robotOps,
   users,
   nav,
+  materials,
   floor,
   workflow,
   devices,

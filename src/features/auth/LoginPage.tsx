@@ -9,7 +9,7 @@ import { notify } from '@/ui/toast';
 import { LanguageSelect } from '@/components/data/LanguageSelect';
 import { copy } from './copy';
 import bg from './assets/login-bg.jpg';
-import logo from '@/ui/icons/ati-logo.svg'; // the light-on-dark logo (same one as the sidebar)
+import logo from '@/ui/icons/ati-flow-logo.svg'; // the Ati Flow logo (white on dark; same one as the sidebar)
 import robot from '@/assets/robots/sherpa-xt-lite.svg';
 import ribbonTip from './assets/ribbon-tip.svg';
 import './login.css';
@@ -72,7 +72,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
 
         <section className="w-full max-w-[480px]">
           {/* robot + ribbon driving across the top of the card */}
-          <div className="h-[54px] overflow-hidden px-4" aria-hidden>
+          <div className="ati-lane mx-5 h-[54px] overflow-hidden" aria-hidden>
             <div className="ati-drive flex w-max items-end">
               <div className="relative mr-[-1px] h-[54px] w-[62px] shrink-0 overflow-hidden">
                 <img
@@ -99,8 +99,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
             {/* sidebar-theme header */}
             <div className="flex flex-col gap-4 bg-[image:var(--surface-sidebar)] px-8 py-7 text-white sm:px-12">
               <div className="flex items-center gap-1">
-                <img src={logo} alt="" className="h-4 w-7" />
-                <span className="text-[20px] font-semibold leading-5 text-[#5eead4]">Flow</span>
+                <img src={logo} alt="Ati Flow" className="h-8 w-auto" />
                 <span className="ml-1 rounded-md bg-[#5eead4]/12 px-1.5 text-[11px] font-medium text-[#5eead4]">
                   v4.0
                 </span>

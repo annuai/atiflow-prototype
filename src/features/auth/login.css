@@ -10,6 +10,11 @@
     translate: -450px 0;
   }
 }
+.ati-lane {
+  /* the robot and ribbon come out of a shadow on one side and go into a shadow on the other: both edges of the lane fade out */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%);
+}
 .ati-drive {
   animation: ati-drive 8.037s linear infinite;
 }
@@ -31,6 +36,10 @@
   animation: ati-shake 0.35s ease;
 }
 @media (prefers-reduced-motion: reduce) {
+  .ati-lane {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
   .ati-drive {
     animation: none;
     translate: 0 0;

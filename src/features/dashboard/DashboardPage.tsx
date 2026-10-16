@@ -7,6 +7,7 @@ import { useLoadPhase } from '@/components/skeleton/Skeleton';
 import { useApp } from '@/core/store';
 import { useAuth } from '@/features/auth';
 import { LIVE_FLOOR_PATH } from '@/features/live-floor';
+import { MaterialsLive, ViewSwitch, useMaterialsRelevant, type InsightView } from '@/features/material-insights';
 import { notify } from '@/ui/toast';
 import { ActivityCard } from './components/ActivityCard';
 import { BatteryCard } from './components/BatteryCard';
@@ -36,6 +37,9 @@ export function DashboardPage() {
   const phase = useLoadPhase(!snap);
   const [params, setParams] = useSearchParams();
   const tv = params.get('tv') === '1';
+  const materialsRelevant = useMaterialsRelevant();
+  const view: InsightView = materialsRelevant && params.get('view') === 'materials' ? 'materials' : 'fleet';
+  const setView = (v: InsightView) => setParams(v === 'materials' ? { view: 'materials' } : {}, { replace: true });
   const setTv = useCallback(
     (on: boolean) => {
       setParams(on ? { tv: '1' } : {}, { replace: true });
@@ -73,7 +77,14 @@ export function DashboardPage() {
         </div>
         <div className="builder md-card">
           <div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
-            {!snap || phase !== 'ready' ? (
+            {materialsRelevant && (
+              <div>
+                <ViewSwitch value={view} onChange={setView} />
+              </div>
+            )}
+            {view === 'materials' ? (
+              <MaterialsLive />
+            ) : !snap || phase !== 'ready' ? (
               phase === 'skeleton' ? (
                 <DashboardSkeleton />
               ) : null

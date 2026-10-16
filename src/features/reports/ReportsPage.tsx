@@ -5,6 +5,7 @@ import { BadgeWithDot } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { StatusStrip } from '@/components/data/StatusStrip';
 import { feed } from '@/features/live-floor';
+import { MaterialsReport, ViewSwitch, useMaterialsRelevant, type InsightView } from '@/features/material-insights';
 import { AllKpis } from './components/AllKpis';
 import { RangeBar } from './components/RangeBar';
 import { Scorecard } from './components/Scorecard';
@@ -13,6 +14,7 @@ import { WhatChanged } from './components/WhatChanged';
 import { copy } from './copy';
 import { useLoadPhase } from '@/components/skeleton/Skeleton';
 import { ReportsSkeleton } from './components/ReportsSkeleton';
+import { resolveRange } from './model/range';
 import { reportSource } from './data/source';
 import { useReport } from './data/useReport';
 import { moves, summary } from './model/derive';
@@ -25,7 +27,10 @@ import type { MetricId, RangeSelection } from './model/types';
 export function ReportsPage() {
   const [range, setRange] = useState<RangeSelection>({ preset: 'today' }),
     [trend, setTrend] = useState<MetricId>('utilisation'),
-    [all, setAll] = useState(false);
+    [all, setAll] = useState(false),
+    [view, setView] = useState<InsightView>('fleet');
+  const materialsRelevant = useMaterialsRelevant();
+  const period = useMemo(() => resolveRange(range), [range]);
   useEffect(() => feed.acquire(), []); // the fleet keeps running (and being measured) while this page is open
   const { report, loading, error, refresh } = useReport(reportSource, range);
   const phase = useLoadPhase(!report && !error);
@@ -54,7 +59,14 @@ export function ReportsPage() {
         <div className="builder md-card">
           <div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
             <RangeBar value={range} onChange={setRange} generatedAt={report?.generatedAt ?? null} />
-            {error ? (
+            {materialsRelevant && (
+              <div>
+                <ViewSwitch value={view} onChange={setView} />
+              </div>
+            )}
+            {materialsRelevant && view === 'materials' ? (
+              <MaterialsReport period={period} />
+            ) : error ? (
               <EmptyState
                 icon={AlertCircle}
                 size="lg"
@@ -93,7 +105,9 @@ export function ReportsPage() {
                 </div>
               </div>
             )}
-            <p className="text-center text-xs text-tertiary">{copy.sample}</p>
+            {!(materialsRelevant && view === 'materials') && (
+              <p className="text-center text-xs text-tertiary">{copy.sample}</p>
+            )}
           </div>
         </div>
       </div>

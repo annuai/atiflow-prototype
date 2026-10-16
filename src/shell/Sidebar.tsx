@@ -6,7 +6,8 @@ import { Button as AriaButton } from 'react-aria-components';
 import { Badge } from '@/components/base/badges/badges';
 import { Tooltip } from '@/components/base/tooltip/tooltip';
 import type { PublicUser } from '@/features/auth/types';
-import logo from '@/ui/icons/ati-logo.svg';
+import logo from '@/ui/icons/ati-flow-logo.svg';
+import mark from '@/ui/icons/ati-logo.svg';
 import chev from '@/ui/icons/chevron-down.svg';
 import { HeaderSwitcher, type SwitcherItem } from './HeaderSwitcher';
 import { UserMenu } from './UserMenu';
@@ -86,10 +87,8 @@ export function Sidebar({ title, switcher, useNavModel, user, onLogout, open, on
             </button>
             <div className="sb-ws">
               <div className="sb-logo">
-                <span className="mark">
-                  <img src={logo} alt="" />
-                </span>
-                <span className="t">Flow</span>
+                <img className="sb-logo-full" src={logo} alt="Ati Flow" />
+                <img className="sb-logo-mark" src={mark} alt="Ati Flow" />
               </div>
               <span className="sb-ver">v4.0</span>
               <button

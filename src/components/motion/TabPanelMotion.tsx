@@ -38,7 +38,7 @@ export function TabPanelMotion({
       <motion.div
         key={tabKey}
         ref={box}
-        className={cx(fill && 'flex min-h-0 flex-1 flex-col gap-4', className)}
+        className={cx(fill && 'flex flex-1 flex-col gap-4', className)}
         initial={changed ? { opacity: 0 } : false}
         animate={{ opacity: 1, transition: { duration, ease } }}
       >
