@@ -3,6 +3,7 @@ import { messages as actionCenter } from './actionCenter';
 import { messages as auth } from './auth';
 import { messages as bookings } from './bookings';
 import { messages as common } from './common';
+import { messages as ai } from './ai';
 import { messages as dashboard } from './dashboard';
 import { messages as devices } from './devices';
 import { messages as fleets } from './fleets';
@@ -25,6 +26,7 @@ import { messages as users } from './users';
 import { messages as workflow } from './workflow';
 
 export const catalog: Catalog = {
+  ai,
   actionCenter,
   auth,
   bookings,

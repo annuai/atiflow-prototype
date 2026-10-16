@@ -5,3 +5,5 @@ export { useBookingsRunning } from './model/bridge';
 export { cancelBooking } from './model/actions';
 export { canCancelBooking } from './model/rules';
 export { useBookings } from './model/store';
+export { bookingsStore } from './model/store';
+export { isFreeRobot } from './model/free';

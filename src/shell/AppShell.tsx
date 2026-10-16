@@ -5,6 +5,7 @@ import { AnimatePresence } from 'motion/react';
 import { Scrim } from '@/components/motion/Scrim';
 import { workspaceById, workspaceHome, workspaceOfPath, workspacesOf, type WorkspaceId } from '@/features/access';
 import { authStore, useAuth } from '@/features/auth/authStore';
+import { AtiAiDock, atiAiStore } from '@/features/ati-ai';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import type { NavModel, SearchHit } from './types';
@@ -14,11 +15,10 @@ interface Props {
   useNavModel: () => NavModel;
   searchPlaceholder: string;
   getHits: (q: string) => SearchHit[];
-  onAi?: () => void;
   children: ReactNode;
 }
 /** Common chrome for every signed-in page: sidebar (workspace title, a switcher when the user has several workspaces, account menu), topbar, mobile drawer. Pages only supply content + nav/search data. */
-export function AppShell({ useNavModel, searchPlaceholder, getHits, onAi, children }: Props) {
+export function AppShell({ useNavModel, searchPlaceholder, getHits, children }: Props) {
   const user = useAuth((s) => s.user)!;
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -67,9 +67,15 @@ export function AppShell({ useNavModel, searchPlaceholder, getHits, onAi, childr
         {navOpen && <Scrim key="scrim" className="scrim" onClick={() => setNavOpen(false)} />}
       </AnimatePresence>
       <div className="main">
-        <Topbar onMenu={() => setNavOpen(true)} searchPlaceholder={searchPlaceholder} getHits={getHits} onAi={onAi} />
+        <Topbar
+          onMenu={() => setNavOpen(true)}
+          searchPlaceholder={searchPlaceholder}
+          getHits={getHits}
+          onAi={() => atiAiStore.getState().toggle()}
+        />
         {children}
       </div>
+      <AtiAiDock />
     </div>
   );
 }

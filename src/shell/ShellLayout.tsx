@@ -5,7 +5,6 @@ import { liveHits, useLiveNav } from '@/features/live-floor/liveNav';
 import type { WorkspaceId } from '@/features/access';
 import { AppShell } from './AppShell';
 import { PageTransition } from './PageTransition';
-import { useShellExtras } from './shellExtras';
 import type { NavModel, SearchHit } from './types';
 import { copy } from './copy';
 
@@ -42,16 +41,9 @@ const SHELLS: Partial<
 /** (Keyed by workspace: the sidebar of each workspace uses its own hook, so a switch must remount it instead of re-rendering it with a different hook.) */
 export function ShellLayout({ workspace }: { workspace: WorkspaceId }) {
   const s = SHELLS[workspace]!;
-  const { onAi } = useShellExtras();
   return (
     <MotionConfig reducedMotion="user">
-      <AppShell
-        key={workspace}
-        useNavModel={s.useNavModel}
-        getHits={s.getHits}
-        searchPlaceholder={s.placeholder}
-        onAi={onAi}
-      >
+      <AppShell key={workspace} useNavModel={s.useNavModel} getHits={s.getHits} searchPlaceholder={s.placeholder}>
         <PageTransition />
       </AppShell>
     </MotionConfig>

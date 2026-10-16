@@ -19,6 +19,7 @@ import { materials } from './materials';
 import { nav } from './nav';
 import { auth } from './auth';
 import { common } from './common';
+import { ai } from './ai';
 import { preferences } from './preferences';
 import { settings } from './settings';
 import { shell } from './shell';
@@ -49,4 +50,5 @@ export const catalog = {
   devices,
   misc,
   insights,
+  ai,
 };

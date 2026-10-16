@@ -23,6 +23,7 @@ img {
   display: block;
 }
 .app {
+  overflow-x: clip; /* the assistant slides in from beyond the right edge */
   display: flex;
   height: 100vh;
   height: 100dvh;

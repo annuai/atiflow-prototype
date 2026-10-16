@@ -12,7 +12,6 @@ import { WorkflowName } from './components/WorkflowName';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { MapPreview } from './components/MapPreview';
 import { countNodes } from './model/tree';
-import { useShellAi } from '@/shell/shellExtras';
 import { selectFleet, selectNodes, useFleetNames, useWorkflow, wfStore } from './model/store';
 import { publishProblem } from './model/validate';
 import { runSimulation, stopSimulation } from './sim/runner';
@@ -44,10 +43,7 @@ function SelectFleetPrompt() {
 }
 
 /** Route element for `/configurator/workflows/:id`: opens that workflow, then renders the builder once the store points at it. */
-const focusAiBar = () => document.querySelector<HTMLInputElement>('[data-wf-ai] input')?.focus(); // the top bar's Ati AI button
-
 export function WorkflowBuilderPage() {
-  useShellAi(focusAiBar);
   const { id = '' } = useParams();
   const exists = useWorkflow((s) => id in s.workflows);
   const current = useWorkflow((s) => s.current);
