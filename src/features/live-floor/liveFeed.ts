@@ -17,6 +17,7 @@ import { authStore } from '@/features/auth';
 import type { RosterEntry } from '@/adapters/sim';
 import type {
   ChargeResult,
+  RelocalizeResult,
   FleetEvent,
   NavGraph,
   OrderUpdate,
@@ -214,7 +215,12 @@ const robotCommands = {
   sendToCharger(id: string): ChargeResult {
     return adapter?.sendToCharger?.(id) ?? { ok: false, reason: 'not-running' };
   },
+  /** Ask a robot that was moved by hand to find its place on the map again (refused while it drives or is offline). */
+  relocalize(id: string): RelocalizeResult {
+    return adapter?.relocalize?.(id) ?? { ok: false, reason: 'not-running' };
+  },
 };
+handle.relocalize = robotCommands.relocalize;
 handle.sendToCharger = robotCommands.sendToCharger; // the robot window (ui layer) reaches it through the handle
 
 export const feed = {

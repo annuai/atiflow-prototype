@@ -19,6 +19,7 @@ import { ProgressBar } from '@/components/base/progress-indicators/progress-indi
 import { ChevronDown, ChevronRight, Home01, Users01, ChevronUp, XClose } from '@untitledui/icons';
 import type { NavGraph, RobotTelemetry } from '../core/types';
 import { locateTarget } from './locate';
+import { RelocalizeDialog } from './RelocalizeDialog';
 import { SendToChargerDialog } from './SendToChargerDialog';
 import { copy } from './copy';
 
@@ -220,6 +221,7 @@ export function RobotPanel() {
   const fleets = useApp((s) => s.fleets);
   const open = useApp((s) => s.robotPanelOpen);
   const [charger, setCharger] = useState(false);
+  const [relocalize, setRelocalize] = useState(false);
   if (!r || !open) return null;
   const fleet = fleets.find((f) => f.id === r.fleetId);
   const dest = nav?.stations.find((s) => s.id === (r.task?.next ?? r.task?.to));
@@ -259,9 +261,11 @@ export function RobotPanel() {
         ...(r.state === 'charging' || r.state === 'offline'
           ? []
           : [{ label: copy.charger.button, onClick: () => setCharger(true) }]),
+        ...(r.state === 'offline' ? [] : [{ label: copy.relocalize.button, onClick: () => setRelocalize(true) }]),
       ]}
     >
       <SendToChargerDialog robotId={charger ? r.id : null} onClose={() => setCharger(false)} />
+      <RelocalizeDialog robotId={relocalize ? r.id : null} onClose={() => setRelocalize(false)} />
       {dest && (
         <div className="sub" style={{ margin: '0 0 8px' }}>
           {copy.robotPanel.headingTo} <b>{dest.id}</b> · {dest.name}

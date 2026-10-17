@@ -90,6 +90,19 @@ export const floor = {
       'not-running': (id: string, _trip: string) => `The floor is not running, so ${id} cannot be sent`,
     },
   },
+  relocalize: {
+    button: 'Relocalize',
+    title: (id: string) => `Relocalize ${id}?`,
+    body: 'Use this after the robot was moved by hand onto a lane. It finds its place on the map again. It must be standing still.',
+    confirm: 'Relocalize',
+    done: (id: string) => `${id} is finding its place on the map`,
+    refused: {
+      'not-found': (id: string) => `${id} was not found`,
+      offline: (id: string) => `${id} is offline`,
+      moving: (id: string) => `${id} is driving. Wait until it has stopped.`,
+      'not-running': (id: string) => `The floor is not running, so ${id} cannot be relocalized`,
+    },
+  },
   mini: {
     minimised: (id: string) => `${id} (window minimised)`,
     open: (id: string) => `Open ${id}`,

@@ -202,12 +202,19 @@ export interface TelemetryAdapter {
   submitOrder?(o: TransportOrder): boolean;
   /** Optional: send a robot to the nearest free charger of its fleet. Refused (with the reason) while it is on a work trip, offline, in error or already charging; a robot driving an empty return or parking trip goes when that ends. */
   sendToCharger?(robotId: string): ChargeResult;
+  /** Optional: tell a robot that was moved by hand to find its place on the map again. Refused while it is driving, offline or unknown. The robot's own localization sets the pose; the dashboard only asks. */
+  relocalize?(robotId: string): RelocalizeResult;
   cancelOrder?(id: string): boolean;
   onOrderUpdate?(cb: (u: OrderUpdate) => void): void;
 }
 
 export type CameraMode = 'orbit' | 'top' | 'walk' | 'follow';
 export type LayerKey = 'robots' | 'routes' | 'stations' | 'zones' | 'labels' | 'equipment' | 'alerts';
+
+/** The answer to "relocalize this robot". */
+export type RelocalizeResult =
+  | { ok: true }
+  | { ok: false; reason: 'not-found' | 'offline' | 'moving' | 'not-running' };
 
 /** The answer to "send this robot to a charger". */
 export type ChargeResult =

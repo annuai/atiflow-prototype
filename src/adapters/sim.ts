@@ -4,6 +4,7 @@ import { angleDiff, pointInPoly } from '../core/geom';
 import type { TripIdSource } from '../data/tripIds';
 import type {
   ChargeResult,
+  RelocalizeResult,
   FleetEvent,
   NavGraph,
   OrderUpdate,
@@ -58,6 +59,12 @@ interface Entry {
   zones: Span[];
   xings: Span[];
 } // each permit is given back when its own span is left
+/** Where the robot says it is: its real position, plus the error of a robot that was moved by hand and not relocalized yet. */
+function reportedPose(b: { pos: Vec2; theta: number; lostBy: Vec2 | null }): RobotTelemetry['pose'] {
+  const by = b.lostBy ?? { x: 0, y: 0 };
+  return { x: b.pos.x + by.x, y: b.pos.y + by.y, theta: b.theta };
+}
+
 interface Bot {
   id: string;
   model: string;
@@ -101,6 +108,7 @@ interface Bot {
   energyKWh: number;
   kWh: number;
   faultUntil: number;
+  /** how far the robot believes it is from where it really is (a robot moved by hand and not yet relocalized); null = localized */ lostBy: Vec2 | null;
   /** someone asked for this robot to go to a charger: its next trip is a charge trip */ chargeRequested: boolean;
   /** until this time the robot keeps clear of other robots' BODIES only, not of the way they have reserved ahead (breaks two robots that wait for each other's reservation) */
   ignoreClaims: number;
@@ -237,6 +245,7 @@ export class FleetSim {
         energyKWh: 0,
         kWh: roster?.[i].batteryKWh ?? 3,
         faultUntil: 0,
+        lostBy: null,
         chargeRequested: false,
         ignoreClaims: 0,
         handedOver: 0,
@@ -478,6 +487,22 @@ export class FleetSim {
       return { ok: true, when: 'now' };
     }
     return { ok: true, when: 'after-trip' };
+  }
+  /** "Relocalize": the robot finds its place on the map again. Only a robot that stands still can do it (a driving one is refused). */
+  relocalize(id: string): RelocalizeResult {
+    const b = this.bots.find((x) => x.id === id);
+    if (!b) return { ok: false, reason: 'not-found' };
+    if (b.state === 'offline') return { ok: false, reason: 'offline' };
+    if (b.speed > 0.05) return { ok: false, reason: 'moving' };
+    b.lostBy = null;
+    return { ok: true };
+  }
+  /** Test and demo aid: make a robot report a position `by` metres away from where it is (as if someone had moved it and it has not found its place yet). */
+  displace(id: string, by: Vec2): boolean {
+    const b = this.bots.find((x) => x.id === id);
+    if (!b) return false;
+    b.lostBy = by;
+    return true;
   }
   // ---- requested trips (orders): people ask for a material to be moved; a free robot of the fleet takes the oldest order
   /** Orders waiting for a robot (oldest first). */
@@ -1232,7 +1257,7 @@ export class FleetSim {
         model: b.model,
         fleetId: b.fleetId,
         siteId: this.siteId,
-        pose: { x: b.pos.x, y: b.pos.y, theta: b.theta },
+        pose: reportedPose(b),
         speed: b.speed,
         state: b.state,
         battery: Math.round(b.battery),

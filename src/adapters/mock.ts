@@ -40,6 +40,9 @@ export class MockSimulator implements TelemetryAdapter {
   sendToCharger(id: string) {
     return this.sim.sendToCharger(id);
   }
+  relocalize(id: string) {
+    return this.sim.relocalize(id);
+  }
   connect() {
     this.last = performance.now();
     this.timer = window.setInterval(() => {
