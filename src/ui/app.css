@@ -817,9 +817,10 @@ img {
   .tb-spacer {
     display: none;
   } /* the search box takes all the free width */
-  .tb-text {
+  .tb-text,
+  .topbar [data-text]:has(> .tb-text) {
     display: none;
-  } /* phones: Go to Support / Ati AI show only their icons */
+  } /* phones: Go to Support / Ati AI show only their icons (the label wrapper goes too, or it keeps its padding and leaves a gap) */
 }
 @media (max-width: 720px) {
   .hide-sm {
