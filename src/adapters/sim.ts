@@ -1,11 +1,12 @@
 import { LaneGraph, pointAt, type PathPlan } from '../core/lanes';
 import { gateDepthAt } from '../core/gate';
-import { angleDiff, pointInPoly } from '../core/geom';
+import { angleDiff, pointInPoly, segDist } from '../core/geom';
 import type { TripIdSource } from '../data/tripIds';
 import type {
   ChargeResult,
   RelocalizeResult,
   FleetEvent,
+  Lane,
   NavGraph,
   OrderUpdate,
   RobotState,
@@ -20,6 +21,8 @@ const HOLD = 2.4,
   ACC = 1.2,
   DEC = 3,
   TD = 1.3; // hold distance before an intersection / traffic zone, cruise speed, accel / brake (m/s^2), robot centre -> trolley centre
+const REJOIN_M = 1.3,
+  REJOIN_MAX = 15; // a robot farther than this from every lane of its fleet is off the road (same limit as the OFF_LANE check); it can rejoin from up to REJOIN_MAX away
 const REROUTE_AFTER = 6; // seconds stopped by an obstacle before the robot looks for another road
 const TURN_RATE = 2.5; // rad/s: the robot turns at most this fast, and slows down while its heading lags behind the route
 const CLEAR = 0.01,
@@ -283,6 +286,37 @@ export class FleetSim {
         .map((o) => o.node),
     );
   }
+  /** Where a trip starts from. A robot on its lane network starts from its node; one that is off the road (moved by hand) first finds the nearest lane of its fleet and joins it there, then follows the route from that lane's end. null = no lane near enough to rejoin. */
+  private leadIn(b: Bot): { from: string; first: Lane | null } | null {
+    const at = this.graph.nodes.get(b.node);
+    if (!at || Math.hypot(at.x - b.pos.x, at.y - b.pos.y) <= REJOIN_M) return { from: b.node, first: null };
+    let best: Lane | null = null,
+      bd = Infinity;
+    for (const l of this.graph.nav.lanes) {
+      if (!l.fleets.includes(b.fleetId)) continue;
+      for (let i = 0; i + 1 < l.geom.length; i++) {
+        const d = segDist(b.pos.x, b.pos.y, l.geom[i][0], l.geom[i][1], l.geom[i + 1][0], l.geom[i + 1][1]).d;
+        if (d < bd) {
+          bd = d;
+          best = l;
+        }
+      }
+    }
+    if (!best || bd > REJOIN_MAX) return null;
+    return bd <= REJOIN_M ? { from: b.node, first: null } : { from: best.to, first: best };
+  }
+  /** The route to a node from where the lead-in says the robot starts: the lane it rejoins (when off the road), then the best route onward. */
+  private routeFrom(
+    b: Bot,
+    lead: { from: string; first: Lane | null },
+    to: string,
+    avoids: (ReadonlySet<string> | undefined)[],
+  ): Lane[] | null {
+    if (lead.first && lead.first.to === to) return [lead.first];
+    let lanes: Lane[] | null = null;
+    for (const a of avoids) lanes ??= this.graph.route(lead.from, to, b.fleetId, a);
+    return lanes && lead.first ? [lead.first, ...lanes] : lanes;
+  }
   private planRoute(b: Bot): boolean {
     return b.trip ? this.startLeg(b) : this.startTrip(b);
   }
@@ -307,18 +341,16 @@ export class FleetSim {
     const g = this.graph;
     const avoid = this.occupiedNodes(b);
     const stationNodes = new Set(g.nav.stations.map((q) => q.nodeId));
+    const lead = this.leadIn(b);
+    if (!lead) return false; // no lane near enough to rejoin: the robot waits and asks again
     while (t.leg < t.legs.length) {
       const id = t.legs[t.leg];
       const st = g.station(id)!;
       const spoken = this.bots.some((o) => o !== b && (this.standsAt(o) === id || o.dest === id));
-      const lanes = spoken
-        ? null
-        : (g.route(b.node, st.nodeId, b.fleetId, stationNodes) ??
-          g.route(b.node, st.nodeId, b.fleetId, avoid) ??
-          g.route(b.node, st.nodeId, b.fleetId)); // when the only way out leads past a parked robot, the robot goes anyway and waits for it to leave (it will: it is only parked between jobs)      // keep to roads without other stations on them when there is one: a parked robot must not block through traffic
+      const lanes = spoken ? null : this.routeFrom(b, lead, st.nodeId, [stationNodes, avoid, undefined]); // when the only way out leads past a parked robot, the robot goes anyway and waits for it to leave (it will: it is only parked between jobs)      // keep to roads without other stations on them when there is one: a parked robot must not block through traffic
       if (lanes && lanes.length) {
         const from = b.stationId ?? undefined;
-        const plan = g.plan(lanes, b.pos);
+        const plan = g.plan(lanes, b.pos, !!lead.first);
         const carrying = t.loaded && t.leg >= (t.loadFrom ?? 0);
         Object.assign(b, {
           prio: this.time,
@@ -402,6 +434,8 @@ export class FleetSim {
     const loaded = !kind && b.nextLoaded;
     const avoid = this.occupiedNodes(b);
     const stationNodes = new Set(g.stations.map((q) => q.nodeId));
+    const lead = this.leadIn(b);
+    if (!lead) return false; // off the road with no lane near enough to rejoin: no trip is started
     const spoken = new Set(
       this.bots
         .filter((o) => o !== b)
@@ -433,15 +467,15 @@ export class FleetSim {
         .map((c) => c.st); // a charger: the nearest; work: far away, else the farthest there is
     const cands = [...order(wanted.filter((s) => !crowded(s))), ...order(wanted.filter(crowded))]; // stations away from other robots first; a crowded one is better than leaving the robot idle in someone's way
     for (const st of cands) {
-      const lanes =
-        this.graph.route(b.node, st.nodeId, b.fleetId, stationNodes) ??
-        this.graph.route(b.node, st.nodeId, b.fleetId, avoid) ??
-        this.graph.route(b.node, st.nodeId, b.fleetId);
+      const lanes = this.routeFrom(b, lead, st.nodeId, [stationNodes, avoid, undefined]);
       if (!lanes || !lanes.length) continue;
-      const stops = kind ? [] : this.pickStops(b, st.id, this.graph.plan(lanes, b.pos), spoken, crowded);
+      const stops = kind ? [] : this.pickStops(b, st.id, this.graph.plan(lanes, b.pos, !!lead.first), spoken, crowded);
       const work = !kind;
       const due = work
-        ? this.time + SLA_BASE + (SLA_FACTOR * this.graph.plan(lanes, b.pos).total) / V + SLA_PER_STOP * stops.length
+        ? this.time +
+          SLA_BASE +
+          (SLA_FACTOR * this.graph.plan(lanes, b.pos, !!lead.first).total) / V +
+          SLA_PER_STOP * stops.length
         : null;
       b.trip = {
         assignedAtS: this.time,
@@ -502,6 +536,13 @@ export class FleetSim {
     const b = this.bots.find((x) => x.id === id);
     if (!b) return false;
     b.lostBy = by;
+    return true;
+  }
+  /** Test and demo aid: someone picks the robot up and puts it `by` metres away (it reports its new position). Only a robot that stands still can be moved. */
+  moveByHand(id: string, by: Vec2): boolean {
+    const b = this.bots.find((x) => x.id === id);
+    if (!b || b.speed > 0.05 || b.plan) return false;
+    b.pos = { x: b.pos.x + by.x, y: b.pos.y + by.y };
     return true;
   }
   // ---- requested trips (orders): people ask for a material to be moved; a free robot of the fleet takes the oldest order
