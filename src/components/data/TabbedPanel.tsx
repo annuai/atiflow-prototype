@@ -48,11 +48,15 @@ export function TabbedPanel({
   contentKey,
   children,
 }: Props) {
-  // the chosen tab scrolls into view when the tab bar scrolls sideways (a phone), e.g. when a page opens on its last tab
+  // The chosen tab scrolls into view INSIDE the tab bar when it scrolls sideways (a phone). `scrollIntoView` must not be used here: it also scrolls every ancestor that can scroll,
+  // including the page's own overflow-hidden frame, which slid the whole app (sidebar included) a few pixels to the left.
   const bar = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const el = bar.current?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
-    el?.scrollIntoView?.({ inline: 'center', block: 'nearest' });
+    const list = bar.current?.querySelector<HTMLElement>('[role="tablist"]');
+    const tab = list?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+    if (!list || !tab || list.scrollWidth <= list.clientWidth) return;
+    const at = tab.getBoundingClientRect().left - list.getBoundingClientRect().left + list.scrollLeft;
+    list.scrollTo({ left: at - (list.clientWidth - tab.offsetWidth) / 2 });
   }, [selected]);
   return (
     <Tabs selectedKey={selected} onSelectionChange={(k) => onSelect(String(k))} className={rootClassName}>

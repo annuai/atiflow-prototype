@@ -40,4 +40,25 @@ test.describe('fleets', () => {
     await expect(page.getByRole('heading', { name: 'Assembly Fleet' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Line Side Fleet' })).toBeVisible();
   });
+
+  test('opening a tab never slides the page frame sideways (the sidebar keeps its left padding)', async ({ page }) => {
+    await page.setViewportSize({ width: 1100, height: 720 }); // a laptop window with the sidebar open: where it showed
+    const slid = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('*')]
+          .filter((e) => e.scrollLeft > 0 && !e.matches('[role=tablist]'))
+          .map((e) => `${e.tagName}.${String(e.className).slice(0, 30)}`),
+      );
+    for (const tab of ['workflows', 'settings', 'materials']) {
+      await page.goto(`/configurator/fleets/Line%20Side%20Fleet/${tab}`);
+      await expect(page.getByRole('tab', { selected: true })).toBeVisible();
+      await page.waitForTimeout(400);
+      expect(await slid(), tab).toEqual([]);
+      const left = await page.locator('.sidebar').evaluate((el) => Math.round(el.getBoundingClientRect().left));
+      expect(left, `${tab}: sidebar position`).toBeGreaterThanOrEqual(8);
+    }
+    await page.goto('/configurator/master-data/staging-area');
+    await page.waitForTimeout(400);
+    expect(await slid(), 'staging area').toEqual([]);
+  });
 });
