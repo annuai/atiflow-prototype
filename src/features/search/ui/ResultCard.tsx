@@ -1,4 +1,6 @@
 import { Fragment } from 'react';
+import { Badge } from '@/components/base/badges/badges';
+import { Button } from '@/components/base/buttons/button';
 import { useApp } from '@/core/store';
 import { copy as floor } from '@/ui/copy';
 import { cx } from '@/utils/cx';
@@ -6,13 +8,7 @@ import { copy } from '../copy';
 import { searchRegistry } from '../registry';
 import type { SearchAction, SearchResult } from '../types';
 
-const TONE = {
-  success: 'bg-success-primary text-success-primary',
-  warning: 'bg-warning-primary text-warning-primary',
-  error: 'bg-error-primary text-error-primary',
-  brand: 'bg-brand-primary text-brand-secondary',
-  gray: 'bg-secondary text-secondary',
-} as const;
+const BADGE = { success: 'success', warning: 'warning', error: 'error', brand: 'brand', gray: 'gray' } as const;
 
 /** A title with the matched words marked. */
 export function Marked({ text, ranges }: { text: string; ranges: [number, number][] }) {
@@ -104,38 +100,23 @@ export function ResultCard({
         {!simple && meta.length > 0 && (
           <span className="mt-1.5 flex flex-wrap gap-1.5">
             {meta.map((m) => (
-              <span
-                key={m.label}
-                className={cx('rounded-full px-2 py-0.5 text-xs font-medium', TONE[m.tone ?? 'gray'])}
-              >
+              <Badge key={m.label} size="sm" type="pill-color" color={BADGE[m.tone ?? 'gray']}>
                 {m.label}: {m.value}
-              </span>
+              </Badge>
             ))}
           </span>
         )}
       </button>
       <div className="flex flex-wrap items-center gap-2">
         {primary && (
-          <button
-            type="button"
-            onClick={() => onAction(primary)}
-            className={cx(
-              'inline-flex cursor-pointer items-center justify-center rounded-lg bg-brand-solid px-3 text-sm font-semibold text-white outline-focus-ring hover:bg-brand-solid_hover focus-visible:outline-2',
-              simple ? 'min-h-12 px-5 text-md' : 'min-h-10',
-            )}
-          >
+          <Button size={simple ? 'xl' : 'md'} color="primary" onPress={() => onAction(primary)}>
             {primary.label}
-          </button>
+          </Button>
         )}
         {others.map((a) => (
-          <button
-            key={a.id}
-            type="button"
-            onClick={() => onAction(a)}
-            className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-lg border border-primary bg-primary px-3 text-sm font-semibold text-secondary outline-focus-ring hover:bg-primary_hover focus-visible:outline-2"
-          >
+          <Button key={a.id} size="md" color="secondary" onPress={() => onAction(a)}>
             {a.label}
-          </button>
+          </Button>
         ))}
       </div>
     </li>

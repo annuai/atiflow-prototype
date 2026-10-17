@@ -12,7 +12,9 @@ import { copy } from '../copy';
 import { rememberSearch } from '../recent';
 import { searchRegistry } from '../registry';
 import type { EntityType, SearchAction, SearchGroup, SearchResult, SearchSort } from '../types';
-import { FIELD, FilterBar } from './FilterBar';
+import { Button } from '@/components/base/buttons/button';
+import { Input } from '@/components/base/input/input';
+import { FilterBar } from './FilterBar';
 import { ResultCard } from './ResultCard';
 import { TypeTabs } from './TypeTabs';
 import { useCommands } from './useCommands';
@@ -20,7 +22,6 @@ import { useQueryState } from './useQueryState';
 import { useSearch } from './useSearch';
 
 const PAGE = 20;
-const btn = 'min-h-11 rounded-lg border border-primary px-4 text-sm font-semibold';
 
 /** The text box of the page; its own state starts from the URL (the page remounts it when the address changes). */
 function QueryBox({ q, simple, onSubmit }: { q: string; simple: boolean; onSubmit(text: string): void }) {
@@ -34,18 +35,14 @@ function QueryBox({ q, simple, onSubmit }: { q: string; simple: boolean; onSubmi
         onSubmit(text.trim());
       }}
     >
-      <label className="relative flex-1">
-        <SearchLg
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-fg-quaternary"
-        />
-        <input
-          className={`${FIELD} w-full pl-10 ${simple ? 'min-h-14 text-md' : ''}`}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          aria-label={copy.ui.label}
-        />
-      </label>
+      <Input
+        aria-label={copy.ui.label}
+        icon={SearchLg}
+        size={simple ? 'lg' : 'md'}
+        wrapperClassName="flex-1"
+        value={text}
+        onChange={setText}
+      />
     </form>
   );
 }
@@ -111,9 +108,9 @@ function Status({
         subtext=""
         size="lg"
         action={
-          <button type="button" className={btn} onClick={onRetry}>
+          <Button size="md" color="secondary" onPress={onRetry}>
             {copy.ui.retry}
-          </button>
+          </Button>
         }
       />
     );
@@ -126,9 +123,9 @@ function Status({
       size="lg"
       action={
         didYouMean ? (
-          <button type="button" className={btn} onClick={() => onPick(didYouMean)}>
+          <Button size="md" color="secondary" onPress={() => onPick(didYouMean)}>
             {didYouMean}
-          </button>
+          </Button>
         ) : undefined
       }
     />
@@ -163,9 +160,9 @@ function Results({ groups, type, simple, list, total, onType, onMore, onOpen, on
         {list.map(card)}
         {total > list.length && (
           <li>
-            <button type="button" className={`${btn} w-full`} onClick={onMore}>
+            <Button size="md" color="secondary" className="w-full" onPress={onMore}>
               {copy.ui.showMore}
-            </button>
+            </Button>
           </li>
         )}
       </ul>
@@ -179,13 +176,9 @@ function Results({ groups, type, simple, list, total, onType, onMore, onOpen, on
               {g.label} <span className="font-normal text-tertiary">({g.total})</span>
             </h2>
             {g.total > g.results.length && (
-              <button
-                type="button"
-                className="min-h-11 text-sm font-semibold text-brand-secondary underline"
-                onClick={() => onType(g.type)}
-              >
+              <Button size="sm" color="link-color" onPress={() => onType(g.type)}>
                 {copy.ui.showMore}
-              </button>
+              </Button>
             )}
           </div>
           <ul className="flex flex-col gap-2">{g.results.map(card)}</ul>

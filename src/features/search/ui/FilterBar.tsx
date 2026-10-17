@@ -1,12 +1,12 @@
+import { Button } from '@/components/base/buttons/button';
+import { Select } from '@/components/base/select/select';
 import { copy } from '../copy';
 import type { SearchGroup, SearchSort } from '../types';
 
 const SORTS: SearchSort[] = ['relevance', 'recent', 'az'];
-const field =
-  'min-h-11 rounded-lg border border-primary bg-primary px-3 text-sm text-primary outline-focus-ring focus-visible:outline-2';
-export const FIELD = field;
+const ANY = '__any';
 
-/** Status / fleet / zone filters (only those the current results have), sort, and "Clear filters". */
+/** Status / fleet / zone filters (only those the current results have), sort, and "Clear filters": Untitled UI Select and Button. */
 export function FilterBar({
   groups,
   params,
@@ -21,49 +21,45 @@ export function FilterBar({
   const values = (key: 'status' | 'fleet' | 'zone') =>
     [...new Set(groups.flatMap((g) => g.results.map((r) => r.facets?.[key]).filter((x): x is string => !!x)))].sort();
   const active = ['status', 'fleet', 'zone'].some((k) => params.get(k));
+  const sortLabel = (s: SearchSort) =>
+    s === 'relevance' ? copy.ui.relevance : s === 'recent' ? copy.ui.recentSort : copy.ui.az;
   return (
-    <div className="flex shrink-0 flex-wrap items-center gap-2">
+    <div className="flex shrink-0 flex-wrap items-end gap-3">
       {(['status', 'fleet', 'zone'] as const).map((k) => {
         const list = values(k);
-        if (!list.length && !params.get(k)) return null;
+        const current = params.get(k);
+        if (!list.length && !current) return null;
+        const items = [{ id: ANY, label: copy.ui.any }, ...list.map((v) => ({ id: v, label: v }))];
         return (
-          <label key={k} className="flex items-center gap-2 text-sm text-tertiary">
-            {copy.ui[k]}
-            <select
-              className={field}
-              value={params.get(k) ?? ''}
-              onChange={(e) => onSet({ [k]: e.target.value || null })}
-            >
-              <option value="">{copy.ui.any}</option>
-              {list.map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
+          <Select
+            key={k}
+            size="sm"
+            label={copy.ui[k]}
+            aria-label={copy.ui[k]}
+            className="w-[calc(50%-0.375rem)] sm:w-40"
+            selectedKey={current ?? ANY}
+            onSelectionChange={(id) => onSet({ [k]: id === ANY ? null : String(id) })}
+            items={items}
+          >
+            {(item) => <Select.Item {...item} />}
+          </Select>
         );
       })}
-      <label className="flex items-center gap-2 text-sm text-tertiary">
-        {copy.ui.sort}
-        <select
-          className={field}
-          value={sort}
-          onChange={(e) => onSet({ sort: e.target.value === 'relevance' ? null : e.target.value })}
-        >
-          {SORTS.map((s) => (
-            <option key={s} value={s}>
-              {s === 'relevance' ? copy.ui.relevance : s === 'recent' ? copy.ui.recentSort : copy.ui.az}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Select
+        size="sm"
+        label={copy.ui.sort}
+        aria-label={copy.ui.sort}
+        className="w-[calc(50%-0.375rem)] sm:w-40"
+        selectedKey={sort}
+        onSelectionChange={(id) => onSet({ sort: id === 'relevance' ? null : String(id) })}
+        items={SORTS.map((s) => ({ id: s, label: sortLabel(s) }))}
+      >
+        {(item) => <Select.Item {...item} />}
+      </Select>
       {active && (
-        <button
-          type="button"
-          className="min-h-11 text-sm font-semibold text-brand-secondary underline"
-          onClick={() => onSet({ status: null, fleet: null, zone: null })}
-        >
+        <Button size="sm" color="link-color" onPress={() => onSet({ status: null, fleet: null, zone: null })}>
           {copy.ui.clearFilters}
-        </button>
+        </Button>
       )}
     </div>
   );
