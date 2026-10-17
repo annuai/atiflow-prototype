@@ -354,3 +354,20 @@ describe('auto alignment', () => {
     expect(Math.hypot(t.dx, t.dy)).toBeGreaterThan(0); // and it did move
   });
 });
+
+describe('the dummy DWG (tools/dwg-import/sites/dummy-annuai)', () => {
+  it('is a layout the app takes, and auto-align lays it onto the real lidar walls of the sample map', () => {
+    const layout = parseLayout(JSON.parse(readFileSync(new URL('dummy_layout.json', dir), 'utf8')))!;
+    expect(layout.walls).toHaveLength(11);
+    expect(layout.equipment).toHaveLength(18);
+    const lidar = extractStructure(importEntries(readZip(sampleZip())).grid!).walls;
+    const { t, score } = autoAlign(layout.walls, lidar);
+    expect(score).toBeGreaterThan(0.4); // the drawing is cleaner than the lidar and has walls the lidar never saw
+    // the building outline lands within half a metre of where the lidar says it is: the map's x runs -16 to 24 m
+    const xs = transformLayout(layout, t).walls.flatMap((w) => [w.a[0], w.b[0]]);
+    expect(Math.min(...xs)).toBeGreaterThan(-16.6);
+    expect(Math.min(...xs)).toBeLessThan(-15.4);
+    expect(Math.max(...xs)).toBeGreaterThan(23.4);
+    expect(Math.max(...xs)).toBeLessThan(24.6);
+  });
+});

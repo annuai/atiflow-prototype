@@ -1,0 +1,26 @@
+# DUMMY site for trying the DWG overlay: a clean drawing of the building in the sample lidar map (test_annuai). Made by make_dummy.py.
+# Regenerate (needs `brew install libredwg` and the Python packages of ../../requirements.txt):
+#   python -I make_dummy.py dummy.dxf && dxf2dwg -y -o dummy.dwg dummy.dxf
+#   dwg2dxf -y -o roundtrip.dxf dummy.dwg          # what a real client DWG goes through
+#   python -I ../../import_dwg.py build import.config.yaml roundtrip.dxf . --preview     # writes site.json (the layout the app's DWG overlay takes)
+siteId: dummy-annuai
+name: Dummy drawing of test_annuai
+dxf: dummy.dxf
+scale: 0.001                                     # drawing unit (mm) -> metres
+# the building plus 1 m: the output's (0, 0) is this box's south-west corner, like a real crop (so the layout is NOT in the lidar's frame: the overlay has to align it)
+crop: [513000, 197900, 555000, 227600]
+detail: [513000, 197900, 555000, 227600]
+floors:
+  - [514000, 198900, 554000, 226600]
+walls:
+  "WALL": {h: 3.2, t: 0.2}
+equipment:
+  "COLUMN": {kind: pillar, h: 3.2, close: 1}
+  "EQUIP": {kind: machine, h: 1.5, close: 1}
+cell: 100
+close: 1
+minArea: 0.1
+maxArea: 450
+labelLayers: []
+labelPatterns: []
+zones: []
