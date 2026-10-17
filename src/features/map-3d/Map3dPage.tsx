@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/skeleton/Skeleton';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 import { EmptyState } from '@/components/data/EmptyState';
 import { Engine } from '@/engine/Engine';
+import { originGizmo } from '@/engine/originGizmo';
 import { useAuth } from '@/features/auth';
 import { draftOf, latestOf, mapVersionsStore, useMapVersions, type MapData } from '@/features/map-editor';
 import { useMap } from '@/features/maps';
@@ -35,6 +36,11 @@ export function Map3dPage() {
     if (!site || !nav || !holder.current) return;
     const eng = new Engine(holder.current);
     eng.load(site, nav);
+    eng.scene.add(
+      originGizmo(
+        Math.max(3, 0.1 * Math.max(site.bounds.maxX - site.bounds.minX, site.bounds.maxY - site.bounds.minY)),
+      ),
+    ); // a tenth of the map, so it reads at any size
     setReady(true);
     return () => {
       eng.dispose();
