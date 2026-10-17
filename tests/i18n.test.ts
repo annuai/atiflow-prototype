@@ -115,3 +115,10 @@ describe('names of workspaces and features', () => {
     expect(WORKSPACES[2].features[0].label).toBe('Approve');
   });
 });
+
+describe('the search box placeholder of each workspace', () => {
+  it('a configurator is told to search robots, stations and zones; a supervisor live operations, fleets, trips and analytics', () => {
+    expect(CATALOGS.en.shell.searchConfigurator).toMatch(/robots, stations, zones/i);
+    expect(CATALOGS.en.shell.searchSupervisor).toMatch(/live operations, fleets, trips, analytics/i);
+  });
+});

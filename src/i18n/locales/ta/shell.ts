@@ -13,9 +13,9 @@ export const messages: Messages<typeof shell> = {
   sidebarExpand: 'பக்கப்பட்டியை விரி',
   sidebarCollapse: 'பக்கப்பட்டியைச் சுருக்கு',
   comingSoon: 'விரைவில்',
-  searchConfigurator: 'நேரடி இயக்கங்கள், ஃப்ளீட்கள், பயணங்கள், பகுப்பாய்வுகளைத் தேடுங்கள்...',
+  searchConfigurator: 'ரோபோக்கள், நிலையங்கள், மண்டலங்களைத் தேடுங்கள்…',
   searchOperator: 'தேடு…',
-  searchSupervisor: 'ரோபோக்கள், நிலையங்கள், மண்டலங்களைத் தேடுங்கள்…',
+  searchSupervisor: 'நேரடி இயக்கங்கள், ஃப்ளீட்கள், பயணங்கள், பகுப்பாய்வுகளைத் தேடுங்கள்...',
   bootTitle: 'Ati Flow உங்கள் தரவை ஏற்ற முடியவில்லை',
   bootText: (failed) =>
     `ஏற்ற முடியவில்லை: ${failed}. எதுவும் மாற்றப்படவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.`,
