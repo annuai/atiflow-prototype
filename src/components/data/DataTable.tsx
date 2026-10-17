@@ -91,6 +91,7 @@ export function DataTable<T>({
       <Table
         aria-label={label}
         size="sm"
+        wrapperClassName={stickyHeader ? 'overflow-x-visible' : undefined}
         style={minWidth ? { minWidth } : undefined}
         sortDescriptor={sort}
         onSortChange={setSort}
@@ -98,7 +99,7 @@ export function DataTable<T>({
           ? { selectionMode: 'multiple' as const, selectedKeys, onSelectionChange, disabledKeys: disabled }
           : {})}
       >
-        <Table.Header className={plain ? 'bg-primary' : undefined}>
+        <Table.Header className={cx(plain && 'bg-primary', stickyHeader && 'sticky top-0 z-10')}>
           {columns.map((c, i) => (
             <Table.Head
               key={c.id}

@@ -112,14 +112,16 @@ const TableCardHeader = ({ title, badge, description, contentTrailing, className
 interface TableRootProps extends AriaTableProps, Omit<ComponentPropsWithRef<"table">, "className" | "slot" | "style"> {
     /** Controls the density of the header, rows and cells. The size of a wrapping `TableCard.Root` takes precedence. */
     size?: "sm" | "md";
+    /** Classes for the wrapper around the table (it scrolls sideways by default; `overflow-x-visible` lets a sticky header stick to the page's own scroll box). */
+    wrapperClassName?: string;
 }
 
-const TableRoot = ({ className, size = "md", ...props }: TableRootProps) => {
+const TableRoot = ({ className, size = "md", wrapperClassName, ...props }: TableRootProps) => {
     const context = useContext(TableContext);
 
     return (
         <TableContext.Provider value={{ size: context?.size ?? size }}>
-            <div className="overflow-x-auto">
+            <div className={cx("overflow-x-auto", wrapperClassName)}>
                 <AriaTable className={(state) => cx("w-full overflow-x-hidden", typeof className === "function" ? className(state) : className)} {...props} />
             </div>
         </TableContext.Provider>
