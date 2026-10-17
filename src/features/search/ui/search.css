@@ -150,4 +150,43 @@
   .sr-kbd {
     display: none;
   }
+  /* On a phone the box is only as wide as the free space in the top bar, so the results are a panel of their own: the full width of the screen, just under the top bar,
+     short enough to stay above the on-screen keyboard, with finger-sized rows and the whole row as the tap target (the action label would only take room from the title) */
+  .sr-pop {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 60px);
+    left: 8px;
+    right: 8px;
+    max-height: min(52dvh, 460px);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sr-item {
+    min-height: 56px;
+    padding: 8px 12px;
+    gap: 12px;
+  }
+  .sr-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .sr-text b {
+    font-size: 15px;
+  }
+  .sr-text small {
+    font-size: 13px;
+  }
+  .sr-act {
+    display: none;
+  }
+  .sr-head button {
+    min-height: 40px;
+    padding: 0 8px;
+  }
+  .sr-field {
+    height: 40px;
+  }
+  .sr-field input {
+    font-size: 16px; /* 16 px or more: iPhones zoom the page in when a smaller field is focused */
+  }
 }

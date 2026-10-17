@@ -15,4 +15,8 @@ export const common = {
   required: 'Required',
   comingSoon: 'Coming soon',
   language: 'Language',
+  noWebgl: {
+    title: '3D view is not available in this browser',
+    body: 'Your browser or graphics driver does not offer WebGL 2, which the 3D views need. Turn on hardware acceleration in the browser settings, update the browser, or open Ati Flow in a current Chrome, Edge, Firefox or Safari.',
+  },
 } as const;

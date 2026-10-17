@@ -1,0 +1,20 @@
+# Cross-browser check (Chromium, Firefox, WebKit/Safari). Not run on every push: start it by hand from the Actions tab ("Run workflow").
+name: Browsers
+on:
+  workflow_dispatch:
+jobs:
+  browsers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:browsers
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browsers-report
+          path: playwright-report-browsers

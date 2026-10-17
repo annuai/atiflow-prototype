@@ -53,7 +53,7 @@ export const messages: Messages<typeof devices> = {
     exclusiveTag: 'Ati एक्सक्लूसिव',
   },
   placeholders: {
-    robotName: 'उदा. Sherpa-09',
+    robotName: 'उदा. AMR-020',
     hardwareName: 'उदा. Line-01 समन बटन',
   },
   tabs: {

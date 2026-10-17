@@ -212,9 +212,7 @@ export type CameraMode = 'orbit' | 'top' | 'walk' | 'follow';
 export type LayerKey = 'robots' | 'routes' | 'stations' | 'zones' | 'labels' | 'equipment' | 'alerts';
 
 /** The answer to "relocalize this robot". */
-export type RelocalizeResult =
-  | { ok: true }
-  | { ok: false; reason: 'not-found' | 'offline' | 'moving' | 'not-running' };
+export type RelocalizeResult = { ok: true } | { ok: false; reason: 'not-found' | 'offline' | 'moving' | 'not-running' };
 
 /** The answer to "send this robot to a charger". */
 export type ChargeResult =

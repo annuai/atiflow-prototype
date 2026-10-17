@@ -1,4 +1,16 @@
 import * as THREE from 'three';
+
+/** A rounded-rectangle path. `CanvasRenderingContext2D.roundRect` is missing in Safari before 16 (and older browsers): there, one missing method would stop the whole 3D scene from being built, so draw the corners ourselves. */
+export function roundedRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  if (typeof ctx.roundRect === 'function') return ctx.roundRect(x, y, w, h, r);
+  const k = Math.min(r, w / 2, h / 2);
+  ctx.moveTo(x + k, y);
+  ctx.arcTo(x + w, y, x + w, y + h, k);
+  ctx.arcTo(x + w, y + h, x, y + h, k);
+  ctx.arcTo(x, y + h, x, y, k);
+  ctx.arcTo(x, y, x + w, y, k);
+  ctx.closePath();
+}
 export function labelSprite(text: string, opts: { color?: string; bg?: string; size?: number } = {}) {
   const size = opts.size ?? 56;
   const c = document.createElement('canvas');
@@ -12,7 +24,7 @@ export function labelSprite(text: string, opts: { color?: string; bg?: string; s
   const r = size * 0.45;
   const h = c.height;
   ctx.beginPath();
-  ctx.roundRect(0, 0, w, h, r);
+  roundedRectPath(ctx, 0, 0, w, h, r);
   ctx.fill();
   ctx.fillStyle = opts.color ?? '#e2e8f0';
   ctx.textBaseline = 'middle';
@@ -58,7 +70,7 @@ export function liveLabel(w = 480, h = 88) {
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = bg;
     ctx.beginPath();
-    ctx.roundRect(2, 2, w - 4, h - 4, h * 0.4);
+    roundedRectPath(ctx, 2, 2, w - 4, h - 4, h * 0.4);
     ctx.fill();
     ctx.fillStyle = fg;
     ctx.font = `600 ${h * 0.5}px Blinker, system-ui, sans-serif`;

@@ -5,6 +5,9 @@ import { Skeleton } from '@/components/skeleton/Skeleton';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 import { EmptyState } from '@/components/data/EmptyState';
 import { Engine } from '@/engine/Engine';
+import { webGlProblem } from '@/engine/support';
+import { reportError } from '@/platform';
+import { localized } from '@/i18n';
 import { originGizmo } from '@/engine/originGizmo';
 import { useAuth } from '@/features/auth';
 import { draftOf, latestOf, mapVersionsStore, useMapVersions, type MapData } from '@/features/map-editor';
@@ -31,24 +34,44 @@ export function Map3dPage() {
   const nav = useMemo(() => (data ? navOf(data) : null), [data]);
   const holder = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
+  const [noGl, setNoGl] = useState(() => webGlProblem() !== null);
 
   useEffect(() => {
-    if (!site || !nav || !holder.current) return;
-    const eng = new Engine(holder.current);
+    if (noGl || !site || !nav || !holder.current) return;
+    let eng: Engine;
+    try {
+      eng = new Engine(holder.current);
+    } catch (e) {
+      reportError(e, { where: 'map-3d-engine' });
+      queueMicrotask(() => setNoGl(true)); // (not synchronously inside the effect)
+      return;
+    }
     eng.load(site, nav);
     eng.scene.add(
       originGizmo(
         Math.max(3, 0.1 * Math.max(site.bounds.maxX - site.bounds.minX, site.bounds.maxY - site.bounds.minY)),
       ),
     ); // a tenth of the map, so it reads at any size
-    setReady(true);
+    setReady(true); // eslint-disable-line react-hooks/set-state-in-effect -- the scene is an external system built in this effect; `ready` only hides the loading skeleton
     return () => {
       eng.dispose();
       setReady(false);
     };
-  }, [site, nav]);
+  }, [site, nav, noGl]);
 
   if (!map) return <Navigate to="/configurator/maps" replace />;
+  if (noGl)
+    return (
+      <div className="content">
+        <div className="builder md-card">
+          <EmptyState
+            icon={Cube01}
+            title={localized('common').noWebgl.title}
+            subtext={localized('common').noWebgl.body}
+          />
+        </div>
+      </div>
+    );
   if (!data)
     return (
       <div className="content">

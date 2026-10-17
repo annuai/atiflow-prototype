@@ -16,11 +16,9 @@ function makeFleet() {
   fleetsStore.getState().assignMap(NAME, 'main-assembly');
   const id = wfStore.getState().startWorkflow(NAME);
   wfStore.getState().saveDraft();
-  userDirectory
-    .getState()
-    .update('arjun', {
-      fleets: [...(userDirectory.getState().users.find((u) => u.username === 'arjun')!.fleets ?? []), f.id],
-    });
+  userDirectory.getState().update('arjun', {
+    fleets: [...(userDirectory.getState().users.find((u) => u.username === 'arjun')!.fleets ?? []), f.id],
+  });
   return { id, code, fleetId: f.id };
 }
 

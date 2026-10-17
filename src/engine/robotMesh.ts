@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { log } from '@/platform';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { ROBOT_TYPES, DEFAULT_ROBOT_TYPE, type RobotTypeId } from '../data/robotTypes';
+import { roundedRectPath } from './labels';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 
@@ -298,7 +299,7 @@ export function robotPlanTexture(): THREE.CanvasTexture {
   const g = c.getContext('2d')!;
   const rr = (x: number, y: number, w: number, h: number, r: number, fill: string) => {
     g.beginPath();
-    g.roundRect(x, y, w, h, r);
+    roundedRectPath(g, x, y, w, h, r);
     g.fillStyle = fill;
     g.fill();
   };

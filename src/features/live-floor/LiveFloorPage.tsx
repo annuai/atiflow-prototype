@@ -3,6 +3,11 @@ import { services } from '@/services';
 import { Link, useLocation } from 'react-router-dom';
 import { store, useApp } from '@/core/store';
 import { Engine } from '@/engine/Engine';
+import { webGlProblem } from '@/engine/support';
+import { reportError } from '@/platform';
+import { EmptyState } from '@/components/data/EmptyState';
+import { localized } from '@/i18n';
+import { Cube01 } from '@untitledui/icons';
 import { loadRobotModels } from '@/engine/robotMesh';
 import { myPrefsNow } from '@/features/preferences';
 import { handle } from '@/ui/engineHandle';
@@ -36,9 +41,18 @@ export function LiveFloorPage() {
     site = useApp((s) => s.site),
     zoneId = useApp((s) => s.activeZoneId),
     q = useApp((s) => s.query);
+  const [noGl, setNoGl] = useState(() => webGlProblem() !== null);
   useEffect(() => {
+    if (noGl) return;
     let dead = false;
-    const eng = new Engine(holder.current!);
+    let eng: Engine;
+    try {
+      eng = new Engine(holder.current!);
+    } catch (e) {
+      reportError(e, { where: 'live-floor-engine' }); // the context could not be made (a blocked GPU, too many contexts): say so instead of a blank page
+      queueMicrotask(() => setNoGl(true)); // (not synchronously inside the effect)
+      return;
+    }
     handle.engine = eng;
     eng.onView = setView;
     const offReset = feed.onReset(() => eng.clearRobots());
@@ -81,7 +95,7 @@ export function LiveFloorPage() {
         query: '',
       });
     }; // clean slate for the next visit
-  }, []);
+  }, [noGl]);
   useEffect(() => {
     // `?focus=robot:AMR-003` | `station:STA-113` | `zone:<id>` | `fleet:<id>`: a shareable address that flies the camera there once the scene is ready
     const f = new URLSearchParams(search).get('focus');
@@ -133,6 +147,25 @@ export function LiveFloorPage() {
   // a fleet that is not on the floor (no map, map not published, nothing to drive on) is explained, never an empty scene
   const idle = ready ? feed.world()?.idle.find((i) => i.fleetId === fleetId) : undefined;
   const canConfigure = useAccess().can('configurator.fleets');
+  if (noGl)
+    return (
+      <div className="content">
+        <div className="title-block">
+          <div>
+            <h1>{copy.page.title}</h1>
+            <p>{copy.page.subtitle}</p>
+          </div>
+        </div>
+        <div className="builder md-card">
+          <EmptyState
+            icon={Cube01}
+            size="lg"
+            title={localized('common').noWebgl.title}
+            subtext={localized('common').noWebgl.body}
+          />
+        </div>
+      </div>
+    );
   return (
     <>
       <div className="content">

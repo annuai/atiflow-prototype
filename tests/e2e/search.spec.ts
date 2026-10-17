@@ -97,4 +97,14 @@ test.describe('Global search', () => {
     await expect(page.getByRole('tab').nth(1)).toContainText('Robots');
     await expect(page.locator('section h2').first()).toContainText('Robots');
   });
+
+  test('search covers the open workspace only, even for a person who can enter several', async ({ page }) => {
+    await signIn(page, 'meera'); // a configurator who also holds supervisor and operator access
+    await page.goto('/configurator/search?q=dashboard');
+    await expect(page.getByText(/no results/i).first()).toBeVisible(); // the Dashboard is a supervisor page
+    await page.goto('/supervisor/search?q=dashboard');
+    await expect(page.getByText('/supervisor/dashboard').first()).toBeVisible();
+    await page.goto('/supervisor/search?q=users');
+    await expect(page.getByText('/configurator/users')).toHaveCount(0); // and Users is a configurator page
+  });
 });

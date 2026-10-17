@@ -83,3 +83,17 @@ test.describe('a robot in the configurator', () => {
     await expect(page.getByText('v3.2.2').first()).toBeVisible();
   });
 });
+
+test.describe('adding a robot', () => {
+  test('the form starts with the next AMR name, which can be changed', async ({ page }) => {
+    await signIn(page, 'kavin');
+    await page.goto('/configurator/robots');
+    await page.getByRole('button', { name: 'Add Robot' }).first().click();
+    const name = page.getByLabel(/Robot Name/);
+    await expect(name).toHaveValue(/^AMR-0\d\d$/);
+    const suggested = Number((await name.inputValue()).slice(4));
+    expect(suggested).toBeGreaterThan(19); // one more than the highest robot there is
+    await name.fill('AMR-777');
+    await expect(name).toHaveValue('AMR-777');
+  });
+});

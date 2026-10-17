@@ -1,6 +1,6 @@
 import { type PublicUser } from '@/features/auth';
 
-/** Who a notification is for: the workspaces that have notifications. A user receives those of every workspace they can enter (a superuser both). */
+/** Who a notification is for: the workspaces that have notifications. A person is shown only those of the workspace that is open (a person with access to two workspaces sees each one's own), whatever else they can enter. */
 export type Audience = 'supervisor' | 'configurator' | 'operator';
 
 export type NotificationLevel = 'critical' | 'warn' | 'info' | 'success';
@@ -20,7 +20,17 @@ export interface AppNotification {
   read: boolean;
   /** Buttons (none for information only). */
   actions?: NotificationAction[];
+  /** The workspace it is meant for (a backend says it; the local sources fill it in). Saved notifications without one are placed by their kind (`audienceOf`). */
+  audience?: Audience;
 }
+/** The workspace a notification belongs to: the one it names, else what its kind implies (stock / MES for configurators, trips and approvals for operators, the rest robot alerts for supervisors). */
+export const audienceOf = (n: { audience?: Audience; kind: AppNotification['kind'] }): Audience =>
+  n.audience ??
+  (n.kind === 'stock' || n.kind === 'mes'
+    ? 'configurator'
+    : n.kind === 'trip' || n.kind === 'approval'
+      ? 'operator'
+      : 'supervisor');
 export type NewNotification = Omit<AppNotification, 'read'>;
 
 /**

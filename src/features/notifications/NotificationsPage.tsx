@@ -10,7 +10,7 @@ import { LIVE_FLOOR_PATH } from '@/features/live-floor';
 import { localized } from '@/i18n';
 import { NotificationItem } from './components/NotificationItem';
 import { copy } from './copy';
-import { useNotificationStore, useNotifications } from './NotificationsProvider';
+import { useNotificationStore, useWorkspaceNotifications } from './NotificationsProvider';
 import type { Audience, NotificationAction } from './types';
 
 type Tab = 'all' | 'unread';
@@ -23,7 +23,7 @@ export function NotificationsPage() {
       ? 'operator'
       : 'supervisor';
   const navigate = useNavigate(); // the workspace the page is opened in decides the shell around it
-  const items = useNotifications((s) => s.items);
+  const items = useWorkspaceNotifications(); // only what is meant for the workspace that is open
   const [tab, setTab] = useState<Tab>('all');
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -59,7 +59,7 @@ export function NotificationsPage() {
                 { id: 'unread', label: copy.unread(unread) },
               ]}
             />
-            <Button size="sm" color="secondary" isDisabled={!unread} onPress={() => st.markAllRead()}>
+            <Button size="sm" color="secondary" isDisabled={!unread} onPress={() => st.markAllRead(role)}>
               {copy.markAll}
             </Button>
           </div>

@@ -17,4 +17,8 @@ export const messages: Messages<typeof common> = {
   required: 'ആവശ്യമാണ്',
   comingSoon: 'ഉടൻ വരുന്നു',
   language: 'ഭാഷ',
+  noWebgl: {
+    title: 'ഈ ബ്രൗസറിൽ 3D കാഴ്ച ലഭ്യമല്ല',
+    body: 'നിങ്ങളുടെ ബ്രൗസറോ ഗ്രാഫിക്സ് ഡ്രൈവറോ WebGL 2 നൽകുന്നില്ല, 3D കാഴ്ചകൾക്ക് ഇത് വേണം. ബ്രൗസർ ക്രമീകരണങ്ങളിൽ ഹാർഡ്‌വെയർ ആക്സിലറേഷൻ ഓണാക്കുക, ബ്രൗസർ അപ്ഡേറ്റ് ചെയ്യുക, അല്ലെങ്കിൽ Ati Flow പുതിയ Chrome, Edge, Firefox അല്ലെങ്കിൽ Safari-യിൽ തുറക്കുക.',
+  },
 };

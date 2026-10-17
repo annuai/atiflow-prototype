@@ -17,4 +17,8 @@ export const messages: Messages<typeof common> = {
   required: 'आवश्यक',
   comingSoon: 'जल्द आ रहा है',
   language: 'भाषा',
+  noWebgl: {
+    title: 'इस ब्राउज़र में 3D व्यू उपलब्ध नहीं है',
+    body: 'आपका ब्राउज़र या ग्राफ़िक्स ड्राइवर WebGL 2 नहीं देता, जो 3D व्यू के लिए ज़रूरी है। ब्राउज़र सेटिंग्स में हार्डवेयर एक्सेलेरेशन चालू करें, ब्राउज़र अपडेट करें, या Ati Flow को नए Chrome, Edge, Firefox या Safari में खोलें।',
+  },
 };

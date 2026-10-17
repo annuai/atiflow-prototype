@@ -82,39 +82,42 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
   const online = device.status === 'online';
   /** The buttons at the bottom of the Details and Configuration tabs: Remove / Unassign on the left, then Edit (or Cancel / Save while editing). */
   const footer = (f: EditFooter): ReactNode => (
-    <div className="mt-auto flex flex-wrap items-center justify-end gap-3 pt-2">
+    <div className="contents sm:mt-auto sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:gap-3 sm:pt-2">
       {!f.editing && (
         <Button
           color="tertiary-destructive"
           size="md"
           iconLeading={Trash01}
-          className="mr-auto"
+          className="mt-auto self-start sm:mr-auto sm:mt-0"
           onPress={() => setConfirm(true)}
         >
           {t.detail.remove(kind.singular)}
         </Button>
       )}
-      {f.editing ? (
-        <>
-          <Button color="secondary" size="md" isDisabled={f.busy} onPress={f.onCancel}>
-            {t.detail.cancel}
-          </Button>
-          <Button color="primary" size="md" isLoading={f.busy} onPress={f.onSave}>
-            {t.detail.saveChanges}
-          </Button>
-        </>
-      ) : (
-        <>
-          {fleet && (
-            <Button color="secondary" size="md" onPress={unassign}>
-              {t.detail.unassign(fleet)}
+      {/* On a phone the main actions stay at the bottom of the card while the fields scroll under them, side by side and as wide as the card allows */}
+      <div className="flex gap-3 max-sm:sticky max-sm:bottom-0 max-sm:z-10 max-sm:-mx-4 max-sm:-mb-4 max-sm:border-t max-sm:border-secondary max-sm:bg-primary max-sm:px-4 max-sm:py-3 max-sm:[&>button]:flex-1 sm:justify-end">
+        {f.editing ? (
+          <>
+            <Button color="secondary" size="md" isDisabled={f.busy} onPress={f.onCancel}>
+              {t.detail.cancel}
             </Button>
-          )}
-          <Button color="primary" size="md" isDisabled={f.disabled} onPress={f.onEdit}>
-            {f.editLabel}
-          </Button>
-        </>
-      )}
+            <Button color="primary" size="md" isLoading={f.busy} onPress={f.onSave}>
+              {t.detail.saveChanges}
+            </Button>
+          </>
+        ) : (
+          <>
+            {fleet && (
+              <Button color="secondary" size="md" onPress={unassign}>
+                {t.detail.unassign(fleet)}
+              </Button>
+            )}
+            <Button color="primary" size="md" isDisabled={f.disabled} onPress={f.onEdit}>
+              {f.editLabel}
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   );
   const content = (
@@ -193,7 +196,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
             </div>
           </div>
         </div>
-        <div className="hidden h-[96px] w-[200px] shrink-0 items-center justify-center lg:flex">
+        <div className="flex h-16 w-24 shrink-0 items-center justify-center sm:h-[96px] sm:w-[200px]">
           {kind.illustration(device)}
         </div>
       </div>
@@ -213,7 +216,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
             label={t.detail.sections}
             rootClassName="flex-1"
             barClassName="min-w-0"
-            listClassName="overflow-x-auto"
+            listClassName="overflow-x-auto [scrollbar-width:none] max-sm:[mask-image:linear-gradient(to_right,#000_86%,transparent)] [&::-webkit-scrollbar]:hidden"
             panelClassName="flex flex-1 flex-col pt-6"
             contentClassName="flex flex-1 flex-col gap-6 sm:gap-8"
           >

@@ -30,4 +30,18 @@ export function blankValues(kind: DeviceKind, preset: Record<string, FieldValue>
   return { ...out, ...preset };
 }
 
+/** Robots are named AMR-001, AMR-002...: the next free name is one more than the highest number in use (kept to the same width, at least three digits). Hardware has no naming scheme (null). */
+export function suggestName(kind: DeviceKind, existing: Device[]): string | null {
+  if (kind.id !== 'robot') return null;
+  let top = 0,
+    width = 3;
+  for (const d of existing) {
+    const m = /^AMR-(\d+)$/i.exec(nameOf(d).trim());
+    if (!m) continue;
+    top = Math.max(top, Number(m[1]));
+    width = Math.max(width, m[1].length);
+  }
+  return `AMR-${String(top + 1).padStart(width, '0')}`;
+}
+
 export const findDevice = (list: Device[], name: string) => list.find((d) => same(nameOf(d), name));

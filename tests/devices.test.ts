@@ -83,3 +83,16 @@ describe('shared dataset', () => {
     expect(new Set(r.map((x) => x.fleetId))).toEqual(new Set(['line-side', 'asrs']));
   });
 });
+
+describe('the next robot name', () => {
+  const robot = (name: string) => ({ status: 'online', values: { name } }) as never;
+  it('is the next AMR number after the highest in use, padded like the others', async () => {
+    const { suggestName } = await import('../src/features/devices/model/validate');
+    const { KINDS } = await import('../src/features/devices/model/kinds');
+    expect(suggestName(KINDS.robot, [robot('AMR-001'), robot('AMR-019'), robot('AMR-007')])).toBe('AMR-020');
+    expect(suggestName(KINDS.robot, [])).toBe('AMR-001');
+    expect(suggestName(KINDS.robot, [robot('Sherpa-09'), robot('AMR-004')])).toBe('AMR-005'); // other names are ignored
+    expect(suggestName(KINDS.robot, [robot('AMR-0099')])).toBe('AMR-0100'); // keeps a wider number width
+    expect(suggestName(KINDS.hardware, [])).toBeNull(); // hardware has no scheme
+  });
+});

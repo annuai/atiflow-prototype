@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useStore } from 'zustand';
+import { workspaceOfPath } from '@/features/access';
 import { useAuth } from '@/features/auth';
 import { createNotificationStore, type NotificationState, type NotificationStore } from './store';
-import type { NotificationApi } from './types';
+import { audienceOf, type Audience, type NotificationApi } from './types';
 
 const Context = createContext<NotificationStore | null>(null);
 
@@ -28,4 +30,15 @@ export function useNotificationStore(): NotificationStore {
   return s;
 }
 export const useNotifications = <T,>(sel: (s: NotificationState) => T): T => useStore(useNotificationStore(), sel);
-export const useUnreadCount = () => useNotifications((s) => s.items.filter((n) => !n.read).length);
+/** The workspace that is open (from the address); notifications and the unread count show only that workspace's own. */
+export const useOpenAudience = (): Audience => {
+  const ws = workspaceOfPath(useLocation().pathname);
+  return ws === 'configurator' || ws === 'operator' ? ws : 'supervisor';
+};
+/** The notifications of the open workspace only. */
+export const useWorkspaceNotifications = () => {
+  const audience = useOpenAudience();
+  const all = useNotifications((s) => s.items);
+  return useMemo(() => all.filter((n) => audienceOf(n) === audience), [all, audience]);
+};
+export const useUnreadCount = () => useWorkspaceNotifications().filter((n) => !n.read).length;

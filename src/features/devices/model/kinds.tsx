@@ -258,7 +258,7 @@ export const KINDS: Record<'robot' | 'hardware', DeviceKind> = {
     typeOf: (d) => robotTypeByLabel(d.values.sherpaType).label,
     headerBadges: (d) => [robotTypeByLabel(d.values.sherpaType).label],
     thumb: (d) => robotPicture('h-16 w-24 object-contain', d.values.sherpaType),
-    illustration: (d) => robotPicture('h-full max-h-[96px] w-[200px] object-contain', d.values.sherpaType),
+    illustration: (d) => robotPicture('h-full max-h-[96px] w-full max-w-[200px] object-contain', d.values.sherpaType),
     preview: (v) => ({
       image: robotPicture('h-[137px] w-[160px] object-contain', v.sherpaType),
       caption: robotTypeByLabel(v.sherpaType).label,
@@ -320,8 +320,8 @@ export const KINDS: Record<'robot' | 'hardware', DeviceKind> = {
       </span>
     ),
     illustration: (d) => (
-      <span className="grid size-[96px] place-items-center rounded-3xl border-2 border-secondary text-secondary">
-        {hardwarePicture(String(d.values.hwType), 'size-12')}
+      <span className="grid size-16 place-items-center rounded-3xl sm:size-[96px] border-2 border-secondary text-secondary">
+        {hardwarePicture(String(d.values.hwType), 'size-8 sm:size-12')}
       </span>
     ),
     preview: (v) => ({

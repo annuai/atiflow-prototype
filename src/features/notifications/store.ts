@@ -2,7 +2,7 @@ import { createStore, type StoreApi } from 'zustand/vanilla';
 import { services } from '@/services';
 import { type PublicUser } from '@/features/auth';
 import { NotificationCenter } from './center';
-import type { AppNotification, NewNotification, NotificationApi } from './types';
+import { audienceOf, type Audience, type AppNotification, type NewNotification, type NotificationApi } from './types';
 
 export interface NotificationState {
   owner: PublicUser | null;
@@ -11,7 +11,8 @@ export interface NotificationState {
   open(user: PublicUser | null): void;
   add(list: NewNotification[]): void;
   markRead(id: string): void;
-  markAllRead(): void;
+  /** Marks everything read, or only what is meant for one workspace. */
+  markAllRead(audience?: Audience): void;
   clear(): void;
 }
 export type NotificationStore = StoreApi<NotificationState>;
@@ -80,9 +81,10 @@ export function createNotificationStore(
         apply();
         tell(get().owner, [id]);
       },
-      markAllRead() {
-        const ids = center.items.filter((n) => !n.read).map((n) => n.id);
-        center.markAllRead();
+      markAllRead(audience) {
+        const mine = (n: AppNotification) => !audience || audienceOf(n) === audience;
+        const ids = center.items.filter((n) => !n.read && mine(n)).map((n) => n.id);
+        center.items = center.items.map((n) => (!n.read && mine(n) ? { ...n, read: true } : n));
         apply();
         tell(get().owner, ids);
       },

@@ -4,7 +4,7 @@ import { ModalShell } from '@/components/modal/ModalShell';
 import { useFleetNames } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
 import { deviceStore, useDevices } from '../model/store';
-import { blankValues, validateNew } from '../model/validate';
+import { blankValues, suggestName, validateNew } from '../model/validate';
 import type { DeviceKind, FieldValue } from '../model/types';
 import { t } from '../text';
 
@@ -69,7 +69,13 @@ function Body({
 /** "Add Robot" / "Add Hardware" dialog: form column + live preview column. Everything comes from the DeviceKind. */
 function Form({ kind, preset, isOpen, onOpenChange }: Props) {
   const existing = useDevices((s) => s[kind.id]);
-  const [values, setValues] = useState(() => blankValues(kind, preset));
+  // a new robot starts with the next AMR-xxx name (editable), so every robot gets a logical, findable name
+  const [values, setValues] = useState<Record<string, FieldValue>>(() => {
+    const start = blankValues(kind, preset);
+    const next = suggestName(kind, existing);
+    return next && !preset?.name ? { ...start, name: next } : start;
+  });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const set = (key: string) => (v: FieldValue) => {
     setValues((o) => ({ ...o, [key]: v }));

@@ -8,13 +8,16 @@ import type { SearchContext } from './types';
 export function buildSearchContext(): SearchContext | null {
   const user = authStore.getState().user;
   if (!user) return null;
+  const workspace = workspaceOfPath(typeof location === 'undefined' ? '' : location.pathname);
+  // Search covers the open workspace only, even for a person who may enter another: a permission of another workspace counts as not held here, a page of another workspace is not offered
+  const inWorkspace = (perm: string) => !workspace || perm.startsWith(`${workspace}.`);
   return {
     user,
-    key: `${user.username}|${user.role}|${JSON.stringify(user.custom ?? null)}|${[...(visibleLiveIds() ?? ['*'])].sort().join(',')}`,
-    can: (perm) => can(user, perm),
-    canOpen: (path) => canOpen(user, path),
+    key: `${user.username}|${user.role}|${JSON.stringify(user.custom ?? null)}|${[...(visibleLiveIds() ?? ['*'])].sort().join(',')}|${workspace ?? ''}`,
+    can: (perm) => inWorkspace(perm) && can(user, perm),
+    canOpen: (path) => (!workspace || workspaceOfPath(path) === workspace) && canOpen(user, path),
     liveFleets: visibleLiveIds(),
-    workspace: workspaceOfPath(typeof location === 'undefined' ? '' : location.pathname),
+    workspace,
     locale: getLocale(),
     site: settingsStore.getState().general.siteName,
     now: Date.now(),

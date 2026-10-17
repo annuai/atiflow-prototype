@@ -6,7 +6,12 @@ import { SOURCES } from '../src/features/notifications/sources';
 import { timeAgo } from '../src/features/notifications/copy';
 import { localApi, restApi } from '../src/features/notifications/api';
 import { createNotificationStore } from '../src/features/notifications/store';
-import type { AppNotification, NewNotification, NotificationApi } from '../src/features/notifications/types';
+import {
+  audienceOf,
+  type AppNotification,
+  type NewNotification,
+  type NotificationApi,
+} from '../src/features/notifications/types';
 import type { PublicUser } from '../src/features/auth/types';
 import type { RobotTelemetry } from '../src/core/types';
 
@@ -318,5 +323,54 @@ describe('time', () => {
     expect(timeAgo(t, t + 5 * 60_000)).toBe('5 min ago');
     expect(timeAgo(t, t + 3 * 3_600_000)).toBe('3 h ago');
     expect(timeAgo(t, t + 50 * 3_600_000)).toBe('2 d ago');
+  });
+});
+
+describe('notifications belong to the open workspace', () => {
+  const user = {
+    username: 'meera',
+    role: 'configurator',
+    custom: { add: ['supervisor.live-floor', 'operator.book-trip'], remove: [] },
+  } as unknown as PublicUser;
+  it('a notification says which workspace it is for; older saved ones are placed by their kind', () => {
+    expect(audienceOf({ kind: 'mes' })).toBe('configurator');
+    expect(audienceOf({ kind: 'stock' })).toBe('configurator');
+    expect(audienceOf({ kind: 'trip' })).toBe('operator');
+    expect(audienceOf({ kind: 'approval' })).toBe('operator');
+    expect(audienceOf({ kind: 'blocked' })).toBe('supervisor');
+    expect(audienceOf({ kind: 'mes', audience: 'operator' })).toBe('operator'); // what a backend says wins
+  });
+  it('the local sources tag every notification with the workspace of the source (a person with several workspaces collects all of them)', () => {
+    const got: NewNotification[] = [];
+    const src = (kind: NewNotification['kind']) => () => [
+      {
+        start: (emit: (l: NewNotification[]) => void) => (
+          emit([{ id: kind, kind, level: 'info', title: kind, at: 1 }]),
+          () => {}
+        ),
+      },
+    ];
+    localApi({ supervisor: src('blocked'), configurator: src('mes'), operator: src('trip') }).subscribe(user, (l) =>
+      got.push(...l),
+    );
+    expect(Object.fromEntries(got.map((x) => [x.id, x.audience]))).toEqual({
+      blocked: 'supervisor',
+      mes: 'configurator',
+      trip: 'operator',
+    });
+  });
+  it('"mark all as read" in one workspace leaves the other workspaces\' notifications unread', () => {
+    const store = createNotificationStore(
+      { subscribe: () => () => {} },
+      () => ({ read: () => [], save: () => {}, clear: () => {} }) as never,
+    );
+    store.getState().open(user);
+    store.getState().add([
+      { id: 'a', kind: 'mes', level: 'info', title: 'a', at: 2, audience: 'configurator' },
+      { id: 'b', kind: 'blocked', level: 'warn', title: 'b', at: 1, audience: 'supervisor' },
+    ]);
+    store.getState().markAllRead('configurator');
+    const read = Object.fromEntries(store.getState().items.map((x) => [x.id, x.read]));
+    expect(read).toEqual({ a: true, b: false });
   });
 });
