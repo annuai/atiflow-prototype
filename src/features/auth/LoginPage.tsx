@@ -8,7 +8,7 @@ import type { PublicUser } from './types';
 import { notify } from '@/ui/toast';
 import { LanguageSelect } from '@/components/data/LanguageSelect';
 import { copy } from './copy';
-import bg from './assets/login-bg.jpg';
+import bg from './assets/login-bg.webp';
 import logo from '@/ui/icons/ati-flow-logo.svg'; // the Ati Flow logo (white on dark; same one as the sidebar)
 import robot from '@/assets/robots/sherpa-xt-lite.svg';
 import ribbonTip from './assets/ribbon-tip.svg';
