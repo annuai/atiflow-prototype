@@ -47,10 +47,10 @@ export function useSimulationPanel(data: MapData | undefined, fleetLive: string 
       else if (sel.id !== choice.start) setChoice({ ...choice, end: sel.id });
     },
     run() {
-      if (!data || !fleetLive) return;
+      if (!data) return; // an imported map no fleet runs yet has the empty fleet id: that is a valid map to simulate on
       const a = data.stations.find((x) => x.id === choice.start),
         b = data.stations.find((x) => x.id === choice.end);
-      const p = planTrip(data, fleetLive, choice.start, choice.end);
+      const p = planTrip(data, fleetLive ?? '', choice.start, choice.end);
       if (!p.ok || !a || !b) {
         setError(
           !p.ok && p.reason === 'same'
