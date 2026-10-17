@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { Skeleton } from '@/components/skeleton/Skeleton';
 import { fleetDirectory } from '@/data/fleetDirectory';
@@ -38,6 +38,7 @@ import { publishProblems } from './model/validate';
 import { moveShape } from './model/shape';
 import { deleteZone, setZoneShape } from './model/zones';
 import { zoneType } from './model/zoneTypes';
+import { buildMapZip, download } from './model/exportMap';
 import { importedSite } from './model/importedSite';
 import { seedMapData } from './model/seed';
 import { useSimulationPanel } from './sim/useSimulationPanel';
@@ -56,6 +57,7 @@ export function MapEditorPage() {
     return () => document.documentElement.classList.remove('map-editor-open');
   }, []);
   const map = useMap(id);
+  const navigate = useNavigate();
   const imported = map?.source === 'imported',
     mapName = map?.name ?? '';
   const user = useAuth((s) => s.user)!;
@@ -199,6 +201,14 @@ export function MapEditorPage() {
     : current.number === latest?.number
       ? { label: copy.published(current.number!), color: 'success' as const }
       : { label: copy.viewing(current.number!), color: 'gray' as const };
+  const exportZip = async () => {
+    try {
+      download(await buildMapZip(map, data), `${map.name}.zip`);
+      notify.success(copy.exportMap.done(map.name), copy.exportMap.doneBody, 'map-export');
+    } catch {
+      notify.error(copy.exportMap.failed, undefined, 'map-export');
+    }
+  };
   const startDraft = () => {
     mapVersionsStore.getState().startDraft(id, user.name);
     setViewing('draft');
@@ -262,6 +272,8 @@ export function MapEditorPage() {
           onHistory={() => setHistoryOpen(true)}
           onPublish={() => setPublishOpen(true)}
           onEdit={startDraft}
+          on3d={data.structure || data.dwg ? () => navigate(`/configurator/maps/${id}/3d`) : undefined}
+          onExport={data.source ? exportZip : undefined}
         />
         <VersionBanner
           current={current}

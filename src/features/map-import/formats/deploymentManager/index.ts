@@ -14,7 +14,18 @@ import {
 
 /** Names of the files of a Deployment Manager map folder. A better export may add files; unknown ones are listed, never an error. */
 const FILES = { ui: 'webui_map.json', meta: 'yelli_meta.json', grid: 'yelli_map.npz', poses: 'yelli_poses.npy' };
-const KNOWN = [FILES.ui, FILES.meta, FILES.grid, FILES.poses, 'yelli_frames.npy', 'yelli_map.png', 'webui_map.png'];
+const KNOWN = [
+  FILES.ui,
+  FILES.meta,
+  FILES.grid,
+  FILES.poses,
+  'yelli_frames.npy',
+  'yelli_map.png',
+  'webui_map.png',
+  'map.json',
+];
+/** The folder this app writes its own files into: the Deployment Manager ignores it. */
+export const ATI_FOLDER = 'ati_flow';
 
 const num = z.coerce.number().finite();
 const stationSchema = z
@@ -116,6 +127,19 @@ function readGrid(entries: Entries, warnings: ImportWarning[], minLevel: number,
   return { grid: g, cells: width * height, kept, removed };
 }
 
+/** What an earlier export of this app left in `ati_flow/map.json` (a damaged file is only a warning: the Deployment Manager's files are enough to open the map). */
+function readAti(entries: Entries, warnings: ImportWarning[]): Record<string, unknown> | null {
+  const key = Object.keys(entries).find((p) => p === `${ATI_FOLDER}/map.json` || p.endsWith(`/${ATI_FOLDER}/map.json`));
+  if (!key) return null;
+  try {
+    const j = JSON.parse(new TextDecoder().decode(entries[key]));
+    return j && typeof j === 'object' && j.schema === 1 ? (j as Record<string, unknown>) : null;
+  } catch {
+    warnings.push({ code: 'ati.invalid', level: 'info' });
+    return null;
+  }
+}
+
 function readPath(entries: Entries, warnings: ImportWarning[]): [number, number][] {
   const b = findEntry(entries, FILES.poses);
   if (!b) return [];
@@ -158,6 +182,7 @@ export const deploymentManager: MapImporter = {
       names.add(k);
     }
     warnings.push({ code: 'content.noRoutes', level: 'info' });
+    const ati = readAti(entries, warnings);
     const unread = Object.keys(entries).filter((p) => !KNOWN.includes(p.split('/').pop() ?? p));
     return {
       format: 'deployment-manager',
@@ -166,6 +191,7 @@ export const deploymentManager: MapImporter = {
       stations,
       path,
       grid,
+      ati,
       unread,
       stats: { gridCells: cells, keptCells: kept, removedSpecks: removed, pathPoints: path.length },
       warnings,

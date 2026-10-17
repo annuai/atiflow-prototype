@@ -45,6 +45,8 @@ export interface ImportedMap {
   /** The path the robot drove while it mapped, in metres from the origin (a hint for drawing roads). */
   path: [number, number][];
   grid: GridImage | null;
+  /** What this app wrote into the zip's `ati_flow/map.json` on an earlier export (roads, zones, ...): reading it back means nothing is lost on a round trip to the Deployment Manager. */
+  ati: Record<string, unknown> | null;
   /** Files of the zip nobody read (a better export may carry routes or zones we do not know yet). */
   unread: string[];
   /** Counts for the review step. */

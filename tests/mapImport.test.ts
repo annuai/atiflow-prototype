@@ -7,6 +7,19 @@ import { crop, halve, pyramid, removeSpecks, worldRect } from '@/features/map-im
 import { readZip } from '@/features/map-import/core/zip';
 import { importEntries } from '@/features/map-import/formats/registry';
 import { ImportError } from '@/features/map-import/core/types';
+import { exportMapZip } from '@/features/map-import/export';
+import {
+  alignmentScore,
+  applyPoint,
+  autoAlign,
+  IDENTITY,
+  parseLayout,
+  refineAlignment,
+  samplePoints,
+  solveSimilarity,
+  transformLayout,
+} from '@/features/map-import/core/dwg';
+import { extractStructure } from '@/features/map-import/core/walls';
 import { prepareImport } from '@/features/map-import/core/prepare';
 import { buildMapData } from '@/features/map-import/build';
 import { mapVersionsStore } from '@/features/map-editor/model/store';
@@ -161,5 +174,183 @@ describe('creating a map from an import', () => {
     expect(mapVersionsStore.getState().publish('m1', 'tester')).toBe(5);
     mapVersionsStore.getState().startDraft('m1', 'tester');
     expect(mapVersionsStore.getState().publish('m1', 'tester')).toBe(6);
+  });
+});
+
+describe('walls and objects from the grid', () => {
+  const rectGrid = () => {
+    // a 10 m x 6 m room with 8 cm thick walls, a 0.6 m pillar inside and one speck outside (2 cm cells)
+    const w = 600,
+      h = 400,
+      alpha = new Uint8Array(w * h);
+    const fill = (x0: number, y0: number, x1: number, y1: number) => {
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) alpha[y * w + x] = 255;
+    };
+    fill(50, 50, 550, 54);
+    fill(50, 346, 550, 350);
+    fill(50, 50, 54, 350);
+    fill(546, 50, 550, 350);
+    fill(300, 200, 330, 230);
+    fill(10, 10, 12, 12);
+    return { res: 0.02, width: w, height: h, originCol: 50, originRow: 350, alpha };
+  };
+  it('finds the room as wall lines, the pillar as one box, and drops the speck', () => {
+    const s = extractStructure(rectGrid());
+    expect(s.equipment).toHaveLength(1);
+    expect(s.equipment[0].w).toBeCloseTo(0.6, 0);
+    const len = s.walls.reduce((n, w) => n + Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]), 0);
+    expect(len).toBeGreaterThan(30); // the perimeter is 32 m
+    expect(len).toBeLessThan(36);
+    expect(s.walls.length).toBeLessThan(12); // straight lines, not a pile of pixels
+    for (const w of s.walls)
+      for (const [x, y] of [w.a, w.b]) expect(x >= -0.3 && x <= 10.3 && y >= -0.3 && y <= 6.3).toBe(true);
+  });
+  it('turns the sample map into a plausible building', () => {
+    const t0 = performance.now();
+    const grid = importEntries(readZip(sampleZip())).grid!;
+    const s = extractStructure(grid);
+    expect(s.walls.length).toBeGreaterThan(20);
+    expect(s.walls.length).toBeLessThan(4000);
+    expect(performance.now() - t0).toBeLessThan(8000);
+  });
+});
+
+describe('export back to the Deployment Manager', () => {
+  const orig = sampleZip();
+  const prepared = prepareImport(orig);
+  const data = () =>
+    buildMapData(
+      prepared,
+      prepared.levels.map((_, i) => `a${i}`),
+    );
+  it('writes positions into webui_map.json, keeps every other file byte for byte, adds our own folder', () => {
+    let d = data();
+    d = moveStation(d, d.stations[0].id, { x: 4.5, y: -2.25 });
+    d = { ...d, stations: d.stations.map((s, i) => (i === 0 ? { ...s, name: 'Dock A', type: 'charge' as const } : s)) };
+    const out = readZip(exportMapZip({ original: orig, data: d, name: 'test_annuai', version: 'v5' }));
+    const ui = JSON.parse(new TextDecoder().decode(out['test_annuai/map/webui_map.json']));
+    expect(ui.stations['1']).toMatchObject({ name: 'Dock A', x: 4.5, y: -2.25, charging: true });
+    expect(ui.stations['1'].three_point_turn).toBeDefined(); // a field we do not edit is untouched
+    expect(ui.stations['3'].station_tags).toContain('parking');
+    expect(Object.keys(ui.stations)).toHaveLength(23);
+    const before = readZip(orig);
+    for (const k of ['yelli_map.npz', 'yelli_meta.json', 'yelli_poses.npy', 'yelli_frames.npy'])
+      expect(out[`test_annuai/map/${k}`]).toEqual(before[`test_annuai/map/${k}`]);
+    expect(out['test_annuai/map/ati_flow/map.json']).toBeDefined();
+  });
+  it('a station we added gets the next Deployment Manager id', () => {
+    const d = data();
+    const extra = {
+      ...d.stations[0],
+      id: 'STA-999',
+      externalId: undefined,
+      unplaced: undefined,
+      name: 'New',
+      extra: undefined,
+      nodeId: 'N-999',
+    };
+    const out = readZip(
+      exportMapZip({
+        original: orig,
+        data: {
+          ...d,
+          stations: [...d.stations, extra],
+          nodes: [...d.nodes, { id: 'N-999', x: 1, y: 2, kind: 'station' }],
+        },
+        name: 'x',
+        version: 'v5',
+      }),
+    );
+    const ui = JSON.parse(new TextDecoder().decode(out['test_annuai/map/webui_map.json']));
+    expect(ui.stations['24']).toMatchObject({ name: 'New', x: 1, y: 2 });
+  });
+  it('importing our own export brings everything back (roads, zones, moved stations) and the Deployment Manager still reads it', () => {
+    let d = data();
+    d = moveStation(d, d.stations[0].id, { x: 4.5, y: -2.25 });
+    d = {
+      ...d,
+      zones: [
+        {
+          id: 'Z1',
+          type: 'no-go',
+          name: 'Nope',
+          shape: { kind: 'rect', cx: 0, cy: 0, w: 1, h: 1, rot: 0 },
+          polygon: [],
+          props: {},
+        },
+      ],
+    };
+    const again = prepareImport(exportMapZip({ original: orig, data: d, name: 'test_annuai', version: 'v5' }));
+    expect(again.map.ati).not.toBeNull();
+    const back = buildMapData(
+      again,
+      again.levels.map((_, i) => `a${i}`),
+    );
+    expect(back.zones.map((z) => z.id)).toEqual(['Z1']);
+    expect(back.stations).toHaveLength(23);
+    const s1 = back.stations.find((s) => s.externalId === '1')!;
+    expect(s1.unplaced).toBeUndefined();
+    expect(back.nodes.find((n) => n.id === s1.nodeId)).toMatchObject({ x: 4.5, y: -2.25 });
+  });
+  it('makes a minimal folder when there is no original zip', () => {
+    const out = readZip(exportMapZip({ original: null, data: data(), name: 'm', version: 'v2' }));
+    expect(Object.keys(out).sort()).toEqual(['map/ati_flow/map.json', 'map/webui_map.json']);
+  });
+});
+
+describe('laying a DWG over the map', () => {
+  const wall = (ax: number, ay: number, bx: number, by: number) => ({
+    a: [ax, ay] as [number, number],
+    b: [bx, by] as [number, number],
+    t: 0.2,
+    h: 3,
+    layer: 'x',
+  });
+  const room = [wall(0, 0, 10, 0), wall(10, 0, 10, 6), wall(10, 6, 0, 6), wall(0, 6, 0, 0)];
+  it('two matching pairs give the exact move', () => {
+    const t = solveSimilarity([
+      { from: [0, 0], to: [5, 5] },
+      { from: [10, 0], to: [5, 15] }, // turned a quarter turn, 1x scale
+    ]);
+    expect(t.scale).toBeCloseTo(1);
+    expect(t.rot).toBeCloseTo(Math.PI / 2);
+    const [x, y] = applyPoint(t, [0, 6]);
+    expect([x, y].map((v) => Math.round(v * 100) / 100)).toEqual([-1, 5]);
+  });
+  it('refines a drawing that is a little off back onto the lidar walls', () => {
+    const lidar = room;
+    const off = { scale: 1.01, rot: 0.03, dx: 0.5, dy: -0.4 };
+    const drawing = transformLayout({ walls: room, equipment: [], floorPolygons: [] }, off).walls; // the drawing as supplied: moved away
+    const { t, score } = refineAlignment(drawing, lidar, IDENTITY);
+    expect(score).toBeGreaterThan(0.9);
+    expect(Math.abs(t.dx)).toBeLessThan(0.5); // moved most of the way back
+    expect(alignmentScore(samplePoints(drawing), lidar, t)).toBeGreaterThan(
+      alignmentScore(samplePoints(drawing), lidar, IDENTITY),
+    );
+  });
+  it('accepts the layout the DWG import writes and refuses anything else', () => {
+    expect(parseLayout({ walls: [{ a: [0, 0], b: [1, 1] }] })?.walls).toHaveLength(1);
+    expect(parseLayout({ walls: [] })).toBeNull();
+    expect(parseLayout('nope')).toBeNull();
+  });
+});
+
+describe('auto alignment', () => {
+  const w = (ax: number, ay: number, bx: number, by: number) => ({
+    a: [ax, ay] as [number, number],
+    b: [bx, by] as [number, number],
+    t: 0.2,
+    h: 3,
+    layer: 'x',
+  });
+  const lidar = [w(-5, -3, 5, -3), w(5, -3, 5, 3), w(5, 3, -5, 3), w(-5, 3, -5, -3), w(0, -3, 0, 3)]; // a room with a partition, around the origin
+  it('finds a drawing that is turned a quarter and far away', () => {
+    const away = { scale: 1, rot: Math.PI / 2, dx: 100, dy: 40 };
+    const drawing = transformLayout({ walls: lidar, equipment: [], floorPolygons: [] }, away).walls;
+    const { t, score } = autoAlign(drawing, lidar);
+    expect(score).toBeGreaterThan(0.85);
+    // the room is symmetric, so a half turn is as good a match: what counts is that every wall of the drawing lies on a lidar wall
+    expect(alignmentScore(samplePoints(drawing), lidar, t, 0.1)).toBeGreaterThan(0.85);
+    expect(Math.hypot(t.dx, t.dy)).toBeGreaterThan(0); // and it did move
   });
 });

@@ -60,6 +60,7 @@ const OperatorHistoryPage = lazy(() =>
   import('@/features/operator-history/OperatorHistoryPage').then((m) => ({ default: m.OperatorHistoryPage })),
 );
 const ApprovePage = lazy(() => import('@/features/requests/ApprovePage').then((m) => ({ default: m.ApprovePage })));
+const Map3dPage = lazy(() => import('@/features/map-3d').then((m) => ({ default: m.Map3dPage })));
 const MapEditorPage = lazy(() =>
   import('@/features/map-editor/MapEditorPage').then((m) => ({ default: m.MapEditorPage })),
 );
@@ -201,6 +202,7 @@ export function AppRoot() {
               <Route path="/configurator/settings/:tab?" element={<SettingsPage />} />
               <Route path="/configurator/maps" element={<MapsPage />} />
               <Route path="/configurator/maps/:id" element={<MapEditorPage />} />
+              <Route path="/configurator/maps/:id/3d" element={<Map3dPage />} />
             </Route>
             <Route path="/no-access" element={<NoAccessPage />} />
             <Route path="*" element={<RootRedirect />} />

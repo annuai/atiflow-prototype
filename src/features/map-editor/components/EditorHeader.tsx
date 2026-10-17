@@ -1,4 +1,4 @@
-import { ClockRewind, Map01, ReverseLeft, ReverseRight, Rocket01 } from '@untitledui/icons';
+import { ClockRewind, Cube01, Download01, Map01, ReverseLeft, ReverseRight, Rocket01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
@@ -25,6 +25,8 @@ export function EditorHeader({
   onHistory,
   onPublish,
   onEdit,
+  on3d,
+  onExport,
 }: {
   canUndo: boolean;
   canRedo: boolean;
@@ -41,6 +43,10 @@ export function EditorHeader({
   onHistory(): void;
   onPublish(): void;
   onEdit(): void;
+  /** open the 3D view (when the map has walls to show) */
+  on3d?(): void;
+  /** download the map for the Deployment Manager (imported maps) */
+  onExport?(): void;
 }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-3 border-b border-secondary px-4 py-2">
@@ -100,6 +106,26 @@ export function EditorHeader({
           <ButtonGroupItem id="design">{copy.design}</ButtonGroupItem>
           <ButtonGroupItem id="simulation">{copy.simulation}</ButtonGroupItem>
         </ButtonGroup>
+        {on3d && (
+          <ButtonUtility
+            size="sm"
+            color="secondary"
+            icon={Cube01}
+            tooltip={copy.view3d.button}
+            aria-label={copy.view3d.button}
+            onPress={on3d}
+          />
+        )}
+        {onExport && (
+          <ButtonUtility
+            size="sm"
+            color="secondary"
+            icon={Download01}
+            tooltip={copy.exportMap.button}
+            aria-label={copy.exportMap.button}
+            onPress={onExport}
+          />
+        )}
         <ButtonUtility
           size="sm"
           color="secondary"

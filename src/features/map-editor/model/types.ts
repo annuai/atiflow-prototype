@@ -1,4 +1,4 @@
-import type { Lane, NavNode, Station } from '@/core/types';
+import type { Equipment, Lane, NavNode, Station, Wall } from '@/core/types';
 
 /** The kinds of zone a map can hold. Add a type in `zoneTypes.ts`; nothing else needs to know. */
 export type ZoneTypeId = string;
@@ -78,6 +78,18 @@ export interface MapBase {
   /** Biggest first. */ levels: MapBaseLevel[];
 }
 
+/** Walls and machines for the 3D view, in metres from the map origin. */
+export interface MapStructure {
+  walls: Wall[];
+  equipment: Equipment[];
+}
+/** A client drawing (DWG, already turned into walls by the DWG import) laid over the map: `layout` as imported, `transform` = how it was moved onto the map. */
+export interface MapDwg {
+  name: string;
+  layout: MapStructure & { floorPolygons: [number, number][][] };
+  transform: { scale: number; rot: number; dx: number; dy: number };
+}
+
 /** Everything a map holds: its own network (nodes, one-way lanes grouped in roads), its stations, staging areas and zones. The editor changes this; the floor will read the published one. */
 export interface MapData {
   nodes: NavNode[];
@@ -90,6 +102,10 @@ export interface MapData {
   base?: MapBase;
   /** The file this map was imported from (kept as a stored asset so it can be exported again). */
   source?: { assetId: string; fileName: string; format: string };
+  /** Walls and machines estimated from the lidar grid (imported maps). */
+  structure?: MapStructure;
+  /** The client's DWG laid over the map: when present, the 3D view uses its (accurate) walls. */
+  dwg?: MapDwg;
   /** The path the robot drove while it mapped, metres: a hint for drawing roads (imported maps). */
   path?: [number, number][];
 }
