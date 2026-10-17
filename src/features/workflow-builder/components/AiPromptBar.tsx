@@ -19,7 +19,7 @@ export function AiPromptBar() {
   };
   return (
     <form className="float cmd" data-no-pan data-wf-ai onSubmit={submit}>
-      <span className="ai">
+      <span className="wf-ai-mark">
         <Stars02 className="size-4" />
       </span>
       <Input
