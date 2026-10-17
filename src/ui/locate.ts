@@ -71,6 +71,37 @@ export function takePendingLocate(): string | null {
   return p;
 }
 
+/**
+ * Locate something that may not have been reported yet (the page was just opened with `?focus=robot:AMR-007`, before the fleet's first report): runs at once when it is known, otherwise as
+ * soon as it appears (for at most 20 s). Returns a function that cancels the wait.
+ */
+export function locateWhenKnown(id: string, kind: 'robot' | 'station'): () => void {
+  const known = () =>
+    kind === 'robot' ? !!store.getState().robots[id] : !!store.getState().nav?.stations.some((q) => q.id === id);
+  if (known()) {
+    locateTarget(id);
+    return () => {};
+  }
+  let waiting = true;
+  let later: ReturnType<typeof setTimeout> | undefined;
+  const off = store.subscribe(() => {
+    if (!waiting || !known()) return;
+    waiting = false;
+    off();
+    later = setTimeout(() => locateTarget(id), 60); // the 3D scene gets the same report a moment later
+  });
+  const giveUp = setTimeout(() => {
+    waiting = false;
+    off();
+  }, 20_000);
+  return () => {
+    waiting = false;
+    off();
+    clearTimeout(giveUp);
+    clearTimeout(later);
+  };
+}
+
 /** Select a robot or station and fly the Live Floor camera to it (leaving walk / follow mode, and clearing a fleet filter that would hide it). */
 export function locateTarget(id: string) {
   const s = store.getState();

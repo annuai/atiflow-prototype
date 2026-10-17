@@ -229,6 +229,9 @@ export class Engine {
   setScenes(sources: SceneSource[], show: string[]) {
     if (this.active.length) this.manager.remember(this.activeKey, this.pose());
     const want = sources.filter((src) => show.includes(src.key));
+    // the same scenes asked for again (the page does it whenever it becomes ready or its fleet is confirmed): nothing is reloaded, so the camera is left alone and a flight that is
+    // already under way (Locate on map) is not cancelled by a reframe
+    const unchanged = this.active.length > 0 && SceneManager.setKey(want.map((src) => src.key)) === this.activeKey;
     want.forEach((src) => this.manager.ensure(src));
     this.active = this.manager.show(want.map((src) => src.key));
     this.activeKey = SceneManager.setKey(want.map((src) => src.key));
@@ -243,7 +246,7 @@ export class Engine {
     if (st.selectedId && !this.robotObjects().some((o) => o.userData.robotId === st.selectedId)) st.select(null);
     if (st.selectedStationId && !this.stationPos(st.selectedStationId)) st.selectStation(null);
     if (st.activeZoneId && !this.zones.some((z) => z.id === st.activeZoneId)) st.setZone(null);
-    this.frameActive();
+    if (!unchanged) this.frameActive();
     this.applyLayers();
     this.refreshZones();
   }
@@ -526,6 +529,9 @@ export class Engine {
     }
     const s = store.getState();
     this.applyFilter(s.fleetId, s.query);
+    const want = this.pendingFocus;
+    if (want && this.robots.has(want.id)) this.focusRobot(want.id);
+    else if (want && performance.now() > want.until) this.pendingFocus = null;
   }
   private tintDot(r: RobotVis, c: string) {
     const m = r.dot.material as THREE.SpriteMaterial;
@@ -761,9 +767,15 @@ export class Engine {
     this.incoming.geometry.setFromPoints(pts);
     this.incoming.visible = pts.length > 0;
   }
+  /** A robot to fly to as soon as its first report has made it (Locate on map right after the page opened, before the fleet has told us where the robot is). */
+  private pendingFocus: { id: string; until: number } | null = null;
   focusRobot(id: string) {
     const r = this.robots.get(id);
-    if (!r) return;
+    if (!r) {
+      this.pendingFocus = { id, until: performance.now() + 20_000 };
+      return;
+    }
+    this.pendingFocus = null;
     store.getState().select(id);
     const p = r.group.position.clone();
     this.flyTo(

@@ -25,7 +25,7 @@ import { LocateBox } from './LocateBox';
 import { feed } from './liveFeed';
 import { chooseFleet, visibleFleetIds } from './defaultFleet';
 import { showFor } from './world/scenes';
-import { locateTarget, takePendingLocate } from '@/ui/locate';
+import { locateTarget, locateWhenKnown, takePendingLocate } from '@/ui/locate';
 import { copy } from '@/ui/copy';
 
 /** Supervisor home: the 3D live floor. Content only; chrome comes from AppShell. */
@@ -102,8 +102,8 @@ export function LiveFloorPage() {
     if (!ready || !f) return;
     const [kind, ...rest] = f.split(':');
     const id = decodeURIComponent(rest.join(':'));
-    if (kind === 'robot' || kind === 'station') locateTarget(id);
-    else if (kind === 'zone') handle.engine?.focusZone(id);
+    if (kind === 'robot' || kind === 'station') return locateWhenKnown(id, kind); // (waits for the first report of a robot that is not known yet)
+    if (kind === 'zone') handle.engine?.focusZone(id);
     else if (kind === 'fleet') {
       store.getState().setFleet(id);
       store.getState().setNav(`fleet:${id}`);

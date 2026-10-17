@@ -108,3 +108,28 @@ test.describe('Global search', () => {
     await expect(page.getByText('/configurator/users')).toHaveCount(0); // and Users is a configurator page
   });
 });
+
+test.describe('Locate on map really flies the camera to the robot', () => {
+  const zoom = async (page: import('@playwright/test').Page) =>
+    Number(((await page.locator('.zoom').innerText()).match(/(\d+)\s*%/) ?? [])[1]);
+  test('opened from the address and from the search, the camera ends close to the robot (not at the home view)', async ({
+    page,
+  }) => {
+    await signIn(page, 'arjun');
+    await page.goto('/supervisor/livefloor');
+    await expect(page.locator('canvas')).toBeVisible();
+    await page.waitForTimeout(3000);
+    const home = await zoom(page);
+    // straight from an address (a reload: the fleet has not reported the robot yet when the scene is ready)
+    await page.goto('/supervisor/livefloor?focus=robot:AMR-007');
+    await expect(page.getByText('AMR-007').first()).toBeVisible({ timeout: 25_000 });
+    await expect.poll(() => zoom(page), { timeout: 15_000 }).toBeGreaterThan(home + 25);
+    // from the search result, inside the running app
+    await page.goto('/supervisor/dashboard');
+    await find(page, 'r-03'); // "R-03" means AMR-003
+    await page.getByRole('option').first().click();
+    await expect(page).toHaveURL(/focus=robot:AMR-003/);
+    await expect(page.getByText('AMR-003').first()).toBeVisible({ timeout: 25_000 });
+    await expect.poll(() => zoom(page), { timeout: 15_000 }).toBeGreaterThan(home + 25);
+  });
+});
