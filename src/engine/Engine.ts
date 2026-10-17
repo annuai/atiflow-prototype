@@ -1126,6 +1126,10 @@ export class Engine {
     document.removeEventListener('pointerlockchange', this.onLock);
     document.removeEventListener('mousemove', this.onLook);
     this.resizeObserver?.disconnect();
+    // OrbitControls puts a keydown listener on the canvas's root node (the document) and takes it off through the same call: once the page has already
+    // removed the canvas, that root is the detached canvas itself and the document keeps the listener (and this Engine) for good, so put the canvas back first
+    const canvas = this.renderer.domElement;
+    if (!canvas.isConnected) document.body.appendChild(canvas);
     this.controls.dispose();
     this.renderer.dispose();
     this.renderer.forceContextLoss(); // the browser allows only a handful of live WebGL contexts

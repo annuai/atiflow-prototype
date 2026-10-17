@@ -26,4 +26,17 @@ test.describe('fleets', () => {
     await expect(page).toHaveURL(/Night%20Fleet/);
     await expect(page.getByRole('heading', { name: 'Night Fleet' })).toBeVisible();
   });
+
+  test('a fleet is deleted from the danger zone of its Settings tab, after typing its name', async ({ page }) => {
+    await page.goto('/configurator/fleets/Assembly%20Fleet/settings');
+    await expect(page.getByText('Danger zone')).toBeVisible();
+    await page.getByRole('button', { name: 'Delete fleet' }).click();
+    const confirm = page.getByRole('button', { name: 'Delete fleet' }).last();
+    await expect(confirm).toBeDisabled(); // not before the name is typed
+    await page.getByRole('textbox').last().fill('Assembly Fleet');
+    await confirm.click();
+    await expect(page).toHaveURL(/\/configurator\/fleets$/);
+    await expect(page.getByRole('heading', { name: 'Assembly Fleet' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Line Side Fleet' })).toBeVisible();
+  });
 });

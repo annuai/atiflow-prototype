@@ -21,6 +21,8 @@ export interface DatasetState extends DatasetData {
   addFleet(name: string): FleetRecord;
   /** Renames the fleet and every robot / hardware assigned to it. */
   renameFleet(from: string, to: string): void;
+  /** Removes the fleet; its robots and hardware stay registered and become unassigned. */
+  removeFleet(name: string): void;
   addDevice(kind: DeviceKindId, values: Record<string, FieldValue>): void;
   updateDevice(kind: DeviceKindId, name: string, values: Record<string, FieldValue>): void;
   removeDevice(kind: DeviceKindId, name: string): void;
@@ -76,6 +78,15 @@ export const datasetStore = createStore<DatasetState>((set, get) => ({
       fleets: get().fleets.map((f) => (f.name === from ? { ...f, name: to } : f)),
       robot: move(get().robot),
       hardware: move(get().hardware),
+    });
+  },
+  removeFleet(name) {
+    const free = (list: Device[]) =>
+      list.map((d) => (d.values.fleet === name ? { ...d, values: { ...d.values, fleet: '' } } : d));
+    set({
+      fleets: get().fleets.filter((f) => f.name !== name),
+      robot: free(get().robot),
+      hardware: free(get().hardware),
     });
   },
   // new records start Offline: they have not connected yet

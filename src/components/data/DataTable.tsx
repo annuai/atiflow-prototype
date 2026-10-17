@@ -33,7 +33,7 @@ interface Props<T> {
   /** Makes rows clickable (keyboard accessible). */
   onRowAction?(row: T): void;
   selection?: RowSelection;
-  /** Keep the heading row visible while the body scrolls (use inside a height-limited box). */
+  /** The heading row stays at the top of the scrolling box while the rows scroll under it (default: on; pass `false` for a table that never scrolls). */
   stickyHeader?: boolean;
   minWidth?: number;
   /** No zebra striping and a white heading row (flat tables inside a card). */
@@ -54,7 +54,7 @@ export function DataTable<T>({
   columns,
   onRowAction,
   selection,
-  stickyHeader,
+  stickyHeader = true,
   minWidth,
   plain,
   progressive,
@@ -99,7 +99,9 @@ export function DataTable<T>({
           ? { selectionMode: 'multiple' as const, selectedKeys, onSelectionChange, disabledKeys: disabled }
           : {})}
       >
-        <Table.Header className={cx(plain && 'bg-primary', stickyHeader && 'sticky top-0 z-10')}>
+        <Table.Header
+          className={cx(plain && 'bg-primary', stickyHeader && 'sticky top-[var(--table-sticky-top,0px)] z-10')}
+        >
           {columns.map((c, i) => (
             <Table.Head
               key={c.id}
@@ -109,7 +111,7 @@ export function DataTable<T>({
               label={c.header}
               tooltip={c.hint}
               className={cx(
-                stickyHeader && 'sticky top-0 z-10',
+                stickyHeader && 'sticky top-[var(--table-sticky-top,0px)] z-10',
                 plain ? 'bg-primary' : stickyHeader && 'bg-secondary',
                 c.headClassName,
               )}

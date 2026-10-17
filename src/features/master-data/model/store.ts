@@ -18,6 +18,8 @@ export interface MasterDataState {
   assignMaterials(codes: string[], fleet: string): void;
   /** The fleet was renamed: assigned materials follow it. */
   renameFleet(from: string, to: string): void;
+  /** The fleet was deleted: no material is assigned to it any more. */
+  removeFleet(name: string): void;
   unassignMaterial(code: string, fleet: string): void;
   /** Take a material out of Master Data (callers check that no workflow uses it). */
   removeMaterial(code: string): void;
@@ -47,6 +49,12 @@ export const masterDataStore = createStore<MasterDataState>((set, get) => ({
   },
   setMaterialFleets: (code, fleets) =>
     set({ materials: get().materials.map((m) => (m.code === code ? { ...m, fleets, updatedAt: Date.now() } : m)) }),
+  removeFleet: (name) =>
+    set({
+      materials: get().materials.map((m) =>
+        m.fleets.includes(name) ? { ...m, fleets: m.fleets.filter((f) => f !== name) } : m,
+      ),
+    }),
   renameFleet: (from, to) =>
     set({
       materials: get().materials.map((m) =>

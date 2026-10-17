@@ -102,10 +102,11 @@ export function Sidebar({ title, switcher, useNavModel, user, onLogout, open, on
               </button>
             </div>
             <HeaderSwitcher title={title} {...switcher} />
-            {groups.map((g) => (
-              <Group key={g.id} g={g} />
-            ))}
-            <div className="sb-spacer" />
+            <div className="sb-scroll">
+              {groups.map((g) => (
+                <Group key={g.id} g={g} />
+              ))}
+            </div>
             <div className="sb-foot">
               {footerItems.map((it) => (
                 <Item key={it.id} item={it} />

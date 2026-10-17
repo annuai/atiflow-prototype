@@ -60,6 +60,8 @@ export interface WfState {
   createFleet(name: string): boolean;
   /** Rename a fleet everywhere in the workflow store (list + each workflow's fleet). Workflow names are NOT changed. */
   renameFleet(from: string, to: string): void;
+  /** The fleet was deleted: so are its workflows (the open one closes). */
+  removeFleet(name: string): void;
   /** Keep the open workflow as a draft (it would otherwise be discarded when left). */
   saveDraft(): void;
   /** Remove the open workflow if it was never saved or published (called when the user leaves it). */
@@ -174,6 +176,16 @@ export const wfStore = createStore<WfState>((set, get) => {
         workflows: Object.fromEntries(
           Object.entries(get().workflows).map(([id, w]) => [id, w.fleet === from ? { ...w, fleet: to } : w]),
         ),
+      });
+    },
+    removeFleet(name) {
+      const { workflows, current, hist } = get();
+      const gone = Object.keys(workflows).filter((id) => workflows[id].fleet === name);
+      if (!gone.length) return;
+      set({
+        workflows: Object.fromEntries(Object.entries(workflows).filter(([id]) => !gone.includes(id))),
+        hist: Object.fromEntries(Object.entries(hist).filter(([id]) => !gone.includes(id))),
+        current: current && gone.includes(current) ? null : current,
       });
     },
     createFleet(name) {

@@ -171,7 +171,7 @@ export function FleetStationGroups({ fleet, materials, masterGroups, toolbarLeft
               {inGroup.length === 0 ? (
                 <EmptyState icon={Package} title={copy.emptyTitle.groupMaterials} subtext={copy.groups.noMaterials} />
               ) : (
-                <div className="overflow-auto">
+                <div className="overflow-auto sm:overflow-clip">
                   <DataTable
                     plain
                     label={group.name}

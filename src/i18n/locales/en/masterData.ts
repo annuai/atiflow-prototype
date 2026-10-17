@@ -14,7 +14,7 @@ export const masterData = {
     groupFilter: (name: string) => `Group: ${name}`,
     addMore: 'Add more from API',
     add: 'Add Material',
-    columns: { material: 'Material', group: 'Material Group', fleet: 'Fleet' },
+    columns: { material: 'Material', group: 'Material group', fleet: 'Fleet' },
     groupHint: 'Group the material belongs to',
     fleetHint: 'Fleets this material is assigned to. Assign materials from the fleet’s page.',
     unassigned: 'Unassigned',

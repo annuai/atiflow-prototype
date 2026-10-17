@@ -14,6 +14,8 @@ export interface FleetsState {
   unassignMap(fleet: string): void;
   /** The fleet was renamed: move its profile to the new name. */
   renameProfile(from: string, to: string): void;
+  /** The fleet was deleted: drop its profile (map and station groups). */
+  removeProfile(fleet: string): void;
   createGroup(fleet: string, g: { name: string; stationId: string; codes: string[] }): void;
   renameGroup(fleet: string, id: string, name: string): void;
   deleteGroup(fleet: string, id: string): void;
@@ -34,6 +36,10 @@ export const fleetsStore = createStore<FleetsState>((set, get) => {
   };
   return {
     profiles: load(),
+    removeProfile: (fleet) => {
+      const { [fleet]: _gone, ...rest } = get().profiles;
+      set({ profiles: rest });
+    },
     renameProfile: (from, to) => {
       const { [from]: p, ...rest } = get().profiles;
       if (p) set({ profiles: { ...rest, [to]: p } });

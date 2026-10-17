@@ -125,7 +125,7 @@ export function FleetMaterials({ fleet, materials, total, onAssign, onGroup, too
       ) : rows.length === 0 ? (
         <NoResults subtext={copy.materials.noMatch(text)} />
       ) : (
-        <div className="min-h-0 overflow-auto rounded-xl border border-secondary">
+        <div className="min-h-0 overflow-auto rounded-xl border border-secondary sm:overflow-clip">
           <DataTable
             plain
             label={copy.tabs.materials}

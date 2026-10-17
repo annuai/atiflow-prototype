@@ -16,7 +16,7 @@ import { MaterialsPanel } from './components/MaterialsPanel';
 import { WorkflowsPanel } from './components/WorkflowsPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useMap } from './model/maps';
-import { fleetPath } from './paths';
+import { FLEETS_PATH, fleetPath } from './paths';
 import { profileOf, useFleets } from './model/store';
 import { t } from './text';
 import { PageTitleName } from '@/shell/PageTitle';
@@ -43,7 +43,7 @@ export function FleetPage() {
   const workflows = useWorkflow((s) => workflowsOfFleet(s.workflows, name).filter(isKept).length);
   const materials = useMasterData((s) => s.materials).filter((m) => m.fleets.includes(name)).length;
   if (known && renamedFrom) setRenamedFrom('');
-  if (!known && renamedFrom !== name) return <Navigate to="/configurator" replace />; // (a fleet that was just renamed is briefly unknown under its old URL)
+  if (!known && renamedFrom !== name) return <Navigate to={FLEETS_PATH} replace />; // (a fleet that was just renamed is briefly unknown under its old URL)
   if (!active) return <Navigate to={fleetPath(name)} replace />;
   const onRename = (to: string) => {
     setRenamedFrom(name);

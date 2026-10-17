@@ -42,17 +42,10 @@ img {
   padding: var(--sp-2xl) 12px 12px;
   border-radius: var(--r-xl);
   color: var(--sb-text);
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  .sidebar::-webkit-scrollbar {
-    display: none;
-  }
+  overflow: hidden;
   .sidebar > * {
     flex-shrink: 0;
-  } /* on a short screen the menu scrolls (swipe up) instead of being cut off */
+  } /* the logo, the workspace switcher and the footer (notifications, settings, account) never move or shrink */
   background: var(--surface-sidebar);
   box-shadow: 0 10px 15px rgba(15, 23, 32, 0.45);
 }
@@ -180,8 +173,18 @@ img {
     opacity 0.15s ease,
     max-width 0.2s ease;
 }
-.sb-spacer {
-  flex: 1 0 12px;
+/* the part between the workspace switcher and the footer: when there are more items than fit it scrolls (swipe up) and only it scrolls */
+.sidebar > .sb-scroll {
+  flex: 1 1 0;
+  min-height: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.sb-scroll::-webkit-scrollbar {
+  display: none;
 }
 .sb-foot {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -1440,10 +1443,12 @@ body {
   padding: 16px 20px 20px;
   overflow-y: auto;
   gap: 16px;
+  --table-sticky-top: -16px; /* a table heading sticks to the very top of the scrolling card: sticky offsets start inside the padding, so pull it up by the padding */
 }
 @media (max-width: 720px) {
   .md-body {
     padding: 12px;
+    --table-sticky-top: -12px;
   }
 }
 /* A bar above a page card's scrolling body (a tab switch) uses the SAME side padding as the body, so its left edge lines up with the headings below it. */

@@ -100,7 +100,7 @@ export function WorkflowsPanel({ fleet }: { fleet: string }) {
       ) : shown.length === 0 ? (
         <NoResults subtext={t.noMatch(text)} />
       ) : (
-        <div className="overflow-auto rounded-xl border border-secondary">
+        <div className="overflow-auto rounded-xl border border-secondary sm:overflow-clip">
           <DataTable
             plain
             label={t.title}

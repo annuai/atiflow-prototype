@@ -11,7 +11,7 @@ export function DeviceTable({ kind, rows, onOpen }: { kind: DeviceKind; rows: De
     {
       id: 'name',
       sort: (d) => nameOf(d),
-      header: kind.columns.name.toUpperCase(),
+      header: kind.columns.name,
       cell: (d) => (
         <div className="flex items-center gap-3">
           {kind.thumb(d)}
@@ -22,7 +22,7 @@ export function DeviceTable({ kind, rows, onOpen }: { kind: DeviceKind; rows: De
     {
       id: 'type',
       sort: (d) => kind.typeOf(d),
-      header: kind.columns.type.toUpperCase(),
+      header: kind.columns.type,
       cell: (d) => (
         <Badge size="md" type="pill-color" color="gray">
           {kind.typeOf(d)}
@@ -32,13 +32,13 @@ export function DeviceTable({ kind, rows, onOpen }: { kind: DeviceKind; rows: De
     {
       id: 'fleet',
       sort: (d) => String(d.values.fleet ?? ''),
-      header: t.list.columns.fleet.toUpperCase(),
+      header: t.list.columns.fleet,
       cell: (d) => d.values.fleet || <span className="text-quaternary">{t.list.unassigned}</span>,
     },
     {
       id: 'status',
       sort: (d) => d.status,
-      header: t.list.columns.status.toUpperCase(),
+      header: t.list.columns.status,
       headClassName: 'w-32',
       cell: (d) => <StatusBadge status={d.status} />,
     },

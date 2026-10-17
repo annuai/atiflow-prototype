@@ -9,7 +9,22 @@ export const fleets = {
     },
   },
   tabs: { overview: 'Overview', materials: 'Materials', workflows: 'Workflows', settings: 'Settings' },
-  settings: { soon: 'Fleet settings are not part of this prototype yet.' },
+  settings: {
+    zone: 'Danger zone',
+    title: 'Delete this fleet',
+    body: 'This removes the fleet and cannot be undone. The map, the robots, the hardware and the materials themselves are kept.',
+    effects: (r: number, h: number, w: number, m: number, u: number) =>
+      `${n(r, 'robot')} and ${n(h, 'hardware item')} become unassigned, ${n(w, 'workflow')} ${w === 1 ? 'is' : 'are'} deleted, ${n(m, 'material')} ${m === 1 ? 'is' : 'are'} unassigned and ${n(u, 'person', 'people')} lose${u === 1 ? 's' : ''} access to this fleet.`,
+    blocked: (c: number) =>
+      `${n(c, 'trip')} of this fleet ${c === 1 ? 'is' : 'are'} still open. Delete the fleet when they are finished or cancelled.`,
+    button: 'Delete fleet',
+    confirmTitle: (name: string) => `Delete ${name}?`,
+    confirmBody:
+      'The fleet, its workflows and its map assignment are deleted for good. Its robots, hardware and materials become unassigned.',
+    prompt: (name: string) => `Type ${name} to confirm`,
+    confirm: 'Delete fleet',
+    done: (name: string) => ({ title: `${name} deleted`, body: 'The fleet and its workflows are gone.' }),
+  },
   meta: {
     map: (name: string, v: number) => `Map: ${name} · Map version ${v}`,
     noMap: 'No map assigned',

@@ -7,7 +7,7 @@ export const devices = {
       subtitle: 'Add, configure, or remove robots',
       addLabel: 'Add Robot',
       addSubtitle: 'Register a new autonomous mobile robot to your fleet operations.',
-      columns: { name: 'Robot Name', type: 'Robot Type' },
+      columns: { name: 'Robot name', type: 'Robot type' },
       detailHeading: 'Robot Specifications & Metadata',
       detailDescription: 'Basic configuration parameters for the robot',
       empty: {
@@ -22,7 +22,7 @@ export const devices = {
       subtitle: 'Add new hardware and configure them',
       addLabel: 'Add Hardware',
       addSubtitle: 'Register a new hardware device to enhance operations',
-      columns: { name: 'Hardware Name', type: 'Hardware Type' },
+      columns: { name: 'Hardware name', type: 'Hardware type' },
       detailHeading: 'Configuration',
       detailDescription: 'Basic configuration parameters for the hardware',
       previewHeading: 'HARDWARE PREVIEW',
@@ -70,7 +70,7 @@ export const devices = {
     searchLabel: (plural: string) => `Search ${plural.toLowerCase()}`,
     noMatch: (plural: string, q: string) => `No ${plural.toLowerCase()} match “${q}”.`,
     unassigned: 'Unassigned',
-    columns: { fleet: 'ASSIGNED FLEET', status: 'STATUS' },
+    columns: { fleet: 'Assigned fleet', status: 'Status' },
   },
   modal: {
     cancel: 'Cancel',
