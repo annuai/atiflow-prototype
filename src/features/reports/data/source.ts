@@ -42,7 +42,7 @@ export function createReportSource(deps: SourceDeps): ReportSource {
 /** The source in use. The robots are the ones on the Live Floor (same definition: `robotsOnFloor`), so the report and the floor list the same robots. */
 export const reportSource = createReportSource({
   roster: async () => {
-    const { nav } = await feed.ready();
+    const { live: nav } = await feed.ready();
     return robotsOnFloor(
       robotRecords(datasetStore.getState()),
       nav.fleets.map((f) => f.id),

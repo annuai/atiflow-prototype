@@ -9,8 +9,11 @@ import type { WfNode } from './types';
  * (pick, drop, buffer, ASRS; never parking spots or chargers). The map is loaded once and kept; until it is there a fleet has no stations.
  */
 export interface MapData {
+  /** The BASE site and lane map: what a first version of a map is seeded from. */
   site: SiteLayout;
   nav: NavGraph;
+  /** What the floor runs on now: the stations of every fleet that has a map (use this for anything a fleet can drive to). */
+  live: NavGraph;
 }
 let loaded: MapData | null = null;
 let loading: Promise<MapData> | null = null;
@@ -19,6 +22,8 @@ export function loadMap(): Promise<MapData> {
   return (loading ??= feed.ready().then((m) => {
     loaded = m;
     listeners.forEach((l) => l());
+    // a fleet that got a map, a map that was published: the stations a fleet can use changed
+    feed.onWorld(() => void feed.ready().then((n) => ((loaded = n), listeners.forEach((l) => l()))));
     return m;
   }));
 }
@@ -46,7 +51,7 @@ export const liveIdOf = (fleet: string | null) => {
 /** The work stations a fleet can use on the map (ids like STA-101), in map order. Empty until the map is loaded or for a fleet that has no map. */
 export function fleetStations(fleet: string | null, map: MapData | null = loaded): Station[] {
   const id = liveIdOf(fleet);
-  return map && id ? map.nav.stations.filter((s) => isWork(s) && s.fleets.includes(id)) : [];
+  return map && id ? map.live.stations.filter((s) => isWork(s) && s.fleets.includes(id)) : [];
 }
 export function useFleetStations(fleet: string | null): Station[] {
   const m = useMapData();

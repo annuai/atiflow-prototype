@@ -213,7 +213,7 @@ describe("stations come from the fleet's map", () => {
   const nav = JSON.parse(readFileSync('public/sites/ecc/nav.json', 'utf8'));
   it('a fleet offers the work stations of its lane map (never parking or chargers); the Assembly fleet has its own area plus the shared east strip', async () => {
     const { fleetStations } = await import('../src/features/workflow-builder/model/stations');
-    const map = { site: {} as never, nav };
+    const map = { site: {} as never, nav, live: nav };
     const line = fleetStations('Line Side Fleet', map).map((s) => s.id),
       asm = fleetStations('Assembly Fleet', map).map((s) => s.id);
     expect(line).toContain('STA-101');
@@ -271,7 +271,7 @@ describe("stations come from the fleet's map", () => {
   });
   it("the seeds only use stations that exist on their fleet's map", async () => {
     const { fleetStations } = await import('../src/features/workflow-builder/model/stations');
-    const map = { site: {} as never, nav };
+    const map = { site: {} as never, nav, live: nav };
     const ids = (nodes: ReturnType<typeof seedOf>): string[] =>
       nodes
         .flatMap((n) => [

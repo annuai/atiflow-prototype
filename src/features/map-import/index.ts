@@ -17,3 +17,4 @@ export {
   type Layout,
   type Similarity,
 } from './core/dwg';
+export { layoutOf, type WallSource } from './layoutOf';

@@ -74,7 +74,9 @@ export class RulesIndex {
     return this.nav.trafficZones.find((z) => pointInPoly(x, y, z.polygon)) ?? null;
   }
   fleetAllowed(fleet: string, x: number, y: number): boolean {
-    return (this.areas.get(fleet) ?? []).some((p) => {
+    const areas = this.areas.get(fleet) ?? [];
+    if (!areas.length) return true; // a fleet with no areas (a map that has none, such as an imported one) is limited by its lanes only
+    return areas.some((p) => {
       const xs = p.map((q) => q[0]),
         ys = p.map((q) => q[1]);
       return (

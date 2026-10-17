@@ -97,7 +97,7 @@ export function MapEditorPage() {
   const isDraft = current?.status === 'draft';
   const fleetName = map ? fleetDirectory.byLiveId(map.fleetLive)?.name : undefined;
   const tool: Tool = isDraft && mode === 'design' ? wantTool : SELECT; // a published version only allows looking
-  const takenStations = useMemo(() => base?.nav.stations.map((s) => s.id) ?? [], [base]);
+  const takenStations = useMemo(() => base?.live.stations.map((s) => s.id) ?? [], [base]);
   const takenAreas = useMemo(
     () => Object.values(allMaps).flatMap((h) => h.versions.flatMap((v) => v.data.stagingAreas.map((a) => a.id))),
     [allMaps],

@@ -8,8 +8,11 @@ import { fleetDirectory } from '@/data/fleetDirectory';
 import { robotRecords, robotsOnFloor } from '@/data/robots';
 import { scopeKey } from '@/features/access';
 import { fleetsStore } from '@/features/fleets';
-import { applyPublishedMaps, latestOf, mapVersionsStore } from '@/features/map-editor';
+import { latestOf, mapVersionsStore } from '@/features/map-editor';
+import { mapsStore } from '@/data/maps';
+import { layoutOf } from '@/features/map-import';
 import { visibleLiveIds } from '@/features/auth';
+import { buildWorld, type World } from './world/buildWorld';
 import { authStore } from '@/features/auth';
 import type { RosterEntry } from '@/adapters/sim';
 import type {
@@ -32,8 +35,7 @@ export const SITE =
  */
 let refs = 0,
   stopTimer: number | undefined,
-  adapter: TelemetryAdapter | null = null,
-  loaded: Promise<{ site: SiteLayout; nav: NavGraph; live: NavGraph }> | null = null;
+  adapter: TelemetryAdapter | null = null;
 const listeners = new Set<(b: RobotTelemetry[]) => void>(),
   resetListeners = new Set<() => void>();
 const orderUpdateListeners = new Set<(u: OrderUpdate) => void>(),
@@ -43,35 +45,47 @@ export const liveStats = new StatsTracker();
 /** KPI building blocks measured from the live telemetry and events (read by the Reports page). It keeps collecting while the feed runs. */
 export const measurements = new MeasurementLog();
 
-/** The latest published version of the map each fleet runs on (a map nobody opened in the editor has none: the base lane map is used). */
-function publishedMaps(nav: NavGraph) {
-  const out: { fleetLive: string; data: NonNullable<ReturnType<typeof latestOf>>['data'] }[] = [];
-  for (const f of nav.fleets) {
-    const name = fleetDirectory.byLiveId(f.id)?.name;
-    const mapId = name ? fleetsStore.getState().profiles[name]?.mapId : null;
-    const h = mapId ? mapVersionsStore.getState().byMap[mapId] : undefined;
-    const v = latestOf(h);
-    // a map nobody has edited is only a copy of the base lane map: use the base (the copy may be older)
-    if (v && !(h!.versions.length === 1 && v.createdBy === 'System')) out.push({ fleetLive: f.id, data: v.data });
-  }
-  return out;
+/** The latest PUBLISHED version of a map somebody has edited (a map nobody edited is only a copy of the base lane map: the base is used for it). */
+function publishedOf(mapId: string) {
+  const h = mapVersionsStore.getState().byMap[mapId];
+  const v = latestOf(h);
+  return v && !(h!.versions.length === 1 && v.createdBy === 'System') ? v.data : null;
 }
 
+/** The base site and lane map (fetched once) and the WORLD built from them and from the fleets, their maps and the published versions (rebuilt whenever one of those changes). */
+let base: Promise<{ site: SiteLayout; nav: NavGraph }> | null = null;
+let world: World | null = null;
+const worldListeners = new Set<() => void>();
+function refreshWorld(b: { site: SiteLayout; nav: NavGraph }): World {
+  b.nav.fleets = b.nav.fleets.map((f) => {
+    const r = fleetDirectory.byLiveId(f.id);
+    return r ? { ...f, name: r.name, color: r.color } : f;
+  }); // one name per fleet across the whole app
+  const next = buildWorld({
+    baseSite: b.site,
+    baseNav: b.nav,
+    fleets: datasetStore.getState().fleets,
+    profiles: fleetsStore.getState().profiles,
+    maps: mapsStore.getState().maps,
+    published: publishedOf,
+    structure: (d) => layoutOf(d, 'dwg') ?? null,
+  });
+  if (world?.signature === next.signature) return world;
+  world = next;
+  store.getState().setSite(next.site, next.nav);
+  syncFleets();
+  worldListeners.forEach((cb) => cb());
+  return next;
+}
 function load() {
-  return (loaded ??= Promise.all([
+  return (base ??= Promise.all([
     fetch(`/sites/${SITE}/site.json`).then((r) => r.json() as Promise<SiteLayout>),
     fetch(`/sites/${SITE}/nav.json`).then((r) => r.json() as Promise<NavGraph>),
-  ]).then(([site, nav]) => {
-    nav.fleets = nav.fleets.map((f) => {
-      const r = fleetDirectory.byLiveId(f.id);
-      return r ? { ...f, name: r.name, color: r.color } : f;
-    }); // one name per fleet across the whole app
-    // the base lane map stays what the Map Editor seeds from; the floor itself runs on the published maps
-    const live = applyPublishedMaps(nav, publishedMaps(nav));
-    store.getState().setSite(site, live);
-    syncFleets();
-    return { site, nav, live };
-  }));
+  ]).then(([site, nav]) => ({ site, nav }))).then((b) => {
+    const w = refreshWorld(b);
+    // `site` / `nav` are the BASE (what the Map Editor seeds a first map version from); `live` and `world` are what the floor runs on
+    return { site: b.site, nav: b.nav, live: w.nav, world: w };
+  });
 }
 /** The robots on the floor: the shared dataset's robots that `robotsOnFloor` lets through (assigned to a fleet with a map here, not offline). */
 export function rosterFrom(nav: NavGraph): RosterEntry[] {
@@ -142,11 +156,12 @@ function onScopeChange() {
 authStore.subscribe(onScopeChange);
 datasetStore.subscribe(onScopeChange);
 async function start() {
-  const { site, live: nav } = await load();
+  const { world: w } = await load();
   if (adapter || refs === 0) return;
+  const nav = w.nav;
   const roster = rosterFrom(nav);
   rosterKey = rosterSignature(roster);
-  adapter = services().fleetFeed.connect({ siteId: site.siteId, nav, roster });
+  adapter = services().fleetFeed.connect({ siteId: w.site.siteId, nav, roster });
   adapter.onEvent?.((e) => {
     const ids = visibleLiveIds();
     if (!ids || fleetsOf(e).some((f) => ids.has(f))) measurements.event(e);
@@ -163,16 +178,29 @@ async function start() {
   orderStartListeners.forEach((cb) => cb()); // (people's requests that were waiting for the floor are handed over now)
   if (import.meta.env.DEV) Object.assign(window, { __adapter: adapter, __measurements: measurements }); // dev-only: lets tests inject faults
 }
-/** The shared dataset changed what runs on the floor (a robot added, removed, moved to another fleet or type): restart the simulation with the new roster. */
-datasetStore.subscribe(() => {
-  if (!adapter || !loaded) return;
-  void loaded.then(({ nav }) => {
-    if (!adapter || rosterSignature(rosterFrom(nav)) === rosterKey) return;
-    stop();
-    resetListeners.forEach((cb) => cb());
-    void start();
-  });
-});
+/**
+ * Something that decides what is on the floor changed (a fleet created or renamed, a map assigned or published, a robot added or moved): rebuild the world and, when the floor is running
+ * and the world or its robots really are different, restart the simulation with them. A short pause lets a burst of changes (one click can touch three stores) count once.
+ */
+let reconcileTimer: ReturnType<typeof setTimeout> | undefined;
+function reconcile() {
+  if (!base) return; // nobody has looked at the floor yet: it is built when somebody does
+  clearTimeout(reconcileTimer);
+  reconcileTimer = setTimeout(() => {
+    void base?.then((b) => {
+      const before = world?.signature;
+      const w = refreshWorld(b);
+      if (!adapter || (w.signature === before && rosterSignature(rosterFrom(w.nav)) === rosterKey)) return;
+      stop();
+      resetListeners.forEach((cb) => cb());
+      void start();
+    });
+  }, 60);
+}
+datasetStore.subscribe(reconcile);
+fleetsStore.subscribe(reconcile);
+mapsStore.subscribe(reconcile);
+mapVersionsStore.subscribe(reconcile);
 function stop() {
   adapter?.disconnect();
   adapter = null;
@@ -230,8 +258,17 @@ export const feed = {
       if (--refs === 0) stopTimer = window.setTimeout(stop, 1500);
     };
   },
-  /** The site and its navigation graph, once loaded. */
+  /** The base site and lane map plus the world the floor runs on (`live`, `world`), once loaded. */
   ready: load,
+  /** The world as it is now (null before the first load). */
+  world: () => world,
+  /** Called when the world was rebuilt and is different (a fleet got a map, a map was published...): the 3D scene must be built again. */
+  onWorld(cb: () => void) {
+    worldListeners.add(cb);
+    return () => {
+      worldListeners.delete(cb);
+    };
+  },
   /** Called when the simulation restarts with a different set of robots (the views drop the old ones). */
   onReset(cb: () => void) {
     resetListeners.add(cb);

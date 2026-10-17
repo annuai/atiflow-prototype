@@ -1,16 +1,9 @@
 import type { NavGraph, SiteLayout } from '@/core/types';
 import type { MapData } from '@/features/map-editor';
-import { transformLayout, type Layout } from '@/features/map-import';
-
-export type WallSource = 'lidar' | 'dwg';
-
-/** The walls, machines and floor of a map for the 3D scene: the DWG laid over it when there is one (and it is chosen), else what was estimated from the lidar grid. */
-export function layoutOf(data: MapData, source: WallSource): Layout | null {
-  if (source === 'dwg' && data.dwg) return transformLayout(data.dwg.layout, data.dwg.transform);
-  return data.structure ? { ...data.structure, floorPolygons: [] } : null;
-}
+import { layoutOf, type WallSource } from '@/features/map-import';
 
 /** The scene's site: the layout plus a floor (the DWG's floor polygons, or the rectangle around everything). */
+export { layoutOf, type WallSource };
 export function siteOf(name: string, data: MapData, source: WallSource): SiteLayout | null {
   const l = layoutOf(data, source);
   if (!l) return null;

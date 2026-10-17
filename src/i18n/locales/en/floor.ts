@@ -168,6 +168,16 @@ export const floor = {
     backToFloor: 'Back to whole floor',
     loading: 'Loading the floor',
   },
+  idleFleet: {
+    title: (name: string) => `${name} is not on the floor yet`,
+    why: {
+      'no-map': 'It has no map. Assign a map to the fleet, then add robots.',
+      'not-published': 'Its map is still a draft. Publish the map in the Map Editor.',
+      'no-network':
+        'Its map has no roads, or fewer than two stations with a position, so there is nothing to drive between.',
+    },
+    open: 'Open the fleet',
+  },
   noAccess: {
     title: 'Nothing to open yet',
     text: (name: string) =>

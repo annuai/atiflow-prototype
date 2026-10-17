@@ -1,7 +1,7 @@
 import type { FleetDef, NavGraph, SiteLayout } from '@/core/types';
 import type { FleetRecord } from '@/data/fleets';
 import { applyPublishedMaps, seedMapData, type MapData } from '@/features/map-editor';
-import type { FleetMap } from '@/features/maps';
+import type { FleetMap } from '@/data/maps';
 
 /**
  * THE WORLD of the Live Floor: what the simulator drives on, what the 3D scene shows and what every page reads, built from FLEETS and their MAPS, never from a fixed list.
@@ -88,10 +88,48 @@ function placed(d: MapData, prefix: string, dx: number, dy: number): MapData {
 const extent = (d: MapData, s: Structure | null) => {
   const xs: number[] = [0],
     ys: number[] = [0];
-  for (const w of s?.walls ?? []) (xs.push(w.a[0], w.b[0]), ys.push(w.a[1], w.b[1]));
-  for (const n of d.nodes) (xs.push(n.x), ys.push(n.y));
+  for (const w of s?.walls ?? []) {
+    xs.push(w.a[0], w.b[0]);
+    ys.push(w.a[1], w.b[1]);
+  }
+  for (const n of d.nodes) {
+    xs.push(n.x);
+    ys.push(n.y);
+  }
   return { minX: Math.min(...xs) - 2, maxX: Math.max(...xs) + 2, minY: Math.min(...ys) - 2, maxY: Math.max(...ys) + 2 };
 };
+
+/** The 3D scene: the base site, plus the walls and machines of every placed map (moved to where the map is placed), and bounds that hold them all. */
+function mergeSite(
+  baseSite: SiteLayout,
+  parts: { data: MapData; dx: number; dy: number; s: Structure | null }[],
+): SiteLayout {
+  const site: SiteLayout = {
+    ...baseSite,
+    walls: [...baseSite.walls],
+    equipment: [...baseSite.equipment],
+    floorPolygons: [...baseSite.floorPolygons],
+  };
+  let b = { ...baseSite.bounds };
+  for (const { data, dx, dy, s } of parts) {
+    const box = extent(data, s);
+    const t = (p: [number, number]) => shift(p, dx, dy);
+    for (const w of s?.walls ?? []) site.walls.push({ ...w, a: t(w.a), b: t(w.b) });
+    for (const e of s?.equipment ?? []) site.equipment.push({ ...e, x: e.x + dx, y: e.y + dy });
+    const floors = s?.floorPolygons.length
+      ? s.floorPolygons.map((p) => p.map(t))
+      : [[t([box.minX, box.minY]), t([box.maxX, box.minY]), t([box.maxX, box.maxY]), t([box.minX, box.maxY])]];
+    site.floorPolygons.push(...floors);
+    b = {
+      minX: Math.min(b.minX, box.minX + dx),
+      maxX: Math.max(b.maxX, box.maxX + dx),
+      minY: Math.min(b.minY, box.minY + dy),
+      maxY: Math.max(b.maxY, box.maxY + dy),
+    };
+  }
+  site.bounds = b;
+  return site;
+}
 
 export function buildWorld(i: WorldInput): World {
   const baseIds = new Set(i.baseNav.fleets.map((f) => f.id));
@@ -155,40 +193,18 @@ export function buildWorld(i: WorldInput): World {
     .map((id) => {
       const base = i.baseNav.fleets.find((f) => f.id === id);
       const r = dsById.get(id);
+      // a fleet runs where its map is: on a shared ECC map it has that map's areas too (the fleet the map was made for owns them)
+      const owner = i.baseNav.fleets.find((f) => f.id === i.maps.find((m) => m.id === runs[id])?.fleetLive);
       return {
         id,
         name: r?.name ?? base?.name ?? id,
         color: r?.color ?? base?.color ?? '#14b8a6',
-        areas: base?.areas ?? [],
+        areas: uniq([...(base?.areas ?? []), ...(owner?.areas ?? [])]),
       };
     });
   const world: NavGraph = { ...nav, fleets };
 
-  // the 3D scene: the base site, plus the walls and machines of every placed map
-  const site: SiteLayout = {
-    ...i.baseSite,
-    walls: [...i.baseSite.walls],
-    equipment: [...i.baseSite.equipment],
-    floorPolygons: [...i.baseSite.floorPolygons],
-  };
-  let b = { ...i.baseSite.bounds };
-  for (const { data, dx, dy, s } of parts) {
-    const box = extent(data, s);
-    const t = (p: [number, number]) => shift(p, dx, dy);
-    for (const w of s?.walls ?? []) site.walls.push({ ...w, a: t(w.a), b: t(w.b) });
-    for (const e of s?.equipment ?? []) site.equipment.push({ ...e, x: e.x + dx, y: e.y + dy });
-    const floors = s?.floorPolygons.length
-      ? s.floorPolygons.map((p) => p.map(t))
-      : [[t([box.minX, box.minY]), t([box.maxX, box.minY]), t([box.maxX, box.maxY]), t([box.minX, box.maxY])]];
-    site.floorPolygons.push(...floors);
-    b = {
-      minX: Math.min(b.minX, box.minX + dx),
-      maxX: Math.max(b.maxX, box.maxX + dx),
-      minY: Math.min(b.minY, box.minY + dy),
-      maxY: Math.max(b.maxY, box.maxY + dy),
-    };
-  }
-  site.bounds = b;
+  const site = mergeSite(i.baseSite, parts);
 
   const signature = JSON.stringify([
     fleets.map((f) => [f.id, f.name]),

@@ -33,7 +33,7 @@ function Body({ onOpenChange }: { onOpenChange(o: boolean): void }) {
   const t = copy.importMap;
   const navigate = useNavigate();
   const user = useAuth((s) => s.user)!;
-  const taken = useMapData()?.nav.stations.map((s) => s.id) ?? [];
+  const taken = useMapData()?.live.stations.map((s) => s.id) ?? [];
   const types = MAP_FILE_EXTENSIONS.map((e) => e.slice(1).toUpperCase()).join(' / ');
   const [step, setStep] = useState<Step>({ id: 'pick' });
   const [error, setError] = useState('');

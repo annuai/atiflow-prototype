@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { services } from '@/services';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { store, useApp } from '@/core/store';
 import { Engine } from '@/engine/Engine';
 import { loadRobotModels } from '@/engine/robotMesh';
@@ -10,7 +10,9 @@ import { CameraModes, ZoomControl, FleetList, RobotPanel, RobotMini, StationPane
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { useLoadPhase } from '@/components/skeleton/Skeleton';
 import { LiveFloorSkeleton } from './LiveFloorSkeleton';
-import { FleetSelect, useVisibleFleets } from '@/features/auth';
+import { FleetSelect, useAccess, useVisibleFleets } from '@/features/auth';
+import { fleetPath } from '@/features/fleets';
+import { fleetDirectory } from '@/data/fleetDirectory';
 import { WalkPad } from '@/ui/WalkPad';
 import { useCoarse } from '@/ui/useCoarse';
 import { XClose } from '@untitledui/icons';
@@ -19,8 +21,18 @@ import { feed } from './liveFeed';
 import { locateTarget } from '@/ui/locate';
 import { copy } from '@/ui/copy';
 
+/** The world was rebuilt (a fleet got a map, a map was published...): a number that changes then, so the scene below is built again from the new world. */
+let worldVersion = 0;
+feed.onWorld(() => worldVersion++);
+const subscribeWorld = (cb: () => void) => feed.onWorld(cb);
+
 /** Supervisor home: the 3D live floor. Content only; chrome comes from AppShell. */
 export function LiveFloorPage() {
+  const v = useSyncExternalStore(subscribeWorld, () => worldVersion);
+  return <LiveFloor key={v} />;
+}
+
+function LiveFloor() {
   const { state: routeState, search } = useLocation(); // the Dashboard can send us here to locate a robot or station; search sends `?focus=robot:AMR-003`
   const holder = useRef<HTMLDivElement>(null);
   const [view, setView] = useState({ x: 0, y: 0, yaw: 0, zoomPct: 100 });
@@ -43,10 +55,10 @@ export function LiveFloorPage() {
     const off = feed.onBatch((b) => {
       if (live) eng.updateRobots(b);
     });
-    Promise.all([feed.ready(), loadRobotModels()]).then(([{ site: s, nav: n }]) => {
+    Promise.all([feed.ready(), loadRobotModels()]).then(([{ world }]) => {
       if (dead) return;
       live = true;
-      eng.load(s, n);
+      eng.load(world.site, world.nav);
       setReady(true);
       {
         const st = store.getState(),
@@ -109,6 +121,9 @@ export function LiveFloorPage() {
   const coarse = useCoarse();
   const loadPhase = useLoadPhase(!ready);
   const zone = site?.zones.find((z) => z.id === zoneId);
+  // a fleet that is not on the floor (no map, map not published, nothing to drive on) is explained, never an empty scene
+  const idle = ready && fleetId !== 'all' ? feed.world()?.idle.find((i) => i.fleetId === fleetId) : undefined;
+  const canConfigure = useAccess().can('configurator.fleets');
   return (
     <>
       <div className="content">
@@ -141,6 +156,15 @@ export function LiveFloorPage() {
             {loadPhase !== 'ready' && (loadPhase === 'skeleton' ? <LiveFloorSkeleton /> : <div className="loading" />)}
             <CameraModes fleetOpen={fleetOpen} onFleet={() => setFleetOpen((o) => !o)} />
             {fleetOpen && <FleetList />}
+            {idle && (
+              <div className="float idle-fleet" role="status">
+                <b>{copy.idleFleet.title(idle.name)}</b>
+                <span>{copy.idleFleet.why[idle.why]}</span>
+                {canConfigure && fleetDirectory.byName(idle.name) && (
+                  <Link to={fleetPath(idle.name, 'overview')}>{copy.idleFleet.open}</Link>
+                )}
+              </div>
+            )}
             <RobotPanel />
             <RobotMini />
             <StationPanel />
