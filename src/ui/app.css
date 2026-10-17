@@ -343,12 +343,12 @@ img {
   box-shadow: var(--shadow-xs);
 }
 .bh {
-  height: 52px;
+  min-height: 52px; /* a bar as tall as its controls need: the room above and below them is always --bar-inset, so it is also the room after the last one, whatever size the controls are (40 px on a phone) */
   flex: none;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 var(--bar-inset) 0 16px;
+  padding: var(--bar-inset) var(--bar-inset) var(--bar-inset) 16px;
   border-bottom: 1px solid var(--border-secondary);
 }
 .bh h2 {
@@ -851,7 +851,7 @@ img {
     display: none;
   }
   .bh {
-    padding: 0 12px;
+    padding-left: 12px; /* (the other sides keep --bar-inset) */
   }
   .bh span[style] {
     display: none;

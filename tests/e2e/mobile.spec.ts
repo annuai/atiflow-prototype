@@ -53,7 +53,7 @@ test.describe('configurator on a phone', () => {
     const r = await sticksOut(page, '.content');
     expect(r.bad).toEqual([]);
     expect(r.page).toBeLessThanOrEqual(0);
-    const tabs = page.getByRole('tablist');
+    const tabs = page.locator('[data-tab-scroller]').first();
     const scrolls = await tabs.evaluate((el) => {
       const before = el.scrollLeft;
       el.scrollLeft = 300;
@@ -75,4 +75,25 @@ test.describe('configurator on a phone', () => {
       expect(r.bad, await tab.innerText()).toEqual([]);
     }
   });
+});
+
+test('on a phone the gap after the last control in a card header is the gap above it', async ({ page }) => {
+  await signIn(page, 'kavin');
+  await page.goto('/configurator');
+  await page.waitForURL(/\/configurator\/workflows\//);
+  const g = await page
+    .locator('.bh')
+    .first()
+    .evaluate((bar) => {
+      const b = bar.getBoundingClientRect();
+      const controls = [...bar.querySelectorAll('button, [role=combobox]')].filter(
+        (e) => e.getBoundingClientRect().width > 0,
+      );
+      const last = controls.reduce((a, c) =>
+        c.getBoundingClientRect().right > a.getBoundingClientRect().right ? c : a,
+      );
+      const c = last.getBoundingClientRect();
+      return { right: Math.round(b.right - c.right), top: Math.round(c.top - b.top) };
+    });
+  expect(Math.abs(g.right - g.top), JSON.stringify(g)).toBeLessThanOrEqual(1);
 });

@@ -216,7 +216,6 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
             label={t.detail.sections}
             rootClassName="flex-1"
             barClassName="min-w-0"
-            listClassName="overflow-x-auto [scrollbar-width:none] max-sm:[mask-image:linear-gradient(to_right,#000_86%,transparent)] [&::-webkit-scrollbar]:hidden"
             panelClassName="flex flex-1 flex-col pt-6"
             contentClassName="flex flex-1 flex-col gap-6 sm:gap-8"
           >

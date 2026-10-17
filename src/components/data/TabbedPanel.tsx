@@ -52,11 +52,11 @@ export function TabbedPanel({
   // including the page's own overflow-hidden frame, which slid the whole app (sidebar included) a few pixels to the left.
   const bar = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const list = bar.current?.querySelector<HTMLElement>('[role="tablist"]');
-    const tab = list?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
-    if (!list || !tab || list.scrollWidth <= list.clientWidth) return;
-    const at = tab.getBoundingClientRect().left - list.getBoundingClientRect().left + list.scrollLeft;
-    list.scrollTo({ left: at - (list.clientWidth - tab.offsetWidth) / 2 });
+    const scroller = bar.current?.querySelector<HTMLElement>('[data-tab-scroller]'); // the box the tab row scrolls in
+    const tab = scroller?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+    if (!scroller || !tab || scroller.scrollWidth <= scroller.clientWidth) return;
+    const at = tab.getBoundingClientRect().left - scroller.getBoundingClientRect().left + scroller.scrollLeft;
+    scroller.scrollTo({ left: at - (scroller.clientWidth - tab.offsetWidth) / 2 });
   }, [selected]);
   return (
     <Tabs selectedKey={selected} onSelectionChange={(k) => onSelect(String(k))} className={rootClassName}>

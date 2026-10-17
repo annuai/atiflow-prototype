@@ -115,8 +115,7 @@ export const TabList = <T extends Orientation>({
     const slides = type === "underline" || type === "line";
     const listRef = useTabIndicator(orientation === "vertical" ? "y" : "x");
 
-    return (
-        <TabListContext.Provider value={{ size, type, orientation, fullWidth }}>
+    const list = (
             <AriaTabList
                 {...otherProps}
                 ref={slides ? listRef : undefined}
@@ -130,6 +129,7 @@ export const TabList = <T extends Orientation>({
                         })[type as HorizontalTypes],
 
                         orientation === "vertical" && "w-max flex-col",
+                        slides && orientation === "horizontal" && "w-max min-w-full",
 
                         // Only horizontal tabs with underline type have bottom border
                         orientation === "horizontal" &&
@@ -150,6 +150,18 @@ export const TabList = <T extends Orientation>({
             >
                 {children ?? (otherProps.items ? (item) => <Tab {...item}>{item.children}</Tab> : undefined)}
             </AriaTabList>
+    );
+    // A row of tabs that is wider than its box scrolls sideways. The list inside is as wide as ALL its tabs (`w-max`, at least the box), so the line under the tabs (a pseudo-element
+    // spanning the list) reaches the last tab however far it is scrolled; if the list itself were the scroller the line would stop at the edge of the box.
+    return (
+        <TabListContext.Provider value={{ size, type, orientation, fullWidth }}>
+            {slides && orientation === "horizontal" ? (
+                <div data-tab-scroller className="max-w-full overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {list}
+                </div>
+            ) : (
+                list
+            )}
         </TabListContext.Provider>
     );
 };
