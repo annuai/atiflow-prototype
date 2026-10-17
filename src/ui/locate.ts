@@ -10,15 +10,19 @@ export interface LocateHit {
   sub: string;
 }
 
-/** Robots and stations whose id contains the text (case-insensitive; "20487" or "101" is enough). Exact id first, then robots, then stations. */
+/** Robots and stations whose id contains the text (case-insensitive; "20487" or "101" is enough). Exact id first, then robots, then stations. With a `fleetId` only that fleet's robots and stations are searched ('all' or none = every fleet). */
 export function findTargets(
   text: string,
-  robots: Record<string, RobotTelemetry>,
-  stations: Station[],
+  allRobots: Record<string, RobotTelemetry>,
+  allStations: Station[],
   limit = 6,
+  fleetId?: string,
 ): LocateHit[] {
   const q = text.trim().toLowerCase();
   if (!q) return [];
+  const only = fleetId && fleetId !== 'all' ? fleetId : null;
+  const robots = only ? Object.fromEntries(Object.entries(allRobots).filter(([, r]) => r.fleetId === only)) : allRobots;
+  const stations = only ? allStations.filter((s) => s.fleets.includes(only)) : allStations;
   const hits: (LocateHit & { rank: number })[] = [];
   for (const r of Object.values(robots)) {
     const i = r.id.toLowerCase().indexOf(q);

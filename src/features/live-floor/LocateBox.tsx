@@ -8,14 +8,15 @@ import { cx } from '@/utils/cx';
 import { findTargets, locateTarget, type LocateHit } from '@/ui/locate';
 import { copy } from '@/ui/copy';
 
-/** Bottom search box of the Live Floor: type a robot or station id, pick (or press Enter) and the camera flies there and selects it. */
+/** Bottom search box of the Live Floor: type a robot or station id of the fleet on screen, pick (or press Enter) and the camera flies there and selects it. */
 export function LocateBox({ legendClosed, onOpenLegend }: { legendClosed: boolean; onOpenLegend(): void }) {
   const robots = useApp((s) => s.robots),
-    stations = useApp((s) => s.nav?.stations ?? []);
+    stations = useApp((s) => s.nav?.stations ?? []),
+    fleetId = useApp((s) => s.fleetId);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const hits = useMemo(() => findTargets(q, robots, stations), [q, robots, stations]);
+  const hits = useMemo(() => findTargets(q, robots, stations, 6, fleetId), [q, robots, stations, fleetId]);
   const locate = (h: LocateHit) => {
     setOpen(false);
     setQ(h.id);

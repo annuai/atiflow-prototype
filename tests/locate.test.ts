@@ -25,3 +25,21 @@ describe('Live Floor search box', () => {
     expect(findTargets('zzz', robots, stations)).toEqual([]);
   });
 });
+
+describe('Live Floor search box, one fleet at a time', () => {
+  const inFleet = (id: string, fleetId: string) => ({ id, state: 'moving', fleetId }) as RobotTelemetry;
+  const two = Object.fromEntries([inFleet('AMR-001', 'a'), inFleet('AMR-101', 'b')].map((r) => [r.id, r]));
+  const sts = [
+    { id: 'STA-101', name: 'One', fleets: ['a'] },
+    { id: 'STA-201', name: 'Two', fleets: ['b'] },
+    { id: 'STA-301', name: 'Shared', fleets: ['a', 'b'] },
+  ] as Station[];
+  it('only the chosen fleet is searched', () => {
+    expect(findTargets('1', two, sts, 10, 'a').map((h) => h.id)).toEqual(['AMR-001', 'STA-101', 'STA-301']);
+    expect(findTargets('1', two, sts, 10, 'b').map((h) => h.id)).toEqual(['AMR-101', 'STA-201', 'STA-301']);
+  });
+  it('without a fleet (or "all") every fleet is searched', () => {
+    expect(findTargets('1', two, sts, 10).length).toBe(5);
+    expect(findTargets('1', two, sts, 10, 'all').length).toBe(5);
+  });
+});
