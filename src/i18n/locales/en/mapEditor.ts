@@ -52,6 +52,7 @@ export const mapEditor = {
   },
   hint: {
     station: 'Click the map to place a station. Esc when done.',
+    place: 'Click the map to place this station. Esc to cancel.',
     staging: 'Click the map to place the A1 cell of a staging area. Esc when done.',
     road: 'Click points along the road. Double-click or Enter to finish, Esc when done.',
     roadMany: (n: number) => `${n} point${n === 1 ? '' : 's'} · double-click or Enter to finish`,
@@ -64,6 +65,8 @@ export const mapEditor = {
   },
   stations: {
     title: 'Stations',
+    needsPlacement: 'Needs placement',
+    needsPlacementCount: (n: number) => `${n} stations need a position`,
     tabStations: 'Stations',
     tabStaging: 'Staging areas',
     add: 'Add new station',
@@ -80,6 +83,8 @@ export const mapEditor = {
     noMatch: (q: string) => `No station matches “${q}”.`,
     form: {
       back: 'All stations',
+      placeNote: 'This station has no position yet. Place it on the map before publishing.',
+      placeButton: 'Place on the map',
       name: 'Station name',
       id: 'Station ID',
       type: 'Type',

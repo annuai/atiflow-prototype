@@ -13,3 +13,4 @@ src/components/shared-assets
 lint.baseline.json
 test-results
 playwright-report
+tests/fixtures/maps/

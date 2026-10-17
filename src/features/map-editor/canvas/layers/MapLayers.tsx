@@ -3,6 +3,7 @@ import { isCoarse } from '@/components/map/useTouchGestures';
 import { stationColor } from '../../model/stations';
 import type { MapData } from '../../model/types';
 import { zoneType } from '../../model/zoneTypes';
+import { ImportedLayers } from './BaseLayer';
 import { ZoneHandles } from './ZoneHandles';
 import { centreOf, gateNormal } from '../../model/shape';
 import { polyPoints, type P, type stagingGeometry } from '../layers';
@@ -15,11 +16,14 @@ type DragEnd = (e: ReactPointerEvent) => void;
 
 /** The map's zones: tinted, dashed (areas are plain), selectable. */
 export function ZoneLayer({
+  under,
   zones,
   vp,
   isSelected,
   handles,
 }: {
+  /** an imported map's floor picture and mapping path, drawn first so the zones lie on top of them */
+  under: Pick<MapData, 'base' | 'path'>;
   zones: MapData['zones'];
   vp: Vp;
   isSelected: IsSelected;
@@ -28,6 +32,7 @@ export function ZoneLayer({
 }) {
   return (
     <>
+      <ImportedLayers data={under} vp={vp} />
       {zones.map((z) => (
         <GateMark key={`g-${z.id}`} zone={z} vp={vp} />
       ))}

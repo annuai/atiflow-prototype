@@ -422,6 +422,8 @@ export const messages: Messages<typeof insights> = {
       shareName: (a, b, name) => `${a} और ${b} का नाम एक ही है “${name}”`,
       notReached: (id, name) => `${id} · ${name} रूट पर सेट है लेकिन कोई रूट उस तक नहीं पहुँचता`,
       notReachedDetail: 'इसे किसी रूट से जोड़ें (रूट टैब), या इसकी स्थिति रूट से बाहर करें।',
+      unplaced: (id, name) => `${id} · ${name} की अभी कोई जगह तय नहीं है`,
+      unplacedDetail: 'इसे मैप पर रखें (स्टेशन टैब), या हटा दें।',
       throughNoGo: (road, zone) => `${road} प्रवेश वर्जित ज़ोन “${zone}” से गुज़रती है`,
       throughNoGoDetail: 'रोबोट प्रवेश वर्जित ज़ोन में कभी नहीं जाते: सड़क या ज़ोन को हटाएँ।',
       field: (f) => `फ़ील्ड: ${f}`,

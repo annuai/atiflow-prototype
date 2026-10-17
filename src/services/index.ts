@@ -50,6 +50,7 @@ const HYDRATED: [string, (s: Services) => { hydrate?(): Promise<unknown> }][] = 
   ['master data', (s) => s.masterData],
   ['map names', (s) => s.mapNames],
   ['map versions', (s) => s.mapVersions],
+  ['imported maps', (s) => s.mapCatalog],
   ['settings', (s) => s.settings],
   ['preferences', (s) => s.preferences],
   ['action center log', (s) => s.actionLog],

@@ -11,4 +11,5 @@ export interface FleetMap {
   /** The lane-map fleet that runs on this map: its lanes, areas and stations are what the thumbnail draws. */ fleetLive: string;
   /** When the map was last changed (epoch ms). */ updatedAt: number;
   stations: MapStation[];
+  /** 'imported' = made from a Deployment Manager map file (no lane map of its own yet; its picture is a stored floor image). */ source?: 'imported';
 }

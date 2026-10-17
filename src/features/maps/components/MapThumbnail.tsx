@@ -4,6 +4,8 @@ import type { NavGraph, SiteLayout } from '@/core/types';
 import { useMapData } from '@/features/workflow-builder';
 import { cx } from '@/utils/cx';
 import { t } from '../text';
+import type { FleetMap } from '../model/types';
+import { ImportedThumbnail } from './ImportedThumbnail';
 
 const pts = (p: [number, number][]) => p.map((q) => q.join(',')).join(' ');
 /** The floor of the site, the same for every fleet: floor, equipment and walls. Built once per site. */
@@ -45,7 +47,7 @@ function useFleetLayer(site: SiteLayout | null, nav: NavGraph | null, fleetLive:
  * A picture of a map, drawn from the real site and lane map (not a screenshot): the floor, then the lanes, areas and stations of the fleet that runs on it, in the fleet's colour.
  * The plan is long and narrow, so it is turned a quarter turn to fill a wide card; the whole plan is always shown. Size it with `className`.
  */
-export function MapThumbnail({ fleetLive, className }: { fleetLive: string; className?: string }) {
+function FleetThumbnail({ fleetLive, className }: { fleetLive: string; className?: string }) {
   const data = useMapData();
   const site = data?.site ?? null;
   const floor = useFloor(site);
@@ -100,5 +102,22 @@ export function MapThumbnail({ fleetLive, className }: { fleetLive: string; clas
         ))}
       </g>
     </svg>
+  );
+}
+
+/** The picture of a map: an imported one shows its stored floor image, the others are drawn from the site and lane map. */
+export function MapThumbnail({
+  map,
+  fleetLive,
+  className,
+}: {
+  map?: Pick<FleetMap, 'id' | 'source'>;
+  fleetLive: string;
+  className?: string;
+}) {
+  return map?.source === 'imported' ? (
+    <ImportedThumbnail mapId={map.id} className={className} />
+  ) : (
+    <FleetThumbnail fleetLive={fleetLive} className={className} />
   );
 }

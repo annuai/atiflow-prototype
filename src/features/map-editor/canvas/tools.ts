@@ -8,6 +8,7 @@ export type Tool =
   | { kind: 'select' }
   | { kind: 'station' }
   | { kind: 'staging' }
+  | { kind: 'place'; id: string }
   | { kind: 'road'; oneWay: boolean }
   | { kind: 'gate'; shape: 'line' | 'box' }
   | { kind: 'zone'; type: ZoneTypeId };
@@ -17,6 +18,7 @@ export function drawMode(t: Tool): 'none' | 'one' | 'two' | 'many' {
   switch (t.kind) {
     case 'station':
     case 'staging':
+    case 'place':
       return 'one';
     case 'gate':
     case 'zone':
@@ -55,7 +57,7 @@ export function toolFor(m: Module, choice: string): Tool {
   }
 }
 export const moduleOfTool = (t: Tool): Module | null =>
-  t.kind === 'station' || t.kind === 'staging'
+  t.kind === 'station' || t.kind === 'staging' || t.kind === 'place'
     ? 'stations'
     : t.kind === 'road'
       ? 'routes'

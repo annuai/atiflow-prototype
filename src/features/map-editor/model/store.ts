@@ -22,6 +22,8 @@ export interface MapVersionsState {
   byMap: Saved;
   /** The first published version of a map (once; later calls do nothing). */
   ensure(mapId: string, number: number, data: MapData, now?: number): void;
+  /** A map made by an import: no published version yet, only a draft (nothing reaches the floor until it is published); the first publish gets `firstNumber`. */
+  createImported(mapId: string, firstNumber: number, data: MapData, by: string, now?: number): void;
   /** Start the draft: a copy of `fromNumber` (default: the latest published). Only one draft per map: an existing one is kept. */
   startDraft(mapId: string, by: string, fromNumber?: number, now?: number): MapVersion | null;
   /** Change the draft (never a published version). */
@@ -33,14 +35,17 @@ export interface MapVersionsState {
   publish(mapId: string, by: string, now?: number): number | null;
   reset(): void;
 }
-const put = (s: Saved, mapId: string, versions: MapVersion[]): Saved => ({ ...s, [mapId]: { versions } });
+const put = (s: Saved, mapId: string, versions: MapVersion[]): Saved => ({
+  ...s,
+  [mapId]: { ...s[mapId], versions },
+});
 
 /** What the service holds, with every version's data completed (older saved maps lack newer fields). */
 const loadVersions = (): Saved =>
   Object.fromEntries(
     Object.entries(services().mapVersions.read()).map(([k, h]) => [
       k,
-      { versions: h.versions.map((v) => ({ ...v, data: normaliseData(v.data) })) },
+      { ...h, versions: h.versions.map((v) => ({ ...v, data: normaliseData(v.data) })) },
     ]),
   );
 export const mapVersionsStore = createStore<MapVersionsState>((set, get) => ({
@@ -70,6 +75,20 @@ export const mapVersionsStore = createStore<MapVersionsState>((set, get) => ({
         },
       ]),
     });
+  },
+  createImported(mapId, firstNumber, data, by, now = Date.now()) {
+    if (get().byMap[mapId]) return;
+    const draft: MapVersion = {
+      id: uid(),
+      mapId,
+      status: 'draft',
+      number: null,
+      basedOn: null,
+      createdAt: now,
+      createdBy: by,
+      data,
+    };
+    set({ byMap: { ...get().byMap, [mapId]: { versions: [draft], firstNumber } } });
   },
   startDraft(mapId, by, fromNumber, now = Date.now()) {
     const h = get().byMap[mapId];
@@ -134,7 +153,8 @@ export const mapVersionsStore = createStore<MapVersionsState>((set, get) => ({
     const h = get().byMap[mapId];
     const d = draftOf(h);
     if (!h || !d) return null;
-    const number = (latestOf(h)?.number ?? 0) + 1;
+    const latest = latestOf(h)?.number;
+    const number = latest == null ? (h.firstNumber ?? 1) : latest + 1;
     set({
       byMap: put(
         get().byMap,

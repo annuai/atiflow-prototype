@@ -9,6 +9,8 @@ export function hintFor(tool: Tool, placed: number): string {
       return copy.hint.station;
     case 'staging':
       return copy.hint.staging;
+    case 'place':
+      return copy.hint.place;
     case 'gate':
       return tool.shape === 'box' ? copy.hint.gateBox : copy.hint.gateLine;
     case 'road':

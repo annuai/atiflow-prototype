@@ -29,6 +29,18 @@ export function onRoad(data: MapData, stationId: string): boolean {
   if (data.lanes.some((l) => l.from === n.id || l.to === n.id)) return true;
   return data.lanes.some((l) => l.geom.some((g, i) => i > 0 && dist(n.x, n.y, l.geom[i - 1], g) <= 1));
 }
+/** An imported station that was never given a position blocks Publish. */
+const unplacedProblem = (s: MapData['stations'][number]): MapProblem[] =>
+  s.unplaced
+    ? [
+        {
+          level: 'block',
+          title: text.problems.unplaced(s.id, s.name),
+          detail: text.problems.unplacedDetail,
+          stationId: s.id,
+        },
+      ]
+    : [];
 /** The cell states Master Data keeps for an area (key "row-col"; a missing cell is available). */
 export type CellStatesOf = (areaId: string) => Record<string, 'available' | 'reserved' | 'blocked' | 'filled'>;
 /**
@@ -58,6 +70,7 @@ export function publishProblems(
     }
   const seen = new Map<string, string>();
   for (const s of next.stations) {
+    out.push(...unplacedProblem(s));
     const key = s.name.trim().toLowerCase();
     if (!key) out.push({ level: 'block', title: text.problems.noName(s.id), stationId: s.id });
     else if (seen.has(key))

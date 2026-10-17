@@ -38,6 +38,8 @@ export interface SidePanelProps {
   onPick(sel: Selection): void;
   /** arm a tool of a module (with a choice from its menu) */
   onArm(module: Module, choice?: string): void;
+  /** arm the tool that places an imported station that has no position yet */
+  onPlace(stationId: string): void;
   /** stop drawing: the select tool, nothing half drawn */
   onStopDrawing(): void;
   onDelete(what: Thing): void;
@@ -66,6 +68,7 @@ function StationsSection(p: SidePanelProps) {
         onBack={p.onBack}
         onPatch={(patch) => p.edit((m) => updateStation(m, station.id, patch))}
         onMove={(to) => p.edit((m) => moveStation(m, station.id, to))}
+        onPlace={() => p.onPlace(station.id)}
         onDelete={() => p.onDelete({ kind: 'station', id: station.id })}
       />
     );

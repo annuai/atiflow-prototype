@@ -75,7 +75,7 @@ export function OverviewPanel({ fleet }: { fleet: string }) {
         <h2 className="text-lg font-semibold text-primary">{copy.overview.map}</h2>
         {map ? (
           <div className="relative flex overflow-hidden rounded-xl border border-secondary bg-primary shadow-xs transition hover:shadow-md">
-            <MapThumbnail fleetLive={map.fleetLive} className="hidden h-32 w-52 shrink-0 sm:block" />
+            <MapThumbnail map={map} fleetLive={map.fleetLive} className="hidden h-32 w-52 shrink-0 sm:block" />
             <div className="flex min-w-0 flex-1 flex-col justify-center gap-3 p-5">
               <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
                 <Button size="sm" color="secondary" onPress={() => setAssigningMap(true)}>

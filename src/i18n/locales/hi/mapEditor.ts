@@ -54,6 +54,7 @@ export const messages: Messages<typeof mapEditor> = {
   },
   hint: {
     station: 'स्टेशन रखने के लिए मैप पर क्लिक करें। पूरा होने पर Esc दबाएँ।',
+    place: 'इस स्टेशन को रखने के लिए मैप पर क्लिक करें। रद्द करने के लिए Esc।',
     staging: 'स्टेजिंग एरिया का A1 सेल रखने के लिए मैप पर क्लिक करें। पूरा होने पर Esc दबाएँ।',
     road: 'सड़क के साथ-साथ बिंदुओं पर क्लिक करें। खत्म करने के लिए डबल-क्लिक या Enter, पूरा होने पर Esc।',
     roadMany: (n) => `${n} बिंदु · खत्म करने के लिए डबल-क्लिक या Enter`,
@@ -66,6 +67,8 @@ export const messages: Messages<typeof mapEditor> = {
   },
   stations: {
     title: 'स्टेशन',
+    needsPlacement: 'जगह तय करनी है',
+    needsPlacementCount: (n) => `${n} स्टेशनों की जगह तय करनी है`,
     tabStations: 'स्टेशन',
     tabStaging: 'स्टेजिंग एरिया',
     add: 'नया स्टेशन जोड़ें',
@@ -82,6 +85,8 @@ export const messages: Messages<typeof mapEditor> = {
     noMatch: (q) => `“${q}” से कोई स्टेशन मेल नहीं खाता।`,
     form: {
       back: 'सभी स्टेशन',
+      placeNote: 'इस स्टेशन की अभी कोई जगह तय नहीं है। पब्लिश करने से पहले इसे मैप पर रखें।',
+      placeButton: 'मैप पर रखें',
       name: 'स्टेशन का नाम',
       id: 'स्टेशन ID',
       type: 'प्रकार',

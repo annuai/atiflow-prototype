@@ -3,12 +3,12 @@ import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { addRoad } from '../model/roads';
 import { addStagingArea } from '../model/staging';
-import { addStation } from '../model/stations';
+import { addStation, moveStation } from '../model/stations';
 import type { MapData, Selection } from '../model/types';
 import { newGate, rectFromCorners } from '../model/shape';
 import { addZone } from '../model/zones';
 import type { P } from './layers';
-import { drawMode, type Tool } from './tools';
+import { drawMode, SELECT, type Tool } from './tools';
 
 export interface DrawToolsInput {
   data: MapData | undefined;
@@ -31,7 +31,13 @@ export function useDrawTools(i: DrawToolsInput) {
   const { data, fleetLive, tool, drawing, setDrawing, setSelection, setTool, edit } = i;
 
   const onPoint = (p: P) => {
-    if (!data || !fleetLive) return;
+    if (!data || fleetLive === undefined) return;
+    if (tool.kind === 'place') {
+      edit((m) => moveStation(m, tool.id, { x: p[0], y: p[1] }));
+      setSelection({ kind: 'station', id: tool.id });
+      setTool(SELECT);
+      return;
+    }
     if (tool.kind === 'station') {
       const r = addStation(data, fleetLive, { x: p[0], y: p[1] }, i.takenStations);
       edit(() => r.data);
@@ -73,7 +79,7 @@ export function useDrawTools(i: DrawToolsInput) {
   };
 
   const finish = () => {
-    if (!data || !fleetLive) return;
+    if (!data || fleetLive === undefined) return;
     if (tool.kind === 'road') {
       const r = addRoad(data, drawing, { oneWay: tool.oneWay, fleetLive });
       if (!r.id) {

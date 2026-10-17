@@ -32,6 +32,7 @@ export function StationsPanel({
   onCancelAdd(): void;
 }) {
   const t = copy.stations;
+  const unplaced = data.stations.filter((s) => s.unplaced).length;
   const items =
     sub === 'stations'
       ? [...data.stations]
@@ -39,7 +40,7 @@ export function StationsPanel({
           .map((s) => ({
             id: s.id,
             title: s.name,
-            subtitle: `${s.id} · ${stationTypeLabel(s.type)}`,
+            subtitle: `${s.id} · ${stationTypeLabel(s.type)}${s.unplaced ? ` · ${t.needsPlacement}` : ''}`,
             dot: stationColor(s.type),
           }))
       : [...data.stagingAreas]
@@ -110,6 +111,11 @@ export function StationsPanel({
             {adding && (
               <p className="rounded-lg bg-brand-secondary px-3 py-2 text-xs text-brand-secondary">
                 {sub === 'stations' ? t.adding : copy.hint.staging}
+              </p>
+            )}
+            {sub === 'stations' && unplaced > 0 && (
+              <p className="rounded-lg bg-warning-primary px-3 py-2 text-xs text-warning-primary">
+                {t.needsPlacementCount(unplaced)}
               </p>
             )}
             {!editable && <p className="text-xs text-tertiary">{t.readOnly}</p>}

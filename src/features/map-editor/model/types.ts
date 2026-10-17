@@ -22,6 +22,12 @@ export interface MapZone {
 
 /** A station of a map: the fleet's station plus how a robot stands at it. */
 export interface MapStation extends Station {
+  /** The id the file this station came from used ("1"); an import and an export match stations by it. */ externalId?: string;
+  /** Source fields we have no column for, kept as they came so a map can go back to the Deployment Manager unchanged. */ extra?: Record<
+    string,
+    unknown
+  >;
+  /** The file gave no real position: the station waits in the "Needs placement" list and Publish is blocked until it is placed. */ unplaced?: boolean;
   /** heading of the robot at the station (degrees) */ angle?: number;
   /** stands on the lane (true, default) or off it */ onLane?: boolean;
 }
@@ -56,6 +62,22 @@ export interface StagingAreaDef {
   cellWidth: number;
 }
 
+/**
+ * The floor picture of an imported map (from a lidar grid): the full-size image and smaller copies for zooming out, all stored as binary assets (never inside the saved map).
+ * Pixel (col, row) of a picture lies at x = (col - originCol) * res, y = (originRow - row) * res, metres from the map origin; `originCol/Row` can be fractional in the smaller copies.
+ */
+export interface MapBaseLevel {
+  assetId: string;
+  width: number;
+  height: number;
+  res: number;
+  originCol: number;
+  originRow: number;
+}
+export interface MapBase {
+  /** Biggest first. */ levels: MapBaseLevel[];
+}
+
 /** Everything a map holds: its own network (nodes, one-way lanes grouped in roads), its stations, staging areas and zones. The editor changes this; the floor will read the published one. */
 export interface MapData {
   nodes: NavNode[];
@@ -64,6 +86,12 @@ export interface MapData {
   stations: MapStation[];
   stagingAreas: StagingAreaDef[];
   zones: MapZone[];
+  /** The floor picture behind everything (imported maps). */
+  base?: MapBase;
+  /** The file this map was imported from (kept as a stored asset so it can be exported again). */
+  source?: { assetId: string; fileName: string; format: string };
+  /** The path the robot drove while it mapped, metres: a hint for drawing roads (imported maps). */
+  path?: [number, number][];
 }
 
 export type VersionStatus = 'published' | 'draft';
@@ -82,6 +110,8 @@ export interface MapVersion {
 }
 export interface MapHistory {
   versions: MapVersion[];
+  /** The number the first publish gets (an imported map starts at its routing version, such as 5); later ones count up from the latest. */
+  firstNumber?: number;
 }
 
 /** What the editor has selected. */

@@ -1,19 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Map01 } from '@untitledui/icons';
-import { Radio, RadioGroup } from 'react-aria-components';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { Label } from '@/components/base/input/label';
 import { Select } from '@/components/base/select/select';
 import { FormField } from '@/components/form/FormField';
 import { ModalShell } from '@/components/modal/ModalShell';
 import { notify } from '@/ui/toast';
-import { cx } from '@/utils/cx';
 import { copy } from '../copy';
 import { validateNewMap, type NewMapForm } from '../model/logic';
 import { mockRunData, type RunData, type RunDataSource } from '../model/runData';
-import { DEFAULT_ROUTING, ROUTING_VERSIONS } from '../model/routing';
+import { DEFAULT_ROUTING } from '../model/routing';
 import { useMaps } from '../model/maps';
 import { RobotPicker } from './RobotPicker';
+import { RoutingVersionPicker } from './RoutingVersionPicker';
 
 const BLANK: NewMapForm = { name: '', robot: '', runData: '', version: DEFAULT_ROUTING, zMin: '', zMax: '' };
 
@@ -99,44 +98,12 @@ function Body({ onOpenChange, source }: { onOpenChange(o: boolean): void; source
             </p>
           )}
         </div>
-        <div className="flex flex-col gap-1.5">
-          <Label isRequired>{t.version}</Label>
-          <RadioGroup
-            aria-label={t.version}
-            value={f.version}
-            onChange={(v) => set({ version: v })}
-            className="flex flex-col gap-3"
-          >
-            {ROUTING_VERSIONS.map((r) => (
-              <Radio
-                key={r.id}
-                value={r.id}
-                className={({ isSelected, isFocusVisible }) =>
-                  cx(
-                    'flex cursor-pointer items-start gap-3 rounded-xl border bg-primary p-4 outline-focus-ring transition',
-                    isSelected ? 'border-brand ring-2 ring-brand' : 'border-secondary hover:bg-primary_hover',
-                    isFocusVisible && 'outline-2 outline-offset-2',
-                  )
-                }
-              >
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-primary text-fg-secondary shadow-xs">
-                  <r.icon className="size-4" />
-                </span>
-                <span className="text-sm">
-                  <span className="block text-secondary">
-                    <b className="font-semibold text-primary">{r.label}</b> {r.name}
-                  </span>
-                  <span className="block text-tertiary">{r.note}</span>
-                </span>
-              </Radio>
-            ))}
-          </RadioGroup>
-          {errors.version && (
-            <p className="text-sm text-error-primary" role="alert">
-              {errors.version}
-            </p>
-          )}
-        </div>
+        <RoutingVersionPicker
+          label={t.version}
+          value={f.version}
+          onChange={(v) => set({ version: v })}
+          error={errors.version}
+        />
         <div className="flex items-center gap-4 text-xs font-medium tracking-wide text-tertiary">
           <span className="h-px flex-1 bg-border-secondary" />
           {t.optional}

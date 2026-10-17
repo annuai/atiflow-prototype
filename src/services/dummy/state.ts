@@ -5,6 +5,7 @@ import type {
   DatasetService,
   DevicePrefs,
   FleetProfileService,
+  MapCatalogService,
   MapNameService,
   MapVersionService,
   MasterDataService,
@@ -33,6 +34,7 @@ export const FLEETS_KEY = 'atiflow.fleets.v1';
 export const MASTERDATA_KEY = 'atiflow.masterdata.v1';
 export const MAPNAMES_KEY = 'atiflow.mapnames.v1';
 export const MAPVERSIONS_KEY = 'atiflow.mapversions.v1';
+export const MAPCATALOG_KEY = 'atiflow.mapcatalog.v1';
 export const SETTINGS_KEY = 'atiflow.settings.v1';
 export const PREFERENCES_KEY = 'atiflow.preferences.v1';
 export const ACTIONLOG_KEY = 'atiflow.actioncenter.v1';
@@ -139,3 +141,11 @@ export const createDummyRobotOpsState = (backend?: Backend): RobotOpsStateServic
     schema: z.record(z.string(), z.object({}).passthrough()),
     seed: () => ({}),
   }) as unknown as RobotOpsStateService;
+
+export const createDummyMapCatalog = (backend?: Backend): MapCatalogService =>
+  createSavedState({
+    key: MAPCATALOG_KEY,
+    backend,
+    schema: z.array(z.object({ id: z.string(), name: z.string(), version: z.number() }).passthrough()),
+    seed: () => [],
+  }) as unknown as MapCatalogService;

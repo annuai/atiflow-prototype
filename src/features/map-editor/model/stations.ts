@@ -60,7 +60,12 @@ export const updateStation = (
 export function moveStation(data: MapData, id: string, to: { x: number; y: number }): MapData {
   const s = data.stations.find((q) => q.id === id);
   if (!s) return data;
-  return { ...data, nodes: data.nodes.map((n) => (n.id === s.nodeId ? { ...n, x: round(to.x), y: round(to.y) } : n)) };
+  return {
+    ...data,
+    nodes: data.nodes.map((n) => (n.id === s.nodeId ? { ...n, x: round(to.x), y: round(to.y) } : n)),
+    // a station that was waiting for a position has one now
+    stations: s.unplaced ? data.stations.map((q) => (q.id === id ? { ...q, unplaced: undefined } : q)) : data.stations,
+  };
 }
 /** Delete a station. Its node goes too unless a lane still uses it (then it stays as a plain waypoint). */
 export function deleteStation(data: MapData, id: string): MapData {

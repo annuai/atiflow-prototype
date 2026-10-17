@@ -38,6 +38,7 @@ import { publishProblems } from './model/validate';
 import { moveShape } from './model/shape';
 import { deleteZone, setZoneShape } from './model/zones';
 import { zoneType } from './model/zoneTypes';
+import { importedSite } from './model/importedSite';
 import { seedMapData } from './model/seed';
 import { useSimulationPanel } from './sim/useSimulationPanel';
 import { PageTitleName } from '@/shell/PageTitle';
@@ -55,6 +56,8 @@ export function MapEditorPage() {
     return () => document.documentElement.classList.remove('map-editor-open');
   }, []);
   const map = useMap(id);
+  const imported = map?.source === 'imported',
+    mapName = map?.name ?? '';
   const user = useAuth((s) => s.user)!;
   const base = useMapData();
   const history = useMapVersions((s) => s.byMap[id]);
@@ -76,8 +79,9 @@ export function MapEditorPage() {
 
   // the first published version of a map is made from the real site and lane map, once
   useEffect(() => {
-    if (map && base) mapVersionsStore.getState().ensure(map.id, map.version, seedMapData(map, base.site, base.nav));
-  }, [map, base]);
+    if (map && base && !imported)
+      mapVersionsStore.getState().ensure(map.id, map.version, seedMapData(map, base.site, base.nav));
+  }, [map, base, imported]);
   const draft = draftOf(history),
     latest = latestOf(history);
   const current =
@@ -87,6 +91,7 @@ export function MapEditorPage() {
         ? history?.versions.find((v) => v.number === viewing && v.status === 'published')
         : (draft ?? latest);
   const data: MapData | undefined = current?.data;
+  const site = imported ? importedSite(mapName, data) : base?.site;
   const isDraft = current?.status === 'draft';
   const fleetName = map ? fleetDirectory.byLiveId(map.fleetLive)?.name : undefined;
   const tool: Tool = isDraft && mode === 'design' ? wantTool : SELECT; // a published version only allows looking
@@ -177,7 +182,7 @@ export function MapEditorPage() {
   };
 
   if (!map) return <Navigate to="/configurator/maps" replace />;
-  if (!base || !data || !current)
+  if (!site || !data || !current)
     return (
       <div className="content">
         <div className="builder md-card">
@@ -269,7 +274,7 @@ export function MapEditorPage() {
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <div className="relative min-h-[360px] min-w-0 flex-1">
             <MapCanvas
-              site={base.site}
+              site={site}
               data={data}
               tool={tool}
               editable={editable}
@@ -322,6 +327,10 @@ export function MapEditorPage() {
             }}
             onPick={pick}
             onArm={arm}
+            onPlace={(sid) => {
+              setDrawing([]);
+              setTool({ kind: 'place', id: sid });
+            }}
             onStopDrawing={() => {
               setDrawing([]);
               setTool(SELECT);

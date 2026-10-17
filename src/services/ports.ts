@@ -6,6 +6,7 @@ import type { DatasetData } from '@/data/datasetTypes';
 import type { FleetProfile } from '@/features/fleets/model/types';
 import type { Material, MaterialGroup, StagingArea } from '@/features/master-data/model/types';
 import type { MapHistory } from '@/features/map-editor/model/types';
+import type { FleetMap } from '@/features/maps/model/types';
 import type { SettingsData } from '@/features/settings/model/types';
 import type { Preferences } from '@/features/preferences/model/types';
 import type { AppNotification } from '@/features/notifications/types';
@@ -95,6 +96,17 @@ export type MasterDataService = SavedState<MasterDataDocument>;
 /** Names chosen for maps in the Map Editor, by map id. */
 export type MapNameService = SavedState<Record<string, string>>;
 export type MapVersionService = SavedState<Record<string, MapHistory>>;
+/** Maps that were imported (the built-in ones are code); each carries the Deployment Manager version it was made for. */
+export type MapCatalogService = SavedState<FleetMap[]>;
+/**
+ * Binary files of maps (floor pictures, the original uploaded zip), content addressed: the id is the SHA-256 of the bytes, so the same file is stored once.
+ * Dummy: IndexedDB in this browser. Real: object storage behind the API.
+ */
+export interface MapAssetService {
+  put(bytes: Uint8Array, mime: string): Promise<string>;
+  get(id: string): Promise<{ bytes: Uint8Array; mime: string } | null>;
+  remove(id: string): Promise<void>;
+}
 export type SettingsService = SavedState<SettingsData>;
 /** Personal preferences, by username. */
 export type PreferenceService = SavedState<Record<string, Partial<Preferences>>>;
@@ -141,6 +153,8 @@ export interface Services {
   masterData: MasterDataService;
   mapNames: MapNameService;
   mapVersions: MapVersionService;
+  mapCatalog: MapCatalogService;
+  mapAssets: MapAssetService;
   settings: SettingsService;
   preferences: PreferenceService;
   notificationCache: NotificationCacheService;

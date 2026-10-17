@@ -25,6 +25,7 @@ export function StationForm({
   onBack,
   onPatch,
   onMove,
+  onPlace,
   onDelete,
 }: {
   onLocate(): void;
@@ -36,6 +37,8 @@ export function StationForm({
   onBack(): void;
   onPatch(p: Partial<Pick<MapStation, 'name' | 'type' | 'angle' | 'onLane'>>): void;
   onMove(to: { x: number; y: number }): void;
+  /** arm the place tool: the next click on the map gives this station its position */
+  onPlace(): void;
   onDelete(): void;
 }) {
   const f = copy.stations.form;
@@ -56,6 +59,19 @@ export function StationForm({
           {station.id}
         </Badge>
       </div>
+      {station.unplaced && (
+        <div
+          className="flex flex-col gap-2 rounded-lg bg-warning-primary p-3 text-sm text-warning-primary"
+          role="status"
+        >
+          {f.placeNote}
+          {editable && (
+            <Button size="sm" color="secondary" className="w-fit" onPress={onPlace}>
+              {f.placeButton}
+            </Button>
+          )}
+        </div>
+      )}
       <Input
         label={f.name}
         size="sm"

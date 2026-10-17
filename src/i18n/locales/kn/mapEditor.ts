@@ -53,6 +53,7 @@ export const messages: Messages<typeof mapEditor> = {
   },
   hint: {
     station: 'ಸ್ಟೇಷನ್ ಇಡಲು ನಕ್ಷೆಯಲ್ಲಿ ಕ್ಲಿಕ್ ಮಾಡಿ. ಮುಗಿದಾಗ Esc.',
+    place: 'ಈ ಸ್ಟೇಷನ್ ಇಡಲು ನಕ್ಷೆಯಲ್ಲಿ ಕ್ಲಿಕ್ ಮಾಡಿ. ರದ್ದುಮಾಡಲು Esc.',
     staging: 'ಸ್ಟೇಜಿಂಗ್ ಏರಿಯಾದ A1 ಸೆಲ್ ಇಡಲು ನಕ್ಷೆಯಲ್ಲಿ ಕ್ಲಿಕ್ ಮಾಡಿ. ಮುಗಿದಾಗ Esc.',
     road: 'ರಸ್ತೆಯ ಉದ್ದಕ್ಕೂ ಬಿಂದುಗಳನ್ನು ಕ್ಲಿಕ್ ಮಾಡಿ. ಮುಗಿಸಲು ಡಬಲ್-ಕ್ಲಿಕ್ ಅಥವಾ Enter, ಮುಗಿದಾಗ Esc.',
     roadMany: (n) => `${n} ಬಿಂದುಗಳು · ಮುಗಿಸಲು ಡಬಲ್-ಕ್ಲಿಕ್ ಅಥವಾ Enter`,
@@ -65,6 +66,8 @@ export const messages: Messages<typeof mapEditor> = {
   },
   stations: {
     title: 'ಸ್ಟೇಷನ್‌ಗಳು',
+    needsPlacement: 'ಸ್ಥಾನ ಇಡಬೇಕು',
+    needsPlacementCount: (n) => `${n} ಸ್ಟೇಷನ್‌ಗಳಿಗೆ ಸ್ಥಾನ ಬೇಕು`,
     tabStations: 'ಸ್ಟೇಷನ್‌ಗಳು',
     tabStaging: 'ಸ್ಟೇಜಿಂಗ್ ಏರಿಯಾಗಳು',
     add: 'ಹೊಸ ಸ್ಟೇಷನ್ ಸೇರಿಸಿ',
@@ -81,6 +84,8 @@ export const messages: Messages<typeof mapEditor> = {
     noMatch: (q) => `“${q}” ಗೆ ಹೊಂದುವ ಸ್ಟೇಷನ್ ಇಲ್ಲ.`,
     form: {
       back: 'ಎಲ್ಲಾ ಸ್ಟೇಷನ್‌ಗಳು',
+      placeNote: 'ಈ ಸ್ಟೇಷನ್‌ಗೆ ಇನ್ನೂ ಸ್ಥಾನವಿಲ್ಲ. ಪ್ರಕಟಿಸುವ ಮೊದಲು ಅದನ್ನು ನಕ್ಷೆಯಲ್ಲಿ ಇಡಿ.',
+      placeButton: 'ನಕ್ಷೆಯಲ್ಲಿ ಇಡಿ',
       name: 'ಸ್ಟೇಷನ್ ಹೆಸರು',
       id: 'ಸ್ಟೇಷನ್ ID',
       type: 'ಪ್ರಕಾರ',

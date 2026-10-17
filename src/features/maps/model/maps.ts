@@ -48,9 +48,12 @@ const withNames = (maps: FleetMap[]) => {
   const n = savedNames();
   return maps.map((m) => (n[m.id] ? { ...m, name: n[m.id] } : m));
 };
+/** Maps that were imported from a file: the built-in ones are code, these are saved. */
+const allMaps = () => withNames([...SYSTEM_MAPS, ...services().mapCatalog.read()]);
+const catalogPersist = createPersister('imported maps', (v: FleetMap[]) => services().mapCatalog.save(v));
 
 const namePersist = createPersister('map names', (v: Record<string, string>) => services().mapNames.save(v));
-export const mapsStore = createStore<{ maps: FleetMap[] }>(() => ({ maps: withNames(SYSTEM_MAPS) }));
+export const mapsStore = createStore<{ maps: FleetMap[] }>(() => ({ maps: allMaps() }));
 /** The text of a refused map name ('' = fine): not empty, not used by another map (ignoring case). */
 export const mapNameError = (id: string, name: string): string => {
   const n = name.trim();
@@ -68,7 +71,12 @@ export function renameMap(id: string, name: string): string {
   namePersist.queue({ ...savedNames(), [id]: n });
   return '';
 }
-registerStoreInit(() => mapsStore.setState({ maps: withNames(SYSTEM_MAPS) }));
+/** Add a map made by an import (it stays until someone removes it; the first version is created by the caller). */
+export function addImportedMap(map: FleetMap) {
+  mapsStore.setState({ maps: [...mapsStore.getState().maps, map] });
+  catalogPersist.queue(mapsStore.getState().maps.filter((m) => m.source === 'imported'));
+}
+registerStoreInit(() => mapsStore.setState({ maps: allMaps() }));
 export const useMaps = () => useStore(mapsStore, (s) => s.maps);
 export const useMap = (id: string | null) => useStore(mapsStore, (s) => s.maps.find((m) => m.id === id) ?? null);
 export const mapById = (id: string | null) => mapsStore.getState().maps.find((m) => m.id === id) ?? null;

@@ -5,6 +5,7 @@ import type { Services } from '../ports';
 import { createDummyBookings } from './bookings';
 import { createDummyFleetFeed } from './fleetFeed';
 import { createDummyIdentity } from './identity';
+import { createDummyMapAssets } from './mapAssets';
 import { createDummyRequests } from './requests';
 import { createDummyTripIds } from './tripIds';
 import { createDummyRobotOps } from './robotOps';
@@ -15,6 +16,7 @@ import {
   createDummyDevicePrefs,
   createDummyFleetProfiles,
   createDummyMapNames,
+  createDummyMapCatalog,
   createDummyMapVersions,
   createDummyMasterData,
   createDummyNotificationCache,
@@ -54,6 +56,8 @@ export function createDummyServices(opts: DummyServicesOptions = {}): Services {
     masterData: createDummyMasterData(opts.backend),
     mapNames: createDummyMapNames(opts.backend),
     mapVersions: createDummyMapVersions(opts.backend),
+    mapCatalog: createDummyMapCatalog(opts.backend),
+    mapAssets: createDummyMapAssets(),
     settings: createDummySettings(opts.backend),
     preferences: createDummyPreferences(opts.backend),
     notificationCache: createDummyNotificationCache(opts.backend),

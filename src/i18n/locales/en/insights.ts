@@ -426,6 +426,8 @@ export const insights = {
       shareName: (a: string, b: string, name: string) => `${a} and ${b} share the name “${name}”`,
       notReached: (id: string, name: string) => `${id} · ${name} is set On route but no route reaches it`,
       notReachedDetail: 'Connect it with a route (the Routes tab), or set its placement to Off route.',
+      unplaced: (id: string, name: string) => `${id} · ${name} has no position yet`,
+      unplacedDetail: 'Place it on the map (Stations tab), or delete it.',
       throughNoGo: (road: string, zone: string) => `${road} passes through the no-go zone “${zone}”`,
       throughNoGoDetail: 'Robots never enter a no-go zone: move the road or the zone.',
       field: (f: string) => `Field: ${f}`,

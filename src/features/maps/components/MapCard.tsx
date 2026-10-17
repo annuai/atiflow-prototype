@@ -28,7 +28,7 @@ export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
         aria-label={t.maps.openInEditor(map.name)}
       />
       <div className="relative h-44 bg-[#f4f7f6]">
-        <MapThumbnail fleetLive={map.fleetLive} className="size-full" />
+        <MapThumbnail map={map} fleetLive={map.fleetLive} className="size-full" />
         <span className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-black/70 py-1 pr-3 pl-1 text-xs font-medium text-white">
           <Badge size="sm" type="pill-color" color="brand">
             {copy.card.version(map.version)}

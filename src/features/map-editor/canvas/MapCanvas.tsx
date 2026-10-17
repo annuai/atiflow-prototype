@@ -95,6 +95,7 @@ export function MapCanvas({
     [data.stagingAreas, vp.X, vp.Y], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
+  const placedStations = data.stations.filter((s) => !s.unplaced); // those waiting for a position are listed in the panel, not piled on the origin
   const isSelected = (kind: string, id: string) => selection?.kind === kind && selection.id === id;
   const selectedZone = selection?.kind === 'zone' ? data.zones.find((z) => z.id === selection.id) : undefined;
   const preview = drawingPreview(tool, drawing, cursor);
@@ -120,6 +121,7 @@ export function MapCanvas({
         <path d={layers.grid} fill="none" stroke="#e5e7eb" strokeWidth={1} vectorEffect="non-scaling-stroke" />
         <path d={layers.floor} fill="#ffffff" stroke="#d4d4d8" strokeWidth={1} vectorEffect="non-scaling-stroke" />
         <ZoneLayer
+          under={data}
           zones={data.zones}
           vp={vp}
           isSelected={isSelected}
@@ -161,7 +163,7 @@ export function MapCanvas({
           vp={vp}
         />
         <StationLayer
-          stations={data.stations}
+          stations={placedStations}
           nodes={nodes}
           vp={vp}
           isSelected={isSelected}
