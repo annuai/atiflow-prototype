@@ -29,9 +29,11 @@ describe('dummy ERP catalogue (public/dummy-api/materials.json)', () => {
     expect(words.total).toBeGreaterThan(0);
     expect(words.rows.every((r) => r.group === '1CO1' && /master compound/i.test(r.name))).toBe(true);
   });
-  it('all() returns every match for select-all', () => {
+  it('all() returns every match of the search and prefix, for select-all', () => {
     const q = { text: '', prefix: 'RM6' };
-    expect(catalog.all(q)).toHaveLength(catalog.search({ ...q, limit: 1 }).total);
+    const all = catalog.all(q);
+    expect(all).toHaveLength(catalog.search({ ...q, limit: 1 }).total);
+    expect(all.every((r) => r.code.startsWith('RM6'))).toBe(true);
   });
   it('a query over the whole catalogue is fast (main thread safe too)', () => {
     const t = performance.now();
@@ -53,8 +55,8 @@ describe('dummy ERP catalogue (public/dummy-api/materials.json)', () => {
 
 describe('importing the whole catalogue stays quick', () => {
   const incoming = catalog
-    .all({ text: '', prefix: '' })
-    .map((r) => ({ code: r.code, name: r.name, groupName: r.group }));
+    .search({ text: '', prefix: '', limit: 1e6 })
+    .rows.map((r) => ({ code: r.code, name: r.name, groupName: r.group }));
   it('merges 47k materials in well under a second and makes one group per code', () => {
     const t = performance.now();
     const r = mergeMaterials([], [], incoming, 1);
@@ -72,5 +74,17 @@ describe('importing the whole catalogue stays quick', () => {
     );
     expect(performance.now() - t).toBeLessThan(1000);
     expect(rows.filter((r) => r.status === 'added')).toHaveLength(20_000);
+  });
+});
+
+describe('removing a material from Master Data', () => {
+  it('takes only that material out', async () => {
+    const { masterDataStore } = await import('../src/features/master-data/model/store');
+    const st = masterDataStore.getState();
+    const before = st.materials.length;
+    const code = st.materials[0].code;
+    st.removeMaterial(code);
+    expect(masterDataStore.getState().materials).toHaveLength(before - 1);
+    expect(masterDataStore.getState().materials.some((m) => m.code === code)).toBe(false);
   });
 });

@@ -41,12 +41,12 @@ export interface ErpBom {
 
 /**
  * Where "Import from API" reads from. The UI only knows this interface; the dummy adapter (services/dummy/erp) answers from a worker, a real one calls the ERP.
- * Real contract: GET /materials?q=&prefix=&offset=&limit= -> { total, items }, GET /materials/codes?q=&prefix= for select-all.
+ * Real contract: GET /materials?q=&prefix=&offset=&limit= -> { total, items }.
  */
 export interface MaterialSource {
   /** One page of the matches (stale answers are the caller's to ignore). */
   search(q: ErpQuery): Promise<ErpResult>;
-  /** EVERY match (limit and offset ignored), for "select all N". */
+  /** EVERY match of the search and prefix (limit and offset ignored), for "Select all N". */
   all(q: Omit<ErpQuery, 'limit' | 'offset'>): Promise<ErpRow[]>;
   /** The bill of materials of one material. Optional and unused today. */
   bom?(code: string): Promise<ErpBom | null>;

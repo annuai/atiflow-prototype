@@ -25,7 +25,7 @@ interface View {
 
 /**
  * Search + code-prefix filter over the ERP and a selectable list of what comes back. The source answers one page at a time (more is fetched as the list is scrolled),
- * so a catalogue of any size stays quick; "Select all" asks the source for every match. Selection survives changing the search.
+ * so a catalogue of any size stays quick; Selection survives changing the search.
  */
 export function ApiStep({ source, showStatus, selected, onSelect, picked }: Props) {
   const existing = useMasterData((s) => s.materials);
@@ -33,9 +33,9 @@ export function ApiStep({ source, showStatus, selected, onSelect, picked }: Prop
   const [text, setText] = useState('');
   const [prefix, setPrefix] = useState('');
   const [view, setView] = useState<View | null>(null);
+  const [selectingAll, setSelectingAll] = useState(false);
   const [failed, setFailed] = useState(false);
   const [more, setMore] = useState(false);
-  const [selectingAll, setSelectingAll] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const q = `${text}\u0000${prefix}`;
 

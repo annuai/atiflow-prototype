@@ -8,7 +8,7 @@ export const masterData = {
     'staging-area': { label: 'Staging Area', subtitle: 'Manage the staging areas' },
   },
   materials: {
-    note: 'Only materials selected from the material list are shown here. Materials can’t be deleted once added, as they may be used in workflows.',
+    note: 'Only the materials you selected from the material list are shown here. Add more any time, or remove the ones you no longer need (a material used in a workflow can’t be removed).',
     searchPlaceholder: 'Search materials by material groups, code, name',
     allGroups: 'All groups',
     groupFilter: (name: string) => `Group: ${name}`,
@@ -26,7 +26,18 @@ export const masterData = {
         'Import your materials from your ERP, upload a file or add one by hand. Workflows can only use materials that are assigned to their fleet.',
       action: 'Add materials',
     },
-    rowMenu: { label: 'Row actions', edit: 'Edit details', fleets: 'Manage fleets' },
+    rowMenu: { label: 'Row actions', edit: 'Edit details', fleets: 'Manage fleets', remove: 'Remove' },
+    remove: {
+      title: (name: string) => `Remove ${name}?`,
+      description: (code: string) =>
+        `${code} will no longer be listed in Master Data. You can add it again from the API at any time.`,
+      confirm: 'Remove',
+      inUse: {
+        title: 'This material is used in a workflow',
+        body: (code: string, fleets: string[]) =>
+          `${code} is used in ${fleets.join(', ')}. Remove it from the workflow first.`,
+      },
+    },
   },
   fleets: {
     inUse: {

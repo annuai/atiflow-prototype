@@ -19,6 +19,8 @@ export interface MasterDataState {
   /** The fleet was renamed: assigned materials follow it. */
   renameFleet(from: string, to: string): void;
   unassignMaterial(code: string, fleet: string): void;
+  /** Take a material out of Master Data (callers check that no workflow uses it). */
+  removeMaterial(code: string): void;
   /** Block / release one cell of an area (the area comes from its map; only its cell states are kept here). */
   toggleCell(area: StagingArea, row: number, col: number): void;
 }
@@ -53,6 +55,7 @@ export const masterDataStore = createStore<MasterDataState>((set, get) => ({
     }),
   assignMaterials: (codes, fleet) => set({ materials: assignToFleet(get().materials, codes, fleet, Date.now()) }),
   unassignMaterial: (code, fleet) => set({ materials: unassignFromFleet(get().materials, code, fleet, Date.now()) }),
+  removeMaterial: (code) => set({ materials: get().materials.filter((m) => m.code !== code) }),
   toggleCell(area, row, col) {
     const cur = get().areas.find((a) => a.id === area.id);
     const next = toggleBlocked({ ...area, cells: { ...(cur?.cells ?? {}), ...area.cells } }, row, col);

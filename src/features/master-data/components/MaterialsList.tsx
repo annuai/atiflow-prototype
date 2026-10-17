@@ -1,6 +1,6 @@
 import { useDeferredValue, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Database01, Edit05, Flag01, PackagePlus, Plus, SearchLg } from '@untitledui/icons';
+import { Database01, Edit05, Flag01, PackagePlus, Plus, SearchLg, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
@@ -15,6 +15,7 @@ import { useMasterData } from '../model/store';
 import type { Material } from '../model/types';
 import { EditMaterialModal } from './EditMaterialModal';
 import { FleetsModal } from './FleetsModal';
+import { RemoveMaterialDialog } from './RemoveMaterialDialog';
 
 const ALL = '';
 interface Props {
@@ -22,7 +23,7 @@ interface Props {
   onAdd(): void;
 }
 
-/** The materials list: note, search + group filter, table with hover ⋮ menu. Materials cannot be deleted (workflows may use them). */
+/** The materials list: note, search + group filter, table with hover ⋮ menu. A material can be removed unless a workflow uses it. */
 export function MaterialsList({ onAddMore, onAdd }: Props) {
   const materials = useMasterData((s) => s.materials);
   const groups = useMasterData((s) => s.groups);
@@ -37,6 +38,7 @@ export function MaterialsList({ onAddMore, onAdd }: Props) {
   const [group, setGroup] = useState(ALL);
   const [editing, setEditing] = useState<Material | null>(null);
   const [fleetsOf, setFleetsOf] = useState<Material | null>(null);
+  const [removing, setRemoving] = useState<Material | null>(null);
   const deferredText = useDeferredValue(text); // typing stays instant; the long list catches up
   const rows = useMemo(
     () => filterMaterials(materials, groups, { text: deferredText, group }),
@@ -89,10 +91,11 @@ export function MaterialsList({ onAddMore, onAdd }: Props) {
       cell: (m) => (
         <RowMenu
           label={copy.materials.rowMenu.label}
-          onAction={(id) => (id === 'edit' ? setEditing(m) : setFleetsOf(m))}
+          onAction={(id) => (id === 'edit' ? setEditing(m) : id === 'remove' ? setRemoving(m) : setFleetsOf(m))}
           items={[
             { id: 'edit', label: copy.materials.rowMenu.edit, icon: Edit05 },
             { id: 'fleets', label: copy.materials.rowMenu.fleets, icon: Flag01 },
+            { id: 'remove', label: copy.materials.rowMenu.remove, icon: Trash01 },
           ]}
         />
       ),
@@ -168,6 +171,7 @@ export function MaterialsList({ onAddMore, onAdd }: Props) {
       )}
       <EditMaterialModal material={editing} onOpenChange={(o) => !o && setEditing(null)} />
       <FleetsModal material={fleetsOf} onOpenChange={(o) => !o && setFleetsOf(null)} />
+      <RemoveMaterialDialog material={removing} onOpenChange={(o) => !o && setRemoving(null)} />
     </>
   );
 }

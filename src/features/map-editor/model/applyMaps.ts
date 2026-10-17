@@ -20,16 +20,21 @@ export function applyPublishedMaps(nav: NavGraph, maps: { fleetLive: string; dat
   };
   for (const { data } of maps) {
     for (const n of data.nodes) nodes.set(n.id, n);
+    // a lane or station that two maps both hold (a shared area) is one: it serves the fleets of both
+    const union = <T extends { id: string; fleets: string[] }>(list: T[], item: T) => {
+      const old = list.find((q) => q.id === item.id);
+      if (old) old.fleets = [...new Set([...old.fleets, ...item.fleets])];
+    };
     for (const l of data.lanes)
       if (!seen.l.has(l.id)) {
         seen.l.add(l.id);
-        lanes.push(l);
-      }
+        lanes.push({ ...l, fleets: [...l.fleets] });
+      } else union(lanes, l);
     for (const s of data.stations)
       if (!seen.s.has(s.id)) {
         seen.s.add(s.id);
-        stations.push(s);
-      }
+        stations.push({ ...s, fleets: [...s.fleets] });
+      } else union(stations, s);
     for (const z of data.zones)
       if (z.type === 'exclusive' && !seen.z.has(z.id)) {
         seen.z.add(z.id);
