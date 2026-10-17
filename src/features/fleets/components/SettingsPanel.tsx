@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
+import { DangerZone } from '@/components/data/DangerZone';
 import { TypeToConfirmDialog } from '@/components/modal/TypeToConfirmDialog';
 import { useDataset } from '@/data/dataset';
 import { useDevices } from '@/features/devices';
@@ -26,33 +27,32 @@ export function SettingsPanel({ fleet }: { fleet: string }) {
     notify.success(d.title, d.body, 'fleet-deleted');
   };
   return (
-    <section aria-labelledby="fleet-danger" className="rounded-xl border border-secondary bg-primary">
-      <h2 id="fleet-danger" className="border-b border-secondary px-5 py-3 text-sm font-semibold text-error-primary">
-        {t.zone}
-      </h2>
-      <div className="flex flex-wrap items-start justify-between gap-4 px-5 py-4">
-        <div className="min-w-0 max-w-xl">
-          <p className="text-sm font-semibold text-primary">{t.title}</p>
-          <p className="mt-1 text-sm text-tertiary">{t.body}</p>
-          <p className="mt-2 text-sm text-secondary">
-            {t.effects(impact.robots, impact.hardware, impact.workflows, impact.materials, impact.users)}
+    <>
+      <DangerZone
+        label={t.zone}
+        title={t.title}
+        description={t.body}
+        action={
+          <Button
+            size="sm"
+            color="tertiary-destructive"
+            iconLeading={Trash01}
+            isDisabled={impact.openTrips > 0}
+            onPress={() => setAsking(true)}
+          >
+            {t.button}
+          </Button>
+        }
+      >
+        <p className="mt-2 text-sm text-secondary">
+          {t.effects(impact.robots, impact.hardware, impact.workflows, impact.materials, impact.users)}
+        </p>
+        {impact.openTrips > 0 && (
+          <p role="alert" className="mt-2 text-sm text-error-primary">
+            {t.blocked(impact.openTrips)}
           </p>
-          {impact.openTrips > 0 && (
-            <p role="alert" className="mt-2 text-sm text-error-primary">
-              {t.blocked(impact.openTrips)}
-            </p>
-          )}
-        </div>
-        <Button
-          size="sm"
-          color="secondary-destructive"
-          iconLeading={Trash01}
-          isDisabled={impact.openTrips > 0}
-          onPress={() => setAsking(true)}
-        >
-          {t.button}
-        </Button>
-      </div>
+        )}
+      </DangerZone>
       <TypeToConfirmDialog
         isOpen={asking}
         onOpenChange={setAsking}
@@ -63,6 +63,6 @@ export function SettingsPanel({ fleet }: { fleet: string }) {
         confirmLabel={t.confirm}
         onConfirm={run}
       />
-    </section>
+    </>
   );
 }

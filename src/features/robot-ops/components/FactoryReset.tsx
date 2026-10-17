@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, RefreshCcw03 } from '@untitledui/icons';
+import { RefreshCcw03 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
+import { DangerZone } from '@/components/data/DangerZone';
 import { TypeToConfirmDialog } from '@/components/modal/TypeToConfirmDialog';
 import { copy } from '../copy';
 
@@ -17,26 +18,14 @@ export function FactoryReset({
   disabled: boolean;
   onRestore(): void;
 }) {
-  const [open, setOpen] = useState(false);
   const [asking, setAsking] = useState(false);
-  const Chevron = open ? ChevronUp : ChevronDown;
   return (
-    <section className="rounded-xl border border-secondary bg-primary">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-tertiary outline-focus-ring hover:bg-primary_hover focus-visible:outline-2"
-      >
-        {copy.config.reset.zone}
-        <Chevron className="size-4 text-fg-quaternary" aria-hidden />
-      </button>
-      {open && (
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-secondary px-4 py-4">
-          <div className="min-w-0 max-w-md">
-            <p className="text-sm font-semibold text-primary">{copy.config.reset.title}</p>
-            <p className="text-sm text-tertiary">{copy.config.reset.body}</p>
-          </div>
+    <>
+      <DangerZone
+        label={copy.config.reset.zone}
+        title={copy.config.reset.title}
+        description={copy.config.reset.body}
+        action={
           <Button
             size="sm"
             color="tertiary-destructive"
@@ -46,8 +35,8 @@ export function FactoryReset({
           >
             {copy.config.restore}
           </Button>
-        </div>
-      )}
+        }
+      />
       <TypeToConfirmDialog
         isOpen={asking}
         onOpenChange={setAsking}
@@ -58,6 +47,6 @@ export function FactoryReset({
         confirmLabel={copy.config.restoreConfirm}
         onConfirm={onRestore}
       />
-    </section>
+    </>
   );
 }

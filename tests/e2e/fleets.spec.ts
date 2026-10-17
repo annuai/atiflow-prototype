@@ -29,7 +29,8 @@ test.describe('fleets', () => {
 
   test('a fleet is deleted from the danger zone of its Settings tab, after typing its name', async ({ page }) => {
     await page.goto('/configurator/fleets/Assembly%20Fleet/settings');
-    await expect(page.getByText('Danger zone')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Delete fleet' })).toHaveCount(0); // hidden until the danger zone is opened
+    await page.getByRole('button', { name: 'Danger zone' }).click();
     await page.getByRole('button', { name: 'Delete fleet' }).click();
     const confirm = page.getByRole('button', { name: 'Delete fleet' }).last();
     await expect(confirm).toBeDisabled(); // not before the name is typed
