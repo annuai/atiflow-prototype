@@ -47,17 +47,11 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[#eef3f3]">
-      {/* The illustration's robot sits in the middle of the picture. The picture is oversized and shifted so the robot lands left of the card (34% of the width) and below the headline (72% of the height), not behind either. */}
+      {/* The picture fills the page and is anchored to the bottom-left corner, so the robot and the lanes at the bottom of the illustration stay in view. On narrow screens (cropped to a slice) it starts a little in from the left so the robot is not cut off. */}
       <img
         src={bg}
         alt=""
-        className="pointer-events-none absolute max-w-none"
-        style={{
-          width: 'max(140vw, 233vh)',
-          left: 'calc(34vw - max(70vw, 116.5vh))',
-          top: '72vh',
-          translate: '0 -55%',
-        }}
+        className="pointer-events-none absolute inset-0 size-full object-cover object-[20%_bottom] sm:object-left-bottom"
       />
       <div className="absolute inset-0 bg-white/40" />
 
