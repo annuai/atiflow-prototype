@@ -143,22 +143,14 @@ describe('one scene per fleet, and one for the whole floor', () => {
     expect(s.network.lanes.map((l) => l.id).sort()).toEqual(['imp-x/L1', 'imp-x/L2']);
     expect(s.network.forbiddenZones).toEqual([]); // the ECC no-go zones are not this map's
   });
-
-  it('"all fleets" is ONE scene: every fleet, every building', () => {
-    const w = withImported();
-    expect(w.all.fleetId).toBeNull();
-    expect(w.all.fleets.sort()).toEqual(['asrs', 'line-side', 'probe']);
-    expect(w.all.site.bounds.maxX).toBeGreaterThan(baseSite.bounds.maxX + 20);
-    expect(w.all.network.lanes.length).toBe(w.nav.lanes.length);
-  });
 });
 
 describe('what is shown for a choice of fleet', () => {
-  it('a fleet shows its own scene; all fleets and a fleet that is not on the floor show the whole floor', () => {
+  it('a fleet shows its own scene; a fleet that is not on the floor shows nothing (the page says why)', () => {
     const w = withImported();
     expect(visibleScenes(w, 'asrs').map((s) => s.fleetId)).toEqual(['asrs']);
-    expect(visibleScenes(w, 'all')).toEqual([w.all]);
-    expect(visibleScenes(w, 'nobody')).toEqual([w.all]);
+    expect(visibleScenes(w, 'nobody')).toEqual([]);
+    expect(visibleScenes(w, 'all')).toEqual([]); // there is no "all fleets" view
   });
 });
 
@@ -183,8 +175,6 @@ describe('a fleet that is added later', () => {
     expect(late.network.lanes.every((l) => l.fleets.includes('late'))).toBe(true);
     // the imported map's scene is exactly what it was: nothing to reload for it
     expect(sceneOfFleet(after, 'probe')!.key).toBe(sceneOfFleet(before, 'probe')!.key);
-    // the whole floor changed (a fleet joined it)
-    expect(after.all.key).not.toBe(before.all.key);
   });
 
   it('a fleet with no map is not a scene and is listed as idle, never half-loaded', () => {

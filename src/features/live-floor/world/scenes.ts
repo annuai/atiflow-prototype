@@ -6,10 +6,10 @@ import type { World } from './buildWorld';
 export const sceneOfFleet = (w: World, fleetId: string): SceneModel | null =>
   w.scenes.find((s) => s.fleetId === fleetId) ?? null;
 
-/** What to show for the chosen fleet: its own scene, or the whole floor ("All fleets", and a fleet that is not on the floor, which has nothing of its own to show). */
+/** What to show for the chosen fleet: its own scene (nothing, when the fleet is not on the floor: the page says why). */
 export function visibleScenes(w: World, fleetId: string): SceneModel[] {
-  const own = fleetId === 'all' ? null : sceneOfFleet(w, fleetId);
-  return [own ?? w.all];
+  const own = sceneOfFleet(w, fleetId);
+  return own ? [own] : [];
 }
 
 /** A scene as the engine takes it: its building, its network and the fleets whose robots belong to it. */
@@ -20,10 +20,10 @@ export const toSource = (m: SceneModel): SceneSource => ({
   fleets: m.fleets,
 });
 
-/** Tells the engine what to show for the chosen fleet: its own scene (loaded the first time it is chosen, kept after) or the whole floor. */
+/** Tells the engine what to show for the chosen fleet: its own scene (loaded the first time it is chosen, kept after). */
 export function showFor(eng: { setScenes(s: SceneSource[], show: string[]): void }, w: World, fleetId: string) {
   eng.setScenes(
-    [w.all, ...w.scenes].map(toSource),
+    w.scenes.map(toSource),
     visibleScenes(w, fleetId).map((m) => m.key),
   );
 }

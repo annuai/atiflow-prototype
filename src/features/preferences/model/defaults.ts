@@ -14,7 +14,7 @@ export const DEFAULT_ALERTS: AlertPrefs = {
 export const DEFAULT_PREFERENCES: Preferences = {
   alerts: DEFAULT_ALERTS,
   startPage: 'last',
-  defaultFleet: 'all',
+  defaultFleet: '',
   language: 'site',
 };
 

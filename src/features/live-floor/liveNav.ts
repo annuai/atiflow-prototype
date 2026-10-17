@@ -8,7 +8,10 @@ import gear from '@/ui/icons/settings.svg';
 import { useUnreadCount } from '@/features/notifications';
 import { useVisibleFleets, useAccess } from '@/features/auth';
 import { useActionCenterRunning, useCalls } from '@/features/action-center';
+import { myPrefsNow } from '@/features/preferences';
 import type { NavModel } from '@/shell/types';
+import { chooseFleet } from './defaultFleet';
+import { feed } from './liveFeed';
 
 import { ACTION_CENTER_PATH, DASHBOARD_PATH, LIVE_FLOOR_PATH, REPORTS_PATH, SUPERVISOR_SETTINGS_PATH } from './paths';
 import { localized } from '@/i18n';
@@ -67,7 +70,15 @@ export function useLiveNav(): NavModel {
           label: names.features['supervisor.live-floor'],
           icon: master,
           active: onLive && navSel === 'live',
-          onSelect: pick('live', 'all'),
+          onSelect: pick(
+            'live',
+            chooseFleet({
+              current: st.fleetId,
+              visible: fleets.map((f) => f.id),
+              running: Object.keys(feed.world()?.runs ?? {}),
+              preferred: myPrefsNow().defaultFleet,
+            }) ?? 'all',
+          ),
         },
       ],
     },
@@ -77,13 +88,6 @@ export function useLiveNav(): NavModel {
             id: 'fleets',
             label: names.groups.fleets,
             items: [
-              {
-                id: 'all',
-                label: names.items.allFleets,
-                icon: fleetI,
-                active: onLive && navSel === 'fleet:all',
-                onSelect: pick('fleet:all', 'all'),
-              },
               ...fleets.map((f) => ({
                 id: f.id,
                 label: f.name,

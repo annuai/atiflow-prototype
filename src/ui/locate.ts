@@ -73,21 +73,24 @@ export function locateTarget(id: string) {
   if (s.cameraMode === 'walk' || s.cameraMode === 'follow') s.setCameraMode('orbit');
   const r = s.robots[id];
   if (r) {
-    if (s.fleetId !== 'all' && r.fleetId !== s.fleetId) {
-      pending = id; // the whole floor is shown first, then the camera flies there
-      s.setFleet('all');
-      s.setNav('live');
+    if (r.fleetId !== s.fleetId) {
+      pending = id; // the robot's fleet is shown first, then the camera flies there
+      s.setFleet(r.fleetId);
+      s.setNav('fleet:' + r.fleetId);
       return;
     }
     handle.engine?.focusRobot(id);
     return;
   }
   const st = s.nav?.stations.find((q) => q.id === id);
-  if (st && s.fleetId !== 'all' && !st.fleets.includes(s.fleetId)) {
-    pending = id;
-    s.setFleet('all');
-    s.setNav('live');
-    return;
+  if (st && !st.fleets.includes(s.fleetId)) {
+    const owner = st.fleets.find((f) => s.fleets.some((x) => x.id === f)) ?? st.fleets[0];
+    if (owner) {
+      pending = id; // the fleet that owns the station is shown first
+      s.setFleet(owner);
+      s.setNav('fleet:' + owner);
+      return;
+    }
   }
   s.selectStation(id);
   handle.engine?.focusStation(id);

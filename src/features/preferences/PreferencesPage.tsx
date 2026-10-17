@@ -50,7 +50,7 @@ export function PreferencesPage() {
   const navigate = useNavigate();
   const user = useAuth((s) => s.user)!;
   const saved = useMyPreferences();
-  const fleets = useVisibleFleets().filter((f) => f.liveId);
+  const fleets = useVisibleFleets();
   const [d, setD] = useState<Preferences>(saved);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const dirty = JSON.stringify(d) !== JSON.stringify(saved);
@@ -152,12 +152,13 @@ export function PreferencesPage() {
                     <SettingsRow label={copy.start.fleet} hint={copy.start.fleetHint}>
                       <Select
                         aria-label={copy.start.fleet}
-                        selectedKey={d.defaultFleet}
+                        selectedKey={
+                          fleets.some((f) => (f.liveId ?? f.id) === d.defaultFleet)
+                            ? d.defaultFleet
+                            : (fleets[0]?.liveId ?? fleets[0]?.id) || null
+                        }
                         onSelectionChange={(k) => setD({ ...d, defaultFleet: String(k) })}
-                        items={[
-                          { id: 'all', label: copy.start.allFleets },
-                          ...fleets.map((f) => ({ id: f.liveId!, label: f.name })),
-                        ]}
+                        items={fleets.map((f) => ({ id: f.liveId ?? f.id, label: f.name }))}
                       >
                         {(i) => <Select.Item {...i} />}
                       </Select>

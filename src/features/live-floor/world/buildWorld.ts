@@ -36,9 +36,8 @@ export interface World {
   /** Everything on one floor (the base site and every placed map): what the simulation and the rules checker run on. */
   site: SiteLayout;
   nav: NavGraph;
-  /** What is SHOWN, one scene per fleet that is running (its own network on its map's building: two fleets on one map are two scenes) and `all`, the whole floor. See docs/design/map-scenes.md. */
+  /** What is SHOWN: one scene per fleet that is running (its own network on its map's building: two fleets on one map are two scenes). See docs/design/map-scenes.md. */
   scenes: SceneModel[];
-  all: SceneModel;
   /** fleet (its id in `nav`) -> the map it runs on */
   runs: Record<string, string>;
   /** fleets that are NOT on the floor, and why (shown to the person looking at that fleet) */
@@ -233,14 +232,14 @@ export function buildWorld(i: WorldInput): World {
   const site = mergeSite(i.baseSite, parts);
   const partOf = new Map(parts.map((p) => [p.map.id, p]));
   const sceneOf = (
-    fleetId: string | null,
-    mapId: string | null,
+    fleetId: string,
+    mapId: string,
     ids: string[],
     n: NavGraph,
     geo: SiteLayout,
     at: { x: number; y: number },
   ): SceneModel => ({
-    key: `${fleetId ?? 'all'}:${mapId ?? ''}@${networkKey(n)}`,
+    key: `${fleetId}:${mapId}@${networkKey(n)}`,
     fleetId,
     mapId,
     fleets: ids,
@@ -257,14 +256,6 @@ export function buildWorld(i: WorldInput): World {
       y: part?.dy ?? 0,
     });
   });
-  const all = sceneOf(
-    null,
-    null,
-    world.fleets.map((f) => f.id),
-    world,
-    site,
-    { x: 0, y: 0 },
-  );
 
   const signature = JSON.stringify([
     fleets.map((f) => [f.id, f.name]),
@@ -274,5 +265,5 @@ export function buildWorld(i: WorldInput): World {
     idle.map((x) => [x.fleetId, x.why]),
     site.walls.length,
   ]);
-  return { site, nav: world, scenes, all, runs, idle, signature };
+  return { site, nav: world, scenes, runs, idle, signature };
 }

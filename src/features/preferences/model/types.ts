@@ -17,7 +17,7 @@ export interface Preferences {
   alerts: AlertPrefs;
   /** 'last' = the page I used last; otherwise the path of a page. */
   startPage: string;
-  /** 'all' = all fleets, otherwise a lane-map fleet id; applied when I open the Live Floor from its sidebar item. */
+  /** A lane-map fleet id; '' (or a fleet I can no longer see) = the first fleet on the floor. Applied when I open the Live Floor from its sidebar item. */
   defaultFleet: string;
   /** 'site' = the site's default language; otherwise a language id (see src/i18n/languages.ts). */
   language: string;

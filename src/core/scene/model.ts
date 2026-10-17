@@ -1,8 +1,8 @@
 import type { NavGraph, SiteLayout } from '../types';
 
 /**
- * A SCENE is what the Live Floor shows for one choice: ONE FLEET's map (its building and the network that fleet drives on, even when another fleet runs the same map) or the whole floor
- * ("All fleets"). Scenes are never shared: each is loaded in full, for its own fleet. It is a plain value (no Three, no React) so it can be built, hashed, compared and cached anywhere. See docs/design/map-scenes.md.
+ * A SCENE is what the Live Floor shows for the chosen fleet: that fleet's map (its building and the network that fleet drives on, even when another fleet runs the same map).
+ * Scenes are never shared: each is loaded in full, for its own fleet. There is no "all fleets" scene. It is a plain value (no Three, no React) so it can be built, hashed, compared and cached anywhere. See docs/design/map-scenes.md.
  */
 export interface Placement {
   /** where the map's own frame sits in the site frame, metres and radians */
@@ -13,12 +13,12 @@ export interface Placement {
   auto: boolean;
 }
 export interface SceneModel {
-  /** `fleet:map@networkKey` (or `all@networkKey`): changes when the network does, so a loaded scene is replaced exactly when it is out of date */
+  /** `fleet:map@networkKey`: changes when the network does, so a loaded scene is replaced exactly when it is out of date */
   key: string;
-  /** the fleet this scene is for; null = the whole floor ("All fleets") */
-  fleetId: string | null;
-  mapId: string | null;
-  /** the fleets whose robots belong to this scene (one for a fleet's scene, all of them for the whole floor) */
+  /** the fleet this scene is for, and the map it runs on */
+  fleetId: string;
+  mapId: string;
+  /** the fleets whose robots belong to this scene (the one fleet) */
   fleets: string[];
   /** the building */
   site: SiteLayout;

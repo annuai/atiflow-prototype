@@ -18,6 +18,7 @@ import { useCoarse } from '@/ui/useCoarse';
 import { XClose } from '@untitledui/icons';
 import { LocateBox } from './LocateBox';
 import { feed } from './liveFeed';
+import { chooseFleet, visibleFleetIds } from './defaultFleet';
 import { showFor } from './world/scenes';
 import { locateTarget, takePendingLocate } from '@/ui/locate';
 import { copy } from '@/ui/copy';
@@ -49,14 +50,16 @@ export function LiveFloorPage() {
     Promise.all([feed.ready(), loadRobotModels()]).then(([{ world }]) => {
       if (dead) return;
       live = true;
-      showFor(eng, world, store.getState().fleetId);
+      // there is no "all fleets" view: the Live Floor shows one fleet (the chosen one, my own choice, or the first on the floor)
+      const fleet = chooseFleet({
+        current: store.getState().fleetId,
+        visible: visibleFleetIds(),
+        running: Object.keys(world.runs),
+        preferred: myPrefsNow().defaultFleet,
+      });
+      if (fleet) store.getState().setFleet(fleet);
+      showFor(eng, world, fleet ?? '');
       setReady(true);
-      {
-        const st = store.getState(),
-          want = myPrefsNow().defaultFleet;
-        if (want !== 'all' && st.navSel === 'live' && st.fleetId === 'all' && st.fleets.some((f) => f.id === want))
-          st.setFleet(want);
-      } // my default fleet, when I open the Live Floor itself (the "All fleets" item still shows everything)
       eng.updateRobots(Object.values(store.getState().robots)); // robots already on the floor (coming from the Dashboard or the Action Center) show at once: Locate needs their meshes
       const target = (routeState as { locate?: string } | null)?.locate;
       if (target) locateTarget(target);
@@ -99,6 +102,13 @@ export function LiveFloorPage() {
   useEffect(() => {
     const w = feed.world();
     if (!ready || !w || !handle.engine) return;
+    const fleet = chooseFleet({
+      current: fleetId,
+      visible: visibleFleetIds(),
+      running: Object.keys(w.runs),
+      preferred: myPrefsNow().defaultFleet,
+    });
+    if (fleet && fleet !== fleetId) return void store.getState().setFleet(fleet); // the chosen fleet is gone (a different person signed in): this effect runs again with the right one
     showFor(handle.engine, w, fleetId);
     const t = takePendingLocate(); // a locate that was waiting for this scene
     if (t) locateTarget(t);
@@ -121,7 +131,7 @@ export function LiveFloorPage() {
   const loadPhase = useLoadPhase(!ready);
   const zone = site?.zones.find((z) => z.id === zoneId);
   // a fleet that is not on the floor (no map, map not published, nothing to drive on) is explained, never an empty scene
-  const idle = ready && fleetId !== 'all' ? feed.world()?.idle.find((i) => i.fleetId === fleetId) : undefined;
+  const idle = ready ? feed.world()?.idle.find((i) => i.fleetId === fleetId) : undefined;
   const canConfigure = useAccess().can('configurator.fleets');
   return (
     <>
@@ -143,6 +153,7 @@ export function LiveFloorPage() {
               <>
                 <span style={{ fontSize: 12, fontWeight: 600 }}>{copy.page.fleetLabel}</span>
                 <FleetSelect
+                  includeAll={false}
                   className="fleet-select"
                   value={fleetId}
                   onChange={(id) => store.getState().setFleet(id)}
