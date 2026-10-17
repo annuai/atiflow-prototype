@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Send01, SearchLg, Stars02 } from '@untitledui/icons';
+import { Send01, SearchLg } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { wfStore } from '../model/store';
@@ -19,9 +19,6 @@ export function AiPromptBar() {
   };
   return (
     <form className="float cmd" data-no-pan data-wf-ai onSubmit={submit}>
-      <span className="wf-ai-mark">
-        <Stars02 className="size-4" />
-      </span>
       <Input
         size="sm"
         icon={SearchLg}
