@@ -48,7 +48,7 @@ export function EmptyState({
     <div
       role="status"
       className={cx(
-        'mx-auto flex w-full max-w-lg flex-col items-center justify-center text-center',
+        'flex w-full flex-col items-center justify-center text-center',
         s.box,
         framed && 'rounded-xl border border-dashed border-primary',
         className,
@@ -64,7 +64,7 @@ export function EmptyState({
         <Icon className={s.icon} />
       </span>
       <p className={cx('font-semibold text-primary', s.title)}>{title}</p>
-      {subtext && <p className={cx('text-tertiary', s.sub)}>{subtext}</p>}
+      {subtext && <p className={cx('max-w-xl text-tertiary', s.sub)}>{subtext}</p>}
       {children}
       {action && <div className="mt-3 flex flex-wrap justify-center gap-3">{action}</div>}
     </div>

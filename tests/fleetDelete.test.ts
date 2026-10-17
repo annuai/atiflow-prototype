@@ -68,3 +68,25 @@ describe('delete a fleet', () => {
     expect(deleteFleet(NAME)).toBe(true);
   });
 });
+
+describe('a map belongs to one fleet', () => {
+  it('maps another fleet runs on are not offered, the fleet’s own map is, and the store refuses a taken map', async () => {
+    const { availableMaps } = await import('../src/features/fleets/model/logic');
+    const maps = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+    const profiles = { F1: { mapId: 'a' }, F2: { mapId: 'b' }, F3: { mapId: null } };
+    expect(availableMaps(maps, profiles, 'F1').map((m) => m.id)).toEqual(['a', 'c']); // its own + the free one
+    expect(availableMaps(maps, profiles, 'F3').map((m) => m.id)).toEqual(['c']);
+    // the store: a fleet cannot be given a map that another fleet has
+    datasetStore.getState().addFleet('Map Fleet One');
+    datasetStore.getState().addFleet('Map Fleet Two');
+    fleetsStore.getState().assignMap('Map Fleet One', 'shared-map');
+    fleetsStore.getState().assignMap('Map Fleet Two', 'shared-map');
+    expect(fleetsStore.getState().profiles['Map Fleet One']?.mapId).toBe('shared-map');
+    expect(fleetsStore.getState().profiles['Map Fleet Two']?.mapId ?? null).toBeNull();
+    fleetsStore.getState().unassignMap('Map Fleet One');
+    fleetsStore.getState().assignMap('Map Fleet Two', 'shared-map'); // free again once the first fleet lets go
+    expect(fleetsStore.getState().profiles['Map Fleet Two']?.mapId).toBe('shared-map');
+    deleteFleet('Map Fleet One');
+    deleteFleet('Map Fleet Two');
+  });
+});

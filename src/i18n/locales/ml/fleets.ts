@@ -105,6 +105,8 @@ export const messages: Messages<typeof fleets> = {
     version: (v) => `പതിപ്പ് ${v}`,
     done: (map, fleet) => ({ title: 'മാപ്പ് നൽകി', body: `${map} ഇപ്പോൾ ${fleet}-ന്റെ മാപ്പാണ്.` }),
     none: 'ഇതുവരെ മാപ്പുകളൊന്നും ലഭ്യമല്ല.',
+    taken: 'മാപ്പുകളൊന്നും ലഭ്യമല്ല: എല്ലാം മറ്റ് ഫ്ലീറ്റുകൾക്ക് നൽകിയിട്ടുണ്ട്.',
+    noOther: 'മറ്റ് മാപ്പുകളൊന്നും ലഭ്യമല്ല, അല്ലെങ്കിൽ ബാക്കിയെല്ലാം നൽകിയിട്ടുണ്ട്.',
   },
   assignDevices: {
     title: (singular, fleet) => `${fleet}-ന് ${singular} നൽകുക`,

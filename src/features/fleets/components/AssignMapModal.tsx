@@ -8,11 +8,14 @@ import { ModalShell } from '@/components/modal/ModalShell';
 import { notify } from '@/ui/toast';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
+import { availableMaps } from '../model/logic';
 import { fleetsStore, profileOf, useFleets } from '../model/store';
 
 function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean): void }) {
-  const MAPS = useMaps();
-  const profile = useFleets((s) => profileOf(s.profiles, fleet));
+  const all = useMaps();
+  const profiles = useFleets((s) => s.profiles);
+  const profile = profileOf(profiles, fleet);
+  const MAPS = availableMaps(all, profiles, fleet); // only maps no other fleet runs on
   const changing = profile.mapId !== null; // a fleet that already has a map: this is "Change map"
   const [mapId, setMapId] = useState(profile.mapId ?? '');
   const t = copy.assignMap;
@@ -38,7 +41,7 @@ function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean)
       }}
     >
       {MAPS.length === 0 ? (
-        <EmptyState icon={Map01} title={copy.emptyTitle.maps} subtext={t.none} size="sm" />
+        <EmptyState icon={Map01} title={copy.emptyTitle.maps} subtext={all.length ? t.taken : t.none} size="sm" />
       ) : (
         <RadioGroup aria-label={t.title(fleet)} value={mapId} onChange={setMapId} className="flex flex-col gap-3 pt-2">
           {MAPS.map((m) => (
@@ -82,6 +85,9 @@ function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean)
             </Radio>
           ))}
         </RadioGroup>
+      )}
+      {changing && MAPS.length > 0 && MAPS.every((m) => m.id === profile.mapId) && (
+        <p className="mt-3 text-sm text-tertiary">{t.noOther}</p>
       )}
       {clears && (
         <p role="alert" className="mt-3 rounded-lg bg-warning-secondary p-3 text-sm text-warning-primary">

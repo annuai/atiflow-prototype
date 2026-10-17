@@ -105,6 +105,8 @@ export const fleets = {
     version: (v: number) => `Version ${v}`,
     done: (map: string, fleet: string) => ({ title: 'Map assigned', body: `${map} is now the map of ${fleet}.` }),
     none: 'No maps are available yet.',
+    taken: 'No maps are available: all of them are assigned to other fleets.',
+    noOther: 'No other maps available, or all others are assigned.',
   },
   assignDevices: {
     title: (singular: string, fleet: string) => `Assign ${singular.toLowerCase()} to ${fleet}`,

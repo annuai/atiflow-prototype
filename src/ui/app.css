@@ -348,7 +348,7 @@ img {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 16px;
+  padding: 0 var(--bar-inset) 0 16px;
   border-bottom: 1px solid var(--border-secondary);
 }
 .bh h2 {

@@ -8,7 +8,7 @@ import type { FleetProfile } from './types';
 
 export interface FleetsState {
   profiles: Record<string, FleetProfile>;
-  /** Point the fleet at a map. Station groups belong to the old map's stations, so they are cleared when the map changes. */
+  /** Point the fleet at a map (ignored when another fleet already has it: a map belongs to one fleet only). Station groups belong to the old map's stations, so they are cleared when the map changes. */
   assignMap(fleet: string, mapId: string): void;
   /** Take the map away from the fleet. Its station groups belong to that map's stations, so they are cleared with it. */
   unassignMap(fleet: string): void;
@@ -47,6 +47,7 @@ export const fleetsStore = createStore<FleetsState>((set, get) => {
     assignMap: (fleet, mapId) => {
       const p = profileOf(get().profiles, fleet);
       if (p.mapId === mapId) return;
+      if (Object.entries(get().profiles).some(([name, q]) => name !== fleet && q.mapId === mapId)) return; // a map belongs to one fleet only
       set({ profiles: { ...get().profiles, [fleet]: { mapId, groups: [] } } });
     },
     unassignMap: (fleet) => set({ profiles: { ...get().profiles, [fleet]: { mapId: null, groups: [] } } }),

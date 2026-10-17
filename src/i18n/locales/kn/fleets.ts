@@ -107,6 +107,8 @@ export const messages: Messages<typeof fleets> = {
     version: (v) => `ಆವೃತ್ತಿ ${v}`,
     done: (map, fleet) => ({ title: 'ನಕ್ಷೆ ನಿಯೋಜಿಸಲಾಗಿದೆ', body: `${map} ಈಗ ${fleet} ನ ನಕ್ಷೆಯಾಗಿದೆ.` }),
     none: 'ಇನ್ನೂ ನಕ್ಷೆಗಳು ಲಭ್ಯವಿಲ್ಲ.',
+    taken: 'ಯಾವುದೇ ನಕ್ಷೆ ಲಭ್ಯವಿಲ್ಲ: ಎಲ್ಲವೂ ಇತರ ಫ್ಲೀಟ್‌ಗಳಿಗೆ ನಿಯೋಜಿತವಾಗಿವೆ.',
+    noOther: 'ಬೇರೆ ನಕ್ಷೆಗಳು ಲಭ್ಯವಿಲ್ಲ, ಅಥವಾ ಉಳಿದವೆಲ್ಲವೂ ನಿಯೋಜಿತವಾಗಿವೆ.',
   },
   assignDevices: {
     title: (singular, fleet) => `${fleet} ಗೆ ${singular} ನಿಯೋಜಿಸಿ`,

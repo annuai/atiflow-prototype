@@ -18,6 +18,8 @@
   --r-lg: 12px;
   --r-xl: 20px;
   --r-full: 9999px;
+  /* The room around the controls in a card's header bar: the gap above and below a 36 px control in the 52 px bar, which is ALSO the gap after the last control at the right edge (the left keeps the content padding for the title text). A bigger right padding looked like a stray gap after the button or dropdown. */
+  --bar-inset: 8px;
   --bg-page: #f5f5f5;
   --bg-primary: #ffffff;
   --bg-tertiary: #f5f5f5;

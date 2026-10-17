@@ -128,6 +128,9 @@ describe('assigning a map', () => {
   it('a fleet without a map can be given one; changing the map clears station groups of the old map', async () => {
     const { fleetsStore, profileOf } = await import('../src/features/fleets/model/store');
     expect(profileOf(fleetsStore.getState().profiles, 'Brand New Fleet').mapId).toBeNull();
+    fleetsStore.getState().assignMap('Brand New Fleet', 'assembly-east'); // the Assembly Fleet has it: a map belongs to one fleet, so nothing happens
+    expect(profileOf(fleetsStore.getState().profiles, 'Brand New Fleet').mapId).toBeNull();
+    fleetsStore.getState().unassignMap('Assembly Fleet');
     fleetsStore.getState().assignMap('Brand New Fleet', 'assembly-east');
     expect(profileOf(fleetsStore.getState().profiles, 'Brand New Fleet')).toEqual({
       mapId: 'assembly-east',
@@ -135,6 +138,7 @@ describe('assigning a map', () => {
     });
     fleetsStore.getState().assignMap('Line Side Fleet', 'main-assembly');
     expect(profileOf(fleetsStore.getState().profiles, 'Line Side Fleet').groups).toHaveLength(2); // same map: untouched
+    fleetsStore.getState().unassignMap('Brand New Fleet');
     fleetsStore.getState().assignMap('Line Side Fleet', 'assembly-east');
     expect(profileOf(fleetsStore.getState().profiles, 'Line Side Fleet').groups).toEqual([]);
   });

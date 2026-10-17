@@ -108,6 +108,8 @@ export const messages: Messages<typeof fleets> = {
     version: (v) => `பதிப்பு ${v}`,
     done: (map, fleet) => ({ title: 'வரைபடம் ஒதுக்கப்பட்டது', body: `${map} இப்போது ${fleet} இன் வரைபடம்.` }),
     none: 'இன்னும் வரைபடங்கள் இல்லை.',
+    taken: 'வரைபடங்கள் எதுவும் கிடைக்கவில்லை: அனைத்தும் பிற ஃப்ளீட்டுகளுக்கு ஒதுக்கப்பட்டுள்ளன.',
+    noOther: 'வேறு வரைபடங்கள் இல்லை, அல்லது மற்றவை அனைத்தும் ஒதுக்கப்பட்டுள்ளன.',
   },
   assignDevices: {
     title: (singular, fleet) => `${fleet} க்கு ${singular} ஐ ஒதுக்கு`,

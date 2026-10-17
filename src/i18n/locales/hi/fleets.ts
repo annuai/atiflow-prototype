@@ -106,6 +106,8 @@ export const messages: Messages<typeof fleets> = {
     version: (v) => `संस्करण ${v}`,
     done: (map, fleet) => ({ title: 'मैप असाइन हुआ', body: `${map} अब ${fleet} का मैप है।` }),
     none: 'अभी कोई मैप उपलब्ध नहीं है।',
+    taken: 'कोई मैप उपलब्ध नहीं है: सभी मैप दूसरे फ़्लीट को असाइन हैं।',
+    noOther: 'कोई और मैप उपलब्ध नहीं है, या बाकी सभी असाइन हैं।',
   },
   assignDevices: {
     title: (singular, fleet) => `${fleet} को ${singular} असाइन करें`,
