@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNow } from '@/hooks/use-now';
 import { useVisibleFleets } from '@/features/auth';
+import { useFleetFilter } from '@/features/fleet-filter';
 import { flatten, useRequests, type TripRequest } from '@/features/requests';
 import { isKept, useWorkflow, type Workflow } from '@/features/workflow-builder';
 import { byFleet, series, stats, topMaterials, waiting } from './kpis';
@@ -26,14 +27,20 @@ export function toMaterialRequest(r: TripRequest): MaterialRequest {
   };
 }
 
-/** The material requests of the person's fleets (saved routes carry no material, so they are not material requests). */
-export function useMaterialRequests(): MaterialRequest[] {
+/**
+ * The material requests of the person's fleets, or of the fleet chosen in the page's fleet filter (saved routes carry no material, so they are not material requests).
+ * `everyFleet` ignores the filter (used to decide whether material views make sense at all).
+ */
+export function useMaterialRequests(everyFleet = false): MaterialRequest[] {
   const fleets = useVisibleFleets();
+  const { name } = useFleetFilter();
   const all = useRequests((s) => s.requests);
   return useMemo(() => {
     const names = new Set(fleets.map((f) => f.name));
-    return all.filter((r) => r.kind !== 'route' && names.has(r.fleet)).map(toMaterialRequest);
-  }, [all, fleets]);
+    return all
+      .filter((r) => r.kind !== 'route' && names.has(r.fleet) && (everyFleet || !name || r.fleet === name))
+      .map(toMaterialRequest);
+  }, [all, fleets, name, everyFleet]);
 }
 
 /**
@@ -50,7 +57,7 @@ export function hasMaterialWorkflows(workflows: Record<string, Workflow>, fleetN
 export function useMaterialsRelevant(): boolean {
   const fleets = useVisibleFleets();
   const workflows = useWorkflow((s) => s.workflows);
-  const requests = useMaterialRequests();
+  const requests = useMaterialRequests(true); // every fleet: the switch must not vanish because the chosen fleet has none
   return useMemo(
     () =>
       requests.length > 0 ||
@@ -72,6 +79,7 @@ const endOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate() +
 export function useMaterialsView(period: Period, tickMs = 30_000): MaterialsView {
   const real = useMaterialRequests();
   const fleets = useVisibleFleets();
+  const { name } = useFleetFilter();
   const now = useNow(tickMs);
   return useMemo(() => {
     const from = period.from.getTime(),
@@ -80,7 +88,7 @@ export function useMaterialsView(period: Period, tickMs = 30_000): MaterialsView
       prevFrom = from - len;
     // a period that is still running (today) is compared with the same stretch of the one before it (yesterday up to this time), not with all of it
     const hasReal = real.some((r) => r.createdAt >= prevFrom - DAY && r.createdAt < endOf(period.to));
-    const fleetNames = fleets.map((f) => f.name);
+    const fleetNames = name ? [name] : fleets.map((f) => f.name);
     const data = hasReal ? real : sampleRequests(new Date(prevFrom), period.to, fleetNames, now);
     const s = series(data, period.from, period.to);
     return {
@@ -93,5 +101,5 @@ export function useMaterialsView(period: Period, tickMs = 30_000): MaterialsView
       byFleet: byFleet(data, from, to),
       waiting: waiting(data, to),
     };
-  }, [real, fleets, period, now]);
+  }, [real, fleets, name, period, now]);
 }

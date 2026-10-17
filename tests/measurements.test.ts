@@ -124,6 +124,46 @@ describe('MeasurementLog', () => {
   });
 });
 
+describe('one fleet on its own', () => {
+  const mixed = (ts: number, aCharging: number) => [
+    ...Array.from({ length: 4 }, (_, i) =>
+      bot('a' + i, { fleetId: 'A', state: i < aCharging ? 'charging' : 'idle' }, ts),
+    ),
+    ...Array.from({ length: 4 }, (_, i) => bot('b' + i, { fleetId: 'B', state: 'idle' }, ts)),
+  ];
+  it('the report of a fleet has only its robots, its availability and its deadlocks', () => {
+    const log = new MeasurementLog();
+    log.ingest(mixed(T0, 0));
+    log.ingest(mixed(T0 + 61_000, 2)); // half of fleet A is charging, fleet B is fine
+    log.event({ type: 'deadlock', ts: T0 + 70_000, robotIds: ['a0', 'a1'], fleetIds: ['A'], waitedS: 30 });
+    log.event({ type: 'deadlock', ts: T0 + 80_000, robotIds: ['a2', 'b2'], fleetIds: ['A', 'B'], waitedS: 20 }); // a ring across both
+    const all = log.query(T0, T0 + 200_000);
+    const a = log.query(T0, T0 + 200_000, 'A'),
+      b = log.query(T0, T0 + 200_000, 'B');
+    expect(all.robots).toHaveLength(8);
+    expect(all.deadlocks).toBe(2);
+    expect(a.robots.map((r) => r.robotId)).toEqual(['a0', 'a1', 'a2', 'a3']);
+    expect(b.robots.map((r) => r.robotId)).toEqual(['b0', 'b1', 'b2', 'b3']);
+    expect(a.deadlocks).toBe(2);
+    expect(b.deadlocks).toBe(1); // only the ring that involved it
+    // availability: sampled twice; fleet A had half charging the second time, B never
+    expect(all.availTotal).toBe(2);
+    expect(a.availTotal).toBe(2);
+    expect(a.availMet).toBe(1);
+    expect(b.availMet).toBe(2);
+    expect(a.hourly[0].deadlocks).toBe(2);
+    expect(a.observedS).toBe(all.observedS); // time observed is wall clock, the same for everyone
+  });
+  it('a fleet with no data gives an empty report, and asking for no fleet is unchanged', () => {
+    const log = new MeasurementLog();
+    log.ingest(mixed(T0, 0));
+    const none = log.query(T0, T0 + 1000, 'Z');
+    expect(none.robots).toEqual([]);
+    expect(none.deadlocks).toBe(0);
+    expect(log.query(T0, T0 + 1000).robots).toHaveLength(8);
+  });
+});
+
 describe('fed by the simulator', () => {
   it('15 simulated minutes give believable KPIs: busy share, some SLA misses allowed, empty and loaded distance, energy', () => {
     const site = JSON.parse(readFileSync('public/sites/ecc/site.json', 'utf8')) as SiteLayout,

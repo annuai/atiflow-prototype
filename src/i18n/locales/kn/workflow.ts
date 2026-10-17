@@ -116,6 +116,7 @@ export const messages: Messages<typeof workflow> = {
     minimize: 'ನಕ್ಷೆಯನ್ನು ಚಿಕ್ಕದಾಗಿಸಿ',
     open: 'ಸ್ಟೇಷನ್ ನಕ್ಷೆ ತೆರೆಯಿರಿ',
     hintChooseFleet: 'ಸ್ಟೇಷನ್‌ಗಳನ್ನು ನೋಡಲು ಫ್ಲೀಟ್ ಆಯ್ಕೆಮಾಡಿ',
+    hintNoMap: 'ಈ ಫ್ಲೀಟ್‌ಗೆ ಇನ್ನೂ ಪ್ರಕಟಿಸಿದ ನಕ್ಷೆ ಇಲ್ಲ',
     hintNoStations: 'ಈ ಫ್ಲೀಟ್‌ಗೆ ನಕ್ಷೆಯಲ್ಲಿ ಸ್ಟೇಷನ್‌ಗಳಿಲ್ಲ',
     hintPick: (label, multi) =>
       `${label} ಗಾಗಿ ಹೊಂದಿಸಲು ಸ್ಟೇಷನ್ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ${multi ? ' (ತೆಗೆಯಲು ಮತ್ತೆ ಕ್ಲಿಕ್ ಮಾಡಿ)' : ''}`,

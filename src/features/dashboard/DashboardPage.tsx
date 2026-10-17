@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Monitor01 } from '@untitledui/icons';
 import { BadgeWithDot } from '@/components/base/badges/badges';
@@ -7,6 +7,7 @@ import { useLoadPhase } from '@/components/skeleton/Skeleton';
 import { useApp } from '@/core/store';
 import { useAuth } from '@/features/auth';
 import { LIVE_FLOOR_PATH } from '@/features/live-floor';
+import { FleetFilter, useFleetFilter } from '@/features/fleet-filter';
 import { MaterialsLive, ViewSwitch, useMaterialsRelevant, type InsightView } from '@/features/material-insights';
 import { notify } from '@/ui/toast';
 import { ActivityCard } from './components/ActivityCard';
@@ -22,7 +23,7 @@ import { TripsCard } from './components/TripsCard';
 import { copy } from './copy';
 import { t } from './text';
 import { firstName, greeting } from './data/greeting';
-import { useDashboard } from './data/source';
+import { createLiveSource, useDashboard } from './data/source';
 import { TvScreen } from './tv/TvScreen';
 
 /**
@@ -33,7 +34,9 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const user = useAuth((s) => s.user);
   const site = useApp((s) => s.site);
-  const snap = useDashboard();
+  const { scope, many } = useFleetFilter();
+  const source = useMemo(() => createLiveSource(scope), [scope]); // all fleets combined, or just the chosen one
+  const snap = useDashboard(source);
   const phase = useLoadPhase(!snap);
   const [params, setParams] = useSearchParams();
   const tv = params.get('tv') === '1';
@@ -77,9 +80,10 @@ export function DashboardPage() {
         </div>
         <div className="builder md-card">
           <div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
-            {materialsRelevant && (
-              <div>
-                <ViewSwitch value={view} onChange={setView} />
+            {(materialsRelevant || many) && (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {materialsRelevant ? <ViewSwitch value={view} onChange={setView} /> : <span />}
+                <FleetFilter />
               </div>
             )}
             {view === 'materials' ? (

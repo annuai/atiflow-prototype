@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fleetDirectory } from '@/data/fleetDirectory';
+import type { SceneModel } from '@/core/scene';
 import type { NavGraph, SiteLayout, Station } from '@/core/types';
 import { feed } from '@/features/live-floor';
 import type { WfNode } from './types';
@@ -14,16 +15,20 @@ export interface MapData {
   nav: NavGraph;
   /** What the floor runs on now: the stations of every fleet that has a map (use this for anything a fleet can drive to). */
   live: NavGraph;
+  /** one scene per fleet that is on the floor: its map's building and the network that fleet drives on (the latest PUBLISHED version of its map) */
+  scenes?: SceneModel[];
 }
 let loaded: MapData | null = null;
 let loading: Promise<MapData> | null = null;
 const listeners = new Set<() => void>();
 export function loadMap(): Promise<MapData> {
   return (loading ??= feed.ready().then((m) => {
-    loaded = m;
+    loaded = { ...m, scenes: m.world.scenes };
     listeners.forEach((l) => l());
     // a fleet that got a map, a map that was published: the stations a fleet can use changed
-    feed.onWorld(() => void feed.ready().then((n) => ((loaded = n), listeners.forEach((l) => l()))));
+    feed.onWorld(
+      () => void feed.ready().then((n) => ((loaded = { ...n, scenes: n.world.scenes }), listeners.forEach((l) => l()))),
+    );
     return m;
   }));
 }
@@ -56,6 +61,23 @@ export function fleetStations(fleet: string | null, map: MapData | null = loaded
 export function useFleetStations(fleet: string | null): Station[] {
   const m = useMapData();
   return m ? fleetStations(fleet, m) : [];
+}
+/**
+ * The map of a fleet as the configurator draws it (flat, 2D): that fleet's own scene, built from the LATEST PUBLISHED version of the map it runs on (a map nobody edited is the base lane
+ * map). `undefined` while the floor is still loading; `null` when the fleet has no published map to show.
+ */
+export function fleetScene(
+  fleet: string | null,
+  map: MapData | null = loaded,
+): { site: SiteLayout; nav: NavGraph } | null | undefined {
+  if (!map?.scenes) return undefined;
+  const id = liveIdOf(fleet);
+  const sc = id ? map.scenes.find((s) => s.fleetId === id) : undefined;
+  return sc ? { site: sc.site, nav: sc.network } : null;
+}
+export function useFleetScene(fleet: string | null) {
+  const m = useMapData();
+  return fleetScene(fleet, m);
 }
 export const stationLabel = (s: Station) => `${s.id} · ${s.name}`;
 

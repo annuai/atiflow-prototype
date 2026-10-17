@@ -11,7 +11,7 @@ const MIN_LIVE_S = 180;
 
 export interface SourceDeps {
   roster(): Promise<RosterRobot[]>;
-  live?: { query(from: number, to: number): import('@/core/measurements').Measured };
+  live?: { query(from: number, to: number, fleetId?: string): import('@/core/measurements').Measured };
   now?(): Date;
   delayMs?: number;
 }
@@ -23,11 +23,12 @@ export interface SourceDeps {
 export function createReportSource(deps: SourceDeps): ReportSource {
   const now = deps.now ?? (() => new Date());
   return {
-    async fetch(range) {
-      const roster = await deps.roster();
+    async fetch(range, fleetId) {
+      const roster = (await deps.roster()).filter((r) => !fleetId || r.fleetId === fleetId); // one fleet: only its robots
+
       if (range.preset === 'today' && deps.live) {
         const t = now(),
-          m = deps.live.query(startOfDay(t).getTime(), t.getTime());
+          m = deps.live.query(startOfDay(t).getTime(), t.getTime(), fleetId);
         if (m.observedS >= MIN_LIVE_S)
           return buildReport(range, m, null, { kind: 'live', observedMin: Math.round(m.observedS / 60) });
       }

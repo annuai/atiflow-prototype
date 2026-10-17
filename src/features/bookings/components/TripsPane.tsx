@@ -10,7 +10,7 @@ import { robotsOnFloor, useRobotRecords } from '@/data/robots';
 import { ROBOT_TYPES } from '@/data/robotTypes';
 import { useAuth } from '@/features/auth';
 import { routeItems, useRequestsRunning, fleetIdOf, fleetLiveOf, useOperator } from '@/features/requests';
-import { useWorkflow, fleetStations, stationLabel, useMapData } from '@/features/workflow-builder';
+import { useWorkflow, fleetStations, stationLabel, useMapData, fleetScene } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
 import { CustomCallSheet } from './CustomCallSheet';
 import { RobotStep } from './RobotStep';
@@ -159,7 +159,7 @@ export function TripsPane() {
           ) : (
             <StationsStep
               robot={chosen}
-              map={map}
+              map={fleet ? (fleetScene(fleet.name, map) ?? null) : null} // the chosen fleet's own map, the latest published version
               stations={stations}
               from={from}
               to={to}

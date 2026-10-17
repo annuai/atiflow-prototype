@@ -74,12 +74,19 @@ const blank = (robotId: string, fleetId: string): RobotMeasure => ({
   kWh: 0,
   faults: 0,
 });
+interface FleetCounts {
+  deadlocks: number;
+  availMet: number;
+  availTotal: number;
+}
 interface Bucket {
   robots: Map<string, RobotMeasure>;
   observedS: number;
   deadlocks: number;
   availMet: number;
   availTotal: number;
+  /** the same fleet-wide counts per fleet, so a report can be about one fleet */
+  fleets: Map<string, FleetCounts>;
 }
 
 export class MeasurementLog {
@@ -91,10 +98,18 @@ export class MeasurementLog {
     const k = Math.floor(ts / HOUR) * HOUR;
     let b = this.buckets.get(k);
     if (!b) {
-      b = { robots: new Map(), observedS: 0, deadlocks: 0, availMet: 0, availTotal: 0 };
+      b = { robots: new Map(), observedS: 0, deadlocks: 0, availMet: 0, availTotal: 0, fleets: new Map() };
       this.buckets.set(k, b);
     }
     return b;
+  }
+  private fleet(b: Bucket, id: string): FleetCounts {
+    let f = b.fleets.get(id);
+    if (!f) {
+      f = { deadlocks: 0, availMet: 0, availTotal: 0 };
+      b.fleets.set(id, f);
+    }
+    return f;
   }
   private robot(b: Bucket, id: string, fleetId: string) {
     let r = b.robots.get(id);
@@ -137,12 +152,26 @@ export class MeasurementLog {
       const ok = batch.filter((r) => r.state !== 'charging' && r.state !== 'error' && r.state !== 'offline').length;
       b.availTotal++;
       if (ok >= AVAILABLE_SHARE * batch.length) b.availMet++;
+      const mine = new Map<string, { n: number; ok: number }>(); // and the same question for each fleet on its own robots
+      for (const r of batch) {
+        const c = mine.get(r.fleetId) ?? { n: 0, ok: 0 };
+        c.n++;
+        if (r.state !== 'charging' && r.state !== 'error' && r.state !== 'offline') c.ok++;
+        mine.set(r.fleetId, c);
+      }
+      for (const [id, c] of mine) {
+        const f = this.fleet(b, id);
+        f.availTotal++;
+        if (c.ok >= AVAILABLE_SHARE * c.n) f.availMet++;
+      }
     }
   }
   event(e: FleetEvent) {
     const b = this.bucket(e.ts);
-    if (e.type === 'deadlock') b.deadlocks++;
-    else if (e.type === 'fault') {
+    if (e.type === 'deadlock') {
+      b.deadlocks++;
+      for (const id of new Set(e.fleetIds)) this.fleet(b, id).deadlocks++; // a ring across two fleets is a deadlock for each of them
+    } else if (e.type === 'fault') {
       if (e.needsIntervention) this.robot(b, e.robotId, e.fleetId).faults++;
     } else if (e.type === 'trip-completed' && (e.kind === 'transport' || e.kind === 'return')) {
       const m = this.robot(b, e.robotId, e.fleetId);
@@ -161,29 +190,31 @@ export class MeasurementLog {
     this.lastSample = 0;
   }
 
-  /** Everything measured in [from, to] (epoch ms), summed per robot, with one point per hour. */
-  query(from: number, to: number): Measured {
+  /** Everything measured in [from, to] (epoch ms), summed per robot, with one point per hour. `fleetId` limits it to one fleet: its robots, its deadlocks, its availability. */
+  query(from: number, to: number, fleetId?: string): Measured {
     const out: Measured = { from, to, observedS: 0, robots: [], deadlocks: 0, availMet: 0, availTotal: 0, hourly: [] };
     const per = new Map<string, RobotMeasure>();
     for (const [t, b] of [...this.buckets].sort((x, y) => x[0] - y[0])) {
       if (t + HOUR <= from || t > to) continue;
+      const c = fleetId ? (b.fleets.get(fleetId) ?? { deadlocks: 0, availMet: 0, availTotal: 0 }) : b;
       out.observedS += b.observedS;
-      out.deadlocks += b.deadlocks;
-      out.availMet += b.availMet;
-      out.availTotal += b.availTotal;
+      out.deadlocks += c.deadlocks;
+      out.availMet += c.availMet;
+      out.availTotal += c.availTotal;
       const p: HourPoint = {
         t,
         observedS: b.observedS,
         trips: 0,
-        deadlocks: b.deadlocks,
+        deadlocks: c.deadlocks,
         slaMet: 0,
         slaTotal: 0,
-        availMet: b.availMet,
-        availTotal: b.availTotal,
+        availMet: c.availMet,
+        availTotal: c.availTotal,
         execS: 0,
         onlineS: 0,
       };
       for (const [id, m] of b.robots) {
+        if (fleetId && m.fleetId !== fleetId) continue;
         let a = per.get(id);
         if (!a) {
           a = blank(id, m.fleetId);

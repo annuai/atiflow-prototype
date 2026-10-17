@@ -3,7 +3,7 @@ import { Map01, Minus } from '@untitledui/icons';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { locate } from '../model/tree';
 import { selectFleet, selectNodes, useWorkflow, wfStore } from '../model/store';
-import { stationField, useFleetStations, useMapData } from '../model/stations';
+import { stationField, useFleetScene, useFleetStations } from '../model/stations';
 import { NODE_TYPES } from '../model/registry';
 import { simBus } from '../sim/runner';
 import type { Vec2 } from '@/core/types';
@@ -33,7 +33,7 @@ export function MapPreview({
   const selected = useWorkflow((s) => s.selected);
   const nodes = useWorkflow(selectNodes);
   const fleet = useWorkflow(selectFleet);
-  const map = useMapData();
+  const map = useFleetScene(fleet); // this fleet's map, the latest published version: undefined while loading, null when it has none
   const stations = useFleetStations(fleet);
   const usable = useMemo(() => new Set(stations.map((s) => s.id)), [stations]);
   const node = useMemo(() => (selected ? (locate(nodes, selected)?.node ?? null) : null), [selected, nodes]);
@@ -90,15 +90,17 @@ export function MapPreview({
   const label = node ? NODE_TYPES[node.t].label : '';
   const hint = !fleet
     ? copy.map.hintChooseFleet
-    : !map
+    : map === undefined
       ? copy.map.loading
-      : !stations.length
-        ? copy.map.hintNoStations
-        : pickable
-          ? copy.map.hintPick(label, sf!.multi)
-          : running
-            ? ''
-            : copy.map.hintSelect;
+      : map === null
+        ? copy.map.hintNoMap
+        : !stations.length
+          ? copy.map.hintNoStations
+          : pickable
+            ? copy.map.hintPick(label, sf!.multi)
+            : running
+              ? ''
+              : copy.map.hintSelect;
   return (
     <div
       ref={card}
@@ -152,7 +154,9 @@ export function MapPreview({
             robot={robot}
           />
         ) : (
-          <div className="grid size-full place-items-center text-sm text-tertiary">{copy.map.loading}</div>
+          <div className="grid size-full place-items-center px-4 text-center text-sm text-tertiary">
+            {fleet ? (map === null ? copy.map.hintNoMap : copy.map.loading) : copy.map.hintChooseFleet}
+          </div>
         )}
         {hint && (
           <div

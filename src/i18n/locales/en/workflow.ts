@@ -114,6 +114,7 @@ export const workflow = {
     minimize: 'Minimize the map',
     open: 'Open the station map',
     hintChooseFleet: 'Choose a fleet to see its stations',
+    hintNoMap: 'This fleet has no published map yet',
     hintNoStations: 'This fleet has no stations on the map',
     hintPick: (label: string, multi: boolean) =>
       `Click a station to set it for ${label}${multi ? ' (click again to remove)' : ''}`,

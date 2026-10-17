@@ -50,5 +50,6 @@ export interface Report {
   series: Partial<Record<MetricId, SeriesPoint[]>>;
 }
 export interface ReportSource {
-  fetch(range: ResolvedRange): Promise<Report>;
+  /** `fleetId` (the id its robots carry) limits the report to that fleet; without it every fleet is combined. */
+  fetch(range: ResolvedRange, fleetId?: string): Promise<Report>;
 }

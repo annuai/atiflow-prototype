@@ -223,6 +223,26 @@ describe('the report source: measured for today, sample otherwise, same formulas
     expect(a.fleet.sla!).toBeLessThanOrEqual(100);
     expect(a.fleet.emptyTravel!).toBeLessThanOrEqual(100);
   });
+  it('a fleet filter limits the sample to that fleet’s robots, and reaches the live query', async () => {
+    const two = async () => [
+      ...['A1', 'A2', 'A3'].map((id) => ({ id, fleetId: 'a' })),
+      ...['B1', 'B2'].map((id) => ({ id, fleetId: 'b' })),
+    ];
+    const s = createReportSource({ roster: two, now: () => NOW });
+    const all = await s.fetch(resolveRange({ preset: '7d' }, NOW));
+    const a = await s.fetch(resolveRange({ preset: '7d' }, NOW), 'a');
+    const b = await s.fetch(resolveRange({ preset: '7d' }, NOW), 'b');
+    // the sample is built from the robots of the roster, so fewer robots give different totals
+    expect(a.fleet.trips).not.toBe(b.fleet.trips);
+    expect(all.fleet.trips).not.toBe(a.fleet.trips);
+    const seen: (string | undefined)[] = [];
+    const log = new MeasurementLog();
+    const live = { query: (f: number, t: number, fleet?: string) => (seen.push(fleet), log.query(f, t, fleet)) };
+    const s2 = createReportSource({ roster: two, live, now: () => NOW });
+    await s2.fetch(resolveRange({ preset: 'today' }, NOW), 'b');
+    await s2.fetch(resolveRange({ preset: 'today' }, NOW));
+    expect(seen).toEqual(['b', undefined]);
+  });
   it('today comes from the measurement log once it has enough data; a thin log falls back to the sample', async () => {
     const log = new MeasurementLog();
     const day0 = new Date(2026, 9, 13, 13, 0).getTime();

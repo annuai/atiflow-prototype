@@ -6,7 +6,8 @@ import type { FleetRecord } from '../src/data/fleets';
 import type { FleetMap } from '../src/data/maps';
 import { buildWorld, type WorldInput } from '../src/features/live-floor/world/buildWorld';
 import { sceneOfFleet, visibleScenes } from '../src/features/live-floor/world/scenes';
-import type { MapData } from '../src/features/map-editor';
+import { seedMapData, type MapData } from '../src/features/map-editor';
+import { fleetScene } from '../src/features/workflow-builder/model/stations';
 
 const baseSite = JSON.parse(readFileSync('public/sites/ecc/site.json', 'utf8')) as SiteLayout;
 const baseNav = JSON.parse(readFileSync('public/sites/ecc/nav.json', 'utf8')) as NavGraph;
@@ -219,5 +220,42 @@ describe('derived indexes are built once per scene', () => {
     const nodes = new Set(n.nodes.map((q) => q.id));
     expect(n.lanes.every((l) => nodes.has(l.from) && nodes.has(l.to))).toBe(true);
     expect(n.stations.every((s) => nodes.has(s.nodeId))).toBe(true);
+  });
+});
+
+describe('the workflow builder draws a fleet from its own scene, the latest published map', () => {
+  const mapData = (w: ReturnType<typeof ecc>) => ({ site: baseSite, nav: baseNav, live: w.nav, scenes: w.scenes });
+  it('each fleet gets its own map, not the base map', () => {
+    const md = mapData(ecc());
+    const ls = fleetScene('Line Side Fleet', md)!,
+      as = fleetScene('Assembly Fleet', md)!;
+    expect(ls.nav.lanes.every((l) => l.fleets.includes('line-side'))).toBe(true);
+    expect(as.nav.lanes.every((l) => l.fleets.includes('asrs'))).toBe(true);
+    expect(ls.nav.lanes.length).not.toBe(as.nav.lanes.length);
+  });
+  it('a newly published version of the map is what the builder gets', () => {
+    const before = fleetScene('Line Side Fleet', mapData(ecc()))!;
+    const edited = { ...seedMapData(MAPS[0], baseSite, baseNav) };
+    edited.lanes = edited.lanes.slice(0, 10); // someone published a map with far fewer roads
+    const w = buildWorld(
+      input({ fleets: [lineSide, assembly], published: (id) => (id === 'main-assembly' ? edited : null) }),
+    );
+    const after = fleetScene('Line Side Fleet', mapData(w))!;
+    expect(before.nav.lanes.length).toBeGreaterThan(after.nav.lanes.length);
+    // the fleet's own roads are the published ones (lanes only it drives): the 10 that were kept, nothing of the old map
+    const own = (n: typeof after.nav) => n.lanes.filter((l) => l.fleets.length === 1).map((l) => l.id);
+    expect(own(after.nav).sort()).toEqual(
+      edited.lanes
+        .map((l) => l.id)
+        .filter((id) => own(after.nav).includes(id))
+        .sort(),
+    );
+    expect(own(before.nav).length).toBeGreaterThan(own(after.nav).length);
+  });
+  it('says "still loading" (undefined) before the floor is loaded and "no map" (null) for a fleet with none', () => {
+    const md = mapData(ecc());
+    expect(fleetScene('Line Side Fleet', { ...md, scenes: undefined })).toBeUndefined();
+    expect(fleetScene('Nobody Fleet', md)).toBeNull();
+    expect(fleetScene(null, md)).toBeNull();
   });
 });

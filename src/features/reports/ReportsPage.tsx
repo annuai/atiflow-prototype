@@ -4,6 +4,7 @@ import { AlertCircle, ChevronDown, ChevronUp, RefreshCcw01 } from '@untitledui/i
 import { BadgeWithDot } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { StatusStrip } from '@/components/data/StatusStrip';
+import { FleetFilter, useFleetFilter } from '@/features/fleet-filter';
 import { feed } from '@/features/live-floor';
 import { MaterialsReport, ViewSwitch, useMaterialsRelevant, type InsightView } from '@/features/material-insights';
 import { AllKpis } from './components/AllKpis';
@@ -32,7 +33,8 @@ export function ReportsPage() {
   const materialsRelevant = useMaterialsRelevant();
   const period = useMemo(() => resolveRange(range), [range]);
   useEffect(() => feed.acquire(), []); // the fleet keeps running (and being measured) while this page is open
-  const { report, loading, error, refresh } = useReport(reportSource, range);
+  const { scope, many } = useFleetFilter(); // all fleets combined, or just the chosen one
+  const { report, loading, error, refresh } = useReport(reportSource, range, scope);
   const phase = useLoadPhase(!report && !error);
   const verdict = useMemo(() => (report ? summary(report) : null), [report]),
     changes = useMemo(() => (report ? moves(report) : []), [report]);
@@ -59,9 +61,10 @@ export function ReportsPage() {
         <div className="builder md-card">
           <div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
             <RangeBar value={range} onChange={setRange} generatedAt={report?.generatedAt ?? null} />
-            {materialsRelevant && (
-              <div>
-                <ViewSwitch value={view} onChange={setView} />
+            {(materialsRelevant || many) && (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {materialsRelevant ? <ViewSwitch value={view} onChange={setView} /> : <span />}
+                <FleetFilter />
               </div>
             )}
             {materialsRelevant && view === 'materials' ? (
