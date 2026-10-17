@@ -78,6 +78,23 @@ export const workflowEntity: SearchEntity<WorkflowRow> = {
 };
 
 type MaterialRow = { code: string; name: string; group: string; fleets: string[] };
+/**
+ * The rows of Master Data as search rows. The same array is returned while Master Data is unchanged: the search index is rebuilt whenever it gets a different list,
+ * and with tens of thousands of materials that must happen once, not on every search.
+ */
+let masterMemo: { materials: Material[]; groups: unknown; rows: MaterialRow[] } | null = null;
+function masterRows(materials: Material[], groups: { id: string; name: string }[]): MaterialRow[] {
+  if (masterMemo && masterMemo.materials === materials && masterMemo.groups === groups) return masterMemo.rows;
+  const names = new Map(groups.map((g) => [g.id, g.name]));
+  const rows = materials.map((m) => ({
+    code: m.code,
+    name: m.name,
+    group: names.get(m.group) ?? '',
+    fleets: m.fleets,
+  }));
+  masterMemo = { materials, groups, rows };
+  return rows;
+}
 /** Materials: configurators search Master Data; operators only what they may order. */
 export const materialEntity: SearchEntity<MaterialRow> = {
   type: 'material',
@@ -86,14 +103,7 @@ export const materialEntity: SearchEntity<MaterialRow> = {
   permission: (ctx) => ctx.can('configurator.master-data') || ctx.can('operator.book-trip'),
   load: (ctx) => {
     const md = masterDataStore.getState();
-    const groupOf = (id: string) => md.groups.find((g) => g.id === id)?.name ?? '';
-    if (ctx.can('configurator.master-data'))
-      return md.materials.map((m: Material) => ({
-        code: m.code,
-        name: m.name,
-        group: groupOf(m.group),
-        fleets: m.fleets,
-      }));
+    if (ctx.can('configurator.master-data')) return masterRows(md.materials, md.groups);
     const seen = new Set<string>();
     return operatorItems(ctx)
       .materials.filter((i) => !seen.has(i.code) && !!seen.add(i.code))

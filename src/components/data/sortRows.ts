@@ -13,12 +13,14 @@ export function sortRows<T>(
 ): T[] {
   const col = columns.find((c) => c.id === columnId);
   if (!col?.sort) return rows;
-  const by = col.sort,
-    dir = direction === 'descending' ? -1 : 1;
-  return [...rows].sort((a, b) => {
-    const x = by(a),
-      y = by(b);
+  const dir = direction === 'descending' ? -1 : 1;
+  // each key is read once (not on every comparison): keeps sorting tens of thousands of rows quick
+  const keyed = rows.map((row) => ({ row, key: col.sort!(row) }));
+  keyed.sort((a, b) => {
+    const x = a.key,
+      y = b.key;
     if (empty(x) || empty(y)) return empty(x) === empty(y) ? 0 : empty(x) ? 1 : -1;
     return compare(x, y) * dir;
   });
+  return keyed.map((k) => k.row);
 }

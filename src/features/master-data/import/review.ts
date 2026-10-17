@@ -1,4 +1,4 @@
-import { sameCode } from '../model/logic';
+const norm = (s: string) => s.trim().toLowerCase();
 import type { IncomingMaterial } from '../model/types';
 
 export type RowStatus = 'available' | 'added' | 'duplicate' | 'invalid';
@@ -11,12 +11,13 @@ export interface ReviewRow extends IncomingMaterial {
  * added = code already in the list, duplicate = repeated earlier in the same file, invalid = name or code missing, available = can be imported.
  */
 export function classifyRows(rows: IncomingMaterial[], existingCodes: string[]): ReviewRow[] {
-  const seen: string[] = [];
+  const have = new Set(existingCodes.map(norm));
+  const seen = new Set<string>();
   return rows.map((r) => {
     if (!r.code?.trim() || !r.name?.trim()) return { ...r, status: 'invalid' as const };
-    if (existingCodes.some((c) => sameCode(c, r.code))) return { ...r, status: 'added' as const };
-    if (seen.some((c) => sameCode(c, r.code))) return { ...r, status: 'duplicate' as const };
-    seen.push(r.code);
+    if (have.has(norm(r.code))) return { ...r, status: 'added' as const };
+    if (seen.has(norm(r.code))) return { ...r, status: 'duplicate' as const };
+    seen.add(norm(r.code));
     return { ...r, status: 'available' as const };
   });
 }

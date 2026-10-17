@@ -4,6 +4,9 @@ import { t } from '../text';
 const norm = (s: string) => s.trim().toLowerCase();
 export const sameCode = (a: string, b: string) => norm(a) === norm(b);
 export const hasCode = (list: Material[], code: string) => list.some((m) => sameCode(m.code, code));
+/** Every code of the list, normalised, for fast "is it already there" checks over big lists. */
+export const codeSet = (list: Material[]) => new Set(list.map((m) => norm(m.code)));
+export const inCodeSet = (codes: Set<string>, code: string) => codes.has(norm(code));
 
 /** Next free group id: GRP-001, GRP-002... */
 export function nextGroupId(groups: MaterialGroup[]): string {
@@ -35,8 +38,10 @@ export function mergeMaterials(
   let g = groups;
   const out = [...materials];
   let added = 0;
+  const seen = codeSet(materials);
   for (const row of incoming) {
-    if (hasCode(out, row.code)) continue;
+    if (inCodeSet(seen, row.code)) continue;
+    seen.add(norm(row.code));
     const r = ensureGroup(g, row.groupName ?? '', now);
     g = r.groups;
     out.push({ code: row.code.trim(), name: row.name.trim(), group: r.id, fleets: [], updatedAt: now });
@@ -78,10 +83,11 @@ export interface MaterialFilter {
 /** Search by code, name or group name; optional group id filter ('' = all). */
 export function filterMaterials(list: Material[], groups: MaterialGroup[], f: MaterialFilter): Material[] {
   const q = norm(f.text);
-  const gname = (id: string) => groups.find((g) => g.id === id)?.name ?? '';
+  const names = new Map(groups.map((g) => [g.id, norm(g.name)]));
   return list.filter(
     (m) =>
-      (!f.group || m.group === f.group) && (!q || [m.code, m.name, gname(m.group)].some((x) => norm(x).includes(q))),
+      (!f.group || m.group === f.group) &&
+      (!q || norm(m.code).includes(q) || norm(m.name).includes(q) || (names.get(m.group) ?? '').includes(q)),
   );
 }
 

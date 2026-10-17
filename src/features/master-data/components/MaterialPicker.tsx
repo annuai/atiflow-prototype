@@ -1,3 +1,5 @@
+import { useMemo, type ReactNode } from 'react';
+import { useEndReached } from '@/hooks/use-end-reached';
 import { Badge } from '@/components/base/badges/badges';
 import { DataTable, type Column } from '@/components/data/DataTable';
 import { copy } from '../copy';
@@ -17,15 +19,25 @@ interface Props {
   onChange(next: Set<string>): void;
   /** Show the Status column (add-more and file review; the first API import has none). */
   showStatus?: boolean;
+  /** Asks for more rows when the list is scrolled to its end (server-paged lists). */
+  onEnd?(): void;
+  /** Shown under the rows (loading more, errors). */
+  footer?: ReactNode;
 }
 
 /**
  * ONE selectable material list for the three places that pick materials: API import, "add more from API" and the file review step.
  * Rows that are already added are locked and checked; invalid / duplicate rows cannot be selected.
  */
-export function MaterialPicker({ rows, selected, onChange, showStatus }: Props) {
-  const locked = new Set(rows.filter((r) => r.status === 'added').map((r) => r.code));
-  const disabled = new Set(rows.filter((r) => r.status === 'invalid' || r.status === 'duplicate').map((r) => r.code));
+export function MaterialPicker({ rows, selected, onChange, showStatus, onEnd, footer }: Props) {
+  const { locked, disabled } = useMemo(
+    () => ({
+      locked: new Set(rows.filter((r) => r.status === 'added').map((r) => r.code)),
+      disabled: new Set(rows.filter((r) => r.status === 'invalid' || r.status === 'duplicate').map((r) => r.code)),
+    }),
+    [rows],
+  );
+  const endRef = useEndReached<HTMLDivElement>(onEnd, rows.length);
   const columns: Column<PickerRow>[] = [
     {
       id: 'material',
@@ -73,7 +85,10 @@ export function MaterialPicker({ rows, selected, onChange, showStatus }: Props) 
         columns={columns}
         selection={{ selected, onChange, locked, disabled }}
         stickyHeader
+        progressive={onEnd ? undefined : 40}
       />
+      {onEnd && <div ref={endRef} aria-hidden className="h-px" />}
+      {footer}
     </div>
   );
 }

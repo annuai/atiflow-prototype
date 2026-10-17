@@ -5,6 +5,7 @@ import type { RequestsDocument } from '@/features/requests/model/schema';
 import type { DatasetData } from '@/data/datasetTypes';
 import type { FleetProfile } from '@/features/fleets/model/types';
 import type { Material, MaterialGroup, StagingArea } from '@/features/master-data/model/types';
+import type { MaterialSource } from '@/features/master-data/sources/types';
 import type { MapHistory } from '@/features/map-editor/model/types';
 import type { FleetMap } from '@/features/maps/model/types';
 import type { SettingsData } from '@/features/settings/model/types';
@@ -155,6 +156,8 @@ export interface Services {
   mapVersions: MapVersionService;
   mapCatalog: MapCatalogService;
   mapAssets: MapAssetService;
+  /** The ERP that "Import from API" in Master Data reads. */
+  materialCatalog: MaterialSource;
   settings: SettingsService;
   preferences: PreferenceService;
   notificationCache: NotificationCacheService;

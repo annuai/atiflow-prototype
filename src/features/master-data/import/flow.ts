@@ -18,6 +18,7 @@ export type FlowAction =
   | { type: 'open'; mode?: 'add' | 'addMore' }
   | { type: 'choose'; method: Method }
   | { type: 'next' }
+  | { type: 'toProgress' }
   | { type: 'back' }
   | { type: 'close' };
 
@@ -38,6 +39,8 @@ export function flowReducer(s: FlowState, a: FlowAction): FlowState {
       const i = steps.indexOf(s.step);
       return i >= 0 && i < steps.length - 1 ? { ...s, step: steps[i + 1] } : closedFlow;
     }
+    case 'toProgress':
+      return { ...s, step: 'progress' };
     case 'back': {
       const steps = s.method ? METHOD_STEPS[s.method] : [];
       const i = steps.indexOf(s.step);

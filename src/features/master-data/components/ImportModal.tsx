@@ -10,7 +10,7 @@ import type { ParseOutcome } from '../import/parseFile';
 import { materialFields } from '../model/fields';
 import { validateMaterial } from '../model/logic';
 import { masterDataStore, useMasterData } from '../model/store';
-import { mockErp } from '../sources/mockCatalog';
+import { services } from '@/services';
 import type { ErpRow, MaterialSource } from '../sources/types';
 import { ApiStep } from './ApiStep';
 import { FieldStack } from './MaterialForm';
@@ -18,6 +18,8 @@ import { MethodStep } from './MethodStep';
 import { ProgressStep } from './ProgressStep';
 import { ReviewStep } from './ReviewStep';
 import { UploadStep } from './UploadStep';
+
+const BIG_IMPORT = 500;
 
 /** Controller for the add-materials flow: the state machine (`flowReducer`) decides the step, this renders it. */
 export function useImportFlow() {
@@ -31,7 +33,8 @@ interface Props {
   source?: MaterialSource;
 }
 
-export function ImportModal({ flow, dispatch, source = mockErp }: Props) {
+export function ImportModal({ flow, dispatch, source }: Props) {
+  const erp = source ?? services().materialCatalog;
   const materials = useMasterData((s) => s.materials);
   const job = useImportJob((s) => s);
   // state that must survive Back / Continue
@@ -69,10 +72,12 @@ export function ImportModal({ flow, dispatch, source = mockErp }: Props) {
   const rows = outcome?.ok ? outcome.rows : [];
   const review = useMemo(
     () =>
-      classifyRows(
-        rows,
-        materials.map((m) => m.code),
-      ),
+      rows.length === 0
+        ? [] // (only the file flow classifies; with tens of thousands of materials this is not free)
+        : classifyRows(
+            rows,
+            materials.map((m) => m.code),
+          ),
     [rows, materials],
   );
   const close = () => dispatch({ type: 'close' });
@@ -92,12 +97,17 @@ export function ImportModal({ flow, dispatch, source = mockErp }: Props) {
     dispatch({ type: 'next' });
   };
   const submitApi = () => {
-    const n = masterDataStore.getState().addMaterials(
-      [...picked.codes]
-        .map((c) => picked.rows.get(c))
-        .filter((r): r is ErpRow => !!r)
-        .map((r) => ({ code: r.code, name: r.name, groupName: r.group })),
-    );
+    const incoming = [...picked.codes]
+      .map((c) => picked.rows.get(c))
+      .filter((r): r is ErpRow => !!r)
+      .map((r) => ({ code: r.code, name: r.name, groupName: r.group }));
+    if (incoming.length > BIG_IMPORT) {
+      // a big list goes through the background job: progress, cancel and "run in background"
+      startImport(incoming, copy.api.sourceName);
+      dispatch({ type: 'toProgress' });
+      return;
+    }
+    const n = masterDataStore.getState().addMaterials(incoming);
     close();
     const d = copy.api.done(n);
     notify.success(d.title, d.body, 'materials-added');
@@ -139,7 +149,7 @@ export function ImportModal({ flow, dispatch, source = mockErp }: Props) {
           primary={{ label: more ? copy.api.add(n) : copy.api.create(n), isDisabled: n === 0, onPress: submitApi }}
         >
           <ApiStep
-            source={source}
+            source={erp}
             showStatus={more || materials.length > 0}
             selected={picked.codes}
             picked={picked.rows}

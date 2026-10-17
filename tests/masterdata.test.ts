@@ -21,7 +21,6 @@ import {
   validateMaterial,
 } from '../src/features/master-data/model/logic';
 import { seedAreas, seedGroups, seedMaterials } from '../src/fixtures/masterData';
-import { searchCatalogue } from '../src/features/master-data/sources/mockCatalog';
 import { parsePrompt, resolveMaterial } from '../src/features/workflow-builder/model/parsePrompt';
 import { fleetsUsingMaterial } from '../src/features/workflow-builder/model/usage';
 import { createNode, createStart } from '../src/features/workflow-builder/model/factory';
@@ -189,21 +188,6 @@ describe('master data: add flow and mock ERP', () => {
     expect(stepNumber('file', 'review')).toEqual({ n: 2, total: 2 });
     expect(stepNumber('file', 'progress')).toBeNull();
     expect(stepNumber('api', 'api')).toBeNull();
-  });
-  it('mock ERP: huge total, prefix + text filters, capped rows', () => {
-    const all = searchCatalogue({ text: '', prefix: '', limit: 50 });
-    expect(all.total).toBe(128_872);
-    expect(all.rows).toHaveLength(50);
-    const dcp = searchCatalogue({ text: '', prefix: 'dcp', limit: 50 });
-    expect(dcp.rows.map((r) => r.code)).toEqual([
-      'DCP-1001',
-      'DCP-1002',
-      'DCP-1003',
-      'DCP-1004',
-      'DCP-1005',
-      'DCP-1006',
-    ]);
-    expect(searchCatalogue({ text: 'sprocket 24t', prefix: 'DCP-1003', limit: 5 }).total).toBe(1);
   });
 });
 

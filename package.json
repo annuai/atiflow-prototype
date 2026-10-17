@@ -20,7 +20,8 @@
     "audit:map": "vite-node tools/audit-nav.ts",
     "audit:architecture": "node tools/architecture-audit.mjs",
     "test:e2e": "playwright test",
-    "derive:zones": "vite-node tools/derive-zones/derive-zones.ts"
+    "derive:zones": "vite-node tools/derive-zones/derive-zones.ts",
+    "build:dummy-erp": "node tools/build-dummy-erp.mjs"
   },
   "dependencies": {
     "@internationalized/date": "^3.12.4",

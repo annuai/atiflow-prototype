@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Database01, Edit05, Flag01, PackagePlus, Plus, SearchLg } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
@@ -37,8 +37,13 @@ export function MaterialsList({ onAddMore, onAdd }: Props) {
   const [group, setGroup] = useState(ALL);
   const [editing, setEditing] = useState<Material | null>(null);
   const [fleetsOf, setFleetsOf] = useState<Material | null>(null);
-  const rows = useMemo(() => filterMaterials(materials, groups, { text, group }), [materials, groups, text, group]);
-  const groupName = (id: string) => groups.find((g) => g.id === id)?.name ?? copy.materials.noGroup;
+  const deferredText = useDeferredValue(text); // typing stays instant; the long list catches up
+  const rows = useMemo(
+    () => filterMaterials(materials, groups, { text: deferredText, group }),
+    [materials, groups, deferredText, group],
+  );
+  const groupNames = useMemo(() => new Map(groups.map((g) => [g.id, g.name])), [groups]);
+  const groupName = (id: string) => groupNames.get(id) ?? copy.materials.noGroup;
   const columns: Column<Material>[] = [
     {
       id: 'material',
@@ -154,6 +159,7 @@ export function MaterialsList({ onAddMore, onAdd }: Props) {
                 rowKey={(m) => m.code}
                 columns={columns}
                 minWidth={560}
+                progressive={40}
                 stickyHeader
               />
             </div>

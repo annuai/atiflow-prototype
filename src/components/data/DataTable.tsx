@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
+import { useEndReached } from '@/hooks/use-end-reached';
 import type { Selection, SortDescriptor } from 'react-aria-components';
 import { Table } from '@/components/application/table/table';
 import { cx } from '@/utils/cx';
@@ -37,6 +38,8 @@ interface Props<T> {
   minWidth?: number;
   /** No zebra striping and a white heading row (flat tables inside a card). */
   plain?: boolean;
+  /** For very long lists: draw this many rows first and more as the list is scrolled (sorting and selection still cover every row). */
+  progressive?: number;
 }
 
 /**
@@ -54,6 +57,7 @@ export function DataTable<T>({
   stickyHeader,
   minWidth,
   plain,
+  progressive,
 }: Props<T>) {
   const [sort, setSort] = useState<SortDescriptor | undefined>();
   const rows = useMemo(
@@ -66,6 +70,14 @@ export function DataTable<T>({
       ),
     [input, columns, sort],
   );
+  const [shown, setShown] = useState({ of: input, n: progressive ?? Infinity });
+  const limit = shown.of === input ? shown.n : (progressive ?? Infinity); // a new list starts from the first page again
+  const visible = useMemo(() => (limit < rows.length ? rows.slice(0, limit) : rows), [rows, limit]);
+  const more = limit < rows.length;
+  const endRef = useEndReached<HTMLDivElement>(
+    more ? () => setShown({ of: input, n: limit + (progressive ?? 0) }) : undefined,
+    `${limit}:${rows.length}`,
+  );
   const locked = selection?.locked ?? new Set<string>();
   const disabled = new Set([...locked, ...(selection?.disabled ?? [])]);
   const selectedKeys = selection ? new Set([...selection.selected, ...locked]) : undefined;
@@ -75,49 +87,52 @@ export function DataTable<T>({
     selection.onChange(new Set(next.filter((k) => !disabled.has(k))));
   };
   return (
-    <Table
-      aria-label={label}
-      size="sm"
-      style={minWidth ? { minWidth } : undefined}
-      sortDescriptor={sort}
-      onSortChange={setSort}
-      {...(selection
-        ? { selectionMode: 'multiple' as const, selectedKeys, onSelectionChange, disabledKeys: disabled }
-        : {})}
-    >
-      <Table.Header className={plain ? 'bg-primary' : undefined}>
-        {columns.map((c, i) => (
-          <Table.Head
-            key={c.id}
-            id={c.id}
-            isRowHeader={i === 0}
-            allowsSorting={!!c.sort}
-            label={c.header}
-            tooltip={c.hint}
-            className={cx(
-              stickyHeader && 'sticky top-0 z-10',
-              plain ? 'bg-primary' : stickyHeader && 'bg-secondary',
-              c.headClassName,
-            )}
-          />
-        ))}
-      </Table.Header>
-      <Table.Body>
-        {rows.map((r) => (
-          <Table.Row
-            key={rowKey(r)}
-            id={rowKey(r)}
-            onAction={onRowAction ? () => onRowAction(r) : undefined}
-            className={cx('group h-auto', !plain && 'even:bg-secondary', onRowAction && 'cursor-pointer')}
-          >
-            {columns.map((c) => (
-              <Table.Cell key={c.id} className={cx('px-4 py-3', c.className)}>
-                {c.cell(r)}
-              </Table.Cell>
-            ))}
-          </Table.Row>
-        ))}
-      </Table.Body>
-    </Table>
+    <>
+      <Table
+        aria-label={label}
+        size="sm"
+        style={minWidth ? { minWidth } : undefined}
+        sortDescriptor={sort}
+        onSortChange={setSort}
+        {...(selection
+          ? { selectionMode: 'multiple' as const, selectedKeys, onSelectionChange, disabledKeys: disabled }
+          : {})}
+      >
+        <Table.Header className={plain ? 'bg-primary' : undefined}>
+          {columns.map((c, i) => (
+            <Table.Head
+              key={c.id}
+              id={c.id}
+              isRowHeader={i === 0}
+              allowsSorting={!!c.sort}
+              label={c.header}
+              tooltip={c.hint}
+              className={cx(
+                stickyHeader && 'sticky top-0 z-10',
+                plain ? 'bg-primary' : stickyHeader && 'bg-secondary',
+                c.headClassName,
+              )}
+            />
+          ))}
+        </Table.Header>
+        <Table.Body>
+          {visible.map((r) => (
+            <Table.Row
+              key={rowKey(r)}
+              id={rowKey(r)}
+              onAction={onRowAction ? () => onRowAction(r) : undefined}
+              className={cx('group h-auto', !plain && 'even:bg-secondary', onRowAction && 'cursor-pointer')}
+            >
+              {columns.map((c) => (
+                <Table.Cell key={c.id} className={cx('px-4 py-3', c.className)}>
+                  {c.cell(r)}
+                </Table.Cell>
+              ))}
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table>
+      {more && <div ref={endRef} aria-hidden className="h-px" />}
+    </>
   );
 }

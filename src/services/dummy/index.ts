@@ -6,6 +6,8 @@ import { createDummyBookings } from './bookings';
 import { createDummyFleetFeed } from './fleetFeed';
 import { createDummyIdentity } from './identity';
 import { createDummyMapAssets } from './mapAssets';
+import { createDummyMaterialSource } from './erp';
+import { createIdbMasterData } from './masterDataIdb';
 import { createDummyRequests } from './requests';
 import { createDummyTripIds } from './tripIds';
 import { createDummyRobotOps } from './robotOps';
@@ -53,11 +55,12 @@ export function createDummyServices(opts: DummyServicesOptions = {}): Services {
       workMs: opts.workMs,
     }),
     fleetProfiles: createDummyFleetProfiles(opts.backend),
-    masterData: createDummyMasterData(opts.backend),
+    masterData: createIdbMasterData(createDummyMasterData(opts.backend)),
     mapNames: createDummyMapNames(opts.backend),
     mapVersions: createDummyMapVersions(opts.backend),
     mapCatalog: createDummyMapCatalog(opts.backend),
     mapAssets: createDummyMapAssets(),
+    materialCatalog: createDummyMaterialSource(),
     settings: createDummySettings(opts.backend),
     preferences: createDummyPreferences(opts.backend),
     notificationCache: createDummyNotificationCache(opts.backend),
