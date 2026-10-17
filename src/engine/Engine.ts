@@ -91,6 +91,7 @@ export class Engine {
   private fovAnim: { f0: number; f1: number; F0: number; F1: number } | null = null;
   private sun!: THREE.DirectionalLight;
   private unsub: (() => void)[] = [];
+  private resizeObserver: ResizeObserver | null = null;
   private homePos = new THREE.Vector3();
   private homeTarget = new THREE.Vector3();
   private lastView = 0;
@@ -179,7 +180,8 @@ export class Engine {
     window.addEventListener('keyup', this.onKey);
     document.addEventListener('pointerlockchange', this.onLock);
     document.addEventListener('mousemove', this.onLook);
-    new ResizeObserver(() => this.resize()).observe(holder);
+    this.resizeObserver = new ResizeObserver(() => this.resize());
+    this.resizeObserver.observe(holder);
     this.resize();
     this.unsub.push(
       store.subscribe((s, p) => {
@@ -1118,7 +1120,15 @@ export class Engine {
     this.manager.dispose();
     this.active = [];
     this.unsub.forEach((u) => u());
+    // listeners on the window and the document outlive the page: left in place they keep this whole Engine (scene, renderer, models) alive after every visit
+    window.removeEventListener('keydown', this.onKey);
+    window.removeEventListener('keyup', this.onKey);
+    document.removeEventListener('pointerlockchange', this.onLock);
+    document.removeEventListener('mousemove', this.onLook);
+    this.resizeObserver?.disconnect();
+    this.controls.dispose();
     this.renderer.dispose();
+    this.renderer.forceContextLoss(); // the browser allows only a handful of live WebGL contexts
     this.renderer.domElement.remove();
   }
 }

@@ -1,11 +1,11 @@
 import { Select } from '@/components/base/select/select';
-import { LANGUAGES, isLocale, setLocale, useLocale, type LocaleId } from '@/i18n';
+import { LANGUAGES, isLocale, showLocale, useLocale, type LocaleId } from '@/i18n';
 import { services } from '@/services';
 
 /** Remember the language chosen on this device (the sign-in screen, before anyone is known) and switch to it. */
 export function chooseLanguage(id: LocaleId) {
   services().device.set('locale', id);
-  setLocale(id);
+  void showLocale(id);
 }
 
 /**

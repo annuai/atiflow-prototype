@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { loadCatalog } from './catalog';
 import { DEFAULT_LOCALE, LANGUAGES, isLocale, toLocale, type LocaleId } from './languages';
 
 /** The language in use. Resolution order is decided by the caller (`chooseLocale`); this is only the current value. */
@@ -11,6 +12,13 @@ export function setLocale(next: LocaleId) {
   current = next;
   if (typeof document !== 'undefined') document.documentElement.lang = LANGUAGES.find((l) => l.id === next)!.htmlLang;
   listeners.forEach((l) => l());
+}
+let wanted: LocaleId = DEFAULT_LOCALE;
+/** Switch to a language once its text is loaded (the latest request wins when several come quickly). Use this in the app; `setLocale` is for when the catalog is known to be loaded. */
+export async function showLocale(next: LocaleId) {
+  wanted = next;
+  await loadCatalog(next);
+  if (wanted === next) setLocale(next);
 }
 export const subscribeLocale = (cb: () => void) => {
   listeners.add(cb);

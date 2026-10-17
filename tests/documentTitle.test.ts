@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { setLocale } from '@/i18n';
+import { loadAllCatalogs, setLocale } from '@/i18n';
 import { pageTitle } from '@/shell/documentTitle';
 
+await loadAllCatalogs();
 afterEach(() => setLocale('en'));
 
 describe('browser tab titles', () => {

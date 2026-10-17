@@ -1,6 +1,17 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { ALL_PERMISSIONS, WORKSPACES } from '@/features/access';
-import { CATALOGS, LANGUAGES, chooseLocale, localized, setLocale, toLocale, type LocaleId } from '@/i18n';
+import {
+  CATALOGS,
+  LANGUAGES,
+  chooseLocale,
+  loadAllCatalogs,
+  localized,
+  setLocale,
+  toLocale,
+  type LocaleId,
+} from '@/i18n';
+
+await loadAllCatalogs(); // the languages load on demand in the app; the tests compare all of them
 
 /** Product names and acronyms that stay in Latin script in every language. */
 const KEEP_LATIN = /^(Fleet Manager|MTBF|ASRS|KPI|SLA|MES|API|Ati Support|Ati AI)$/;
