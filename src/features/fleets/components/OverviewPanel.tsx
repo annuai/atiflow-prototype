@@ -76,8 +76,8 @@ export function OverviewPanel({ fleet }: { fleet: string }) {
         {map ? (
           <div className="relative flex overflow-hidden rounded-xl border border-secondary bg-primary shadow-xs transition hover:shadow-md">
             <MapThumbnail map={map} fleetLive={map.fleetLive} className="hidden h-32 w-52 shrink-0 sm:block" />
-            <div className="flex min-w-0 flex-1 flex-col justify-center gap-3 p-5">
-              <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+            <div className="flex min-w-0 flex-1 flex-col justify-center gap-3 p-4 sm:p-5 sm:pr-44">
+              <div className="z-10 flex items-center justify-end gap-1 max-sm:order-first sm:absolute sm:top-3 sm:right-3">
                 <Button size="sm" color="secondary" onPress={() => setAssigningMap(true)}>
                   {copy.overview.changeMap}
                 </Button>
@@ -91,7 +91,7 @@ export function OverviewPanel({ fleet }: { fleet: string }) {
                 </Dropdown.Root>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="truncate text-xl font-semibold text-primary">
+                <p className="min-w-0 text-lg font-semibold text-primary [overflow-wrap:anywhere] sm:truncate sm:text-xl">
                   {canEditMaps ? (
                     <Link
                       to={`/configurator/maps/${encodeURIComponent(map.id)}`}

@@ -1,9 +1,9 @@
 import { NoResults } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, SearchLg } from '@untitledui/icons';
+import { Plus } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
-import { ButtonUtility } from '@/components/base/buttons/button-utility';
+import { SearchToggle } from '@/components/data/SearchToggle';
 import { Input } from '@/components/base/input/input';
 import type { DeviceKind, FieldValue } from './model/types';
 import { useDevices } from './model/store';
@@ -51,12 +51,10 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
                 wrapperClassName="dv-search"
               />
             )}
-            <ButtonUtility
-              icon={SearchLg}
-              tooltip={t.list.search}
-              color="secondary"
-              size="sm"
-              onPress={() => {
+            <SearchToggle
+              label={t.list.search}
+              active={searching}
+              onToggle={() => {
                 setSearching((s) => !s);
                 setQ('');
               }}

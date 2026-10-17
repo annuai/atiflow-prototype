@@ -1160,6 +1160,16 @@ img {
 .bh .fleet-select button {
   font-size: 13px;
 }
+@media (max-width: 720px) {
+  /* on a phone the fleet dropdown is wide enough for the whole fleet name and sits at the right edge of the header */
+  .bh .fleet-select {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 164px;
+    max-width: 62%;
+    margin-left: auto;
+  }
+}
 .cmd .flex-1 {
   min-width: 0;
 }

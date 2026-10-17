@@ -35,22 +35,24 @@ export function FleetAccordion({
         open ? 'bg-secondary_subtle' : 'bg-primary',
       )}
     >
-      <div className={cx('flex items-center gap-2 px-5 py-4', open && 'border-b border-secondary bg-secondary')}>
+      <div
+        className={cx('flex items-center gap-2 px-4 py-4 sm:px-5', open && 'border-b border-secondary bg-secondary')}
+      >
         <button
           type="button"
           aria-expanded={open}
           aria-controls={bodyId}
           aria-label={copy.index.expand(name)}
           onClick={onToggle}
-          className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-x-6 gap-y-2 text-left outline-focus-ring focus-visible:outline-2"
+          className="flex min-w-0 flex-1 cursor-pointer flex-col items-start gap-2 text-left outline-focus-ring focus-visible:outline-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6"
         >
-          <h2 className="text-lg font-semibold text-primary">{name}</h2>
-          <div className="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-sm text-tertiary">
-            <span className="flex items-center gap-2">
+          <h2 className="min-w-0 text-lg font-semibold text-primary [overflow-wrap:anywhere]">{name}</h2>
+          <div className="flex min-w-0 max-w-full flex-col items-start gap-1 text-sm text-tertiary sm:ml-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-x-3">
+            <span className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
               {copy.index.mapLabel}
               {map ? (
                 <>
-                  <Badge size="sm" type="modern" color="gray" className="max-w-56">
+                  <Badge size="sm" type="modern" color="gray" className="min-w-0 max-w-full sm:max-w-56">
                     <Map01 className="mr-1 inline size-3.5" />
                     <span className="truncate">{map.name}</span>
                   </Badge>
@@ -76,7 +78,7 @@ export function FleetAccordion({
         <Chevron className="size-5 shrink-0 text-fg-quaternary" aria-hidden />
       </div>
       {open && (
-        <div id={bodyId} className="p-5">
+        <div id={bodyId} className="p-4 sm:p-5">
           {children}
         </div>
       )}

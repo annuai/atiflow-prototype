@@ -41,11 +41,11 @@ export function SoftwareUpdateTab({
       />
       {s && (
         <>
-          <div className="flex flex-wrap items-center gap-4 rounded-xl border border-secondary bg-primary p-4 shadow-xs sm:p-5">
+          <div className="flex flex-col items-start gap-4 rounded-xl border border-secondary bg-primary p-4 shadow-xs sm:flex-row sm:items-center sm:p-5">
             <span className="grid size-12 shrink-0 place-items-center rounded-full bg-secondary text-fg-secondary">
               <UploadCloud02 className="size-6" />
             </span>
-            <div className="min-w-0 flex-1">
+            <div className="w-full min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-lg font-semibold text-primary">{copy.software.firmware(s.latest)}</p>
                 <Badge size="sm" type="pill-color" color="success">
@@ -65,6 +65,7 @@ export function SoftwareUpdateTab({
               <Button
                 size="md"
                 color="primary"
+                className="max-sm:w-full"
                 iconLeading={Download01}
                 isLoading={sw.installing}
                 isDisabled={!online && !sw.installing}
@@ -73,7 +74,14 @@ export function SoftwareUpdateTab({
                 {sw.installing ? copy.software.installing : copy.software.download}
               </Button>
             ) : (
-              <Button size="md" color="secondary" iconLeading={RefreshCw01} isLoading={sw.checking} onPress={sw.check}>
+              <Button
+                size="md"
+                color="secondary"
+                className="max-sm:w-full"
+                iconLeading={RefreshCw01}
+                isLoading={sw.checking}
+                onPress={sw.check}
+              >
                 {sw.checking ? copy.software.checking : copy.software.check}
               </Button>
             )}

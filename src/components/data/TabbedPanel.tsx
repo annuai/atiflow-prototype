@@ -1,5 +1,6 @@
-import type { FC, ReactNode } from 'react';
+import { useEffect, useRef, type FC, type ReactNode } from 'react';
 import { Tabs } from '@/components/application/tabs/tabs';
+import { cx } from '@/utils/cx';
 import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 
 export interface TabItem {
@@ -47,10 +48,26 @@ export function TabbedPanel({
   contentKey,
   children,
 }: Props) {
+  // the chosen tab scrolls into view when the tab bar scrolls sideways (a phone), e.g. when a page opens on its last tab
+  const bar = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = bar.current?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+    el?.scrollIntoView?.({ inline: 'center', block: 'nearest' });
+  }, [selected]);
   return (
     <Tabs selectedKey={selected} onSelectionChange={(k) => onSelect(String(k))} className={rootClassName}>
-      <div className={barClassName}>
-        <Tabs.List type="underline" size="md" fullWidth className={listClassName} aria-label={label} items={tabs} />
+      <div ref={bar} className={barClassName}>
+        <Tabs.List
+          type="underline"
+          size="md"
+          fullWidth
+          className={cx(
+            'overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+            listClassName,
+          )}
+          aria-label={label}
+          items={tabs}
+        />
       </div>
       <Tabs.Panel id={selected} className={panelClassName}>
         <TabPanelMotion tabKey={contentKey ?? selected} fill={!contentClassName} className={contentClassName}>

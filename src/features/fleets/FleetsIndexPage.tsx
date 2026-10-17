@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cube01, Dataflow03, SearchLg } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
-import { ButtonUtility } from '@/components/base/buttons/button-utility';
+import { SearchToggle } from '@/components/data/SearchToggle';
 import { Input } from '@/components/base/input/input';
 import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
@@ -49,14 +49,11 @@ export function FleetsIndexPage() {
             <p>{copy.index.subtitle}</p>
           </div>
           <div className="actions">
-            <ButtonUtility
-              size="sm"
-              color="secondary"
-              icon={SearchLg}
-              tooltip={copy.index.search}
-              aria-label={copy.index.search}
-              aria-pressed={searching}
-              onClick={() => {
+            <SearchToggle
+              size="md"
+              label={copy.index.search}
+              active={searching}
+              onToggle={() => {
                 setSearching((s) => !s);
                 if (searching) setQuery('');
               }}

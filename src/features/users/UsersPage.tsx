@@ -1,9 +1,9 @@
 import { NoResults } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Plus, SearchLg } from '@untitledui/icons';
+import { ChevronRight, Plus } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
-import { ButtonUtility } from '@/components/base/buttons/button-utility';
+import { SearchToggle } from '@/components/data/SearchToggle';
 import { Input } from '@/components/base/input/input';
 import { DataTable, type Column } from '@/components/data/DataTable';
 import { roleById, USERS_PATH } from '@/features/access';
@@ -77,12 +77,10 @@ export function UsersPage() {
                 wrapperClassName="dv-search"
               />
             )}
-            <ButtonUtility
-              icon={SearchLg}
-              tooltip={misc.userForm.search}
-              color="secondary"
-              size="sm"
-              onPress={() => {
+            <SearchToggle
+              label={misc.userForm.search}
+              active={searching}
+              onToggle={() => {
                 setSearching((s) => !s);
                 setQ('');
               }}
