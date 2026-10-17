@@ -1,5 +1,6 @@
 import type { FleetDef, NavGraph, SiteLayout } from '@/core/types';
 import type { FleetRecord } from '@/data/fleets';
+import { geometryKey, networkKey, sliceNetwork, type SceneModel } from '@/core/scene';
 import { applyPublishedMaps, seedMapData, type MapData } from '@/features/map-editor';
 import type { FleetMap } from '@/data/maps';
 
@@ -32,8 +33,11 @@ export interface Structure {
 }
 export type NotRunning = 'no-map' | 'not-published' | 'no-network';
 export interface World {
+  /** Everything on one floor (the base site and every placed map): what the simulation and the rules checker run on. */
   site: SiteLayout;
   nav: NavGraph;
+  /** What is SHOWN: one scene per map that is running (its building and its network), each at its place in the site frame. See docs/design/map-scenes.md. */
+  scenes: SceneModel[];
   /** fleet (its id in `nav`) -> the map it runs on */
   runs: Record<string, string>;
   /** fleets that are NOT on the floor, and why (shown to the person looking at that fleet) */
@@ -103,6 +107,7 @@ const extent = (d: MapData, s: Structure | null) => {
 function mergeSite(
   baseSite: SiteLayout,
   parts: { data: MapData; dx: number; dy: number; s: Structure | null }[],
+  keepBaseBounds = true,
 ): SiteLayout {
   const site: SiteLayout = {
     ...baseSite,
@@ -110,7 +115,7 @@ function mergeSite(
     equipment: [...baseSite.equipment],
     floorPolygons: [...baseSite.floorPolygons],
   };
-  let b = { ...baseSite.bounds };
+  let b: SiteLayout['bounds'] | null = keepBaseBounds ? { ...baseSite.bounds } : null;
   for (const { data, dx, dy, s } of parts) {
     const box = extent(data, s);
     const t = (p: [number, number]) => shift(p, dx, dy);
@@ -120,15 +125,35 @@ function mergeSite(
       ? s.floorPolygons.map((p) => p.map(t))
       : [[t([box.minX, box.minY]), t([box.maxX, box.minY]), t([box.maxX, box.maxY]), t([box.minX, box.maxY])]];
     site.floorPolygons.push(...floors);
-    b = {
-      minX: Math.min(b.minX, box.minX + dx),
-      maxX: Math.max(b.maxX, box.maxX + dx),
-      minY: Math.min(b.minY, box.minY + dy),
-      maxY: Math.max(b.maxY, box.maxY + dy),
-    };
+    const nb = { minX: box.minX + dx, maxX: box.maxX + dx, minY: box.minY + dy, maxY: box.maxY + dy };
+    b = b
+      ? {
+          minX: Math.min(b.minX, nb.minX),
+          maxX: Math.max(b.maxX, nb.maxX),
+          minY: Math.min(b.minY, nb.minY),
+          maxY: Math.max(b.maxY, nb.maxY),
+        }
+      : nb;
   }
-  site.bounds = b;
+  if (b) site.bounds = b;
   return site;
+}
+
+/** The building of ONE placed map alone (its own walls, machines and floor, in the site frame), with bounds that hold just that. */
+function partSite(
+  baseSite: SiteLayout,
+  p: { map: FleetMap; data: MapData; dx: number; dy: number; s: Structure | null },
+): SiteLayout {
+  const empty: SiteLayout = {
+    ...baseSite,
+    name: p.map.name,
+    walls: [],
+    equipment: [],
+    floorPolygons: [],
+    zones: [],
+    labels: [],
+  };
+  return mergeSite(empty, [p], false);
 }
 
 export function buildWorld(i: WorldInput): World {
@@ -205,6 +230,21 @@ export function buildWorld(i: WorldInput): World {
   const world: NavGraph = { ...nav, fleets };
 
   const site = mergeSite(i.baseSite, parts);
+  const partOf = new Map(parts.map((p) => [p.map.id, p]));
+  const scenes: SceneModel[] = [...new Set(Object.values(runs))].map((mapId) => {
+    const fleetIds = Object.keys(runs).filter((id) => runs[id] === mapId);
+    const part = partOf.get(mapId);
+    const network = sliceNetwork(world, fleetIds, { mapId, imported: !!part });
+    const geoSite = part ? partSite(i.baseSite, part) : i.baseSite;
+    return {
+      key: `${mapId}@${networkKey(network)}`,
+      mapId,
+      fleets: fleetIds,
+      geometry: { key: geometryKey(geoSite), site: geoSite },
+      network,
+      placement: { x: part?.dx ?? 0, y: part?.dy ?? 0, rot: 0, auto: true },
+    };
+  });
 
   const signature = JSON.stringify([
     fleets.map((f) => [f.id, f.name]),
@@ -214,5 +254,5 @@ export function buildWorld(i: WorldInput): World {
     idle.map((x) => [x.fleetId, x.why]),
     site.walls.length,
   ]);
-  return { site, nav: world, runs, idle, signature };
+  return { site, nav: world, scenes, runs, idle, signature };
 }

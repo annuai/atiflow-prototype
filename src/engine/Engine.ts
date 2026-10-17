@@ -3,18 +3,14 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { store } from '../core/store';
 import { toScene, fromScene } from '../core/coords';
 import type { CameraMode, LayerKey, NavGraph, RobotTelemetry, SiteLayout, Zone } from '../core/types';
-import { CollisionWorld } from './walk';
-import { labelSprite, dotSprite } from './labels';
+import type { CollisionWorld } from './walk';
+import { dotSprite } from './labels';
 import type { RobotTypeId } from '../data/robotTypes';
 import { ROBOT_MODELS, DEFAULT_MODEL, buildTrolley, robotPlanTexture } from './robotMesh';
-import { RulesLayer, SHARED_COLOR } from './rulesLayer';
+import type { RulesLayer } from './rulesLayer';
+import { renderScene, type LoadedScene } from './SceneRenderer';
 import { STATE_COLOR, STATE_PULSE } from './stateStyle';
-import { localized } from '@/i18n';
 
-const copy = localized('floor');
-
-const KIND_COLOR: Record<string, number> = { 'smt-machine': 0x7e9a94, equipment: 0x9aa9a5, workstation: 0xb4beba };
-const MUTED = 0xcfd5d3;
 const ROBOT_SCALE = 1; // true size: the simulator keeps robots 1 m apart in neighbouring lanes, so anything larger would visibly overlap
 const EYE = 1.7;
 /** Plan (2D) view = the same scene seen with a very narrow field of view from far away: no perspective, so the plan is to scale everywhere. `kOf` is how many times further away the camera sits than in the 3D view for the same picture. */
@@ -72,6 +68,7 @@ export class Engine {
   private zoneMeshes: { zone: Zone; mesh: THREE.Mesh; edge: THREE.LineLoop }[] = [];
   private zoneLabels: THREE.Sprite[] = [];
   private rules!: RulesLayer;
+  private loaded: LoadedScene | null = null;
   private incoming = new THREE.LineSegments(
     new THREE.BufferGeometry(),
     new THREE.LineBasicMaterial({ color: 0xf59e0b }),
@@ -214,161 +211,26 @@ export class Engine {
   }
 
   // ---------------------------------------------------------------- scene
+  /** Draws one scene (a building and its network). The drawing itself is `renderScene`; the engine adds it, frames the camera on it and takes its parts into the lookups it keeps. */
   load(site: SiteLayout, nav: NavGraph) {
+    this.loaded?.dispose();
+    for (const k of ['equipment', 'zones', 'labels'] as const) this.layerGroups[k].length = 0; // the previous scene's objects are gone
     this.site = site;
     this.nav = nav;
-    this.world = new CollisionWorld(site);
-    const B = site.bounds;
-    const cx = (B.minX + B.maxX) / 2,
-      cy = (B.minY + B.maxY) / 2,
-      W = B.maxX - B.minX,
-      D = B.maxY - B.minY;
-    const inActive = (x: number, y: number) =>
-      site.zones.some(
-        (z) => z.active && x >= z.polygon[0][0] && x <= z.polygon[2][0] && y >= z.polygon[0][1] && y <= z.polygon[2][1],
-      );
-
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(6000, 6000),
-      new THREE.MeshStandardMaterial({ color: 0xe6ebe9, roughness: 1 }),
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.set(cx, -0.05, -cy);
-    ground.receiveShadow = true;
-    this.scene.add(ground);
-    for (const poly of site.floorPolygons) {
-      const sh = new THREE.Shape(poly.map(([x, y]) => new THREE.Vector2(x, y)));
-      const m = new THREE.Mesh(
-        new THREE.ShapeGeometry(sh),
-        new THREE.MeshStandardMaterial({ color: 0xf7f9f8, roughness: 0.95 }),
-      );
-      m.rotation.x = -Math.PI / 2;
-      m.scale.set(1, 1, 1);
-      m.position.y = 0;
-      m.receiveShadow = true;
-      // ShapeGeometry lies in XY; rotating about X maps y -> -z, which matches toScene.
-      this.scene.add(m);
-    }
-    const grid = new THREE.GridHelper(Math.max(W, D) * 1.1, Math.round(Math.max(W, D) / 5), 0xd5dcda, 0xe3e8e6);
-    grid.position.set(cx, 0.02, -cy);
-    (grid.material as THREE.Material).opacity = 0.5;
-    (grid.material as THREE.Material).transparent = true;
-    this.scene.add(grid);
-
-    // walls (instanced)
-    const wallMesh = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshStandardMaterial({ roughness: 0.8 }),
-      site.walls.length,
-    );
-    const m4 = new THREE.Matrix4(),
-      q = new THREE.Quaternion(),
-      col = new THREE.Color();
-    site.walls.forEach((w, i) => {
-      const dx = w.b[0] - w.a[0],
-        dy = w.b[1] - w.a[1],
-        L = Math.hypot(dx, dy),
-        th = Math.max(w.t, 0.14);
-      q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(dy, dx));
-      m4.compose(
-        new THREE.Vector3(...toScene((w.a[0] + w.b[0]) / 2, (w.a[1] + w.b[1]) / 2, w.h / 2)),
-        q,
-        new THREE.Vector3(L + th, w.h, th),
-      );
-      wallMesh.setMatrixAt(i, m4);
-      const act = inActive((w.a[0] + w.b[0]) / 2, (w.a[1] + w.b[1]) / 2);
-      wallMesh.setColorAt(i, col.set(w.layer === 'shell' ? 0x9aa6a2 : act ? 0x44534e : MUTED));
-    });
-    wallMesh.castShadow = wallMesh.receiveShadow = true;
-    this.scene.add(wallMesh);
-
-    // equipment (instanced)
-    const eq = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshStandardMaterial({ roughness: 0.7 }),
-      site.equipment.length,
-    );
-    site.equipment.forEach((e, i) => {
-      m4.compose(
-        new THREE.Vector3(...toScene(e.x, e.y, e.h / 2)),
-        new THREE.Quaternion(),
-        new THREE.Vector3(e.w, e.h, e.d),
-      );
-      eq.setMatrixAt(i, m4);
-      eq.setColorAt(i, col.set(KIND_COLOR[e.kind] ?? 0x9aa9a5));
-    });
-    eq.castShadow = eq.receiveShadow = true;
-    this.scene.add(eq);
-    this.layerGroups.equipment.push(eq);
-    // outlines of walls and machines, drawn only in the plan view (flat drawings need crisp edges, shading does not exist there)
-    const lines: number[] = [];
-    const edge = (a: [number, number], b: [number, number], z: number) => {
-      lines.push(...toScene(a[0], a[1], z), ...toScene(b[0], b[1], z));
-    };
-    const box = (cx: number, cy: number, w: number, d: number, th: number, z: number) => {
-      const c = Math.cos(th),
-        sn = Math.sin(th);
-      const P = (
-        [
-          [-w, -d],
-          [w, -d],
-          [w, d],
-          [-w, d],
-        ] as [number, number][]
-      ).map(([x, y]): [number, number] => [cx + (x * c - y * sn) / 2, cy + (x * sn + y * c) / 2]);
-      for (let i = 0; i < 4; i++) edge(P[i], P[(i + 1) % 4], z);
-    };
-    site.equipment.forEach((e) => box(e.x, e.y, e.w, e.d, 0, e.h + 0.04));
-    site.walls.forEach((w) => {
-      const th = Math.max(w.t, 0.14);
-      box(
-        (w.a[0] + w.b[0]) / 2,
-        (w.a[1] + w.b[1]) / 2,
-        Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) + th,
-        th,
-        Math.atan2(w.b[1] - w.a[1], w.b[0] - w.a[0]),
-        w.h + 0.04,
-      );
-    });
-    this.planLines = new THREE.LineSegments(
-      new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(lines, 3)),
-      new THREE.LineBasicMaterial({ color: 0x3d4a46, transparent: true, opacity: 0.75 }),
-    );
-    this.planLines.visible = this.plan;
-    this.planLines.frustumCulled = false;
-    this.scene.add(this.planLines);
-
-    // zones
-    for (const z of site.zones) {
-      const owners = nav.fleets.filter((f) => f.areas.includes(z.id));
-      z.color = owners.length > 1 ? SHARED_COLOR : (owners[0]?.color ?? z.color); // map area tint = owning fleet; shared area = indigo
-      const sh = new THREE.Shape(z.polygon.map(([x, y]) => new THREE.Vector2(x, y)));
-      const mesh = new THREE.Mesh(
-        new THREE.ShapeGeometry(sh),
-        new THREE.MeshBasicMaterial({ color: z.color, transparent: true, opacity: 0.1, depthWrite: false }),
-      );
-      mesh.rotation.x = -Math.PI / 2;
-      mesh.position.y = 0.05;
-      const pts = z.polygon.map(([x, y]) => new THREE.Vector3(...toScene(x, y, 0.08)));
-      const edge = new THREE.LineLoop(
-        new THREE.BufferGeometry().setFromPoints(pts),
-        new THREE.LineBasicMaterial({ color: z.color, transparent: true, opacity: 0.9 }),
-      );
-      this.scene.add(mesh, edge);
-      this.zoneMeshes.push({ zone: z, mesh, edge });
-      this.layerGroups.zones.push(mesh, edge);
-      const lb = labelSprite(owners.length > 1 ? copy.labels3d.shared(z.name) : z.name, { size: 52 });
-      const cxz = (z.polygon[0][0] + z.polygon[2][0]) / 2,
-        cyz = (z.polygon[0][1] + z.polygon[2][1]) / 2;
-      lb.position.set(...toScene(cxz, cyz, 6));
-      lb.scale.set((18 * lb.userData.aspect) / 3.4, 18 / 3.4, 1);
-      this.scene.add(lb);
-      this.zoneLabels.push(lb);
-      this.layerGroups.labels.push(lb);
-    }
-    this.rules = new RulesLayer(this.scene, site, nav);
+    const sc = renderScene(site, nav, { plan: this.plan });
+    this.loaded = sc;
+    this.world = sc.world;
+    this.rules = sc.rules;
+    this.zoneMeshes = sc.zoneMeshes;
+    this.zoneLabels = sc.zoneLabels;
+    this.planLines = sc.planLines;
+    this.layerGroups.equipment.push(...sc.layers.equipment);
+    this.layerGroups.zones.push(...sc.layers.zones);
+    this.layerGroups.labels.push(...sc.layers.labels);
+    this.scene.add(sc.group);
     this.rules.setTraffic(store.getState().traffic);
     // camera home: whole building
+    const { cx, cy, W, D } = sc.frame;
     const asp = Math.max(0.3, this.holder.clientWidth / Math.max(1, this.holder.clientHeight));
     const dist = Math.max(W, D) * 1.15 * (asp < 1 ? Math.pow(1 / asp, 0.7) : 1);
     this.homeTarget.set(...toScene(cx, cy, 0));
@@ -1162,6 +1024,8 @@ export class Engine {
   }
   dispose() {
     cancelAnimationFrame(this.raf);
+    this.loaded?.dispose();
+    this.loaded = null;
     this.unsub.forEach((u) => u());
     this.renderer.dispose();
     this.renderer.domElement.remove();
