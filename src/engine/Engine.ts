@@ -3,12 +3,11 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { store } from '../core/store';
 import { toScene, fromScene } from '../core/coords';
 import type { CameraMode, LayerKey, NavGraph, RobotTelemetry, SiteLayout, Zone } from '../core/types';
-import type { CollisionWorld } from './walk';
 import { dotSprite } from './labels';
 import type { RobotTypeId } from '../data/robotTypes';
 import { ROBOT_MODELS, DEFAULT_MODEL, buildTrolley, robotPlanTexture } from './robotMesh';
-import type { RulesLayer } from './rulesLayer';
-import { renderScene, type LoadedScene } from './SceneRenderer';
+import { renderScene } from './SceneRenderer';
+import { SceneManager, composeCollision, type SceneEntry, type SceneSource } from './SceneManager';
 import { STATE_COLOR, STATE_PULSE } from './stateStyle';
 
 const ROBOT_SCALE = 1; // true size: the simulator keeps robots 1 m apart in neighbouring lanes, so anything larger would visibly overlap
@@ -51,11 +50,14 @@ export class Engine {
   private controls: OrbitControls;
   private clock = new THREE.Clock();
   private raf = 0;
-  private site!: SiteLayout;
-  private nav!: NavGraph;
-  private world!: CollisionWorld;
   private robots = new Map<string, RobotVis>();
+  /** where a robot waits when no loaded scene is its own (hidden): robots are normally children of their scene's `robots` group */
   private robotRoot = new THREE.Group();
+  private manager!: SceneManager;
+  /** the scenes on screen now, and the key of that combination */
+  private active: SceneEntry[] = [];
+  private activeKey = '';
+  private collide = composeCollision(() => this.active.map((e) => e.scene.world));
   private layerGroups: Record<LayerKey, THREE.Object3D[]> = {
     robots: [],
     routes: [],
@@ -65,10 +67,6 @@ export class Engine {
     equipment: [],
     alerts: [],
   };
-  private zoneMeshes: { zone: Zone; mesh: THREE.Mesh; edge: THREE.LineLoop }[] = [];
-  private zoneLabels: THREE.Sprite[] = [];
-  private rules!: RulesLayer;
-  private loaded: LoadedScene | null = null;
   private incoming = new THREE.LineSegments(
     new THREE.BufferGeometry(),
     new THREE.LineBasicMaterial({ color: 0xf59e0b }),
@@ -89,7 +87,6 @@ export class Engine {
   private keys = new Set<string>();
   private walk = { x: 0, y: 0, yaw: 0, pitch: 0 };
   private hemi!: THREE.HemisphereLight;
-  private planLines: THREE.LineSegments | null = null;
   private plan = false;
   private fovAnim: { f0: number; f1: number; F0: number; F1: number } | null = null;
   private sun!: THREE.DirectionalLight;
@@ -128,6 +125,13 @@ export class Engine {
       mouseButtons: { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.PAN },
       touches: { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN },
     }); // touch: 1 finger orbits, 2 fingers pinch-zoom + pan (twist rotates, see onTouchGesture)   // like DCC tools: MMB-drag pans, LMB orbits, wheel zooms
+    this.manager = new SceneManager({
+      capacity: 3,
+      parent: this.scene,
+      build: (src) => renderScene(src.site, src.nav, { plan: this.plan }),
+      onEvict: (e) => this.parkRobotsOf(e),
+    });
+    this.robotRoot.visible = false;
     this.scene.background = new THREE.Color(0xe6ebe9);
     this.scene.fog = new THREE.Fog(0xe6ebe9, 500, 1500);
     this.hemi = new THREE.HemisphereLight(0xffffff, 0x8ea39c, 2.1);
@@ -185,12 +189,12 @@ export class Engine {
           this.onSelect();
           if (!s.selectedId && this.mode === 'follow') store.getState().setCameraMode('orbit');
         } // nothing left to follow
-        if (s.traffic !== p.traffic) this.rules?.setTraffic(s.traffic);
+        if (s.traffic !== p.traffic) this.manager.loaded().forEach((e) => e.scene.rules.setTraffic(s.traffic));
         if (s.selectedStationId !== p.selectedStationId) {
-          this.rules?.setSelected(s.selectedStationId);
+          this.manager.loaded().forEach((e) => e.scene.rules.setSelected(s.selectedStationId));
           if (s.selectedStationId) this.focusStation(s.selectedStationId);
         }
-        if (s.fleetId !== p.fleetId) this.rules?.setFleet(s.fleetId);
+        if (s.fleetId !== p.fleetId) this.manager.loaded().forEach((e) => e.scene.rules.setFleet(s.fleetId));
         if (s.activeZoneId !== p.activeZoneId) this.refreshZones();
       }),
     );
@@ -211,35 +215,115 @@ export class Engine {
   }
 
   // ---------------------------------------------------------------- scene
-  /** Draws one scene (a building and its network). The drawing itself is `renderScene`; the engine adds it, frames the camera on it and takes its parts into the lookups it keeps. */
+  /** A single scene with no fleet of its own (the 3D map page): everything under one catch-all scene. */
   load(site: SiteLayout, nav: NavGraph) {
-    this.loaded?.dispose();
-    for (const k of ['equipment', 'zones', 'labels'] as const) this.layerGroups[k].length = 0; // the previous scene's objects are gone
-    this.site = site;
-    this.nav = nav;
-    const sc = renderScene(site, nav, { plan: this.plan });
-    this.loaded = sc;
-    this.world = sc.world;
-    this.rules = sc.rules;
-    this.zoneMeshes = sc.zoneMeshes;
-    this.zoneLabels = sc.zoneLabels;
-    this.planLines = sc.planLines;
-    this.layerGroups.equipment.push(...sc.layers.equipment);
-    this.layerGroups.zones.push(...sc.layers.zones);
-    this.layerGroups.labels.push(...sc.layers.labels);
-    this.scene.add(sc.group);
-    this.rules.setTraffic(store.getState().traffic);
-    // camera home: whole building
-    const { cx, cy, W, D } = sc.frame;
+    this.setScenes([{ key: 'single', site, nav, fleets: [] }], ['single']);
+  }
+
+  /**
+   * Shows these scenes (each one loaded the first time it is shown and then kept, up to the budget) and hides every other: the scene is the unit, so a fleet on another map is a different
+   * scene, not a filter on this one. Robots follow their fleet's scene; the camera goes back to where it was in this combination of scenes, or frames them.
+   */
+  setScenes(sources: SceneSource[], show: string[]) {
+    if (this.active.length) this.manager.remember(this.activeKey, this.pose());
+    const want = sources.filter((src) => show.includes(src.key));
+    want.forEach((src) => this.manager.ensure(src));
+    this.active = this.manager.show(want.map((src) => src.key));
+    this.activeKey = SceneManager.setKey(want.map((src) => src.key));
+    const st = store.getState();
+    for (const e of this.manager.loaded()) {
+      e.scene.rules.setTraffic(st.traffic);
+      e.scene.rules.setFleet(st.fleetId);
+      e.scene.rules.setSelected(st.selectedStationId);
+    }
+    this.reattachRobots();
+    // nothing stays selected that is not in a scene on screen
+    if (st.selectedId && !this.robotObjects().some((o) => o.userData.robotId === st.selectedId)) st.select(null);
+    if (st.selectedStationId && !this.stationPos(st.selectedStationId)) st.selectStation(null);
+    if (st.activeZoneId && !this.zones.some((z) => z.id === st.activeZoneId)) st.setZone(null);
+    this.frameActive();
+    this.applyLayers();
+    this.refreshZones();
+  }
+  /** A stand-in zone covering what is on screen (walk mode needs a place to start when a map has no active zone). */
+  private frameZone(): Zone {
+    const f = this.active[0]?.scene.frame ?? { cx: 0, cy: 0, W: 10, D: 10 };
+    return {
+      id: 'frame',
+      name: '',
+      kind: 'area',
+      active: true,
+      color: '#999999',
+      polygon: [
+        [f.cx - f.W / 2, f.cy - f.D / 2],
+        [f.cx + f.W / 2, f.cy - f.D / 2],
+        [f.cx + f.W / 2, f.cy + f.D / 2],
+        [f.cx - f.W / 2, f.cy + f.D / 2],
+      ],
+    };
+  }
+  private pose() {
+    return { pos: this.camera.position.clone(), target: this.controls.target.clone() };
+  }
+  /** Home view of what is on screen: the union of the scenes' buildings. Snaps there (a scene change is a reload, not a flight) unless this combination was seen before. */
+  private frameActive() {
+    if (!this.active.length) return;
+    const fr = this.active.map((e) => e.scene.frame);
+    const x0 = Math.min(...fr.map((f) => f.cx - f.W / 2)),
+      x1 = Math.max(...fr.map((f) => f.cx + f.W / 2)),
+      y0 = Math.min(...fr.map((f) => f.cy - f.D / 2)),
+      y1 = Math.max(...fr.map((f) => f.cy + f.D / 2));
+    const cx = (x0 + x1) / 2,
+      cy = (y0 + y1) / 2,
+      W = x1 - x0,
+      D = y1 - y0;
     const asp = Math.max(0.3, this.holder.clientWidth / Math.max(1, this.holder.clientHeight));
     const dist = Math.max(W, D) * 1.15 * (asp < 1 ? Math.pow(1 / asp, 0.7) : 1);
     this.homeTarget.set(...toScene(cx, cy, 0));
     this.homePos.set(cx - dist * 0.35, dist * 0.8, -(cy - dist * 0.75));
-    this.camera.position.copy(this.homePos);
-    this.controls.target.copy(this.homeTarget);
+    const seen = this.manager.recall(this.activeKey);
+    this.camera.position.copy(seen?.pos ?? this.homePos);
+    this.controls.target.copy(seen?.target ?? this.homeTarget);
+    this.fly = null;
     this.controls.update();
-    this.applyLayers();
-    this.refreshZones();
+  }
+  /** The scene whose robots group a fleet's robots belong in: the one on screen that has the fleet, else any loaded one that has it, else a catch-all scene. */
+  private entryOfFleet(fleetId: string | undefined): SceneEntry | undefined {
+    if (!fleetId) return this.manager.loaded().find((e) => e.source.fleets.length === 0);
+    const has = (e: SceneEntry) => e.source.fleets.includes(fleetId);
+    return (
+      this.active.find(has) ??
+      this.manager.loaded().find(has) ??
+      this.manager.loaded().find((e) => e.source.fleets.length === 0)
+    );
+  }
+  private homeOf(fleetId: string | undefined): THREE.Object3D {
+    return this.entryOfFleet(fleetId)?.robots ?? this.robotRoot;
+  }
+  /** Moves every robot (and its trolley) to the robots group of the scene its fleet runs on. */
+  private reattachRobots() {
+    this.robots.forEach((r) => {
+      const dest = this.homeOf(r.t?.fleetId);
+      if (r.group.parent !== dest) dest.add(r.group);
+      if (r.trolley && r.trolley.parent !== dest) dest.add(r.trolley);
+    });
+  }
+  /** A scene is being freed: its robots wait (hidden) until a scene of their fleet is loaded again. */
+  private parkRobotsOf(e: SceneEntry) {
+    [...e.robots.children].forEach((c) => this.robotRoot.add(c));
+  }
+  private get zones(): Zone[] {
+    return this.active.flatMap((e) => e.source.site.zones);
+  }
+  private stationPos(id: string): THREE.Vector3 | undefined {
+    for (const e of this.active) {
+      const p = e.scene.rules.stationPos.get(id);
+      if (p) return p;
+    }
+    return undefined;
+  }
+  private robotObjects(): THREE.Object3D[] {
+    return this.active.flatMap((e) => e.robots.children).filter((c) => c.visible);
   }
 
   // ---------------------------------------------------------------- robots
@@ -294,7 +378,7 @@ export class Engine {
       o.userData.robotId = t.id;
     });
     root.add(halo, ring, dot, glyph);
-    this.robotRoot.add(root);
+    this.homeOf(t.fleetId).add(root);
     this.layerGroups.robots.push(root);
     r = {
       group: root,
@@ -326,8 +410,8 @@ export class Engine {
   /** Drops every robot (the feed restarted with a different set of robots; the next batch draws the new ones). */
   clearRobots() {
     this.robots.forEach((r) => {
-      this.robotRoot.remove(r.group);
-      if (r.trolley) this.robotRoot.remove(r.trolley);
+      r.group.removeFromParent();
+      r.trolley?.removeFromParent();
     });
     this.robots.clear();
     this.layerGroups.robots.length = 0;
@@ -346,7 +430,7 @@ export class Engine {
     this.sun.castShadow = !on;
     this.hemi.intensity = on ? 3.1 : 2.1;
     this.scene.fog = on ? null : new THREE.Fog(0xe6ebe9, 500, 1500);
-    if (this.planLines) this.planLines.visible = on;
+    this.manager.loaded().forEach((e) => (e.scene.planLines.visible = on));
     this.robots.forEach((r) => {
       r.inner.visible = !on;
       r.glyph.visible = on;
@@ -367,7 +451,7 @@ export class Engine {
     const key = t.trailer && t.payload ? `${t.payload.kind}|${t.payload.qty ?? 3}` : '';
     if (key !== r.trolleyKey) {
       if (r.trolley) {
-        this.robotRoot.remove(r.trolley);
+        r.trolley.removeFromParent();
         r.trolley = null;
       }
       r.trolleyKey = key;
@@ -401,7 +485,7 @@ export class Engine {
           o.userData.robotId = t.id;
         });
         g.add(flatT);
-        this.robotRoot.add(g);
+        (r.group.parent ?? this.robotRoot).add(g);
         r.trolley = g;
         r.trFrom = null;
         this.showTrolleyAs(g);
@@ -419,6 +503,11 @@ export class Engine {
       const r = this.ensure(t);
       const now = performance.now();
       r.t = t;
+      const home = this.homeOf(t.fleetId);
+      if (r.group.parent !== home) {
+        home.add(r.group); // its fleet's scene changed
+        if (r.trolley) home.add(r.trolley);
+      }
       r.v = t.speed;
       const cur = this.shown(r);
       const gap = now - r.tArr;
@@ -447,7 +536,7 @@ export class Engine {
   }
   applyFilter(fleetId: string, query: string) {
     void query; // the bottom search box locates a robot or station; it no longer hides the others
-    this.rules?.setFleet(fleetId);
+    this.manager.loaded().forEach((e) => e.scene.rules.setFleet(fleetId));
     this.robots.forEach((r) => {
       const t = r.t;
       r.group.visible = store.getState().layers.robots && (!t || fleetId === 'all' || t.fleetId === fleetId);
@@ -474,19 +563,18 @@ export class Engine {
   }
   private applyLayers() {
     const L = store.getState().layers;
-    (Object.keys(this.layerGroups) as LayerKey[]).forEach((k) =>
-      this.layerGroups[k].forEach((o) => {
-        if (k !== 'robots') o.visible = L[k];
-      }),
-    );
+    for (const e of this.manager.loaded()) {
+      e.scene.layers.equipment.forEach((o) => (o.visible = L.equipment));
+      e.scene.layers.zones.forEach((o) => (o.visible = L.zones));
+      e.scene.layers.labels.forEach((o) => (o.visible = L.labels));
+    }
     this.layerGroups.stations.forEach((o) => (o.visible = L.stations));
-    this.layerGroups.labels.forEach((o) => (o.visible = L.labels));
     const s = store.getState();
     this.applyFilter(s.fleetId, s.query);
   }
   private refreshZones() {
     const act = store.getState().activeZoneId;
-    for (const z of this.zoneMeshes) {
+    for (const z of this.active.flatMap((e) => e.scene.zoneMeshes)) {
       const on = z.zone.id === act;
       (z.mesh.material as THREE.MeshBasicMaterial).opacity = on
         ? 0.22
@@ -559,8 +647,9 @@ export class Engine {
   private enterWalk() {
     const t = this.controls.target;
     const zone =
-      this.zoneMeshes.find((z) => z.zone.id === store.getState().activeZoneId)?.zone ??
-      this.site.zones.find((z) => z.active)!;
+      this.zones.find((z) => z.id === store.getState().activeZoneId) ??
+      this.zones.find((z) => z.active) ??
+      this.frameZone();
     const p = fromScene(t.x, 0, t.z);
     let sx = p.x,
       sy = p.y;
@@ -573,7 +662,7 @@ export class Engine {
       sx = (zone.polygon[0][0] + zone.polygon[2][0]) / 2;
       sy = (zone.polygon[0][1] + zone.polygon[2][1]) / 2;
     }
-    for (let r = 0; r < 20 && this.world.hits(sx, sy, 0.4); r += 1) {
+    for (let r = 0; r < 20 && this.collide.hits(sx, sy, 0.4); r += 1) {
       sx += 1;
     }
     this.walk = { x: sx, y: sy, yaw: 0, pitch: 0 };
@@ -616,7 +705,7 @@ export class Engine {
     this.camera.position.copy(this.controls.target).add(o.setLength(L));
   }
   focusZone(id: string) {
-    const z = this.site.zones.find((q) => q.id === id);
+    const z = this.zones.find((q) => q.id === id);
     if (!z) return;
     store.getState().setZone(id);
     if (this.mode === 'walk' || this.mode === 'follow') store.getState().setCameraMode('orbit');
@@ -644,7 +733,7 @@ export class Engine {
     );
   }
   focusStation(id: string) {
-    const p = this.rules.stationPos.get(id);
+    const p = this.stationPos(id);
     if (!p) return;
     const d = 16;
     this.flyTo(
@@ -657,7 +746,7 @@ export class Engine {
   }
   private updateIncoming() {
     const id = store.getState().selectedStationId;
-    const sp = id ? this.rules.stationPos.get(id) : null;
+    const sp = id ? this.stationPos(id) : null;
     if (!id || !sp) {
       this.incoming.visible = false;
       return;
@@ -689,7 +778,7 @@ export class Engine {
     const b = this.renderer.domElement.getBoundingClientRect();
     this.ptr.set(((e.clientX - b.left) / b.width) * 2 - 1, -((e.clientY - b.top) / b.height) * 2 + 1);
     this.ray.setFromCamera(this.ptr, this.camera);
-    const hits = this.ray.intersectObjects([...this.robotRoot.children.filter((c) => c.visible)], true);
+    const hits = this.ray.intersectObjects(this.robotObjects(), true);
     const rh = hits.find((h) => h.object.userData.robotId || h.object.parent?.userData.robotId);
     let rid: string | null = null;
     if (rh) {
@@ -702,7 +791,7 @@ export class Engine {
     if (this.ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), pt)) {
       const p = fromScene(pt.x, 0, pt.z);
       zone =
-        this.site.zones.find(
+        this.zones.find(
           (z) =>
             z.active &&
             p.x >= z.polygon[0][0] &&
@@ -711,11 +800,11 @@ export class Engine {
             p.y <= z.polygon[2][1],
         )?.id ?? null;
     }
-    const sid = rid ? null : (this.rules?.pick(this.ray) ?? null);
+    const sid = rid ? null : (this.active.map((e) => e.scene.rules.pick(this.ray)).find(Boolean) ?? null);
     return { rid, zone, sid };
   }
   private onMove = (e: PointerEvent) => {
-    if (!this.site || this.mode === 'walk' || e.pointerType === 'touch') return;
+    if (!this.active.length || this.mode === 'walk' || e.pointerType === 'touch') return;
     const { rid, zone, sid } = this.pick(e); // no hover on touch
     this.renderer.domElement.style.cursor = rid || sid || zone ? 'pointer' : 'grab';
     if (zone !== this.hoverZone) {
@@ -727,7 +816,7 @@ export class Engine {
     if (e.button !== 0) return; // only the primary button selects; MMB/RMB are camera drags
     const touch = e.pointerType === 'touch';
     if (
-      !this.site ||
+      !this.active.length ||
       this.mode === 'walk' ||
       this.twistPrev !== null ||
       Math.hypot(e.clientX - this.downAt.x, e.clientY - this.downAt.y) > (touch ? 10 : 5)
@@ -810,11 +899,11 @@ export class Engine {
   }
   /** Double-tap / double-click: zoom in on the tapped floor point; on a robot, locate it. */
   private doubleTap(cx: number, cy: number) {
-    if (!this.site || this.mode === 'walk' || this.mode === 'follow') return;
+    if (!this.active.length || this.mode === 'walk' || this.mode === 'follow') return;
     const b = this.renderer.domElement.getBoundingClientRect();
     this.ptr.set(((cx - b.left) / b.width) * 2 - 1, -((cy - b.top) / b.height) * 2 + 1);
     this.ray.setFromCamera(this.ptr, this.camera);
-    const hits = this.ray.intersectObjects([...this.robotRoot.children.filter((c) => c.visible)], true);
+    const hits = this.ray.intersectObjects(this.robotObjects(), true);
     const rh = hits.find((h) => h.object.userData.robotId || h.object.parent?.userData.robotId);
     if (rh) {
       let o: THREE.Object3D | null = rh.object;
@@ -859,7 +948,7 @@ export class Engine {
     this.raf = requestAnimationFrame(this.loop);
     const dt = Math.min(this.clock.getDelta(), 0.05),
       time = this.clock.elapsedTime;
-    if (!this.site) {
+    if (!this.active.length) {
       this.renderer.render(this.scene, this.camera);
       return;
     }
@@ -907,10 +996,12 @@ export class Engine {
     this.updateSelectedPath();
     // labels: zone labels fade when close, station labels when far
     const cd = this.dist(this.controls.target);
-    this.zoneLabels.forEach((l) => {
-      l.material.opacity = THREE.MathUtils.clamp((cd - 110) / 60, 0, 1);
-    });
-    this.rules?.tick(time, this.camera, this.k);
+    this.active
+      .flatMap((e) => e.scene.zoneLabels)
+      .forEach((l) => {
+        l.material.opacity = THREE.MathUtils.clamp((cd - 110) / 60, 0, 1);
+      });
+    this.active.forEach((e) => e.scene.rules.tick(time, this.camera, this.k));
     this.updateIncoming();
     // fly
     if (this.fly) {
@@ -1002,7 +1093,7 @@ export class Engine {
     const dx = (fX * fw + fY * st) * sp,
       dy = (fY * fw - fX * st) * sp;
     if (dx || dy) {
-      const [nx, ny] = this.world.move(this.walk.x, this.walk.y, dx, dy, 0.4);
+      const [nx, ny] = this.collide.move(this.walk.x, this.walk.y, dx, dy, 0.4);
       this.walk.x = nx;
       this.walk.y = ny;
     }
@@ -1024,8 +1115,8 @@ export class Engine {
   }
   dispose() {
     cancelAnimationFrame(this.raf);
-    this.loaded?.dispose();
-    this.loaded = null;
+    this.manager.dispose();
+    this.active = [];
     this.unsub.forEach((u) => u());
     this.renderer.dispose();
     this.renderer.domElement.remove();

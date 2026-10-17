@@ -15,7 +15,7 @@ const cache = new WeakMap<SceneModel, SceneIndexes>();
 export function sceneIndexes(m: SceneModel): SceneIndexes {
   let i = cache.get(m);
   if (!i) {
-    i = { lanes: new LaneGraph(m.network), rules: new RulesIndex(m.network, m.geometry.site) };
+    i = { lanes: new LaneGraph(m.network), rules: new RulesIndex(m.network, m.site) };
     cache.set(m, i);
   }
   return i;

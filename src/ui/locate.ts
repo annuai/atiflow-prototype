@@ -59,6 +59,14 @@ export function findTargets(
     .map(({ rank, ...h }) => (void rank, h));
 }
 
+let pending: string | null = null;
+/** A locate that had to wait for another scene to be shown (the target belongs to another fleet's map); the Live Floor takes it once that scene is on screen. */
+export function takePendingLocate(): string | null {
+  const p = pending;
+  pending = null;
+  return p;
+}
+
 /** Select a robot or station and fly the Live Floor camera to it (leaving walk / follow mode, and clearing a fleet filter that would hide it). */
 export function locateTarget(id: string) {
   const s = store.getState();
@@ -66,10 +74,19 @@ export function locateTarget(id: string) {
   const r = s.robots[id];
   if (r) {
     if (s.fleetId !== 'all' && r.fleetId !== s.fleetId) {
+      pending = id; // the whole floor is shown first, then the camera flies there
       s.setFleet('all');
       s.setNav('live');
+      return;
     }
     handle.engine?.focusRobot(id);
+    return;
+  }
+  const st = s.nav?.stations.find((q) => q.id === id);
+  if (st && s.fleetId !== 'all' && !st.fleets.includes(s.fleetId)) {
+    pending = id;
+    s.setFleet('all');
+    s.setNav('live');
     return;
   }
   s.selectStation(id);

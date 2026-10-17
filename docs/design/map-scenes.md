@@ -1,8 +1,10 @@
 # Map scenes: loading each fleet's map into memory (system-level design)
 
-Status: **decided; phases 1 and 2 built.** Starting point: commit `39087a2` (the world is built from fleets and their maps) plus the finding below.
+Status: **phases 1-3 built, with the design SIMPLIFIED by the user.** Starting point: commit `39087a2` (the world is built from fleets and their maps).
 
-**Decisions (user):** SceneManager from the start; "All fleets" = every map side by side at its placement; publishing keeps the old network running until the floor restarts; the two ECC fleets share one geometry layer; budget of 3 loaded scenes. Built: phase 1 (`src/core/scene/*`: `SceneModel`, `geometryKey`, `networkKey`, `sliceNetwork`, `sceneIndexes`; `World.scenes`, `world/scenes.ts` `sceneOfFleet` / `visibleScenes`) and phase 2 (`src/engine/SceneRenderer.ts`: `renderScene` -> one group + `dispose()`; `Engine.load` uses it, behaviour unchanged). Next: phase 3 (`SceneManager`, robots in scene groups), phase 4 (placement stored, "All fleets" side by side), phase 5 (prefetch, publish-in-place, e2e).
+**Decisions (user):** a SceneManager (not rebuild-on-switch); **no building sharing**: a scene is one fleet's map loaded in full for that fleet, even when two fleets run the same map (so there is no geometry layer, no reference counting); **"All fleets" = ONE merged scene** (the whole floor, imported maps beside the ECC floor), not side-by-side per-fleet scenes; publishing keeps the old network until the floor restarts; budget of 3 loaded scenes; **a fleet added later simply appears on reload** (no live add). Superseded below: section 2's geometry / network split and shared buildings, section 4's side-by-side "All fleets", section 7's in-place replacement.
+
+Built: phase 1 (`src/core/scene`: `SceneModel {key, fleetId, mapId, fleets, site, network, placement}`, `networkKey`, `sliceNetwork`, `sceneIndexes`; `World.scenes` = one per fleet that runs, `World.all` = the merged floor; `world/scenes.ts`: `sceneOfFleet`, `visibleScenes`, `toSource`, `showFor`), phase 2 (`SceneRenderer.renderScene` -> one group + `dispose()`), phase 3 (`SceneManager` with LRU of 3 and a camera pose per combination of shown scenes, `composeCollision`; the engine shows scenes through it and robots hang under the scene they are shown in; locate waits for the right scene). Still open: placement stored with the map (phase 4), prefetch and an e2e test (phase 5).
 
 ## 1. What is wrong today
 

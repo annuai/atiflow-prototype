@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { services } from '@/services';
 import { Link, useLocation } from 'react-router-dom';
 import { store, useApp } from '@/core/store';
@@ -18,21 +18,12 @@ import { useCoarse } from '@/ui/useCoarse';
 import { XClose } from '@untitledui/icons';
 import { LocateBox } from './LocateBox';
 import { feed } from './liveFeed';
-import { locateTarget } from '@/ui/locate';
+import { showFor } from './world/scenes';
+import { locateTarget, takePendingLocate } from '@/ui/locate';
 import { copy } from '@/ui/copy';
-
-/** The world was rebuilt (a fleet got a map, a map was published...): a number that changes then, so the scene below is built again from the new world. */
-let worldVersion = 0;
-feed.onWorld(() => worldVersion++);
-const subscribeWorld = (cb: () => void) => feed.onWorld(cb);
 
 /** Supervisor home: the 3D live floor. Content only; chrome comes from AppShell. */
 export function LiveFloorPage() {
-  const v = useSyncExternalStore(subscribeWorld, () => worldVersion);
-  return <LiveFloor key={v} />;
-}
-
-function LiveFloor() {
   const { state: routeState, search } = useLocation(); // the Dashboard can send us here to locate a robot or station; search sends `?focus=robot:AMR-003`
   const holder = useRef<HTMLDivElement>(null);
   const [view, setView] = useState({ x: 0, y: 0, yaw: 0, zoomPct: 100 });
@@ -58,7 +49,7 @@ function LiveFloor() {
     Promise.all([feed.ready(), loadRobotModels()]).then(([{ world }]) => {
       if (dead) return;
       live = true;
-      eng.load(world.site, world.nav);
+      showFor(eng, world, store.getState().fleetId);
       setReady(true);
       {
         const st = store.getState(),
@@ -104,6 +95,14 @@ function LiveFloor() {
   useEffect(() => {
     handle.engine?.applyFilter(fleetId, q);
   }, [fleetId, q]);
+  // every fleet has its own map: choosing a fleet shows that map's scene (loaded the first time, kept after), choosing all fleets shows every map
+  useEffect(() => {
+    const w = feed.world();
+    if (!ready || !w || !handle.engine) return;
+    showFor(handle.engine, w, fleetId);
+    const t = takePendingLocate(); // a locate that was waiting for this scene
+    if (t) locateTarget(t);
+  }, [ready, fleetId]);
   const sel = useApp((s) => s.selectedId);
   const robotPanelOpen = useApp((s) => s.robotPanelOpen);
   const selStation = useApp((s) => s.selectedStationId);

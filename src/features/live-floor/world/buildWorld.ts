@@ -1,6 +1,6 @@
 import type { FleetDef, NavGraph, SiteLayout } from '@/core/types';
 import type { FleetRecord } from '@/data/fleets';
-import { geometryKey, networkKey, sliceNetwork, type SceneModel } from '@/core/scene';
+import { networkKey, sliceNetwork, type SceneModel } from '@/core/scene';
 import { applyPublishedMaps, seedMapData, type MapData } from '@/features/map-editor';
 import type { FleetMap } from '@/data/maps';
 
@@ -36,8 +36,9 @@ export interface World {
   /** Everything on one floor (the base site and every placed map): what the simulation and the rules checker run on. */
   site: SiteLayout;
   nav: NavGraph;
-  /** What is SHOWN: one scene per map that is running (its building and its network), each at its place in the site frame. See docs/design/map-scenes.md. */
+  /** What is SHOWN, one scene per fleet that is running (its own network on its map's building: two fleets on one map are two scenes) and `all`, the whole floor. See docs/design/map-scenes.md. */
   scenes: SceneModel[];
+  all: SceneModel;
   /** fleet (its id in `nav`) -> the map it runs on */
   runs: Record<string, string>;
   /** fleets that are NOT on the floor, and why (shown to the person looking at that fleet) */
@@ -231,20 +232,39 @@ export function buildWorld(i: WorldInput): World {
 
   const site = mergeSite(i.baseSite, parts);
   const partOf = new Map(parts.map((p) => [p.map.id, p]));
-  const scenes: SceneModel[] = [...new Set(Object.values(runs))].map((mapId) => {
-    const fleetIds = Object.keys(runs).filter((id) => runs[id] === mapId);
-    const part = partOf.get(mapId);
-    const network = sliceNetwork(world, fleetIds, { mapId, imported: !!part });
-    const geoSite = part ? partSite(i.baseSite, part) : i.baseSite;
-    return {
-      key: `${mapId}@${networkKey(network)}`,
-      mapId,
-      fleets: fleetIds,
-      geometry: { key: geometryKey(geoSite), site: geoSite },
-      network,
-      placement: { x: part?.dx ?? 0, y: part?.dy ?? 0, rot: 0, auto: true },
-    };
+  const sceneOf = (
+    fleetId: string | null,
+    mapId: string | null,
+    ids: string[],
+    n: NavGraph,
+    geo: SiteLayout,
+    at: { x: number; y: number },
+  ): SceneModel => ({
+    key: `${fleetId ?? 'all'}:${mapId ?? ''}@${networkKey(n)}`,
+    fleetId,
+    mapId,
+    fleets: ids,
+    site: geo,
+    network: n,
+    placement: { x: at.x, y: at.y, rot: 0, auto: true },
   });
+  const scenes = Object.keys(runs).map((fleetId) => {
+    const mapId = runs[fleetId];
+    const part = partOf.get(mapId);
+    const network = sliceNetwork(world, [fleetId], { mapId, imported: !!part });
+    return sceneOf(fleetId, mapId, [fleetId], network, part ? partSite(i.baseSite, part) : i.baseSite, {
+      x: part?.dx ?? 0,
+      y: part?.dy ?? 0,
+    });
+  });
+  const all = sceneOf(
+    null,
+    null,
+    world.fleets.map((f) => f.id),
+    world,
+    site,
+    { x: 0, y: 0 },
+  );
 
   const signature = JSON.stringify([
     fleets.map((f) => [f.id, f.name]),
@@ -254,5 +274,5 @@ export function buildWorld(i: WorldInput): World {
     idle.map((x) => [x.fleetId, x.why]),
     site.walls.length,
   ]);
-  return { site, nav: world, scenes, runs, idle, signature };
+  return { site, nav: world, scenes, all, runs, idle, signature };
 }

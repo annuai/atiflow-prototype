@@ -64,3 +64,4 @@ fleetsStore.subscribe((s, p) => {
 });
 
 registerStoreInit(() => withoutSaving(() => fleetsStore.setState({ profiles: load() })));
+if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __fleets: fleetsStore }); // dev-only handle for console testing

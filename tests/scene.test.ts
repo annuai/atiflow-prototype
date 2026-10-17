@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { geometryKey, sceneIndexes, sliceNetwork } from '../src/core/scene';
+import { sceneIndexes, sliceNetwork } from '../src/core/scene';
 import type { NavGraph, SiteLayout } from '../src/core/types';
 import type { FleetRecord } from '../src/data/fleets';
 import type { FleetMap } from '../src/data/maps';
@@ -90,16 +90,17 @@ const withImported = (data = tiny()) =>
     }),
   );
 
-describe('one scene per running map', () => {
-  it('each ECC fleet has its own scene: same building, different network', () => {
+describe('one scene per fleet, and one for the whole floor', () => {
+  it('each ECC fleet has its own scene with only the lanes it drives', () => {
     const w = ecc();
-    expect(w.scenes.map((s) => s.mapId).sort()).toEqual(['assembly-east', 'main-assembly']);
-    const [a, b] = w.scenes;
-    expect(a.geometry.key).toBe(b.geometry.key); // one building, loaded once
-    expect(a.key).not.toBe(b.key);
-    expect(a.network.lanes.length).not.toBe(b.network.lanes.length);
-    for (const s of w.scenes)
-      expect(s.network.lanes.every((l) => l.fleets.some((f) => s.fleets.includes(f)))).toBe(true);
+    expect(w.scenes.map((s) => s.fleetId).sort()).toEqual(['asrs', 'line-side']);
+    const ls = sceneOfFleet(w, 'line-side')!,
+      as = sceneOfFleet(w, 'asrs')!;
+    expect(ls.key).not.toBe(as.key);
+    expect(ls.network.lanes.length).not.toBe(as.network.lanes.length);
+    expect(ls.network.lanes.every((l) => l.fleets.includes('line-side'))).toBe(true);
+    expect(as.network.lanes.every((l) => l.fleets.includes('asrs'))).toBe(true);
+    expect(ls.fleets).toEqual(['line-side']);
   });
 
   it('a lane in a shared area is in both scenes; a lane of one fleet only in its own', () => {
@@ -114,62 +115,91 @@ describe('one scene per running map', () => {
     expect(shared.every((l) => as.network.lanes.some((q) => q.id === l.id))).toBe(true);
   });
 
-  it('a fleet that shares an ECC map is in that map’s scene (nothing to reload between them)', () => {
+  it('two fleets on the SAME map are two scenes, each loaded for its own fleet (nothing is shared)', () => {
     const w = buildWorld(
       input({
         fleets: [lineSide, assembly, probe],
         profiles: { ...input({ fleets: [] }).profiles, 'Probe Fleet': { mapId: 'main-assembly' } },
       }),
     );
-    expect(sceneOfFleet(w, 'probe')).toBe(sceneOfFleet(w, 'line-side'));
-    expect(sceneOfFleet(w, 'probe')!.fleets.sort()).toEqual(['line-side', 'probe']);
-    expect(w.scenes).toHaveLength(2);
+    expect(w.scenes).toHaveLength(3);
+    const a = sceneOfFleet(w, 'probe')!,
+      b = sceneOfFleet(w, 'line-side')!;
+    expect(a).not.toBe(b);
+    expect(a.key).not.toBe(b.key);
+    expect(a.mapId).toBe(b.mapId);
+    expect(a.fleets).toEqual(['probe']);
+    expect(a.network.lanes.length).toBe(b.network.lanes.length); // the same map: the same lanes, tagged for this fleet
+    expect(a.network.lanes.every((l) => l.fleets.includes('probe'))).toBe(true);
   });
 
-  it('an imported map is a third scene with its own building, placed beside the ECC floor', () => {
+  it('an imported map is its own scene: its own building, placed beside the ECC floor, ids prefixed', () => {
     const w = withImported();
     const s = sceneOfFleet(w, 'probe')!;
     expect(s.mapId).toBe('imp-x');
-    expect(s.geometry.key).not.toBe(ecc().scenes[0].geometry.key);
-    expect(s.geometry.site.walls).toHaveLength(1);
-    expect(s.geometry.site.bounds.minX).toBeGreaterThan(baseSite.bounds.maxX); // just its own box, not the union
+    expect(s.site.walls).toHaveLength(1);
+    expect(s.site.bounds.minX).toBeGreaterThan(baseSite.bounds.maxX); // just its own box, not the union
     expect(s.placement.x).toBeGreaterThan(baseSite.bounds.maxX);
     expect(s.network.lanes.map((l) => l.id).sort()).toEqual(['imp-x/L1', 'imp-x/L2']);
     expect(s.network.forbiddenZones).toEqual([]); // the ECC no-go zones are not this map's
   });
 
-  it('adding a map does not change the other scenes (their keys stay, so nothing reloads)', () => {
-    const before = ecc()
-      .scenes.map((s) => s.key)
-      .sort();
-    const after = withImported()
-      .scenes.filter((s) => s.mapId !== 'imp-x')
-      .map((s) => s.key)
-      .sort();
-    expect(after).toEqual(before);
+  it('"all fleets" is ONE scene: every fleet, every building', () => {
+    const w = withImported();
+    expect(w.all.fleetId).toBeNull();
+    expect(w.all.fleets.sort()).toEqual(['asrs', 'line-side', 'probe']);
+    expect(w.all.site.bounds.maxX).toBeGreaterThan(baseSite.bounds.maxX + 20);
+    expect(w.all.network.lanes.length).toBe(w.nav.lanes.length);
   });
 });
 
 describe('what is shown for a choice of fleet', () => {
-  it('a fleet shows its own scene; "all" shows every scene; a fleet that is not on the floor shows all', () => {
+  it('a fleet shows its own scene; all fleets and a fleet that is not on the floor show the whole floor', () => {
     const w = withImported();
-    expect(visibleScenes(w, 'asrs').map((s) => s.mapId)).toEqual(['assembly-east']);
-    expect(visibleScenes(w, 'all')).toHaveLength(3);
-    expect(visibleScenes(w, 'nobody')).toHaveLength(3);
+    expect(visibleScenes(w, 'asrs').map((s) => s.fleetId)).toEqual(['asrs']);
+    expect(visibleScenes(w, 'all')).toEqual([w.all]);
+    expect(visibleScenes(w, 'nobody')).toEqual([w.all]);
+  });
+});
+
+describe('a fleet that is added later', () => {
+  it('gets its own scene, and a scene that does not involve it is not touched', () => {
+    const before = withImported();
+    const after = buildWorld(
+      input({
+        fleets: [lineSide, assembly, probe, { id: 'late', name: 'Late Fleet', color: '#ec4899' }],
+        maps: [...MAPS, imported],
+        profiles: {
+          ...input({ fleets: [] }).profiles,
+          'Probe Fleet': { mapId: 'imp-x' },
+          'Late Fleet': { mapId: 'assembly-east' },
+        },
+        published: (id) => (id === 'imp-x' ? tiny() : null),
+      }),
+    );
+    expect(after.scenes.map((s) => s.fleetId).sort()).toEqual(['asrs', 'late', 'line-side', 'probe']);
+    const late = sceneOfFleet(after, 'late')!;
+    expect(late.mapId).toBe('assembly-east');
+    expect(late.network.lanes.every((l) => l.fleets.includes('late'))).toBe(true);
+    // the imported map's scene is exactly what it was: nothing to reload for it
+    expect(sceneOfFleet(after, 'probe')!.key).toBe(sceneOfFleet(before, 'probe')!.key);
+    // the whole floor changed (a fleet joined it)
+    expect(after.all.key).not.toBe(before.all.key);
+  });
+
+  it('a fleet with no map is not a scene and is listed as idle, never half-loaded', () => {
+    const w = buildWorld(input({ fleets: [lineSide, assembly, probe] }));
+    expect(sceneOfFleet(w, 'probe')).toBeNull();
+    expect(w.idle.map((i) => i.fleetId)).toEqual(['probe']);
   });
 });
 
 describe('keys say exactly what changed', () => {
-  it('the building key follows the walls, not the network', () => {
-    const moved: SiteLayout = {
-      ...baseSite,
-      walls: baseSite.walls.map((w, i) => (i === 0 ? { ...w, a: [w.a[0] + 1, w.a[1]] } : w)),
-    };
-    expect(geometryKey(moved)).not.toBe(geometryKey(baseSite));
-    expect(geometryKey(baseSite)).toBe(geometryKey({ ...baseSite }));
+  it('the same inputs give the same keys', () => {
+    expect(ecc().scenes.map((s) => s.key)).toEqual(ecc().scenes.map((s) => s.key));
   });
-  it('publishing a map with another road changes the scene key but not the building key', () => {
-    const a = withImported().scenes.find((s) => s.mapId === 'imp-x')!;
+  it('publishing a map with another road changes that scene’s key', () => {
+    const a = sceneOfFleet(withImported(), 'probe')!;
     const longer = tiny();
     longer.lanes[0] = {
       ...longer.lanes[0],
@@ -179,9 +209,8 @@ describe('keys say exactly what changed', () => {
         [20, -0.5],
       ],
     };
-    const b = withImported(longer).scenes.find((s) => s.mapId === 'imp-x')!;
+    const b = sceneOfFleet(withImported(longer), 'probe')!;
     expect(b.key).not.toBe(a.key);
-    expect(b.geometry.key).toBe(a.geometry.key);
   });
 });
 

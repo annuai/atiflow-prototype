@@ -1,8 +1,8 @@
 import type { NavGraph, SiteLayout } from '../types';
 
 /**
- * A SCENE is one map as the Live Floor shows it: the BUILDING (geometry layer: walls, machines, floor) and what robots drive on (network layer: nodes, lanes, stations, traffic gates,
- * no-go zones), in the site frame. It is a plain value (no Three, no React) so it can be built, hashed, compared and cached anywhere. See docs/design/map-scenes.md.
+ * A SCENE is what the Live Floor shows for one choice: ONE FLEET's map (its building and the network that fleet drives on, even when another fleet runs the same map) or the whole floor
+ * ("All fleets"). Scenes are never shared: each is loaded in full, for its own fleet. It is a plain value (no Three, no React) so it can be built, hashed, compared and cached anywhere. See docs/design/map-scenes.md.
  */
 export interface Placement {
   /** where the map's own frame sits in the site frame, metres and radians */
@@ -13,13 +13,16 @@ export interface Placement {
   auto: boolean;
 }
 export interface SceneModel {
-  /** `mapId@networkKey`: changes when the map's network changes, so a loaded scene is replaced exactly when it is out of date */
+  /** `fleet:map@networkKey` (or `all@networkKey`): changes when the network does, so a loaded scene is replaced exactly when it is out of date */
   key: string;
-  mapId: string;
-  /** the fleets (their ids in the world) that run on this map */
+  /** the fleet this scene is for; null = the whole floor ("All fleets") */
+  fleetId: string | null;
+  mapId: string | null;
+  /** the fleets whose robots belong to this scene (one for a fleet's scene, all of them for the whole floor) */
   fleets: string[];
-  /** The building. Two maps of the same building have the SAME `geometry.key`, so it is loaded once and shared. */
-  geometry: { key: string; site: SiteLayout };
+  /** the building */
+  site: SiteLayout;
+  /** the lanes, stations, traffic gates and no-go zones this scene's fleets use */
   network: NavGraph;
   placement: Placement;
 }
@@ -35,18 +38,6 @@ export function hashText(s: string): string {
 }
 const r2 = (v: number) => Math.round(v * 100) / 100;
 const pt = (p: [number, number]) => `${r2(p[0])},${r2(p[1])}`;
-
-/** Identity of a building: what is drawn (walls, machines, floor, areas, bounds), not its name or ids of anything else. */
-export function geometryKey(site: SiteLayout): string {
-  const parts = [
-    site.walls.map((w) => `${pt(w.a)}>${pt(w.b)}:${r2(w.t)}:${r2(w.h)}:${w.layer}`).join(';'),
-    site.equipment.map((e) => `${e.kind}:${r2(e.x)},${r2(e.y)}:${r2(e.w)}x${r2(e.d)}x${r2(e.h)}`).join(';'),
-    site.floorPolygons.map((p) => p.map(pt).join(' ')).join('|'),
-    site.zones.map((z) => `${z.id}:${z.polygon.map(pt).join(' ')}`).join('|'),
-    [site.bounds.minX, site.bounds.minY, site.bounds.maxX, site.bounds.maxY].map(r2).join(','),
-  ];
-  return `g-${hashText(parts.join('#'))}-${site.walls.length}-${site.equipment.length}`;
-}
 
 /** Identity of a network: its lanes, stations (with their fleets), traffic gates and no-go zones. */
 export function networkKey(nav: NavGraph): string {
