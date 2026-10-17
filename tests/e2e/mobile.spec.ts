@@ -77,6 +77,34 @@ test.describe('configurator on a phone', () => {
   });
 });
 
+test('the sticky Edit Details bar on a robot page is solid and sits at the very bottom of the card (nothing scrolls visibly under it)', async ({
+  page,
+}) => {
+  await signIn(page, 'kavin');
+  await page.goto('/configurator/robots/AMR-001');
+  const card = page.getByTestId('device-detail');
+  await expect(card).toBeVisible();
+  const r = await card.evaluate(async (el) => {
+    el.scrollTop = 160; // somewhere in the middle of the fields
+    await new Promise((res) => setTimeout(res, 300));
+    const cb = el.getBoundingClientRect();
+    const bar = [...el.querySelectorAll('button')].find((b) =>
+      /edit details/i.test(b.textContent ?? ''),
+    )!.parentElement!;
+    const bb = bar.getBoundingClientRect();
+    const under = document.elementFromPoint(cb.left + cb.width / 2, cb.bottom - 3); // a point just above the card's bottom edge
+    return {
+      barBottom: Math.round(bb.bottom),
+      cardBottom: Math.round(cb.bottom),
+      coveredByBar: !!under && bar.contains(under),
+      bg: getComputedStyle(bar).backgroundColor,
+    };
+  });
+  expect(r.coveredByBar, JSON.stringify(r)).toBe(true);
+  expect(r.barBottom, JSON.stringify(r)).toBeGreaterThanOrEqual(r.cardBottom - 1);
+  expect(r.bg).not.toBe('rgba(0, 0, 0, 0)');
+});
+
 test('on a phone the gap after the last control in a card header is the gap above it', async ({ page }) => {
   await signIn(page, 'kavin');
   await page.goto('/configurator');

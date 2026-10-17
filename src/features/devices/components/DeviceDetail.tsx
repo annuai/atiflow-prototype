@@ -95,7 +95,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
         </Button>
       )}
       {/* On a phone the main actions stay at the bottom of the card while the fields scroll under them, side by side and as wide as the card allows */}
-      <div className="flex gap-3 max-sm:sticky max-sm:bottom-0 max-sm:z-10 max-sm:-mx-4 max-sm:-mb-4 max-sm:border-t max-sm:border-secondary max-sm:bg-primary max-sm:px-4 max-sm:py-3 max-sm:[&>button]:flex-1 sm:justify-end">
+      <div className="flex gap-3 max-sm:sticky max-sm:-bottom-4 max-sm:z-10 max-sm:-mx-4 max-sm:-mb-4 max-sm:border-t max-sm:border-secondary max-sm:bg-primary max-sm:px-4 max-sm:py-3 max-sm:[&>button]:flex-1 sm:justify-end">
         {f.editing ? (
           <>
             <Button color="secondary" size="md" isDisabled={f.busy} onPress={f.onCancel}>
