@@ -12,22 +12,21 @@ export type Tool =
   | { kind: 'gate'; shape: 'line' | 'box' }
   | { kind: 'zone'; type: ZoneTypeId };
 export const SELECT: Tool = { kind: 'select' };
-/** A tool that draws: it collects points until the shape is complete. `one` = finished by a single click, `two` = two points, `many` = double-click / Enter to finish. */
+/** A tool that draws: it collects points until the shape is complete. `one` = finished by a single click, `two` = two points (a rectangle's opposite corners, or a line), `many` = double-click / Enter to finish. */
 export function drawMode(t: Tool): 'none' | 'one' | 'two' | 'many' {
   switch (t.kind) {
     case 'station':
     case 'staging':
       return 'one';
     case 'gate':
+    case 'zone':
       return 'two';
     case 'road':
-    case 'zone':
       return 'many';
     default:
       return 'none';
   }
 }
-export const minPoints = (t: Tool) => (t.kind === 'zone' ? 3 : 2);
 
 /** What each module lets you draw (the arrow next to its icon): ids are the `choice`. Labels come from `copy`/the zone registry. */
 export const CHOICES: Record<Exclude<Module, 'zones'>, string[]> = {

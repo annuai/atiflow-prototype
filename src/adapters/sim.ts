@@ -1,4 +1,5 @@
 import { LaneGraph, pointAt, type PathPlan } from '../core/lanes';
+import { gateDepthAt } from '../core/gate';
 import { angleDiff, pointInPoly } from '../core/geom';
 import type { TripIdSource } from '../data/tripIds';
 import type {
@@ -101,6 +102,10 @@ interface Bot {
   kWh: number;
   faultUntil: number;
   /** someone asked for this robot to go to a charger: its next trip is a charge trip */ chargeRequested: boolean;
+  /** until this time the robot keeps clear of other robots' BODIES only, not of the way they have reserved ahead (breaks two robots that wait for each other's reservation) */
+  ignoreClaims: number;
+  /** until the robot has driven this far along its plan it is still inside zones it handed over to break a deadlock (reported as a warning, not counted as a second robot in the zone) */
+  handedOver: number;
   trip: Trip | null;
   task: RobotTelemetry['task'];
   payload: RobotTelemetry['payload'];
@@ -233,6 +238,8 @@ export class FleetSim {
         kWh: roster?.[i].batteryKWh ?? 3,
         faultUntil: 0,
         chargeRequested: false,
+        ignoreClaims: 0,
+        handedOver: 0,
         trip: null,
         task: null,
         payload: null,
@@ -539,37 +546,35 @@ export class FleetSim {
     this.orders = this.orders.filter((o) => o !== order);
     return true;
   }
-  /** Every traffic zone and intersection a route passes through, grouped: permits closer than GROUP_GAP are requested together. */
+  /** The traffic zones (drawn at every junction) that contain the point. */
+  private zoneIdsAt(x: number, y: number): string[] {
+    return this.graph.nav.trafficZones.filter((z) => pointInPoly(x, y, z.polygon)).map((z) => z.id);
+  }
+  private inAnyZone(x: number, y: number): boolean {
+    return this.graph.nav.trafficZones.some((z) => pointInPoly(x, y, z.polygon));
+  }
+  /** Every traffic zone a route passes through, grouped: zones closer than GROUP_GAP along the route are requested together. */
   private entriesOf(plan: PathPlan): Entry[] {
-    const spans: { zone: boolean; id: string; s: number; exitS: number }[] = [];
+    const spans: { zone: boolean; id: string; s: number; exitS: number; d0?: number; d1?: number }[] = [];
+    const gates = new Map(this.graph.nav.trafficZones.filter((z) => z.gate).map((z) => [z.id, z.gate!]));
     const total = plan.total;
-    for (const z of this.graph.nav.trafficZones) {
-      // intervals [enter, exit] of the path inside each zone; passes <6 m apart are one pass
-      let inside = pointInPoly(plan.pts[0].x, plan.pts[0].y, z.polygon);
-      let start = 0;
-      const mine: typeof spans = [];
-      for (let s = 0.2; s <= total + 0.2; s += 0.2) {
-        const p = pointAt(plan, Math.min(s, total));
-        const now = pointInPoly(p.x, p.y, z.polygon);
-        if (now && !inside) start = s;
-        if (!now && inside) mine.push({ zone: true, id: z.id, s: start, exitS: s });
-        inside = now;
-      }
-      if (inside) mine.push({ zone: true, id: z.id, s: start, exitS: total });
-      for (const q of mine) {
-        const prev = spans.filter((x) => x.id === z.id).pop();
-        if (prev && q.s - prev.exitS < 6) prev.exitS = q.exitS;
-        else spans.push(q);
+    for (let s = 0; s <= total + 0.1; s += 0.2) {
+      // traffic zones (one at every junction): stretches of the path inside a zone
+      const p = pointAt(plan, Math.min(s, total));
+      for (const id of this.zoneIdsAt(p.x, p.y)) {
+        const g = gates.get(id);
+        const d = g ? gateDepthAt(g, p.x, p.y) : undefined;
+        const prev = spans.filter((x) => !x.zone && x.id === id).pop();
+        if (prev && s - prev.exitS < 3) {
+          prev.exitS = s;
+          prev.d1 = d;
+        } else spans.push({ zone: false, id, s, exitS: s, d0: d, d1: d });
       }
     }
-    for (let s = 0; s <= total + 0.1; s += 0.2) {
-      // intersections: stretches of the path inside an intersection area
-      const p = pointAt(plan, Math.min(s, total));
-      for (const id of this.graph.intersections.near(p.x, p.y)) {
-        const prev = spans.filter((x) => !x.zone && x.id === id).pop();
-        if (prev && s - prev.exitS < 3) prev.exitS = s;
-        else spans.push({ zone: false, id, s, exitS: s });
-      }
+    // a Line gate only holds the robots that come from its controlled side (they move towards its line); the others cross freely
+    for (let i = spans.length - 1; i >= 0; i--) {
+      const sp = spans[i];
+      if (gates.has(sp.id) && !((sp.d1 ?? 0) < (sp.d0 ?? 0) - 0.2)) spans.splice(i, 1);
     }
     spans.sort((a, b) => a.s - b.s);
     const out: Entry[] = [];
@@ -599,20 +604,54 @@ export class FleetSim {
             if (plan.cum[i] >= q.s - 0.3 && plan.cum[i] <= q.exitS + 0.3 && plan.laneAt[i]) set.add(plan.laneAt[i]!);
         x.lanes = [...set];
       }
-    // Where to wait: at the usual distance before the first permit, but never inside the area of some other intersection (a waiting robot there would be in the way of the robots that hold it).
-    out.forEach((e, i) => {
-      const floor = i ? out[i - 1].exitS + 0.5 : 0;
-      const q = Math.max(0, e.s - HOLD);
-      const free = (x: number) => {
-        const a = pointAt(plan, Math.max(0, x)),
-          r = pointAt(plan, Math.max(0, x - 1));
-        return !this.graph.intersections.near(a.x, a.y).length && !this.graph.intersections.near(r.x, r.y).length;
-      };
-      let h = q;
-      while (h > floor && !free(h)) h -= 0.3;
-      e.hold = free(h) || h > floor ? Math.max(0, h) : q;
-    });
+    this.placeHolds(plan, out);
     return out;
+  }
+  /** Robots standing inside the zone at the start of their trip and asking for this very zone go first (for a robot outside): they cannot wait outside, and a robot that came in after them would block their way out. */
+  private leavingFirst(b: Bot, zoneId: string): string[] {
+    const poly = this.graph.nav.trafficZones.find((z) => z.id === zoneId)?.polygon;
+    if (!poly || pointInPoly(b.pos.x, b.pos.y, poly)) return [];
+    return this.bots
+      .filter(
+        (o) =>
+          o !== b &&
+          o.plan &&
+          o.s < 0.5 &&
+          !o.locks.has(zoneId) &&
+          o.entries[o.entryIdx]?.xings.some((q) => q.id === zoneId) &&
+          pointInPoly(o.pos.x, o.pos.y, poly),
+      )
+      .map((o) => o.id);
+  }
+  /** Where each group of zones waits: at the usual distance before its first zone, on road outside every zone, with the robot AND its trolley clear of them (a robot waiting inside a zone it holds, or in
+   *  another one, would be in the way of the robots that need it). When a zone follows another so closely that there is no such place between them, the two are taken together. */
+  private placeHolds(plan: PathPlan, out: Entry[]) {
+    const free = (x: number) =>
+      [0, 1.4, 2.2].every((back) => {
+        const p = pointAt(plan, Math.max(0, x - back));
+        return !this.inAnyZone(p.x, p.y);
+      });
+    for (let i = 0; i < out.length; i++) {
+      const e = out[i];
+      const floor = i ? out[i - 1].exitS + 0.5 : 0;
+      let h = Math.max(0, e.s - HOLD);
+      while (h > floor && !free(h)) h -= 0.3;
+      if (i > 0 && !free(h)) {
+        const prev = out[i - 1];
+        prev.exitS = Math.max(prev.exitS, e.exitS);
+        for (const x of e.xings) {
+          const have = prev.xings.find((q) => q.id === x.id);
+          if (have) {
+            have.exitS = Math.max(have.exitS, x.exitS);
+            have.lanes = [...new Set([...(have.lanes ?? []), ...(x.lanes ?? [])])];
+          } else prev.xings.push(x);
+        }
+        out.splice(i, 1);
+        i--;
+        continue;
+      }
+      e.hold = i === 0 && !free(h) ? Math.max(0, e.s - HOLD) : Math.max(0, h);
+    }
   }
   private xing(id: string) {
     return this.xings.get(id) ?? this.xings.set(id, { occ: new Set(), waiters: new Set() }).get(id)!;
@@ -656,10 +695,26 @@ export class FleetSim {
     const cum = [0];
     for (let i = 1; i < pts.length; i++)
       cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
-    for (const id of [...b.locks.keys()]) this.dropLock(b, id); // the new road is asked for again from scratch
+    const clear = b.attached ? TD + 0.7 : 0.7;
+    const inside = [...b.locks.keys()].filter((id) => {
+      const z = this.graph.nav.trafficZones.find((q) => q.id === id);
+      return !!z && pointInPoly(b.pos.x, b.pos.y, z.polygon);
+    }); // a zone the robot is standing in stays its own: it is not asked for again (and never given to another robot while it is inside)
+    for (const id of [...b.locks.keys()]) if (!inside.includes(id)) this.dropLock(b, id); // the new road is asked for again from scratch
+    b.handedOver = 0; // (the new plan has its own distances)
     b.plan = { pts, laneAt, cum, total: cum[cum.length - 1] };
     b.s = cum[trail.length] ?? 0;
-    b.entries = this.entriesOf(b.plan).filter((e) => e.exitS > b.s + 0.5);
+    const all = this.entriesOf(b.plan);
+    b.entries = all.filter((e) => e.exitS > b.s + 0.5);
+    for (const id of inside) {
+      let exit = b.s;
+      for (let q = b.s; q <= b.plan.total; q += 0.2) {
+        const p = pointAt(b.plan, q);
+        if (this.zoneIdsAt(p.x, p.y).includes(id)) exit = q;
+        else if (q > b.s + 0.4) break;
+      }
+      b.locks.set(id, exit + clear);
+    }
     b.entryIdx = 0;
     b.queued = null;
     b.gateAt = -9;
@@ -697,25 +752,16 @@ export class FleetSim {
   /** Ask for every permit of the entry, first come first served (Ati's VISA rule): a robot holds outside, the first to arrive goes first, the others wait until it has cleared. All or nothing.
    *  Two robots may be in an intersection together when their lanes never come close (or they are on the same lane, one behind the other). */
   private takeEntry(b: Bot, e: Entry): { ok: boolean; zone: string | null } {
-    const nav = this.graph.nav;
     const holding = b.locks.size > 0 || b.holds.size > 0; // a robot that already holds permits is never held back by the queue: it must be able to finish and give them back
     if (b.ticketFor !== e) {
       b.ticketFor = e;
       b.ticket = this.time;
     }
     const waits = new Set<string>();
-    const clash = (_id: string, mine: string[] | undefined, other: string[] | undefined) =>
-      !(mine?.length && other?.length && mine.every((a) => other.includes(a))); // only robots on the very same lanes may share an intersection (they just follow each other)
-    const cap = (id: string) => nav.trafficZones.find((z) => z.id === id)!.capacity;
-    const zoneFull = (id: string) => this.zones.get(id)!.occ.size >= cap(id);
-    const takenBy = (id: string, lanes?: string[]) => {
-      const x = this.xing(id);
-      return [...x.occ].filter(
-        (o) => o !== b.id && clash(id, lanes, x.lanes?.get(o) ? [...x.lanes.get(o)!] : undefined),
-      );
-    };
-    /** Robots ahead of this one in the queue for the permit (first come first served), except those that are themselves held up by this very robot: letting them go first would never end. */
-    const earlier = (id: string, zone: boolean, lanes?: string[]) =>
+    // A traffic zone holds ONE robot at a time: the next waits at its hold point until the one inside has left (first come, first served).
+    const takenBy = (id: string) => [...this.xing(id).occ].filter((o) => o !== b.id);
+    /** Robots ahead of this one in the queue for the zone (first come first served), except those that are themselves held up by this very robot: letting them go first would never end. */
+    const earlier = (id: string) =>
       holding
         ? []
         : this.bots.filter(
@@ -724,26 +770,23 @@ export class FleetSim {
               o.queued &&
               !this.waitsFor(o, b.id) &&
               o.ticket < b.ticket &&
-              (zone
-                ? o.queued.zones.some((z) => z.id === id)
-                : o.queued.xings.some((x) => x.id === id && clash(id, lanes, x.lanes))),
+              o.queued.xings.some((x) => x.id === id),
           );
-    let blockedZone: string | null = null;
-    for (const z of e.zones) {
-      const occ = [...this.zones.get(z.id)!.occ].filter((o) => o !== b.id);
-      const q = earlier(z.id, true);
-      if ((zoneFull(z.id) && occ.length) || q.length) {
-        blockedZone ??= z.id;
-        occ.forEach((o) => waits.add(o));
-        q.forEach((o) => waits.add(o.id));
-      }
-    }
-    let logical = !blockedZone;
+    let logical = true;
+    let blockedX: string | null = null;
     for (const x of e.xings) {
-      const held = takenBy(x.id, x.lanes),
-        q = earlier(x.id, false, x.lanes);
+      const held = takenBy(x.id),
+        q = earlier(x.id);
+      const gate = this.graph.nav.trafficZones.find((z) => z.id === x.id && z.gate);
+      // a Line gate waits until its whole area is clear: a robot driving through it the free way counts too
+      if (gate)
+        for (const o of this.bots)
+          if (o !== b && o.state !== 'offline' && !held.includes(o.id) && pointInPoly(o.pos.x, o.pos.y, gate.polygon))
+            held.push(o.id);
+      held.push(...this.leavingFirst(b, x.id));
       if (held.length || q.length) {
         logical = false;
+        blockedX ??= x.id;
         held.forEach((o) => waits.add(o));
         q.forEach((o) => waits.add(o.id));
       }
@@ -756,15 +799,11 @@ export class FleetSim {
     } // (the physical check runs twice a second at most)
     const ok = logical && b.gateOk;
     if (logical && !b.gateOk && b.gateBlock) waits.add(b.gateBlock);
-    const held = waits.size > 0 && (blockedZone !== null || !logical);
+    const held = waits.size > 0 && !logical;
     b.queued = !ok && held ? e : null;
     b.waitsOn = ok ? [] : [...waits];
     if (ok) {
       const clear = b.attached ? TD + 0.7 : 0.7;
-      for (const z of e.zones) {
-        this.zones.get(z.id)!.occ.add(b.id);
-        b.holds.set(z.id, z.exitS + clear);
-      }
       for (const x of e.xings) {
         const p = this.xing(x.id);
         p.occ.add(b.id);
@@ -774,7 +813,7 @@ export class FleetSim {
       b.gateAt = -9;
       b.ticketFor = null;
     }
-    return { ok, zone: blockedZone };
+    return { ok, zone: blockedX };
   }
   /** Heading of the route at arc length q: central difference over 0.5 m, so it is smooth even on curves. */
   private headingAt(plan: PathPlan, q: number) {
@@ -809,7 +848,11 @@ export class FleetSim {
       const q = Math.min(b.s + d, plan.total);
       out.push({
         d,
-        c: [...robotCircles(this.poseAt(plan, q)), ...(b.attached ? trolleyCircles(this.poseAt(plan, q - TD)) : [])],
+        // (the stretch behind the robot, where its trolley hangs now, is not swept ahead: a robot right behind it would block it for ever while both wait)
+        c: [
+          ...robotCircles(this.poseAt(plan, q)),
+          ...(b.attached && q - TD >= b.s - 0.2 ? trolleyCircles(this.poseAt(plan, q - TD)) : []),
+        ],
       });
       if (q >= plan.total) break;
     }
@@ -835,7 +878,7 @@ export class FleetSim {
       if (o === b || o.state === 'offline' || Math.hypot(o.pos.x - at.x, o.pos.y - at.y) > 12) continue;
       if (hit(mine, this.body(o))) return o;
       const c = claims.get(o.id);
-      if (c && hit(mine, c)) return o;
+      if (c && b.ignoreClaims <= this.time && hit(mine, c)) return o;
     }
     return null;
   }
@@ -894,16 +937,27 @@ export class FleetSim {
           fleetIds: [...new Set(ring.map((b) => b.fleetId))],
           waitedS: Math.round(Math.max(...ring.map((b) => this.time - b.waitSince))),
         });
-      const youngest = (list: Bot[]) => list.sort((a, c) => c.ticket - a.ticket || c.prio - a.prio)[0];
-      // 1. a robot hands over the intersections it holds
+      // 1. a robot hands over the zones it holds (a recorded override: ZONE_HANDOVER)
       const holders = ring.filter((b) => b.locks.size > 0);
       if (holders.length) {
-        const v = youngest(holders);
+        const v = [...holders].sort((a, c) => c.ticket - a.ticket || c.prio - a.prio)[0];
         v.resolvedAt = this.time;
-        for (const id of [...v.locks.keys()]) this.dropLock(v, id);
+        for (const id of [...v.locks.keys()]) {
+          v.handedOver = Math.max(v.handedOver, v.locks.get(id) ?? 0);
+          this.dropLock(v, id);
+        }
         continue;
       }
-      // 2. a robot takes another road to the same destination, going forward from where it is (a trip is never given up or handed to anyone else)
+      // 2. robots that only block each other's reserved way ahead (two robots one behind the other on a lane): the younger one goes by the bodies alone for a few seconds
+      if (ring.every((b) => b.waitReason === 'headway')) {
+        const v = [...ring].sort((a, c) => c.ticket - a.ticket)[0];
+        if (v.ignoreClaims < this.time - 20) {
+          v.ignoreClaims = this.time + 8;
+          v.resolvedAt = this.time;
+          continue;
+        }
+      }
+      // 3. a robot takes another road to the same destination, going forward from where it is (a trip is never given up or handed to anyone else)
       let done = false;
       for (const v of ring.filter((b) => b.plan && !b.holds.size).sort((a, c) => c.ticket - a.ticket))
         if (this.reroute(v)) {
@@ -1017,12 +1071,16 @@ export class FleetSim {
     const blocked = free.len < CLAIM - 1e-6;
     b.waitingZone = zoneWait;
     b.waitReason = zoneWait ? 'traffic' : gate ? 'intersection' : blocked ? 'headway' : null;
-    // The robot in the way is itself waiting for permits this robot holds (it stands at its station right on this road): hand them over so it can leave.
+    // The robot in the way is itself waiting for the zones this robot holds (it stands at its station right on this road): this robot hands them over so it can leave (the one exception to one robot per zone: a recorded override, see ZONE_HANDOVER).
     if (blocked && b.locks.size && b.v < 0.05) {
       const by = this.touches(b, this.corridor(b, SAMPLE)[0]?.c ?? [], claims);
       const e2 = by && by.plan && by.s < 0.5 ? by.entries[by.entryIdx] : null;
       if (e2 && this.time - b.stoppedSince > 3 && b.stoppedSince >= 0)
-        for (const x of e2.xings) if (b.locks.has(x.id)) this.dropLock(b, x.id);
+        for (const x of e2.xings)
+          if (b.locks.has(x.id)) {
+            b.handedOver = Math.max(b.handedOver, b.locks.get(x.id) ?? 0);
+            this.dropLock(b, x.id);
+          }
     }
     const curve = Math.min(
       1,
@@ -1066,6 +1124,7 @@ export class FleetSim {
       b.stationId = st.id;
       b.dest = null;
       b.plan = null;
+      b.handedOver = 0;
       b.speed = 0;
       b.v = 0;
       b.waitingZone = null;
@@ -1134,8 +1193,8 @@ export class FleetSim {
         (b.state === 'moving' || b.state === 'waiting' || b.state === 'blocked' || b.state === 'error') && b.plan;
       const traffic = b.waitingZone
         ? { zoneId: b.waitingZone, status: 'waiting' as const }
-        : b.holds.size
-          ? { zoneId: [...b.holds.keys()][0], status: 'inside' as const }
+        : b.holds.size || b.locks.size
+          ? { zoneId: [...b.holds.keys(), ...b.locks.keys()][0], status: 'inside' as const }
           : null;
       const alerts: NonNullable<RobotTelemetry['alerts']> = [];
       const who = b.waitsOn.length ? ` (${b.waitsOn.slice(0, 2).join(', ')} first)` : '';
@@ -1143,6 +1202,12 @@ export class FleetSim {
         alerts.push({ code: 'FAULT', severity: 'critical', msg: 'Fault: needs someone on site' });
       if (b.state === 'blocked') alerts.push({ code: 'OBSTACLE', severity: 'critical', msg: 'Path obstructed' });
       if (b.battery < 25) alerts.push({ code: 'LOW_BATT', severity: 'warn', msg: 'Low battery' });
+      if (b.handedOver > b.s)
+        alerts.push({
+          code: 'ZONE_HANDOVER',
+          severity: 'warn',
+          msg: 'Zone handed over to another robot to break a deadlock',
+        });
       if (b.waitingZone) alerts.push({ code: 'TRAFFIC_WAIT', severity: 'info', msg: `Waiting for ${b.waitingZone}` });
       else if (b.state === 'waiting' && b.waitReason === 'intersection')
         alerts.push({

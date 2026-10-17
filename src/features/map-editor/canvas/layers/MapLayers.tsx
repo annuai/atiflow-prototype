@@ -1,8 +1,10 @@
-import type { PointerEvent as ReactPointerEvent } from 'react';
+import type { ComponentProps, PointerEvent as ReactPointerEvent } from 'react';
 import { isCoarse } from '@/components/map/useTouchGestures';
 import { stationColor } from '../../model/stations';
 import type { MapData } from '../../model/types';
 import { zoneType } from '../../model/zoneTypes';
+import { ZoneHandles } from './ZoneHandles';
+import { centreOf, gateNormal } from '../../model/shape';
 import { polyPoints, type P, type stagingGeometry } from '../layers';
 import type { useViewport } from '../useViewport';
 
@@ -12,9 +14,23 @@ type DragStart = (e: ReactPointerEvent, kind: 'station' | 'staging', id: string,
 type DragEnd = (e: ReactPointerEvent) => void;
 
 /** The map's zones: tinted, dashed (areas are plain), selectable. */
-export function ZoneLayer({ zones, vp, isSelected }: { zones: MapData['zones']; vp: Vp; isSelected: IsSelected }) {
+export function ZoneLayer({
+  zones,
+  vp,
+  isSelected,
+  handles,
+}: {
+  zones: MapData['zones'];
+  vp: Vp;
+  isSelected: IsSelected;
+  /** the selected zone's drag / resize / rotate handles (a draft) */
+  handles?: Omit<ComponentProps<typeof ZoneHandles>, 'vp'>;
+}) {
   return (
     <>
+      {zones.map((z) => (
+        <GateMark key={`g-${z.id}`} zone={z} vp={vp} />
+      ))}
       {zones.map((z) => {
         const t = zoneType(z.type);
         const s = isSelected('zone', z.id);
@@ -35,7 +51,50 @@ export function ZoneLayer({ zones, vp, isSelected }: { zones: MapData['zones']; 
           </polygon>
         );
       })}
+      {handles && <ZoneHandles {...handles} vp={vp} />}
     </>
+  );
+}
+
+/** A Line gate: its line and an arrow towards the side it applies to (the side robots come from). Pixel sized. */
+function GateMark({ zone, vp }: { zone: MapData['zones'][number]; vp: Vp }) {
+  const s = zone.shape;
+  if (s.kind !== 'gate') return null;
+  const t = zoneType(zone.type);
+  const n = gateNormal(s),
+    [mx, my] = centreOf(s),
+    len = 22 * vp.u,
+    head = 6 * vp.u;
+  const tip: P = [mx + n[0] * len, my + n[1] * len],
+    base: P = [tip[0] - n[0] * head, tip[1] - n[1] * head],
+    side: P = [-n[1] * head * 0.6, n[0] * head * 0.6];
+  const X = vp.X,
+    Y = vp.Y;
+  return (
+    <g pointerEvents="none">
+      <line
+        x1={X(s.a[0])}
+        y1={Y(s.a[1])}
+        x2={X(s.b[0])}
+        y2={Y(s.b[1])}
+        stroke={t.color}
+        strokeWidth={3}
+        vectorEffect="non-scaling-stroke"
+      />
+      <line
+        x1={X(mx)}
+        y1={Y(my)}
+        x2={X(base[0])}
+        y2={Y(base[1])}
+        stroke={t.color}
+        strokeWidth={2}
+        vectorEffect="non-scaling-stroke"
+      />
+      <polygon
+        fill={t.color}
+        points={`${X(tip[0])},${Y(tip[1])} ${X(base[0] + side[0])},${Y(base[1] + side[1])} ${X(base[0] - side[0])},${Y(base[1] - side[1])}`}
+      />
+    </g>
   );
 }
 

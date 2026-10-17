@@ -1,3 +1,5 @@
+import { junctionZones } from '../../src/core/junctions';
+import { LaneGraph } from '../../src/core/lanes';
 import type { Lane, NavGraph, NavNode, Station } from '../../src/core/types';
 
 /** Tiny hand-made lane maps for traffic tests: every road is a pair of one-way lanes (keep-right offset), stations hang on dead-end spurs. */
@@ -76,7 +78,7 @@ export function gridMap({
       if (spurs === 'all' || r === 0) spurAt(n, 0, -1);
       if (spurs === 'all' || r === rows - 1) spurAt(n, 0, 1);
     }
-  return {
+  const nav: NavGraph = {
     schema: 2,
     siteId: 'test',
     nodes,
@@ -86,6 +88,7 @@ export function gridMap({
     trafficZones: [],
     forbiddenZones: [],
   };
+  return { ...nav, trafficZones: junctionZones(new LaneGraph(nav)) }; // a traffic zone at every junction, like the real maps
 }
 
 /** One narrow two-lane aisle (opposite lanes only `gap` apart). Two fleets share it and each shuttles between its own two stations at the far ends, so the robots meet head-on in the aisle. */
@@ -206,7 +209,7 @@ export function aisleMap(length = 24, gap = 0.8): NavGraph {
     station('STA-3', 'North west', 'na', 'pick', 'f2'),
     station('STA-4', 'North east', 'nb', 'drop', 'f2'),
   ];
-  return {
+  const nav: NavGraph = {
     schema: 2,
     siteId: 'aisle',
     nodes,
@@ -219,4 +222,5 @@ export function aisleMap(length = 24, gap = 0.8): NavGraph {
     trafficZones: [],
     forbiddenZones: [],
   };
+  return { ...nav, trafficZones: junctionZones(new LaneGraph(nav)) };
 }

@@ -1,7 +1,7 @@
 import type { SiteLayout } from '@/core/types';
 import { cellCenter, outline } from '../model/staging';
 import type { MapData } from '../model/types';
-import { boxPolygon, gatePolygon } from '../model/zones';
+import { newGate, polygonOf, rectFromCorners } from '../model/shape';
 import { zoneType } from '../model/zoneTypes';
 import { drawMode, type Tool } from './tools';
 import type { useViewport } from './useViewport';
@@ -70,14 +70,14 @@ export function drawingPreview(
   if (mode === 'none' || mode === 'one' || !drawing.length) return null;
   const live = cursor ? [...drawing, cursor] : drawing;
   if (tool.kind === 'road') return { kind: 'line', pts: live, color: '#0d9488' };
-  if (tool.kind === 'gate')
-    return cursor
-      ? {
-          kind: 'polygon',
-          pts: tool.shape === 'box' ? boxPolygon(drawing[0], cursor) : gatePolygon(drawing[0], cursor),
-          color: zoneType('exclusive').color,
-        }
-      : null;
-  if (tool.kind === 'zone') return { kind: 'polygon', pts: live, color: zoneType(tool.type).color };
+  if (tool.kind === 'gate' || tool.kind === 'zone') {
+    if (!cursor) return null;
+    const line = tool.kind === 'gate' && tool.shape === 'line';
+    return {
+      kind: 'polygon',
+      pts: polygonOf(line ? newGate(drawing[0], cursor) : rectFromCorners(drawing[0], cursor)),
+      color: zoneType(tool.kind === 'gate' ? 'exclusive' : tool.type).color,
+    };
+  }
   return null;
 }

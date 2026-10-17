@@ -3,11 +3,19 @@ import type { Lane, NavNode, Station } from '@/core/types';
 /** The kinds of zone a map can hold. Add a type in `zoneTypes.ts`; nothing else needs to know. */
 export type ZoneTypeId = string;
 export type ZoneProp = string | number | boolean;
-/** One zone: a polygon (metres, site frame) of some type, with that type's settings in `props`. */
+/**
+ * What a zone is: a rotated rectangle (`rot` in radians, 0 = +x, counter-clockwise; metres, site frame), or a Line gate = a line a -> b whose area reaches `depth` metres to `side`
+ * (+1 = left of a -> b): the side robots come from. A robot arriving from that side waits until the whole area is clear; one arriving from the other side crosses freely.
+ */
+export type ZoneShape =
+  | { kind: 'rect'; cx: number; cy: number; w: number; h: number; rot: number }
+  | { kind: 'gate'; a: [number, number]; b: [number, number]; depth: number; side: 1 | -1 };
+/** One zone of some type, with that type's settings in `props`. `shape` is what is edited; `polygon` is always derived from it (`polygonOf`) for everything that reads outlines. */
 export interface MapZone {
   id: string;
   type: ZoneTypeId;
   name: string;
+  shape: ZoneShape;
   polygon: [number, number][];
   props: Record<string, ZoneProp>;
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { laneArrowPath } from '@/components/map/laneArrows';
 import type { SiteLayout } from '@/core/types';
 import { text } from '../text';
-import type { MapData, Selection } from '../model/types';
+import type { MapData, Selection, ZoneShape } from '../model/types';
 import { drawingPreview, floorPaths, pt, stagingGeometry, type P } from './layers';
 import { DrawingLayer, LocatePulse, RoadHits, StagingLayer, StationLayer, ZoneLayer } from './layers/MapLayers';
 import { ZoomControls } from './layers/ZoomControls';
@@ -32,6 +32,10 @@ interface Props {
   /** Drawn on top of the map inside its SVG (the simulation). */ overlay?: (
     vp: ReturnType<typeof useViewport>,
   ) => ReactNode;
+  /** A zone's shape is changed with its handles (called while dragging, with the new shape). */ onZoneShape(
+    id: string,
+    shape: ZoneShape,
+  ): void;
   /** A station or staging area is dragged (called while dragging, with the new position). */ onMove(
     kind: 'station' | 'staging',
     id: string,
@@ -56,6 +60,7 @@ export function MapCanvas({
   onPoint,
   onFinish,
   onMove,
+  onZoneShape,
   overlay,
   locate,
 }: Props) {
@@ -91,6 +96,7 @@ export function MapCanvas({
   );
 
   const isSelected = (kind: string, id: string) => selection?.kind === kind && selection.id === id;
+  const selectedZone = selection?.kind === 'zone' ? data.zones.find((z) => z.id === selection.id) : undefined;
   const preview = drawingPreview(tool, drawing, cursor);
   const movable = editable && mode === 'none';
   return (
@@ -113,7 +119,12 @@ export function MapCanvas({
       >
         <path d={layers.grid} fill="none" stroke="#e5e7eb" strokeWidth={1} vectorEffect="non-scaling-stroke" />
         <path d={layers.floor} fill="#ffffff" stroke="#d4d4d8" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-        <ZoneLayer zones={data.zones} vp={vp} isSelected={isSelected} />
+        <ZoneLayer
+          zones={data.zones}
+          vp={vp}
+          isSelected={isSelected}
+          handles={selectedZone && { zone: selectedZone, editable, bodyDrag: mode === 'none', onShape: onZoneShape }}
+        />
         <path d={layers.machines} fill="#d8dcd8" fillOpacity={0.75} pointerEvents="none" />
         <StagingLayer
           staging={staging}

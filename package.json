@@ -19,7 +19,8 @@
     "check": "npm run typecheck && npm run lint:ratchet && npm run check:imports && npm run format:check && npm test",
     "audit:map": "vite-node tools/audit-nav.ts",
     "audit:architecture": "node tools/architecture-audit.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "derive:zones": "vite-node tools/derive-zones/derive-zones.ts"
   },
   "dependencies": {
     "@internationalized/date": "^3.12.4",

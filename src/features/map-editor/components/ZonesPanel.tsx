@@ -1,5 +1,5 @@
 import { useSyncedState } from '@/hooks/use-synced-state';
-import { ArrowLeft, ChevronDown, LayoutGrid01, Plus, Hand, Trash01 } from '@untitledui/icons';
+import { ArrowLeft, ChevronDown, FlipBackward, LayoutGrid01, Plus, Hand, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
@@ -9,9 +9,9 @@ import { Label } from '@/components/base/input/label';
 import { Select } from '@/components/base/select/select';
 import { EmptyState } from '@/components/data/EmptyState';
 import { copy } from '../copy';
-import { text } from '../text';
 import { help } from '../help';
-import type { MapData, MapZone, ZoneProp } from '../model/types';
+import { DEFAULT_DEPTH, MIN_SIZE, degrees, flipGate, radians } from '../model/shape';
+import type { MapData, MapZone, ZoneProp, ZoneShape } from '../model/types';
 import { zoneNameProblem } from '../model/zones';
 import { zoneType, zoneTypesOf, type ZoneType } from '../model/zoneTypes';
 import { ModuleList } from './ModuleList';
@@ -45,7 +45,7 @@ export function ZonesPanel({
         id: z.id,
         title: z.name,
         subtitle: exclusive
-          ? `${z.props.shape === 'line' ? t.form.line : t.form.box} · ${z.props.capacity ?? 1} robot${(z.props.capacity ?? 1) === 1 ? '' : 's'}`
+          ? `${z.shape.kind === 'gate' ? t.form.line : t.form.box} · ${z.props.capacity ?? 1} robot${(z.props.capacity ?? 1) === 1 ? '' : 's'}`
           : zoneType(z.type).label,
         dot: zoneType(z.type).color,
       }))}
@@ -104,6 +104,7 @@ export function ZoneForm({
   editable,
   onBack,
   onPatch,
+  onShape,
   onDelete,
 }: {
   onLocate(): void;
@@ -113,6 +114,8 @@ export function ZoneForm({
   editable: boolean;
   onBack(): void;
   onPatch(p: { name?: string; type?: string; props?: Record<string, ZoneProp> }): void;
+  /** the shape was changed from the numbers (the handles on the map call the same edit) */
+  onShape(shape: ZoneShape): void;
   onDelete(): void;
 }) {
   const f = copy.zones.form;
@@ -136,9 +139,9 @@ export function ZoneForm({
         <Badge size="md" color="brand">
           {t.label}
         </Badge>
-        {zone.props.shape && (
+        {zone.type === 'exclusive' && (
           <Badge size="md" color="gray">
-            {zone.props.shape === 'line' ? f.line : f.box}
+            {zone.shape.kind === 'gate' ? f.line : f.box}
           </Badge>
         )}
       </div>
@@ -204,13 +207,7 @@ export function ZoneForm({
           />
         ),
       )}
-      <Input
-        label={f.corners}
-        {...help('zone.corners')}
-        size="sm"
-        value={text.points(zone.polygon.length)}
-        isDisabled
-      />
+      <ShapeFields shape={zone.shape} editable={editable} onShape={onShape} />
       <div className="mt-auto flex flex-col gap-2">
         <LocateButton onPress={onLocate} />
         {!editable ? (
@@ -221,6 +218,60 @@ export function ZoneForm({
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+/** The numbers of a zone's shape: centre, size and rotation of a rectangle; start, end, depth and direction of a Line gate. They edit the same shape the handles on the map do. */
+function ShapeFields({
+  shape,
+  editable,
+  onShape,
+}: {
+  shape: ZoneShape;
+  editable: boolean;
+  onShape(s: ZoneShape): void;
+}) {
+  const f = copy.zones.form;
+  const num = (label: string, tip: string, value: number, commit: (v: number) => void) => (
+    <NumberInput {...help(tip)} label={label} value={value} disabled={!editable} onCommit={commit} />
+  );
+  if (shape.kind === 'gate') {
+    const g = shape;
+    const set = (patch: Partial<typeof g>) => onShape({ ...g, ...patch });
+    return (
+      <>
+        <div className="grid grid-cols-2 gap-3">
+          {num(f.startX, 'zone.centre', g.a[0], (v) => set({ a: [v, g.a[1]] }))}
+          {num(f.startY, 'zone.centre', g.a[1], (v) => set({ a: [g.a[0], v] }))}
+          {num(f.endX, 'zone.centre', g.b[0], (v) => set({ b: [v, g.b[1]] }))}
+          {num(f.endY, 'zone.centre', g.b[1], (v) => set({ b: [g.b[0], v] }))}
+        </div>
+        {num(f.depth, 'zone.depth', g.depth, (v) => set({ depth: Math.max(MIN_SIZE, v) || DEFAULT_DEPTH }))}
+        <div className="flex flex-col gap-1.5">
+          <Label {...help('zone.direction')}>{f.direction}</Label>
+          <Button
+            size="sm"
+            color="secondary"
+            iconLeading={FlipBackward}
+            isDisabled={!editable}
+            onPress={() => onShape(flipGate(g))}
+          >
+            {f.flip}
+          </Button>
+        </div>
+      </>
+    );
+  }
+  const r = shape;
+  const set = (patch: Partial<typeof r>) => onShape({ ...r, ...patch });
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {num(f.centreX, 'zone.centre', r.cx, (v) => set({ cx: v }))}
+      {num(f.centreY, 'zone.centre', r.cy, (v) => set({ cy: v }))}
+      {num(f.width, 'zone.size', r.w, (v) => set({ w: Math.max(MIN_SIZE, v) }))}
+      {num(f.height, 'zone.size', r.h, (v) => set({ h: Math.max(MIN_SIZE, v) }))}
+      {num(f.rotation, 'zone.rotation', degrees(r.rot), (v) => set({ rot: radians(v) }))}
     </div>
   );
 }

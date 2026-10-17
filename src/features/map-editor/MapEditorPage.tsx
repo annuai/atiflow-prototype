@@ -9,10 +9,12 @@ import { useMapData, useWorkflow } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
 import { MapCanvas } from './canvas/MapCanvas';
 import { SimLayer } from './canvas/SimLayer';
-import { DEFAULT_CHOICE, drawMode, minPoints, SELECT, toolFor, type Tool } from './canvas/tools';
+import { DEFAULT_CHOICE, drawMode, SELECT, toolFor, type Tool } from './canvas/tools';
 import { useDrawTools, useEditorShortcuts } from './canvas/useDrawTools';
 import type { P } from './canvas/layers';
 import { DeleteDialog } from './components/DeleteDialog';
+import { LeaveDialog } from './components/LeaveDialog';
+import { useLeaveGuard } from '@/hooks/use-leave-guard';
 import { DrawHint } from './components/DrawHint';
 import { EditorHeader } from './components/EditorHeader';
 import { ModuleToolbar, type Module } from './components/ModuleToolbar';
@@ -33,7 +35,8 @@ import type { MapData, Selection } from './model/types';
 import { useDraftEditor } from './model/useDraftEditor';
 import { workflowsUsing } from './model/usage';
 import { publishProblems } from './model/validate';
-import { deleteZone } from './model/zones';
+import { moveShape } from './model/shape';
+import { deleteZone, setZoneShape } from './model/zones';
 import { zoneType } from './model/zoneTypes';
 import { seedMapData } from './model/seed';
 import { useSimulationPanel } from './sim/useSimulationPanel';
@@ -96,6 +99,7 @@ export function MapEditorPage() {
 
   const sim = useSimulationPanel(data, map?.fleetLive);
   const editor = useDraftEditor(id, current?.id, () => setDrawing([]));
+  const guard = useLeaveGuard(editor.dirty);
   const draw = useDrawTools({
     data,
     fleetLive: map?.fleetLive,
@@ -108,12 +112,23 @@ export function MapEditorPage() {
     takenStations,
     takenAreas,
   });
+  const selectedZone = selection?.kind === 'zone' ? data?.zones.find((z) => z.id === selection.id) : undefined;
   useEditorShortcuts({
     tool,
     canEdit: !!isDraft && mode === 'design',
     ...editor,
     cancel: draw.cancel,
     finish: draw.finish,
+    zone: selectedZone
+      ? {
+          nudge: (dx, dy) =>
+            editor.edit(
+              (m) => setZoneShape(m, selectedZone.id, moveShape(selectedZone.shape, dx, dy)),
+              `nudge:${selectedZone.id}`,
+            ),
+          remove: () => setDeleting({ kind: 'zone', id: selectedZone.id }),
+        }
+      : undefined,
   });
 
   // a different version is shown: nothing is selected, drawn or simulated any more
@@ -266,6 +281,7 @@ export function MapEditorPage() {
               drawing={drawing}
               onPoint={draw.onPoint}
               onFinish={draw.finish}
+              onZoneShape={(zid, shape) => editor.edit((m) => setZoneShape(m, zid, shape), `shape:${zid}`)}
               onMove={(kind, sid, to) =>
                 editor.edit(
                   (m) =>
@@ -280,7 +296,7 @@ export function MapEditorPage() {
               <DrawHint
                 text={hintFor(tool, drawing.length)}
                 showFinish={drawMode(tool) === 'many'}
-                canFinish={drawing.length >= minPoints(tool)}
+                canFinish={drawing.length >= 2}
                 onFinish={draw.finish}
                 onCancel={draw.cancel}
                 cancelLabel={drawing.length ? copy.hint.cancel : copy.hint.done}
@@ -335,6 +351,14 @@ export function MapEditorPage() {
         nextNumber={(latest?.number ?? 0) + 1}
         onPublish={publish}
         onShow={(sid) => pick({ kind: 'station', id: sid })}
+      />
+      <LeaveDialog
+        isOpen={guard.pending}
+        onKeep={guard.stay}
+        onDiscard={() => {
+          editor.discardChanges();
+          guard.leave();
+        }}
       />
       <DeleteDialog
         deleting={deleting}

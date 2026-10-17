@@ -46,7 +46,14 @@ const loadVersions = (): Saved =>
 export const mapVersionsStore = createStore<MapVersionsState>((set, get) => ({
   byMap: loadVersions(),
   ensure(mapId, number, data, now = Date.now()) {
-    if (get().byMap[mapId]?.versions.length) return;
+    const had = get().byMap[mapId]?.versions;
+    if (had?.length) {
+      // a map nobody has edited (only its System-made first version) follows the current lane map, so it never shows an out-of-date copy
+      const [only] = had;
+      if (had.length === 1 && only.createdBy === 'System' && JSON.stringify(only.data) !== JSON.stringify(data))
+        set({ byMap: put(get().byMap, mapId, [{ ...only, data }]) });
+      return;
+    }
     set({
       byMap: put(get().byMap, mapId, [
         {

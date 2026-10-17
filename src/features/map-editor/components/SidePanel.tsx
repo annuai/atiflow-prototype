@@ -6,7 +6,7 @@ import { renameRoad, updateRoad } from '../model/roads';
 import { updateStagingArea } from '../model/staging';
 import { moveStation, nodeOf, updateStation } from '../model/stations';
 import type { MapData, Selection } from '../model/types';
-import { updateZone } from '../model/zones';
+import { setZoneShape, updateZone } from '../model/zones';
 import { zoneType } from '../model/zoneTypes';
 import type { useSimulationPanel } from '../sim/useSimulationPanel';
 import type { Module } from './ModuleToolbar';
@@ -143,6 +143,7 @@ function ZonesSection(p: SidePanelProps & { module: 'exclusive' | 'zones' }) {
         editable={editable}
         onBack={p.onBack}
         onPatch={(patch) => p.edit((m) => updateZone(m, zone.id, patch))}
+        onShape={(shape) => p.edit((m) => setZoneShape(m, zone.id, shape))}
         onDelete={() => p.onDelete({ kind: 'zone', id: zone.id })}
       />
     );

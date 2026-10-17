@@ -78,6 +78,11 @@ export interface TrafficZone {
   capacity: number;
   fleets: string[];
   polygon: [number, number][];
+  /**
+   * A Line gate: robots coming from `side` (+1 = left of a -> b) of the line a -> b wait until the whole area (the line grown `depth` metres to that side = `polygon`) is clear;
+   * robots coming from the other side cross freely. Without `gate` the zone is a plain traffic zone (one robot inside at a time, from any direction).
+   */
+  gate?: { a: [number, number]; b: [number, number]; depth: number; side: 1 | -1 };
 }
 /** Robots never enter. */
 export interface ForbiddenZone {

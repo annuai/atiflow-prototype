@@ -7,6 +7,8 @@ import { datasetStore } from '@/data/dataset';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { robotRecords, robotsOnFloor } from '@/data/robots';
 import { scopeKey } from '@/features/access';
+import { fleetsStore } from '@/features/fleets';
+import { applyPublishedMaps, latestOf, mapVersionsStore } from '@/features/map-editor';
 import { visibleLiveIds } from '@/features/auth';
 import { authStore } from '@/features/auth';
 import type { RosterEntry } from '@/adapters/sim';
@@ -31,7 +33,7 @@ export const SITE =
 let refs = 0,
   stopTimer: number | undefined,
   adapter: TelemetryAdapter | null = null,
-  loaded: Promise<{ site: SiteLayout; nav: NavGraph }> | null = null;
+  loaded: Promise<{ site: SiteLayout; nav: NavGraph; live: NavGraph }> | null = null;
 const listeners = new Set<(b: RobotTelemetry[]) => void>(),
   resetListeners = new Set<() => void>();
 const orderUpdateListeners = new Set<(u: OrderUpdate) => void>(),
@@ -40,6 +42,20 @@ let rosterKey = '';
 export const liveStats = new StatsTracker();
 /** KPI building blocks measured from the live telemetry and events (read by the Reports page). It keeps collecting while the feed runs. */
 export const measurements = new MeasurementLog();
+
+/** The latest published version of the map each fleet runs on (a map nobody opened in the editor has none: the base lane map is used). */
+function publishedMaps(nav: NavGraph) {
+  const out: { fleetLive: string; data: NonNullable<ReturnType<typeof latestOf>>['data'] }[] = [];
+  for (const f of nav.fleets) {
+    const name = fleetDirectory.byLiveId(f.id)?.name;
+    const mapId = name ? fleetsStore.getState().profiles[name]?.mapId : null;
+    const h = mapId ? mapVersionsStore.getState().byMap[mapId] : undefined;
+    const v = latestOf(h);
+    // a map nobody has edited is only a copy of the base lane map: use the base (the copy may be older)
+    if (v && !(h!.versions.length === 1 && v.createdBy === 'System')) out.push({ fleetLive: f.id, data: v.data });
+  }
+  return out;
+}
 
 function load() {
   return (loaded ??= Promise.all([
@@ -50,9 +66,11 @@ function load() {
       const r = fleetDirectory.byLiveId(f.id);
       return r ? { ...f, name: r.name, color: r.color } : f;
     }); // one name per fleet across the whole app
-    store.getState().setSite(site, nav);
+    // the base lane map stays what the Map Editor seeds from; the floor itself runs on the published maps
+    const live = applyPublishedMaps(nav, publishedMaps(nav));
+    store.getState().setSite(site, live);
     syncFleets();
-    return { site, nav };
+    return { site, nav, live };
   }));
 }
 /** The robots on the floor: the shared dataset's robots that `robotsOnFloor` lets through (assigned to a fleet with a map here, not offline). */
@@ -124,7 +142,7 @@ function onScopeChange() {
 authStore.subscribe(onScopeChange);
 datasetStore.subscribe(onScopeChange);
 async function start() {
-  const { site, nav } = await load();
+  const { site, live: nav } = await load();
   if (adapter || refs === 0) return;
   const roster = rosterFrom(nav);
   rosterKey = rosterSignature(roster);

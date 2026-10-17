@@ -361,6 +361,12 @@ export class Intersections {
       (this.cell.get(k) ?? this.cell.set(k, []).get(k)!).push(i);
     });
   }
+  /** The points of every intersection (where lanes of different flows come closer than the gap): what a traffic zone is drawn around. */
+  areas(): { id: string; pts: Vec2[] }[] {
+    const out = new Map<string, Vec2[]>();
+    for (const p of this.pts) (out.get(p.c) ?? out.set(p.c, []).get(p.c)!).push({ x: p.x, y: p.y });
+    return [...out].map(([id, pts]) => ({ id, pts }));
+  }
   /** Every intersection whose area (within `reach` of one of its points) contains the position. */
   near(x: number, y: number): string[] {
     const cx = Math.floor(x),

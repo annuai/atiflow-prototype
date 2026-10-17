@@ -493,6 +493,13 @@ export const insights = {
       'How many robots may be inside at the same time. The next one waits at the entrance until there is room.',
     'zone.field.value': 'The setting for this zone type. The list of settings per type is still to come.',
     'zone.corners': 'The corner points that outline the zone on the map.',
+    'zone.centre': 'Where the middle of the zone is, in metres.',
+    'zone.size': 'Width and height of the rectangle in metres, before it is rotated.',
+    'zone.rotation': 'Turns the zone around its centre, in degrees. 0 points east.',
+    'zone.depth':
+      'How far the gate reaches from its line, in metres, towards the side robots come from. A robot coming from that side waits until the whole area is clear.',
+    'zone.direction':
+      'The arrow points to the side the gate applies to. Robots coming from the other side cross freely.',
     'zone.field.reason': 'Why robots must stay out. Shown to the people who work with the map.',
     'gate.line': 'A thin gate across a road. Robots wait at it until the gate has room.',
     'gate.box': 'A rectangle. Robots wait outside it until it has room.',

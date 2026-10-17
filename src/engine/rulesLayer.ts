@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { toScene } from '../core/coords';
-import type { NavGraph, SiteLayout, StationType } from '../core/types';
+import type { NavGraph, SiteLayout, StationType, TrafficZone } from '../core/types';
+import { gateNormal } from '../core/gate';
 import type { TrafficZoneState } from '../core/rules';
 import { LaneGraph } from '../core/lanes';
 import { labelSprite, liveLabel, stripeTexture } from './labels';
@@ -145,8 +146,35 @@ export class RulesLayer {
       label.sprite.scale.set(3.6, 3.6 / label.sprite.userData.aspect, 1);
       label.set(z.id);
       this.root.add(fill, edge, label.sprite);
+      if (z.gate) this.root.add(...this.gateMarks(z.gate));
       this.tz.set(z.id, { fill, edge, label, center: new THREE.Vector3(...toScene(cx, cy, 0)) });
     }
+  }
+
+  /** A Line gate: its line and an arrow towards the side it applies to (the side robots come from). */
+  private gateMarks(g: NonNullable<TrafficZone['gate']>): THREE.Object3D[] {
+    const n = gateNormal(g),
+      mx = (g.a[0] + g.b[0]) / 2,
+      my = (g.a[1] + g.b[1]) / 2;
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(...toScene(g.a[0], g.a[1], 0.13)),
+        new THREE.Vector3(...toScene(g.b[0], g.b[1], 0.13)),
+      ]),
+      new THREE.LineBasicMaterial({ color: '#b45309' }),
+    );
+    const tip: [number, number] = [mx + n[0] * 1.8, my + n[1] * 1.8],
+      base: [number, number] = [mx + n[0] * 0.8, my + n[1] * 0.8],
+      w: [number, number] = [-n[1] * 0.5, n[0] * 0.5];
+    const tri = new THREE.Mesh(
+      new THREE.BufferGeometry().setFromPoints(
+        [tip, [base[0] + w[0], base[1] + w[1]], [base[0] - w[0], base[1] - w[1]]].map(
+          ([x, y]) => new THREE.Vector3(...toScene(x, y, 0.13)),
+        ),
+      ),
+      new THREE.MeshBasicMaterial({ color: '#b45309', side: THREE.DoubleSide }),
+    );
+    return [line, tri];
   }
 
   private buildForbidden() {
@@ -154,19 +182,17 @@ export class RulesLayer {
     for (const z of this.nav.forbiddenZones) {
       const xs = z.polygon.map((p) => p[0]),
         ys = z.polygon.map((p) => p[1]);
-      const x0 = Math.min(...xs),
-        x1 = Math.max(...xs),
-        y0 = Math.min(...ys),
-        y1 = Math.max(...ys);
+      const cx = xs.reduce((a, b) => a + b, 0) / xs.length,
+        cy = ys.reduce((a, b) => a + b, 0) / ys.length;
       const t = tex.clone();
       t.needsUpdate = true;
-      t.repeat.set((x1 - x0) / 2, (y1 - y0) / 2);
+      t.repeat.set(0.5, 0.5); // the shape's UVs are metres: one stripe tile every 2 m
       const fill = new THREE.Mesh(
-        new THREE.PlaneGeometry(x1 - x0, y1 - y0),
+        new THREE.ShapeGeometry(new THREE.Shape(z.polygon.map(([x, y]) => new THREE.Vector2(x, y)))),
         new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0.85, depthWrite: false }),
       );
       fill.rotation.x = -Math.PI / 2;
-      fill.position.set(...toScene((x0 + x1) / 2, (y0 + y1) / 2, 0.1));
+      fill.position.y = 0.1;
       const edge = new THREE.LineLoop(
         new THREE.BufferGeometry().setFromPoints(z.polygon.map(([x, y]) => new THREE.Vector3(...toScene(x, y, 0.12)))),
         new THREE.LineBasicMaterial({ color: '#ef4444' }),
@@ -187,7 +213,7 @@ export class RulesLayer {
       }
       const lb = liveLabel(560, 80);
       lb.set(copy.labels3d.noGo(z.name), 'rgba(185,28,28,.92)');
-      lb.sprite.position.set(...toScene((x0 + x1) / 2, (y0 + y1) / 2, 2.2));
+      lb.sprite.position.set(...toScene(cx, cy, 2.2));
       lb.sprite.scale.set(7, 7 / lb.sprite.userData.aspect, 1);
       this.root.add(lb.sprite);
       this.fzLabels.push(lb.sprite);

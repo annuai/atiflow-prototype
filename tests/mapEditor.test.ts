@@ -23,7 +23,8 @@ import {
   totalCells,
   updateStagingArea,
 } from '../src/features/map-editor/model/staging';
-import { addZone, boxPolygon, deleteZone, gatePolygon } from '../src/features/map-editor/model/zones';
+import { addZone, deleteZone } from '../src/features/map-editor/model/zones';
+import { newGate, polygonOf, rectFromCorners } from '../src/features/map-editor/model/shape';
 import { normaliseData } from '../src/features/map-editor/model/seed';
 import { emptyHistory, record, redo, undo } from '../src/features/map-editor/model/history';
 import { locateTarget } from '../src/features/map-editor/model/locate';
@@ -236,9 +237,9 @@ describe('roads, zones and staging areas', () => {
   });
   it('zones: a box and a gate are traffic gates; unnamed types get default props', () => {
     const d0 = lineSide();
-    const z = addZone(d0, 'exclusive', boxPolygon([1, 1], [3, 4]));
+    const z = addZone(d0, 'exclusive', rectFromCorners([1, 1], [3, 4]));
     expect(z.data.zones.find((q) => q.id === z.id)).toMatchObject({ type: 'exclusive', props: { capacity: 1 } });
-    expect(gatePolygon([0, 0], [4, 0])).toHaveLength(4);
+    expect(polygonOf(newGate([0, 0], [4, 0]))).toHaveLength(4);
     expect(deleteZone(z.data, z.id).zones).toHaveLength(d0.zones.length);
   });
   it('staging cells: A1 is the first cell, columns run along the direction, rows to the right', () => {

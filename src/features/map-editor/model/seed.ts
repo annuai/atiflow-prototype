@@ -1,6 +1,7 @@
 import type { NavGraph, SiteLayout } from '@/core/types';
 import { type FleetMap } from '@/features/maps';
 import { roadsFromLanes } from './roads';
+import { fitRect, gateFromThin, polygonOf } from './shape';
 import type { MapData, MapZone, StagingAreaDef } from './types';
 
 /**
@@ -49,6 +50,12 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
     },
   ],
 };
+/** A zone from any outline: the smallest rotated rectangle around it (zones are rectangles). */
+const rectZone = (polygon: [number, number][]) => {
+  const shape = fitRect(polygon);
+  return { shape, polygon: polygonOf(shape) };
+};
+
 /**
  * The first version of a map, from the real site and lane map: ITS fleet's lanes, stations and zones (each map owns its full network). The nodes kept are the ones its lanes and
  * stations use. Traffic zones become traffic gates, no-go zones stay no-go, the fleet's active areas become work areas.
@@ -67,14 +74,14 @@ export function seedMapData(map: Pick<FleetMap, 'fleetLive'>, site: SiteLayout, 
         id: z.id,
         type: 'exclusive',
         name: z.name.replace(/^Traffic Zone/i, 'Traffic Gate'),
-        polygon: z.polygon.map((p) => [...p] as [number, number]),
+        ...rectZone(z.polygon),
         props: { capacity: z.capacity },
       })),
     ...nav.forbiddenZones.map((z): MapZone => ({
       id: z.id,
       type: 'no-go',
       name: z.name,
-      polygon: z.polygon.map((p) => [...p] as [number, number]),
+      ...rectZone(z.polygon),
       props: { reason: z.reason },
     })),
     ...site.zones
@@ -83,7 +90,7 @@ export function seedMapData(map: Pick<FleetMap, 'fleetLive'>, site: SiteLayout, 
         id: z.id,
         type: 'area',
         name: z.name,
-        polygon: z.polygon.map((p) => [...p] as [number, number]),
+        ...rectZone(z.polygon),
         props: {},
       })),
   ];
@@ -98,6 +105,22 @@ export function seedMapData(map: Pick<FleetMap, 'fleetLive'>, site: SiteLayout, 
 }
 
 /** Data saved by an earlier version of the editor gets the parts it did not have (roads grouped from its lanes, no staging areas). */
-export function normaliseData(d: Partial<MapData> & Pick<MapData, 'nodes' | 'lanes' | 'stations' | 'zones'>): MapData {
-  return { ...d, roads: d.roads ?? roadsFromLanes(d.lanes), stagingAreas: d.stagingAreas ?? [] } as MapData;
+type SavedZone = Omit<MapZone, 'shape'> & { shape?: MapZone['shape'] };
+export function normaliseData(
+  d: Partial<Omit<MapData, 'zones'>> & Pick<MapData, 'nodes' | 'lanes' | 'stations'> & { zones: SavedZone[] },
+): MapData {
+  return {
+    ...d,
+    roads: d.roads ?? roadsFromLanes(d.lanes),
+    stagingAreas: d.stagingAreas ?? [],
+    zones: d.zones.map(normaliseZone),
+  } as MapData;
+}
+
+/** A zone saved before zones had a shape: a thin Line gate becomes a directional gate (3 m deep), everything else the rectangle around its outline. */
+function normaliseZone(z: SavedZone): MapZone {
+  if (z.shape) return { ...z, shape: z.shape, polygon: polygonOf(z.shape) };
+  const { shape: legacy, ...props } = z.props;
+  const shape = legacy === 'line' ? gateFromThin(z.polygon) : fitRect(z.polygon);
+  return { ...z, props, shape, polygon: polygonOf(shape) };
 }

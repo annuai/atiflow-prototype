@@ -2,3 +2,4 @@
 export { seedMapData } from './model/seed';
 export { latestOf, mapVersionsStore, useMapVersions } from './model/store';
 export type { MapHistory } from './model/types';
+export { applyPublishedMaps } from './model/applyMaps';

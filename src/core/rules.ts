@@ -1,3 +1,4 @@
+import { comesFromGateSide } from './gate';
 import { angleDiff, pointInPoly, segDist, type Poly } from './geom';
 import type { ForbiddenZone, NavGraph, RobotTelemetry, SiteLayout, TrafficZone } from './types';
 
@@ -128,7 +129,14 @@ export class RulesIndex {
     const out: Record<string, TrafficZoneState> = {};
     for (const z of this.nav.trafficZones) {
       const occ = robots
-        .filter((r) => r.state !== 'offline' && pointInPoly(r.pose.x, r.pose.y, z.polygon))
+        .filter(
+          (r) =>
+            r.state !== 'offline' &&
+            !r.alerts?.some((a) => a.code === 'ZONE_HANDOVER') &&
+            (r.speed >= 0.05 || r.traffic?.status === 'inside') &&
+            (!z.gate || comesFromGateSide(z.gate, r.pose.theta)) &&
+            pointInPoly(r.pose.x, r.pose.y, z.polygon),
+        ) // in the zone = driving through it, or reported inside: a robot standing at a station or at a hold point inside the area is not in traffic (its body blocks the others physically), and a robot that handed its zone over to break a deadlock is a recorded exception (ZONE_HANDOVER); at a Line gate only the robots coming from its controlled side are counted (the others cross freely)
         .map((r) => r.id);
       const wait = robots.filter((r) => r.traffic?.status === 'waiting' && r.traffic.zoneId === z.id).map((r) => r.id);
       out[z.id] = { zone: z, occupants: occ, waiting: wait, over: occ.length > z.capacity };

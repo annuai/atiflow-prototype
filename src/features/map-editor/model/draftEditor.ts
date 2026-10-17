@@ -10,6 +10,8 @@ import type { MapData } from './types';
 export class DraftEditor {
   private history: History<MapData> = emptyHistory();
   private draftId: string | undefined;
+  /** the draft as it was when it was opened for editing (what "discard changes" goes back to) */
+  private baseline: MapData | undefined;
   private listeners = new Set<() => void>();
   /** bumps when the history changes, so a component can tell */
   version = 0;
@@ -34,12 +36,24 @@ export class DraftEditor {
   attach(draftId: string | undefined) {
     if (this.draftId === draftId) return;
     this.draftId = draftId;
+    this.baseline = this.live();
     this.history = emptyHistory();
     this.emit();
   }
   get canUndo() {
     return this.history.past.length > 0;
   }
+  /** Unpublished edits made since the draft was opened (what leaving would lose track of). */
+  get dirty() {
+    return this.history.past.length > 0;
+  }
+  /** Put the draft back as it was when it was opened and forget the undo steps. */
+  discardChanges = () => {
+    const base = this.baseline;
+    if (base) mapVersionsStore.getState().updateDraft(this.mapId, () => base);
+    this.history = emptyHistory();
+    this.emit();
+  };
   get canRedo() {
     return this.history.future.length > 0;
   }
