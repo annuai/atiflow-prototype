@@ -280,7 +280,7 @@ Detection: `matchMedia('(pointer: coarse)')` (`Engine.coarse`, `useCoarse()` hoo
 | 1 | One-finger drag orbits the view | done (OrbitControls `touches.ONE`) |
 | 2 | Two-finger pinch zooms | done (`touches.TWO = DOLLY_PAN`) |
 | 3 | Two-finger drag pans (screen-space) | done |
-| 4 | Two-finger twist rotates the view about the look-at point | done (`onTouchMove`, verified 40 deg twist = 40 deg rotation) |
+| 4 | Two-finger twist rotates the 3D view about the look-at point (NOT in the 2D plan, user request) | done (`onTouchMove`, verified 40 deg twist = 40 deg rotation in 3D, 0 in 2D) |
 | 5 | Tap selects robot / station / zone (10 px wobble tolerance instead of 5) | done |
 | 6 | Double-tap zooms in on the tapped floor point (halves the distance); double-tap a robot locates it; desktop double-click does the same | done |
 | 7 | Gesture/tap separation: a pinch/twist never counts as a tap; no hover raycasts on touch | done |
@@ -677,7 +677,7 @@ Selecting a road shows: **Road name, Start X/Y, End X/Y** (metres; editing moves
 **Rename (user request):** the "Exclusive zones" module is now **Traffic Gates** everywhere on screen (tool bar, panel, empty state, zone type label "Traffic gate"; seeded zones are named "Traffic Gate n"). The internal ids (`exclusive`, `EXCLUSIVE_ZONES`) did not change, so saved maps keep working.
 
 **Locate on Map (Map Editor, user request):** every selected thing (station, staging area, road, traffic gate, zone) has a secondary button **Locate on Map** at the bottom of its settings, above Delete (also on published versions). It centres the map on the thing, zooms so it fills about 40% of the view (a station gets a close-up, `useViewport.focusOn`) and pulses a ring for about 3 seconds (`MapCanvas` prop `locate`, `model/locate.ts locateTarget`, `components/LocateButton.tsx`). There are no locate buttons on the list rows.
-**2D view pans (user request):** in the Live Floor's 2D plan a drag with the mouse (left button) or one finger pans the view and never spins it (`Engine.setMode` sets `mouseButtons.LEFT` / `touches.ONE` to PAN in `top`, ROTATE in 3D). The two-finger twist gesture still rotates the plan.
+**2D view pans (user request):** in the Live Floor's 2D plan a drag with the mouse (left button) or one finger pans the view and never spins it (`Engine.setMode` sets `mouseButtons.LEFT` / `touches.ONE` to PAN in `top`, ROTATE in 3D). The two-finger twist no longer rotates the plan (user request: it reduced control): in 2D two fingers pinch-zoom (and drift pans with them), in 3D a twist still rotates.
 
 ## 54. Book a trip and the consolidated History (operator, user request)
 **Two pages (user request): step 1 of 2 = tap a robot, which takes you straight on to step 2 of 2 = the stations (dropdowns or map taps) and Book trip; "Change robot" goes back, and after booking the page returns to step 1.** Tablet sized: big tiles (200 px+), large buttons, the map as tall as the screen allows.

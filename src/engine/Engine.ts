@@ -868,8 +868,8 @@ export class Engine {
       }
       return;
     }
-    if (this.touchPts.size === 2 && this.twistPrev !== null && (this.mode === 'orbit' || this.mode === 'top')) {
-      // two-finger twist rotates the view about the look-at point
+    if (this.touchPts.size === 2 && this.twistPrev !== null && this.mode === 'orbit') {
+      // two-finger twist rotates the 3D view about the look-at point (the 2D plan never rotates)
       const a = this.twistAngle();
       let d = a - this.twistPrev;
       if (d > Math.PI) d -= Math.PI * 2;
