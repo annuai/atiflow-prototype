@@ -1,4 +1,5 @@
 import { NoResults } from '@/components/data/EmptyState';
+import { useSearchText } from '@/hooks/use-search-text';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -23,14 +24,10 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
   const [adding, setAdding] = useState(false);
   const [preset, setPreset] = useState<Record<string, FieldValue>>();
   const [searching, setSearching] = useState(false);
-  const [q, setQ] = useState('');
-  const rows = q.trim()
-    ? devices.filter((d) =>
-        (nameOf(d) + ' ' + kind.typeOf(d) + ' ' + fleetDirectory.nameOf(String(d.values.fleet ?? '')))
-          .toLowerCase()
-          .includes(q.trim().toLowerCase()),
-      )
-    : devices;
+  const { text: q, setText: setQ, matches } = useSearchText();
+  const rows = devices.filter((d) =>
+    matches(nameOf(d) + ' ' + kind.typeOf(d) + ' ' + fleetDirectory.nameOf(String(d.values.fleet ?? ''))),
+  );
   const add = (p?: Record<string, FieldValue>) => {
     setPreset(p);
     setAdding(true);

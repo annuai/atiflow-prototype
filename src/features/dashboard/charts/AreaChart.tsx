@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { StatusDot } from '@/components/data/StatusDot';
 import { t } from '../text';
 
 export interface Line {
@@ -118,7 +119,7 @@ export function AreaChart({
           </div>
           {lines.map((l) => (
             <div key={l.key} className="flex items-center gap-1.5">
-              <i className="size-2 rounded-full" style={{ background: l.color }} />
+              <StatusDot color={l.color} />
               <span className="text-secondary">{l.label}</span>
               <b className="ml-auto pl-3 text-primary">
                 {l.values[hover]}

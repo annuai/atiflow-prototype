@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { StatusDot } from '@/components/data/StatusDot';
 import { LinkExternal01, Minus, Plus } from '@untitledui/icons';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { Select } from '@/components/base/select/select';
@@ -173,7 +174,7 @@ export function LiveStatusCard({
       <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
         {LEGEND.map((k) => (
           <li key={k} className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full" style={{ background: MAP_COLORS[k] }} />
+            <StatusDot color={MAP_COLORS[k]} />
             {t.live.legend[k]}
           </li>
         ))}

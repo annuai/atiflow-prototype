@@ -1,3 +1,4 @@
+import { StatusDot } from '@/components/data/StatusDot';
 import { cx } from '@/utils/cx';
 
 /** One robot type to choose: its picture on a light grey rounded box, its name, how many robots of that type the fleet has and how many are free now. A radio, big enough for a tablet. */
@@ -36,7 +37,7 @@ export function RobotTile({
           <span>{count}</span>
           {free && (
             <span className="flex items-center gap-1.5">
-              <i className={cx('size-2 rounded-full', free.any ? 'bg-success-solid' : 'bg-quaternary')} aria-hidden />
+              <StatusDot tone={free.any ? 'success' : 'neutral'} />
               {free.text}
             </span>
           )}

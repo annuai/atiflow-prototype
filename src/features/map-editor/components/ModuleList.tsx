@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { useSearchText } from '@/hooks/use-search-text';
 import { ChevronRight, SearchLg } from '@untitledui/icons';
 import { Input } from '@/components/base/input/input';
 import { NoResults } from '@/components/data/EmptyState';
@@ -31,8 +32,8 @@ export function ModuleList({
   noMatch(q: string): string;
   label: string;
 }) {
-  const [q, setQ] = useState('');
-  const shown = items.filter((i) => `${i.title} ${i.subtitle ?? ''}`.toLowerCase().includes(q.trim().toLowerCase()));
+  const { text: q, setText: setQ, matches } = useSearchText();
+  const shown = items.filter((i) => matches(`${i.title} ${i.subtitle ?? ''}`));
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-col gap-3 p-3">

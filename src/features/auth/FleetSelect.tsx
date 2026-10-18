@@ -1,4 +1,5 @@
 import { Select } from '@/components/base/select/select';
+import { StatusDot } from '@/components/data/StatusDot';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { useVisibleFleets } from './useFleetScope';
 import { localized } from '@/i18n';
@@ -54,7 +55,7 @@ export function FleetName({ id, name, dot = true }: { id?: string; name?: string
     (name ? fleetDirectory.byName(name) : undefined);
   return (
     <span className="inline-flex items-center gap-1.5">
-      {dot && f && <i className="size-2 rounded-full" style={{ background: f.color }} aria-hidden />}
+      {dot && f && <StatusDot color={f.color} />}
       {f?.name ?? name ?? id ?? ''}
     </span>
   );

@@ -1,4 +1,5 @@
 import { useState, type FC, type ReactNode } from 'react';
+import { StatusDot } from '@/components/data/StatusDot';
 import {
   BatteryFull,
   Eye,
@@ -93,13 +94,7 @@ export function ConfigurationTab({ robot, renderFooter }: { robot: RobotRef; ren
                   >
                     <Icon className="size-4 shrink-0" />
                     <span className="flex-1 whitespace-nowrap">{categoryLabel(c)}</span>
-                    {n > 0 && (
-                      <span
-                        className="size-1.5 rounded-full bg-brand-solid"
-                        title={copy.config.customised(n)}
-                        aria-label={copy.config.customised(n)}
-                      />
-                    )}
+                    {n > 0 && <StatusDot tone="brand" size="sm" label={copy.config.customised(n)} />}
                   </button>
                 );
               })}

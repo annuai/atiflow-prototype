@@ -1,4 +1,5 @@
 import { GROUPS } from '../data/derive';
+import { StatusDot } from '@/components/data/StatusDot';
 import type { FleetState, StateGroup } from '../data/types';
 import { StackedBar } from '../charts/StackedBar';
 import { copy } from '../copy';
@@ -23,7 +24,7 @@ export function FleetStatesCard({
           <div key={f.id}>
             <div className="mb-1.5 flex items-center justify-between text-sm">
               <span className="flex items-center gap-2 font-medium text-primary">
-                <i className="size-2 rounded-full" style={{ background: f.color }} />
+                <StatusDot color={f.color} />
                 {f.name}
               </span>
               <span className="text-tertiary">{copy.fleets.robots(f.total)}</span>
@@ -45,7 +46,7 @@ export function FleetStatesCard({
       <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
         {used.map((g) => (
           <li key={g.id} className="flex items-center gap-1.5">
-            <i className="size-2 rounded-full" style={{ background: g.color }} />
+            <StatusDot color={g.color} />
             {g.label} <b className="text-primary">{fleets.reduce((a, f) => a + f.counts[g.id], 0)}</b>
           </li>
         ))}

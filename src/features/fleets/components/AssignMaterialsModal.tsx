@@ -1,4 +1,5 @@
 import { Package } from '@untitledui/icons';
+import { useSearchText } from '@/hooks/use-search-text';
 import { useFleetName } from '@/data/fleetDirectory';
 import { EmptyState } from '@/components/data/EmptyState';
 import { useMemo, useState } from 'react';
@@ -21,7 +22,7 @@ function Body({ fleet, onOpenChange }: { fleet: FleetId; onOpenChange(o: boolean
   const fleetName = useFleetName(fleet);
   const materials = useMasterData((s) => s.materials);
   const groups = useMasterData((s) => s.groups);
-  const [text, setText] = useState('');
+  const { text, setText } = useSearchText();
   const [prefix, setPrefix] = useState('');
   const [sel, setSel] = useState<Set<string>>(new Set());
   const t = copy.assignMaterials;

@@ -1,4 +1,5 @@
 import { EmptyState, NoResults } from '@/components/data/EmptyState';
+import { useSearchText } from '@/hooks/use-search-text';
 import { useState } from 'react';
 import { Edit05, SearchLg, Trash01, Package, LayersThree01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
@@ -32,15 +33,10 @@ export function FleetStationGroups({ fleet, materials, masterGroups, toolbarLeft
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
   const [adding, setAdding] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
-  const [text, setText] = useState('');
-  const q = text.trim().toLowerCase();
-  const shownGroups = q
-    ? groups.filter((g) =>
-        [g.name, g.stationId, ...g.codes, ...materials.filter((m) => g.codes.includes(m.code)).map((m) => m.name)].some(
-          (x) => x.toLowerCase().includes(q),
-        ),
-      )
-    : groups;
+  const { text, setText, matches } = useSearchText();
+  const shownGroups = groups.filter((g) =>
+    matches(g.name, g.stationId, ...g.codes, ...materials.filter((m) => g.codes.includes(m.code)).map((m) => m.name)),
+  );
   const group = shownGroups.find((g) => g.id === selectedId) ?? shownGroups[0];
   const groupName = (m: Material) => masterGroups.find((g) => g.id === m.group)?.name ?? '';
   const inGroup = group ? materials.filter((m) => group.codes.includes(m.code)) : [];

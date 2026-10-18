@@ -1,12 +1,12 @@
 import { EmptyState, NoResults } from '@/components/data/EmptyState';
-import { useState } from 'react';
+import { useSearchText } from '@/hooks/use-search-text';
+import { StatusDot } from '@/components/data/StatusDot';
 import { SearchLg, Cube01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { Label } from '@/components/base/input/label';
 import { useDevices, KINDS, nameOf } from '@/features/devices';
-import { cx } from '@/utils/cx';
 import { copy } from '../copy';
 import { t as text } from '../text';
 
@@ -21,10 +21,10 @@ export function RobotPicker({
   error?: string;
 }) {
   const robots = useDevices((s) => s.robot);
-  const [q, setQ] = useState('');
+  const { text: q, setText: setQ, matches: matchesText } = useSearchText();
   const t = copy.generate;
   const chosen = robots.find((r) => nameOf(r) === value);
-  const matches = robots.filter((r) => nameOf(r).toLowerCase().includes(q.trim().toLowerCase()));
+  const matches = robots.filter((r) => matchesText(nameOf(r)));
   return (
     <div className="flex flex-col gap-1.5">
       <Label isRequired>{t.robot}</Label>
@@ -34,12 +34,7 @@ export function RobotPicker({
           <div className="min-w-0 flex-1">
             <p className="text-md font-semibold text-primary">{nameOf(chosen)}</p>
             <p className="flex items-center gap-1.5 text-xs text-secondary">
-              <span
-                className={cx(
-                  'size-2 rounded-full',
-                  chosen.status === 'online' ? 'bg-success-solid' : 'bg-error-solid',
-                )}
-              />
+              <StatusDot tone={chosen.status === 'online' ? 'success' : 'danger'} />
               {chosen.status === 'online' ? t.connected : t.disconnected}
             </p>
           </div>

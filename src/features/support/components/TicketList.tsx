@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { StatusDot } from '@/components/data/StatusDot';
 import { timeAgo } from '@/utils/timeAgo';
 import { copy } from '../copy';
 import { supportStore, useSupport } from '../store';
@@ -33,7 +34,7 @@ export function TicketList() {
                 <StatusChip status={t.status} />
                 {t.unread > 0 && (
                   <span className="ml-auto flex items-center gap-1 text-xs font-semibold text-brand-secondary">
-                    <i className="size-2 rounded-full bg-brand-solid" aria-hidden />
+                    <StatusDot tone="brand" />
                     {copy.tickets.newReply}
                   </span>
                 )}

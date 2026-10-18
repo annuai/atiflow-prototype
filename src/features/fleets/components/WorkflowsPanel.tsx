@@ -1,4 +1,5 @@
 import { GitBranch01 } from '@untitledui/icons';
+import { useSearchText } from '@/hooks/use-search-text';
 import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -17,17 +18,13 @@ import type { FleetId } from '@/data/fleets';
 export function WorkflowsPanel({ fleet }: { fleet: FleetId }) {
   const navigate = useNavigate();
   const workflows = useWorkflow((s) => s.workflows);
-  const [text, setText] = useState('');
+  const { text, setText, matches } = useSearchText();
   const [sel, setSel] = useState<Set<string>>(new Set());
   const rows: WorkflowRow[] = useMemo(
     () => workflowsOfFleet(workflows, fleet).filter(isKept).map(workflowSummary),
     [fleet, workflows],
   );
-  const shown = rows.filter(
-    (r) =>
-      !text.trim() ||
-      [r.name, r.materials.join(' '), r.trigger].some((x) => x.toLowerCase().includes(text.trim().toLowerCase())),
-  );
+  const shown = rows.filter((r) => matches(r.name, r.materials.join(' '), r.trigger));
   const open = (r: WorkflowRow) => navigate(`/configurator/workflows/${r.id}`);
   const make = () => navigate(`/configurator/workflows/${wfStore.getState().startWorkflow(fleet)}`);
   const t = copy.workflows;

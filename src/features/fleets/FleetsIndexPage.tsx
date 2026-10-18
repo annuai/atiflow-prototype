@@ -1,4 +1,5 @@
 import { asFleetId, type FleetId } from '@/data/fleets';
+import { useSearchText } from '@/hooks/use-search-text';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cube01, Dataflow03, SearchLg } from '@untitledui/icons';
@@ -30,17 +31,16 @@ export function FleetsIndexPage() {
   const hardware = useDevices((s) => s.hardware);
   const profiles = useFleets((s) => s.profiles);
   const maps = useMaps();
-  const [query, setQuery] = useState('');
+  const { text: query, setText: setQuery, matches } = useSearchText();
   const [searching, setSearching] = useState(false);
   const [making, setMaking] = useState(false);
   const [open, setOpen] = useState<FleetId | null>(null);
   const unassigned = robots.filter((d) => !d.values.fleet);
   const rows = useMemo(() => {
-    const q = query.trim().toLowerCase();
     return fleets
       .map((f) => ({ f, map: maps.find((m) => m.id === profileOf(profiles, f.id).mapId) ?? null }))
-      .filter(({ f, map }) => !q || f.name.toLowerCase().includes(q) || !!map?.name.toLowerCase().includes(q));
-  }, [fleets, maps, profiles, query]);
+      .filter(({ f, map }) => matches(f.name, map?.name));
+  }, [fleets, maps, profiles, matches]);
   const expanded = open ?? rows[0]?.f.id ?? null; // the first fleet is open until the person opens another
   return (
     <>

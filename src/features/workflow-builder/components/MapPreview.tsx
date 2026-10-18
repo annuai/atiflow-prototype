@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { StatusDot } from '@/components/data/StatusDot';
 import { Map01, Minus } from '@untitledui/icons';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { locate } from '../model/tree';
@@ -127,7 +128,7 @@ export function MapPreview({
         {copy.map.title}
         {running && (
           <span className="ml-auto flex items-center gap-1.5 text-[11px] font-medium text-quaternary">
-            <i className="size-1.5 rounded-full bg-[#22c55e]" />
+            <StatusDot tone="success" size="sm" />
             {copy.map.running}
           </span>
         )}

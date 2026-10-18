@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
+import { StatusDot } from '@/components/data/StatusDot';
 import { useLocation } from 'react-router-dom';
 import { FocusScope } from 'react-aria';
 import { ArrowLeft, XClose } from '@untitledui/icons';
 import { notify } from '@/ui/toast';
-import { cx } from '@/utils/cx';
 import { CallView } from './components/CallView';
 import { ChatView } from './components/ChatView';
 import { DevMenu } from './components/DevMenu';
@@ -108,10 +108,7 @@ export function SupportWidget() {
                   {view === 'home' ? copy.title : TITLES[view]()}
                 </h2>
                 <p className="flex items-center gap-1.5 text-xs text-tertiary">
-                  <i
-                    className={cx('size-2 rounded-full', status.online ? 'bg-success-solid' : 'bg-fg-quaternary')}
-                    aria-hidden
-                  />
+                  <StatusDot tone={status.online ? 'success' : 'neutral'} />
                   {status.online ? copy.status.online : copy.status.offline(status.backAt)}
                 </p>
               </div>

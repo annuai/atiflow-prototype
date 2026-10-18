@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { StatusDot } from '@/components/data/StatusDot';
 import { AlertCircle, Lock03, Mail01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
@@ -167,7 +168,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
       <footer className="relative z-10 flex items-center justify-between gap-4 bg-[image:var(--surface-sidebar)] px-6 py-4 text-xs text-slate-300 sm:px-20">
         <span>{copy.footer}</span>
         <span className="flex items-center gap-2">
-          <i className="size-2 rounded-full bg-[#22c55e] ring-2 ring-[#22c55e]/30" />
+          <StatusDot tone="success" ring />
           {copy.status}
         </span>
       </footer>
