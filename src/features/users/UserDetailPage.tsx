@@ -25,6 +25,7 @@ import { PermissionMatrix } from './components/PermissionMatrix';
 import { FleetPicker } from './components/FleetPicker';
 import { ResetPasswordDialog } from './components/ResetPasswordDialog';
 import { RoleBadge } from './components/RoleBadge';
+import { AvatarUpload } from './components/AvatarUpload';
 import { UserAvatar } from './components/UserAvatar';
 import { copy } from './copy';
 import { validateBasics } from './model/validate';
@@ -49,6 +50,7 @@ export function UserDetailPage() {
     title: '',
     role: 'supervisor' as RoleId,
     fleets: [] as string[],
+    avatar: undefined as string | undefined,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState(false),
@@ -65,6 +67,7 @@ export function UserDetailPage() {
       title: user.title,
       role: user.role,
       fleets: user.fleets ?? [],
+      avatar: record?.avatar,
     });
     setErrors({});
     setEditing(false);
@@ -80,6 +83,7 @@ export function UserDetailPage() {
     draft.email !== user.email ||
     draft.title !== user.title ||
     draft.role !== user.role ||
+    draft.avatar !== record?.avatar ||
     JSON.stringify([...draft.fleets].sort()) !== JSON.stringify([...(user.fleets ?? [])].sort());
   const set = (k: keyof typeof draft) => (v: string | string[]) => {
     setDraft((d) => ({ ...d, [k]: k === 'role' ? roleByLabel(String(v)) : String(v) }));
@@ -97,6 +101,7 @@ export function UserDetailPage() {
       title: draft.title.trim() || roleById(roleChanged ? draft.role : user.role).label,
       ...(roleChanged ? { role: draft.role, custom: undefined } : {}),
       fleets: isFleetScoped(draft.role) ? draft.fleets : undefined,
+      avatar: draft.avatar,
     });
     notify.success(copy.detail.updated, undefined, 'user-updated');
   };
@@ -139,6 +144,12 @@ export function UserDetailPage() {
           <div className="dv-scroll grid content-start gap-8 p-5 sm:p-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
             <section className="flex flex-col gap-4" aria-label={copy.detail.basic}>
               <h2 className="text-lg font-semibold text-primary">{copy.detail.basic}</h2>
+              <AvatarUpload
+                value={draft.avatar}
+                preview={record ? toPublic({ ...record, avatar: undefined }).avatar : undefined}
+                name={user.name}
+                onChange={(avatar) => setDraft((d) => ({ ...d, avatar }))}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   def={{ key: 'firstName', label: misc.userForm.firstName, control: 'text', required: true }}

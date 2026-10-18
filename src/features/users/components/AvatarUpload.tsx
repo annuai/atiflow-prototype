@@ -8,10 +8,13 @@ import { UserAvatar } from './UserAvatar';
 /** Choose (or remove) a profile picture: a preview that falls back to the initials, Upload / Change, Remove, and a hint. Reports a small square data URL. */
 export function AvatarUpload({
   value,
+  preview,
   name,
   onChange,
 }: {
   value?: string;
+  /** the picture shown while `value` is empty (the person's standard picture) */
+  preview?: string;
   name: string;
   onChange(dataUrl: string | undefined): void;
 }) {
@@ -32,7 +35,7 @@ export function AvatarUpload({
   };
   return (
     <div className="flex items-center gap-4" role="group" aria-label={copy.add_.photo}>
-      <UserAvatar user={{ name, username: name, avatar: value }} size="xl" />
+      <UserAvatar user={{ name, username: name, avatar: value ?? preview }} size="xl" />
       <div className="flex min-w-0 flex-col gap-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <FileTrigger acceptedFileTypes={AVATAR_TYPES} onSelect={(files) => void pick(files as FileList | null)}>

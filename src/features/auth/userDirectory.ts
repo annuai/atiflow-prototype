@@ -30,7 +30,9 @@ export interface UserDirectory {
   add(input: NewUser): UserRecord;
   update(
     username: string,
-    patch: Partial<Pick<UserRecord, 'firstName' | 'lastName' | 'email' | 'title' | 'role' | 'custom' | 'fleets'>>,
+    patch: Partial<
+      Pick<UserRecord, 'firstName' | 'lastName' | 'email' | 'title' | 'role' | 'custom' | 'fleets' | 'avatar'>
+    >,
   ): void;
   resetPassword(username: string, password: string): void;
   remove(username: string): void;
