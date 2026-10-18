@@ -5,6 +5,7 @@ import { SETTINGS_PATH } from '@/features/configurator';
 import { ConnectionsPanel } from './components/ConnectionsPanel';
 import { GeneralPanel } from './components/GeneralPanel';
 import { copy } from './copy';
+import { PageCard } from '@/components/data/PageCard';
 
 /** Tabs of the page; add a tab here (+ its panel) and the route, subtitle and tab bar follow. */
 const TABS = [
@@ -28,7 +29,7 @@ export function SettingsPage() {
             <p>{copy.tabs[active.id].subtitle}</p>
           </div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           <TabbedPanel
             tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id].label, icon: t.icon }))}
             selected={active.id}
@@ -37,7 +38,7 @@ export function SettingsPage() {
           >
             <active.Panel />
           </TabbedPanel>
-        </div>
+        </PageCard>
       </div>
     </>
   );

@@ -12,6 +12,7 @@ import { NotificationItem } from './components/NotificationItem';
 import { copy } from './copy';
 import { useNotificationStore, useWorkspaceNotifications } from './NotificationsProvider';
 import type { Audience, NotificationAction } from './types';
+import { PageCard } from '@/components/data/PageCard';
 
 type Tab = 'all' | 'unread';
 /** One page for every user (`/supervisor/notifications`, `/configurator/notifications`). What it lists depends on the signed-in user: each workspace has its own sources (see `sources.ts`). */
@@ -64,7 +65,7 @@ export function NotificationsPage() {
             </Button>
           </div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           <div className="md-body flex flex-col gap-3 !px-5 !py-5 sm:!px-6">
             <TabPanelMotion tabKey={tab} className="flex flex-col gap-3">
               {!shown.length ? (
@@ -92,7 +93,7 @@ export function NotificationsPage() {
               )}
             </TabPanelMotion>
           </div>
-        </div>
+        </PageCard>
       </div>
     </>
   );

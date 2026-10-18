@@ -12,6 +12,7 @@ import { ImportMapModal } from './components/ImportMapModal';
 import { MapCard } from './components/MapCard';
 import { fleetsByMap, filterSortMaps, type MapSort } from './model/logic';
 import { useMaps } from './model/maps';
+import { PageCard } from '@/components/data/PageCard';
 
 /** Maps: the maps that are part of the system (none invented), with search and sort. Create New Map / Import open their dialogs; an empty system asks to create the first map. */
 export function MapsPage() {
@@ -45,7 +46,7 @@ export function MapsPage() {
           </div>
           <div className="actions">{actions()}</div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           {maps.length === 0 ? (
             <div className="md-body grid place-items-center">
               <EmptyState
@@ -103,7 +104,7 @@ export function MapsPage() {
               )}
             </div>
           )}
-        </div>
+        </PageCard>
       </div>
       <GenerateMapModal isOpen={generating} onOpenChange={setGenerating} />
       <ImportMapModal isOpen={importing} onOpenChange={setImporting} />

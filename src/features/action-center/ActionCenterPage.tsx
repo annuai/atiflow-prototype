@@ -22,6 +22,7 @@ import { useLoadPhase } from '@/components/skeleton/Skeleton';
 import { useCalls } from './data/useCalls';
 import { logToCsv } from './model/engine';
 import type { Call } from './model/types';
+import { PageCard } from '@/components/data/PageCard';
 
 type Tab = 'open' | 'mine' | 'log';
 const download = (name: string, text: string) => {
@@ -88,7 +89,7 @@ export function ActionCenterPage() {
             )}
           </div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           <div className="md-body flex flex-col gap-4 !px-5 !py-5 sm:!px-6">
             {phase !== 'ready' ? (
               phase === 'skeleton' ? (
@@ -147,7 +148,7 @@ export function ActionCenterPage() {
               </>
             )}
           </div>
-        </div>
+        </PageCard>
       </div>
       <ResolveDialog
         call={resolving}

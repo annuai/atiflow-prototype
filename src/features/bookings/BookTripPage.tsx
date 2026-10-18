@@ -3,6 +3,7 @@ import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { RequestMaterialPane, useRequestableItems } from '@/features/request-material';
 import { TripsPane } from './components/TripsPane';
 import { copy } from './copy';
+import { PageCard } from '@/components/data/PageCard';
 
 type Tab = 'request' | 'trips';
 
@@ -23,7 +24,7 @@ export function BookTripPage() {
           <p>{canRequest ? copy.book.subtitleBoth : copy.book.subtitle}</p>
         </div>
       </div>
-      <div className="builder md-card">
+      <PageCard>
         {canRequest && (
           <div className="md-bar">
             <SegmentedTabs<Tab>
@@ -39,7 +40,7 @@ export function BookTripPage() {
           </div>
         )}
         {tab === 'request' ? <RequestMaterialPane /> : <TripsPane />}
-      </div>
+      </PageCard>
     </div>
   );
 }

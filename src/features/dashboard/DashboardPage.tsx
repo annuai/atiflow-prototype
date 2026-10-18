@@ -25,6 +25,7 @@ import { t } from './text';
 import { firstName, greeting } from './data/greeting';
 import { createLiveSource, useDashboard } from './data/source';
 import { TvScreen } from './tv/TvScreen';
+import { PageCard } from '@/components/data/PageCard';
 
 /**
  * The supervisor dashboard: "do I need to do anything?" first (status strip, needs attention), then the fleets, the floor and the activity. Every number comes from `useDashboard()`;
@@ -78,7 +79,7 @@ export function DashboardPage() {
             </Button>
           </div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           <div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
             {(materialsRelevant || many) && (
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -118,7 +119,7 @@ export function DashboardPage() {
               </>
             )}
           </div>
-        </div>
+        </PageCard>
       </div>
       {tv && snap && <TvScreen snap={snap} siteName={site?.name ?? t.page.floorFallback} onExit={exitTv} />}
     </>

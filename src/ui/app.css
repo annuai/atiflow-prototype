@@ -330,18 +330,6 @@ img {
   display: flex;
   gap: 12px;
 }
-.builder {
-  flex: 1;
-  min-height: 0;
-  margin: 12px 0 12px;
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--r-lg);
-  background: var(--bg-primary);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
-}
 .bh {
   min-height: 52px; /* a bar as tall as its controls need: the room above and below them is always --bar-inset, so it is also the room after the last one, whatever size the controls are (40 px on a phone) */
   flex: none;
@@ -1442,9 +1430,6 @@ body {
 }
 
 /* ---- shared page card (Dashboard, Reports, Notifications, Action Center, Master Data, Fleets, Maps, Settings...). It lives here, not in one page's CSS: pages load lazily, so a page must never depend on another page's stylesheet. ---- */
-.md-card {
-  margin-bottom: 12px;
-}
 .md-body {
   flex: 1;
   min-height: 0;

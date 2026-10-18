@@ -20,6 +20,7 @@ import { TypeTabs } from './TypeTabs';
 import { useCommands } from './useCommands';
 import { useQueryState } from './useQueryState';
 import { useSearch } from './useSearch';
+import { PageCard } from '@/components/data/PageCard';
 
 const PAGE = 20;
 
@@ -228,7 +229,7 @@ export function SearchPage() {
           <p>{q ? copy.ui.pageFor(q) : copy.ui.pageSubtitle}</p>
         </div>
       </div>
-      <div className="builder md-card">
+      <PageCard>
         <div className="md-body !gap-4">
           <QueryBox key={q} q={q} simple={simple} onSubmit={(text) => set({ q: text || null, type: null })} />
           <Controls
@@ -276,7 +277,7 @@ export function SearchPage() {
             />
           )}
         </div>
-      </div>
+      </PageCard>
       {dialogs}
     </div>
   );

@@ -18,6 +18,7 @@ import { runSimulation, stopSimulation } from './sim/runner';
 import './workflow.css';
 import { copy } from './copy';
 import { PageTitleName } from '@/shell/PageTitle';
+import { PageCard } from '@/components/data/PageCard';
 
 /** Canvas stand-in shown until the user picks a fleet for the new workflow. */
 function SelectFleetPrompt() {
@@ -130,7 +131,7 @@ function Builder() {
           </div>
         </div>
         <div className="work">
-          <div className="builder">
+          <PageCard className="m-0 min-w-0 flex-[1_1_0]">
             <div className="bh">
               <Dataflow03 className="size-4 text-[#66cbc4]" />
               {hasFleet ? (
@@ -180,7 +181,7 @@ function Builder() {
             ) : (
               <SelectFleetPrompt />
             )}
-          </div>
+          </PageCard>
           {docked && <MapPreview mode="docked" onClose={stopSimulation} />}
         </div>
       </div>

@@ -13,6 +13,7 @@ import { AddDeviceModal } from './components/AddDeviceModal';
 import { DeviceEmptyState } from './components/DeviceEmptyState';
 import { DeviceTable } from './components/DeviceTable';
 import '@/ui/detailPages.css';
+import { PageCard } from '@/components/data/PageCard';
 
 /** Robots list / Hardware list. Same layout as the Workflow Builder page (title block + one card); everything kind-specific comes from `kind`. */
 export function DeviceListPage({ kind }: { kind: DeviceKind }) {
@@ -64,7 +65,7 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
             </Button>
           </div>
         </div>
-        <div className="builder dv-card">
+        <PageCard>
           {devices.length === 0 ? (
             <div className="dv-scroll flex flex-col">
               <DeviceEmptyState kind={kind} onAdd={add} />
@@ -80,7 +81,7 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
               />
             </div>
           )}
-        </div>
+        </PageCard>
       </div>
       <AddDeviceModal kind={kind} isOpen={adding} onOpenChange={setAdding} preset={preset} />
     </>

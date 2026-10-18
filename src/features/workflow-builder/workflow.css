@@ -520,11 +520,6 @@ body.wf-dragging * {
   gap: 16px;
   margin: 12px 0;
 }
-.work > .builder {
-  margin: 0;
-  flex: 1 1 0;
-  min-width: 0;
-}
 .sim-btn {
   position: relative;
   overflow: hidden;

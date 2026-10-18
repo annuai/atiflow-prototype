@@ -1,5 +1,6 @@
 import { Delayed, Skeleton, SkeletonCard, SkeletonText } from '@/components/skeleton/Skeleton';
 import { copy as floor } from '@/ui/copy';
+import { PageCard } from '@/components/data/PageCard';
 
 /** Generic page while its code loads: the title block and one big card, in the same frame as every page, so nothing jumps when the real page arrives. */
 export function PageSkeleton() {
@@ -12,7 +13,7 @@ export function PageSkeleton() {
             <Skeleton className="h-4 w-72" />
           </div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           <div className="md-body flex flex-col gap-4 !px-5 !py-5 sm:!px-6">
             <SkeletonCard>
               <SkeletonText lines={3} />
@@ -21,7 +22,7 @@ export function PageSkeleton() {
               <SkeletonText lines={6} />
             </SkeletonCard>
           </div>
-        </div>
+        </PageCard>
       </div>
     </Delayed>
   );

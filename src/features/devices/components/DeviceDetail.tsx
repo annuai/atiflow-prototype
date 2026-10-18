@@ -23,6 +23,7 @@ import { robotTypeByLabel } from '@/data/robotTypes';
 import { DetailBreadcrumb, type Crumb } from './DetailBreadcrumb';
 import { StatusBadge } from './StatusBadge';
 import { t } from '../text';
+import { PageCard } from '@/components/data/PageCard';
 
 const TAB_ICONS = [Rows01, Settings02, GamingPad01, RefreshCcw03];
 const detailOf = (f: { detail?: unknown }) =>
@@ -200,10 +201,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
           {kind.illustration(device)}
         </div>
       </div>
-      <div
-        className="mb-3 mt-3 flex min-h-0 flex-1 flex-col overflow-y-auto rounded-[20px] border border-secondary bg-primary p-4 shadow-xs sm:p-6"
-        data-testid="device-detail"
-      >
+      <PageCard className="overflow-y-auto p-4 sm:p-6" data-testid="device-detail">
         {tabs ? (
           <TabbedPanel
             tabs={tabs.map((id, i) => ({
@@ -237,7 +235,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
           confirmLabel={t.detail.confirm.action}
           onConfirm={remove}
         />
-      </div>
+      </PageCard>
     </>
   );
 }

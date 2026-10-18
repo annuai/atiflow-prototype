@@ -1,7 +1,4 @@
-/* Robots / Hardware pages. Layout reuses .content / .title-block / .builder from app.css; only the few extras live here (prefix dv-). */
-.dv-card {
-  margin-bottom: 12px;
-}
+/* Robots / Hardware pages. Layout reuses .content / .title-block from app.css and the PageCard component; only the few extras live here (prefix dv-). */
 .dv-scroll {
   flex: 1;
   min-height: 0;

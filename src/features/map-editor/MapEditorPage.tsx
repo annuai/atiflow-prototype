@@ -43,6 +43,7 @@ import { importedSite } from './model/importedSite';
 import { seedMapData } from './model/seed';
 import { useSimulationPanel } from './sim/useSimulationPanel';
 import { PageTitleName } from '@/shell/PageTitle';
+import { PageCard } from '@/components/data/PageCard';
 
 /**
  * The Map Editor (`/configurator/maps/:id`). A published version can only be looked at; "Edit as draft" makes the one draft, saved as you edit and turned into the next version by Publish.
@@ -187,13 +188,13 @@ export function MapEditorPage() {
   if (!site || !data || !current)
     return (
       <div className="content">
-        <div className="builder md-card">
+        <PageCard>
           <div className="flex flex-col gap-3 p-4" role="status" aria-label="Loading the map">
             <Skeleton className="h-8 w-72" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-[420px] w-full" />
           </div>
-        </div>
+        </PageCard>
       </div>
     );
   const state = isDraft
@@ -255,7 +256,7 @@ export function MapEditorPage() {
   return (
     <div className="content map-editor">
       <PageTitleName name={map.name} />
-      <div className="builder md-card">
+      <PageCard>
         <EditorHeader
           canUndo={editable && editor.canUndo}
           canRedo={editable && editor.canRedo}
@@ -351,7 +352,7 @@ export function MapEditorPage() {
             onLocate={locate}
           />
         </div>
-      </div>
+      </PageCard>
       <VersionHistory
         isOpen={historyOpen}
         onOpenChange={setHistoryOpen}

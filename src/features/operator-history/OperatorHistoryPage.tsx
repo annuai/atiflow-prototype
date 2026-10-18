@@ -20,6 +20,7 @@ import { timeAgo } from '@/utils/timeAgo';
 import { HistoryDetail } from './HistoryDetail';
 import { t } from './text';
 import { historyEntries, type HistoryKind } from './entries';
+import { PageCard } from '@/components/data/PageCard';
 
 type Filter = 'all' | HistoryKind;
 const KIND_COLOR = { request: 'brand', approval: 'warning', trip: 'blue' } as const;
@@ -57,7 +58,7 @@ export function OperatorHistoryPage() {
           <p>{h.subtitle}</p>
         </div>
       </div>
-      <div className="builder md-card">
+      <PageCard>
         <div className="md-body !gap-4">
           <div className="shrink-0">
             <SegmentedTabs<Filter>
@@ -139,7 +140,7 @@ export function OperatorHistoryPage() {
             )}
           </TabPanelMotion>
         </div>
-      </div>
+      </PageCard>
       {(() => {
         const e = all.find((x) => x.key === opened);
         return (

@@ -31,6 +31,7 @@ import { copy } from './copy';
 import { validateBasics } from './model/validate';
 import { localized } from '@/i18n';
 import { PageTitleName } from '@/shell/PageTitle';
+import { PageCard } from '@/components/data/PageCard';
 
 const misc = localized('misc');
 
@@ -140,7 +141,7 @@ export function UserDetailPage() {
             </Button>
           </div>
         </div>
-        <div className="builder dv-card">
+        <PageCard>
           <div className="dv-scroll grid content-start gap-8 p-5 sm:p-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
             <section className="flex flex-col gap-4" aria-label={copy.detail.basic}>
               <h2 className="text-lg font-semibold text-primary">{copy.detail.basic}</h2>
@@ -269,7 +270,7 @@ export function UserDetailPage() {
               {!editing && <p className="mt-4 text-xs text-quaternary">{copy.perms.locked}</p>}
             </section>
           </div>
-        </div>
+        </PageCard>
       </div>
       <ResetPasswordDialog username={user.username} name={user.name} isOpen={resetting} onOpenChange={setResetting} />
       <ConfirmDialog

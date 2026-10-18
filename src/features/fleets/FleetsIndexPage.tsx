@@ -16,6 +16,7 @@ import { OverviewPanel } from './components/OverviewPanel';
 import { useMaps } from '@/features/maps';
 import { profileOf, useFleets } from './model/store';
 import { fleetPath } from './paths';
+import { PageCard } from '@/components/data/PageCard';
 
 /**
  * `/configurator/fleets`: every fleet at a glance. Robots that belong to no fleet first, then one expandable row per fleet (map, version, counts); opening a row shows the same
@@ -63,7 +64,7 @@ export function FleetsIndexPage() {
             </Button>
           </div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           <div className="md-body">
             <div className="flex flex-col gap-8">
               {searching && (
@@ -138,7 +139,7 @@ export function FleetsIndexPage() {
               </section>
             </div>
           </div>
-        </div>
+        </PageCard>
       </div>
       <MakeFleetModal isOpen={making} onOpenChange={setMaking} />
     </>

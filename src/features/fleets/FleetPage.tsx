@@ -20,6 +20,7 @@ import { FLEETS_PATH, fleetPath } from './paths';
 import { profileOf, useFleets } from './model/store';
 import { t } from './text';
 import { PageTitleName } from '@/shell/PageTitle';
+import { PageCard } from '@/components/data/PageCard';
 
 /** Tabs of a fleet page. Add a tab (+ panel) here and the route, tab bar and count badge follow. */
 const TABS = [
@@ -80,7 +81,7 @@ export function FleetPage() {
             </Badge>
           </div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           <TabbedPanel
             tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id], icon: t.icon, badge: counts[t.id] }))}
             selected={active.id}
@@ -90,7 +91,7 @@ export function FleetPage() {
           >
             <active.Panel fleet={name} />
           </TabbedPanel>
-        </div>
+        </PageCard>
       </div>
     </>
   );

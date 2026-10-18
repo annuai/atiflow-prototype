@@ -10,6 +10,7 @@ import { canApprove } from './model/rules';
 import { requestsStore, useRequests } from './model/store';
 import type { TripRequest } from './model/types';
 import { useOperator } from './model/useOperator';
+import { PageCard } from '@/components/data/PageCard';
 
 /** Requests of other operators on my fleets that wait for my approval (the Confirm step of their workflow). What has been decided is in History. */
 export function ApprovePage() {
@@ -40,7 +41,7 @@ export function ApprovePage() {
           <p>{copy.approve.subtitle}</p>
         </div>
       </div>
-      <div className="builder md-card">
+      <PageCard>
         <div className="md-body !gap-4">
           {!waiting.length ? (
             <EmptyState
@@ -64,7 +65,7 @@ export function ApprovePage() {
             </div>
           )}
         </div>
-      </div>
+      </PageCard>
       <RejectSheet
         request={rejecting}
         onClose={() => setRejecting(null)}

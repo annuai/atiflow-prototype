@@ -27,6 +27,7 @@ import { chooseFleet, visibleFleetIds } from './defaultFleet';
 import { showFor } from './world/scenes';
 import { locateTarget, locateWhenKnown, takePendingLocate } from '@/ui/locate';
 import { copy } from '@/ui/copy';
+import { PageCard } from '@/components/data/PageCard';
 
 /** Supervisor home: the 3D live floor. Content only; chrome comes from AppShell. */
 export function LiveFloorPage() {
@@ -156,14 +157,14 @@ export function LiveFloorPage() {
             <p>{copy.page.subtitle}</p>
           </div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           <EmptyState
             icon={Cube01}
             size="lg"
             title={localized('common').noWebgl.title}
             subtext={localized('common').noWebgl.body}
           />
-        </div>
+        </PageCard>
       </div>
     );
   return (
@@ -177,7 +178,7 @@ export function LiveFloorPage() {
           {/* Header action slot (top-right of the title block, same row as "Live Floor"). Empty on purpose: Replay + Dispatch Task were removed. See CLAUDE.md section 13. */}
           <div className="actions" />
         </div>
-        <div className="builder">
+        <PageCard>
           <div className="bh">
             <span className="ic">▦</span>
             <h2>{copy.page.liveView}</h2>
@@ -232,7 +233,7 @@ export function LiveFloorPage() {
             <LocateBox legendClosed={!legendOpen} onOpenLegend={() => setLegend(true)} />
             <ZoomControl pct={view.zoomPct} />
           </div>
-        </div>
+        </PageCard>
       </div>
     </>
   );

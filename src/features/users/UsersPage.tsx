@@ -14,6 +14,7 @@ import { RoleBadge } from './components/RoleBadge';
 import { UserAvatar } from './components/UserAvatar';
 import { copy } from './copy';
 import { localized } from '@/i18n';
+import { PageCard } from '@/components/data/PageCard';
 
 const misc = localized('misc');
 
@@ -90,7 +91,7 @@ export function UsersPage() {
             </Button>
           </div>
         </div>
-        <div className="builder dv-card">
+        <PageCard>
           {rows.length === 0 ? (
             <NoResults subtext={copy.none(q)} className="m-auto" />
           ) : (
@@ -104,7 +105,7 @@ export function UsersPage() {
               />
             </div>
           )}
-        </div>
+        </PageCard>
       </div>
       <AddUserModal isOpen={adding} onOpenChange={setAdding} />
     </>

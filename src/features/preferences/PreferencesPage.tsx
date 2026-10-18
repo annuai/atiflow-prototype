@@ -23,6 +23,7 @@ import {
   validatePreferences,
 } from './model/defaults';
 import type { Preferences } from './model/types';
+import { PageCard } from '@/components/data/PageCard';
 
 const ALL_TABS = [
   { id: 'alerts', icon: Bell01 },
@@ -100,7 +101,7 @@ export function PreferencesPage() {
             <p>{copy.tabs[active.id].subtitle}</p>
           </div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           <TabbedPanel
             tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id].label, icon: t.icon }))}
             selected={active.id}
@@ -209,7 +210,7 @@ export function PreferencesPage() {
               </div>
             </div>
           </TabbedPanel>
-        </div>
+        </PageCard>
       </div>
     </>
   );

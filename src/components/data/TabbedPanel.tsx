@@ -33,7 +33,7 @@ interface Props {
 /**
  * THE tabbed area of the app: an underline tab bar and the content of the chosen tab, wired together as the ARIA tab pattern asks (each tab controls a real tab panel), with the gliding
  * line under the tabs and the fade of the new content. Pages say WHICH tabs there are and render the content of the chosen one as `children`; they carry no tab or animation code.
- * It fills the page card it is placed in (`.builder`); the first child of the card.
+ * It fills the page card it is placed in (`PageCard`); the first child of the card.
  */
 export function TabbedPanel({
   tabs,

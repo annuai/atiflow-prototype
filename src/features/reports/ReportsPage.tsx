@@ -20,6 +20,7 @@ import { reportSource } from './data/source';
 import { useReport } from './data/useReport';
 import { moves, summary } from './model/derive';
 import type { MetricId, RangeSelection } from './model/types';
+import { PageCard } from '@/components/data/PageCard';
 
 /**
  * Supervisor Reports: how the fleet performed over a period, nothing about single robots (that is the Live Floor's job). The verdict first, the five KPIs that matter,
@@ -58,7 +59,7 @@ export function ReportsPage() {
             </Button>
           </div>
         </div>
-        <div className="builder md-card">
+        <PageCard>
           <div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
             <RangeBar value={range} onChange={setRange} generatedAt={report?.generatedAt ?? null} />
             {(materialsRelevant || many) && (
@@ -112,7 +113,7 @@ export function ReportsPage() {
               <p className="text-center text-xs text-tertiary">{copy.sample}</p>
             )}
           </div>
-        </div>
+        </PageCard>
       </div>
     </>
   );
