@@ -27,7 +27,7 @@ import { chooseFleet, visibleFleetIds } from './defaultFleet';
 import { showFor } from './world/scenes';
 import { locateTarget, locateWhenKnown, takePendingLocate } from '@/ui/locate';
 import { copy } from '@/ui/copy';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardHeader, PageHeader } from '@/components/page';
 
 /** Supervisor home: the 3D live floor. Content only; chrome comes from AppShell. */
 export function LiveFloorPage() {
@@ -150,13 +150,8 @@ export function LiveFloorPage() {
   const canConfigure = useAccess().can('configurator.fleets');
   if (noGl)
     return (
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{copy.page.title}</h1>
-            <p>{copy.page.subtitle}</p>
-          </div>
-        </div>
+      <Page>
+        <PageHeader title={copy.page.title} subtitle={copy.page.subtitle} />
         <PageCard>
           <EmptyState
             icon={Cube01}
@@ -165,21 +160,14 @@ export function LiveFloorPage() {
             subtext={localized('common').noWebgl.body}
           />
         </PageCard>
-      </div>
+      </Page>
     );
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{copy.page.title}</h1>
-            <p>{copy.page.subtitle}</p>
-          </div>
-          {/* Header action slot (top-right of the title block, same row as "Live Floor"). Empty on purpose: Replay + Dispatch Task were removed. See CLAUDE.md section 13. */}
-          <div className="actions" />
-        </div>
+      <Page>
+        <PageHeader title={copy.page.title} subtitle={copy.page.subtitle} />
         <PageCard>
-          <div className="bh">
+          <PageCardHeader>
             <span className="ic">▦</span>
             <h2>{copy.page.liveView}</h2>
             <div style={{ flex: 1 }} />
@@ -194,7 +182,7 @@ export function LiveFloorPage() {
                 />
               </>
             )}
-          </div>
+          </PageCardHeader>
           <div className={'canvas' + ((sel && robotPanelOpen) || selStation ? ' has-sel' : '')}>
             <div className="gl" ref={holder} />
             {loadPhase !== 'ready' && (loadPhase === 'skeleton' ? <LiveFloorSkeleton /> : <div className="loading" />)}
@@ -234,7 +222,7 @@ export function LiveFloorPage() {
             <ZoomControl pct={view.zoomPct} />
           </div>
         </PageCard>
-      </div>
+      </Page>
     </>
   );
 }

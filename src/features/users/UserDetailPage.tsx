@@ -31,7 +31,7 @@ import { copy } from './copy';
 import { validateBasics } from './model/validate';
 import { localized } from '@/i18n';
 import { PageTitleName } from '@/shell/PageTitle';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageHeader, PageSubtitle, PageTitle } from '@/components/page';
 
 const misc = localized('misc');
 
@@ -112,35 +112,39 @@ export function UserDetailPage() {
   return (
     <>
       <PageTitleName name={user.name} />
-      <div className="content">
-        <div className="title-block">
-          <div className="flex items-center gap-3">
-            <UserAvatar user={user} size="lg" />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <h1>{user.name}</h1>
-                <RoleBadge role={user.role} />
-                {isCustomised(profile) && (
-                  <Badge size="md" type="pill-color" color="warning">
-                    {copy.perms.customised}
-                  </Badge>
-                )}
+      <Page>
+        <PageHeader
+          heading={
+            <div className="flex items-center gap-3">
+              <UserAvatar user={user} size="lg" />
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <PageTitle>{user.name}</PageTitle>
+                  <RoleBadge role={user.role} />
+                  {isCustomised(profile) && (
+                    <Badge size="md" type="pill-color" color="warning">
+                      {copy.perms.customised}
+                    </Badge>
+                  )}
+                </div>
+                <PageSubtitle>{user.username}</PageSubtitle>
               </div>
-              <p>{user.username}</p>
             </div>
-          </div>
-          <div className="actions">
-            <Button
-              size="sm"
-              color="primary-destructive"
-              iconLeading={Trash01}
-              isDisabled={!canDeleteUser(actor, user)}
-              onPress={() => setDeleting(true)}
-            >
-              {copy.detail.delete}
-            </Button>
-          </div>
-        </div>
+          }
+          actions={
+            <>
+              <Button
+                size="sm"
+                color="primary-destructive"
+                iconLeading={Trash01}
+                isDisabled={!canDeleteUser(actor, user)}
+                onPress={() => setDeleting(true)}
+              >
+                {copy.detail.delete}
+              </Button>
+            </>
+          }
+        />
         <PageCard>
           <div className="dv-scroll grid content-start gap-8 p-5 sm:p-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
             <section className="flex flex-col gap-4" aria-label={copy.detail.basic}>
@@ -271,7 +275,7 @@ export function UserDetailPage() {
             </section>
           </div>
         </PageCard>
-      </div>
+      </Page>
       <ResetPasswordDialog username={user.username} name={user.name} isOpen={resetting} onOpenChange={setResetting} />
       <ConfirmDialog
         isOpen={deleting}

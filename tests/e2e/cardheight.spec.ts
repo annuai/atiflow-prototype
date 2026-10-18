@@ -63,8 +63,13 @@ test('every page card has the same corner, border and room below it', async ({ p
     seen[path] = await card.evaluate((e) => {
       const b = e.getBoundingClientRect();
       const c = getComputedStyle(e);
-      return `${c.borderTopLeftRadius} ${c.borderTopWidth} ${c.boxShadow !== 'none'} gap ${Math.round(window.innerHeight - b.bottom)}`;
+      const h = document.querySelector('[data-page-header]');
+      const hb = h?.getBoundingClientRect();
+      return `${c.borderTopLeftRadius} ${c.borderTopWidth} ${c.boxShadow !== 'none'} gap ${Math.round(window.innerHeight - b.bottom)} title ${hb ? `${Math.round(hb.top)}/${Math.round(hb.height)}` : 'none'}`;
     });
   }
-  expect(new Set(Object.values(seen)).size, JSON.stringify(seen, null, 1)).toBe(1);
+  const part = (re: RegExp) => Object.values(seen).map((v) => v.replace(re, '').trim());
+  expect(new Set(part(/ title .*/)).size, JSON.stringify(seen, null, 1)).toBe(1); // corner, border, shadow, gap
+  const titles = Object.values(seen).filter((v) => !v.endsWith('title none'));
+  expect(new Set(titles.map((v) => v.replace(/.* title /, ''))).size, JSON.stringify(seen, null, 1)).toBe(1); // title row: same place and height
 });

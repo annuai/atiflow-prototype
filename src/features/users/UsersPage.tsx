@@ -14,7 +14,7 @@ import { RoleBadge } from './components/RoleBadge';
 import { UserAvatar } from './components/UserAvatar';
 import { copy } from './copy';
 import { localized } from '@/i18n';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageHeader } from '@/components/page';
 
 const misc = localized('misc');
 
@@ -60,37 +60,37 @@ export function UsersPage() {
   ];
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{copy.title}</h1>
-            <p>{copy.subtitle}</p>
-          </div>
-          <div className="actions">
-            {searching && (
-              <Input
-                size="sm"
-                aria-label={misc.userForm.searchUsers}
-                placeholder={copy.search}
-                value={q}
-                onChange={setQ}
-                autoFocus
-                wrapperClassName="dv-search"
+      <Page>
+        <PageHeader
+          title={copy.title}
+          subtitle={copy.subtitle}
+          actions={
+            <>
+              {searching && (
+                <Input
+                  size="sm"
+                  aria-label={misc.userForm.searchUsers}
+                  placeholder={copy.search}
+                  value={q}
+                  onChange={setQ}
+                  autoFocus
+                  wrapperClassName="dv-search"
+                />
+              )}
+              <SearchToggle
+                label={misc.userForm.search}
+                active={searching}
+                onToggle={() => {
+                  setSearching((s) => !s);
+                  setQ('');
+                }}
               />
-            )}
-            <SearchToggle
-              label={misc.userForm.search}
-              active={searching}
-              onToggle={() => {
-                setSearching((s) => !s);
-                setQ('');
-              }}
-            />
-            <Button size="sm" color="primary" iconLeading={Plus} onPress={() => setAdding(true)}>
-              {copy.add}
-            </Button>
-          </div>
-        </div>
+              <Button size="sm" color="primary" iconLeading={Plus} onPress={() => setAdding(true)}>
+                {copy.add}
+              </Button>
+            </>
+          }
+        />
         <PageCard>
           {rows.length === 0 ? (
             <NoResults subtext={copy.none(q)} className="m-auto" />
@@ -106,7 +106,7 @@ export function UsersPage() {
             </div>
           )}
         </PageCard>
-      </div>
+      </Page>
       <AddUserModal isOpen={adding} onOpenChange={setAdding} />
     </>
   );

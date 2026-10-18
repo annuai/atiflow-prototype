@@ -1,12 +1,13 @@
 import { insights } from '../insightsCopy';
 import type { RangeSelection, ResolvedRange } from './types';
+import { formatDate } from '@/i18n';
 
 const DAY = 86_400_000;
 export const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 const dayCount = (from: Date, to: Date) =>
   Math.max(1, Math.round((startOfDay(to).getTime() - startOfDay(from).getTime()) / DAY) + 1);
-const short = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+const short = (d: Date) => formatDate(d, 'day', { deviceZone: true });
 
 /** Turns what the user picked into calendar days plus the words used for it ("Last 7 days", "previous 7 days"). A custom range without dates falls back to the last 7 days. */
 export function resolveRange(sel: RangeSelection, now: Date = new Date()): ResolvedRange {

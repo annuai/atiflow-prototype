@@ -12,7 +12,7 @@ import { ImportMapModal } from './components/ImportMapModal';
 import { MapCard } from './components/MapCard';
 import { fleetsByMap, filterSortMaps, type MapSort } from './model/logic';
 import { useMaps } from './model/maps';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
 
 /** Maps: the maps that are part of the system (none invented), with search and sort. Create New Map / Import open their dialogs; an empty system asks to create the first map. */
 export function MapsPage() {
@@ -38,17 +38,11 @@ export function MapsPage() {
   );
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{copy.title}</h1>
-            <p>{copy.subtitle}</p>
-          </div>
-          <div className="actions">{actions()}</div>
-        </div>
+      <Page>
+        <PageHeader title={copy.title} subtitle={copy.subtitle} actions={<>{actions()}</>} />
         <PageCard>
           {maps.length === 0 ? (
-            <div className="md-body grid place-items-center">
+            <PageCardBody className="grid place-items-center">
               <EmptyState
                 icon={Map01}
                 size="lg"
@@ -65,9 +59,9 @@ export function MapsPage() {
                   </>
                 }
               />
-            </div>
+            </PageCardBody>
           ) : (
-            <div className="md-body">
+            <PageCardBody>
               <div className="flex flex-wrap gap-3">
                 <Input
                   className="min-w-60 flex-1"
@@ -102,10 +96,10 @@ export function MapsPage() {
                   ))}
                 </div>
               )}
-            </div>
+            </PageCardBody>
           )}
         </PageCard>
-      </div>
+      </Page>
       <GenerateMapModal isOpen={generating} onOpenChange={setGenerating} />
       <ImportMapModal isOpen={importing} onOpenChange={setImporting} />
     </>

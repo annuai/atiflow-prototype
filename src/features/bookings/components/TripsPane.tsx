@@ -21,6 +21,7 @@ import { copy } from '../copy';
 import { useBookingsRunning } from '../model/bridge';
 import { bookingError } from '../model/rules';
 import { bookingsStore } from '../model/store';
+import { PageCardBody } from '@/components/page';
 
 /**
  * Book Trips (a tab of the operator's Book trip page, the only content for fleets without material): saved routes first, and a custom trip: choose the robot to call, then the start and end station, from the lists or by tapping them on the map, and book. No material, no approval and no stops:
@@ -121,7 +122,7 @@ export function TripsPane() {
           }}
         />
       ) : (
-        <div className="md-body !gap-4">
+        <PageCardBody>
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-medium text-tertiary" aria-live="polite">
               {copy.book.stepOf(step, 2)}
@@ -177,7 +178,7 @@ export function TripsPane() {
               onSubmit={() => setConfirmCustom(true)}
             />
           )}
-        </div>
+        </PageCardBody>
       )}
       <CustomCallSheet
         isOpen={confirmCustom}

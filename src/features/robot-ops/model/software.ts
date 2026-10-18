@@ -1,5 +1,4 @@
-import { getLocale } from '@/i18n';
-import { LANGUAGES } from '@/i18n/languages';
+import { formatDate } from '@/i18n';
 import { ins } from '../labels';
 import type { SoftwareStatus } from './types';
 
@@ -23,17 +22,11 @@ export function compareVersions(a: string, b: string): number {
 export const updateAvailable = (s: Pick<SoftwareStatus, 'installed' | 'latest'>) =>
   s.installed === null || compareVersions(s.installed, s.latest) < 0;
 
-/** English keeps the US style ("Sep 15, 2026"); the other languages use their own locale. */
-const intl = () => (getLocale() === 'en' ? 'en-US' : (LANGUAGES.find((l) => l.id === getLocale())?.intl ?? 'en-US'));
-const DATE = () => new Intl.DateTimeFormat(intl(), { month: 'short', day: 'numeric', year: 'numeric' });
-const TIME = () => new Intl.DateTimeFormat(intl(), { hour: 'numeric', minute: '2-digit' });
 const sameDay = (a: number, b: number) => new Date(a).toDateString() === new Date(b).toDateString();
-/** "Sep 15, 2026". */
-export const formatDate = (at: number) => DATE().format(at);
 /** "Today, 10:15 AM", "Yesterday, 4:02 PM", otherwise the date; "Never" when null. */
 export function formatCheck(at: number | null, now: number): string {
   if (at === null) return ins.time.never;
-  if (sameDay(at, now)) return ins.time.today(TIME().format(at));
-  if (sameDay(at, now - 86_400_000)) return ins.time.yesterday(TIME().format(at));
-  return formatDate(at);
+  if (sameDay(at, now)) return ins.time.today(formatDate(at, 'time'));
+  if (sameDay(at, now - 86_400_000)) return ins.time.yesterday(formatDate(at, 'time'));
+  return formatDate(at, 'date');
 }

@@ -21,7 +21,7 @@ for (const [user, path] of pages)
     await page.goto(path);
     await page.waitForTimeout(1200);
     const gaps = await page.evaluate(() =>
-      ([...document.querySelectorAll('.md-body, [data-testid=device-detail]')] as HTMLElement[]).map((b) => {
+      ([...document.querySelectorAll('[data-card-body], [data-testid=device-detail]')] as HTMLElement[]).map((b) => {
         b.scrollTop = b.scrollHeight;
         const low = Math.max(
           ...[...b.querySelectorAll('*')]

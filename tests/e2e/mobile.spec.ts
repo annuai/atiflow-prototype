@@ -47,10 +47,10 @@ test.describe('configurator on a phone', () => {
   test('the fleets page and a fleet fit the screen, and the fleet tabs swipe', async ({ page }) => {
     await page.goto('/configurator/fleets');
     await expect(page.getByRole('heading', { name: 'Line Side Fleet' })).toBeVisible();
-    expect((await sticksOut(page, '.content')).bad).toEqual([]);
+    expect((await sticksOut(page, '[data-page]')).bad).toEqual([]);
     await page.goto('/configurator/fleets/Line%20Side%20Fleet/overview');
     await expect(page.getByRole('heading', { name: 'Assigned map' })).toBeVisible();
-    const r = await sticksOut(page, '.content');
+    const r = await sticksOut(page, '[data-page]');
     expect(r.bad).toEqual([]);
     expect(r.page).toBeLessThanOrEqual(0);
     const tabs = page.locator('[data-tab-scroller]').first();
@@ -110,7 +110,7 @@ test('on a phone the gap after the last control in a card header is the gap abov
   await page.goto('/configurator');
   await page.waitForURL(/\/configurator\/workflows\//);
   const g = await page
-    .locator('.bh')
+    .locator('[data-card-header]')
     .first()
     .evaluate((bar) => {
       const b = bar.getBoundingClientRect();

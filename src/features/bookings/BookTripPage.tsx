@@ -3,7 +3,7 @@ import { SegmentedTabs } from '@/components/data/SegmentedTabs';
 import { RequestMaterialPane, useRequestableItems } from '@/features/request-material';
 import { TripsPane } from './components/TripsPane';
 import { copy } from './copy';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardBar, PageHeader } from '@/components/page';
 
 type Tab = 'request' | 'trips';
 
@@ -17,16 +17,11 @@ export function BookTripPage() {
   const tab: Tab = canRequest && params.get('tab') !== 'trips' ? 'request' : 'trips';
   const setTab = (t: Tab) => setParams(t === 'trips' ? { tab: 'trips' } : {}, { replace: true });
   return (
-    <div className="content">
-      <div className="title-block">
-        <div>
-          <h1>{copy.book.title}</h1>
-          <p>{canRequest ? copy.book.subtitleBoth : copy.book.subtitle}</p>
-        </div>
-      </div>
+    <Page>
+      <PageHeader title={copy.book.title} subtitle={canRequest ? copy.book.subtitleBoth : copy.book.subtitle} />
       <PageCard>
         {canRequest && (
-          <div className="md-bar">
+          <PageCardBar>
             <SegmentedTabs<Tab>
               size="lg"
               value={tab}
@@ -37,10 +32,10 @@ export function BookTripPage() {
                 { id: 'trips', label: copy.book.tabs.trips },
               ]}
             />
-          </div>
+          </PageCardBar>
         )}
         {tab === 'request' ? <RequestMaterialPane /> : <TripsPane />}
       </PageCard>
-    </div>
+    </Page>
   );
 }

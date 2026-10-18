@@ -43,7 +43,7 @@ import { importedSite } from './model/importedSite';
 import { seedMapData } from './model/seed';
 import { useSimulationPanel } from './sim/useSimulationPanel';
 import { PageTitleName } from '@/shell/PageTitle';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard } from '@/components/page';
 
 /**
  * The Map Editor (`/configurator/maps/:id`). A published version can only be looked at; "Edit as draft" makes the one draft, saved as you edit and turned into the next version by Publish.
@@ -187,7 +187,7 @@ export function MapEditorPage() {
   if (!map) return <Navigate to="/configurator/maps" replace />;
   if (!site || !data || !current)
     return (
-      <div className="content">
+      <Page>
         <PageCard>
           <div className="flex flex-col gap-3 p-4" role="status" aria-label="Loading the map">
             <Skeleton className="h-8 w-72" />
@@ -195,7 +195,7 @@ export function MapEditorPage() {
             <Skeleton className="h-[420px] w-full" />
           </div>
         </PageCard>
-      </div>
+      </Page>
     );
   const state = isDraft
     ? { label: copy.draft, color: 'warning' as const }
@@ -254,7 +254,7 @@ export function MapEditorPage() {
   };
   const editable = !!isDraft && mode === 'design';
   return (
-    <div className="content map-editor">
+    <Page className="map-editor">
       <PageTitleName name={map.name} />
       <PageCard>
         <EditorHeader
@@ -397,6 +397,6 @@ export function MapEditorPage() {
         confirmLabel={copy.banner.update(latest?.number ?? 0)}
         onConfirm={() => latest?.number && restore(latest.number)}
       />
-    </div>
+    </Page>
   );
 }

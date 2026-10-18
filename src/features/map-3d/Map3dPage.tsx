@@ -16,7 +16,7 @@ import { Cube01 } from '@untitledui/icons';
 import { copy } from './copy';
 import { DwgPanel } from './DwgPanel';
 import { navOf, siteOf, type WallSource } from './siteOf';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard } from '@/components/page';
 
 /**
  * A map in 3D (`/configurator/maps/:id/3d`): the walls and machines estimated from the lidar grid, or the client's DWG laid over it. The same 3D scene as the Live Floor, with its lane map and
@@ -63,7 +63,7 @@ export function Map3dPage() {
   if (!map) return <Navigate to="/configurator/maps" replace />;
   if (noGl)
     return (
-      <div className="content">
+      <Page>
         <PageCard>
           <EmptyState
             icon={Cube01}
@@ -71,20 +71,20 @@ export function Map3dPage() {
             subtext={localized('common').noWebgl.body}
           />
         </PageCard>
-      </div>
+      </Page>
     );
   if (!data)
     return (
-      <div className="content">
+      <Page>
         <PageCard className="p-4">
           <Skeleton className="h-[420px] w-full" />
         </PageCard>
-      </div>
+      </Page>
     );
   const canEdit = draft !== undefined;
   const hasDwg = !!data.dwg;
   return (
-    <div className="content">
+    <Page>
       <PageCard>
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-secondary px-4 py-2">
           <div className="flex items-center gap-3">
@@ -154,6 +154,6 @@ export function Map3dPage() {
           </aside>
         </div>
       </PageCard>
-    </div>
+    </Page>
   );
 }

@@ -20,7 +20,8 @@ import { timeAgo } from '@/utils/timeAgo';
 import { HistoryDetail } from './HistoryDetail';
 import { t } from './text';
 import { historyEntries, type HistoryKind } from './entries';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
+import { formatDate } from '@/i18n';
 
 type Filter = 'all' | HistoryKind;
 const KIND_COLOR = { request: 'brand', approval: 'warning', trip: 'blue' } as const;
@@ -51,15 +52,10 @@ export function OperatorHistoryPage() {
   const count = (k: Filter) => (k === 'all' ? all.length : all.filter((e) => e.kind === k).length);
   const h = copy.history;
   return (
-    <div className="content">
-      <div className="title-block">
-        <div>
-          <h1>{h.title}</h1>
-          <p>{h.subtitle}</p>
-        </div>
-      </div>
+    <Page>
+      <PageHeader title={h.title} subtitle={h.subtitle} />
       <PageCard>
-        <div className="md-body !gap-4">
+        <PageCardBody>
           <div className="shrink-0">
             <SegmentedTabs<Filter>
               size="lg"
@@ -85,12 +81,7 @@ export function OperatorHistoryPage() {
                 {shown.slice(0, 200).map((e) => {
                   const trip = e.bookingId ? trips.find((t) => t.id === e.bookingId) : undefined;
                   const req = e.requestId ? requests.find((r) => r.id === e.requestId) : undefined;
-                  const when = new Date(e.at).toLocaleString([], {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  });
+                  const when = formatDate(e.at, 'dateTime');
                   return (
                     <li
                       key={e.key}
@@ -139,7 +130,7 @@ export function OperatorHistoryPage() {
               </ul>
             )}
           </TabPanelMotion>
-        </div>
+        </PageCardBody>
       </PageCard>
       {(() => {
         const e = all.find((x) => x.key === opened);
@@ -153,6 +144,6 @@ export function OperatorHistoryPage() {
         );
       })()}
       <RequestCancelDialog request={cancelling} who={me} onClose={() => setCancelling(null)} />
-    </div>
+    </Page>
   );
 }

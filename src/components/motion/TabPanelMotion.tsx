@@ -15,7 +15,7 @@ export function TabPanelMotion({
 }: {
   tabKey: string;
   className?: string;
-  /** the panel fills a page card's scroll body and lays its children out in a column, as the card body does (`.md-body`) */
+  /** the panel fills a page card's scroll body and lays its children out in a column, as the card body does (`PageCardBody`) */
   fill?: boolean;
   children: ReactNode;
 }) {

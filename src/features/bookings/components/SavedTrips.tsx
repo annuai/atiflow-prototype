@@ -12,6 +12,7 @@ import { copy } from '../copy';
 import { isFreeRobot } from '../model/free';
 import { CallSheet } from './CallSheet';
 import { RouteCard } from './RouteCard';
+import { PageCardBody } from '@/components/page';
 
 type MapData = { nav: { stations: { id: string; name: string }[] } } | null;
 
@@ -58,7 +59,7 @@ export function SavedTrips({
   };
   return (
     <>
-      <div className="md-body !gap-4">
+      <PageCardBody>
         <section aria-label={copy.routes.title} className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -116,7 +117,7 @@ export function SavedTrips({
             </button>
           </div>
         </section>
-      </div>
+      </PageCardBody>
       {chosenRoutes.length > 0 && (
         <div className="flex items-center justify-between gap-3 border-t border-secondary bg-primary px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
           <p className="text-md font-semibold text-primary">

@@ -16,7 +16,7 @@ import { OverviewPanel } from './components/OverviewPanel';
 import { useMaps } from '@/features/maps';
 import { profileOf, useFleets } from './model/store';
 import { fleetPath } from './paths';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
 
 /**
  * `/configurator/fleets`: every fleet at a glance. Robots that belong to no fleet first, then one expandable row per fleet (map, version, counts); opening a row shows the same
@@ -43,29 +43,29 @@ export function FleetsIndexPage() {
   const expanded = open ?? rows[0]?.f.name ?? null; // the first fleet is open until the person opens another
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{copy.index.title}</h1>
-            <p>{copy.index.subtitle}</p>
-          </div>
-          <div className="actions">
-            <SearchToggle
-              size="md"
-              label={copy.index.search}
-              active={searching}
-              onToggle={() => {
-                setSearching((s) => !s);
-                if (searching) setQuery('');
-              }}
-            />
-            <Button size="md" color="secondary" iconLeading={Dataflow03} onPress={() => setMaking(true)}>
-              {copy.index.make}
-            </Button>
-          </div>
-        </div>
+      <Page>
+        <PageHeader
+          title={copy.index.title}
+          subtitle={copy.index.subtitle}
+          actions={
+            <>
+              <SearchToggle
+                size="md"
+                label={copy.index.search}
+                active={searching}
+                onToggle={() => {
+                  setSearching((s) => !s);
+                  if (searching) setQuery('');
+                }}
+              />
+              <Button size="md" color="secondary" iconLeading={Dataflow03} onPress={() => setMaking(true)}>
+                {copy.index.make}
+              </Button>
+            </>
+          }
+        />
         <PageCard>
-          <div className="md-body">
+          <PageCardBody>
             <div className="flex flex-col gap-8">
               {searching && (
                 <Input
@@ -138,9 +138,9 @@ export function FleetsIndexPage() {
                 )}
               </section>
             </div>
-          </div>
+          </PageCardBody>
         </PageCard>
-      </div>
+      </Page>
       <MakeFleetModal isOpen={making} onOpenChange={setMaking} />
     </>
   );

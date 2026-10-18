@@ -25,7 +25,7 @@ import { t } from './text';
 import { firstName, greeting } from './data/greeting';
 import { createLiveSource, useDashboard } from './data/source';
 import { TvScreen } from './tv/TvScreen';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
 
 /**
  * The supervisor dashboard: "do I need to do anything?" first (status strip, needs attention), then the fleets, the floor and the activity. Every number comes from `useDashboard()`;
@@ -62,25 +62,28 @@ export function DashboardPage() {
   const help = () => notify.info(copy.attention.helpToast, copy.attention.helpBody, 'call-help'); // placeholder until a notification service exists
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>
+      <Page>
+        <PageHeader
+          title={
+            <>
               {greeting(hour)} {user ? firstName(user.name) : t.page.there}
-            </h1>
-            <p>{copy.subtitle}</p>
-          </div>
-          <div className="actions items-center">
-            <BadgeWithDot size="md" color="success">
-              {copy.live}
-            </BadgeWithDot>
-            <Button size="sm" color="secondary" iconLeading={Monitor01} onPress={() => setTv(true)}>
-              {copy.tv}
-            </Button>
-          </div>
-        </div>
+            </>
+          }
+          subtitle={copy.subtitle}
+          actions={
+            <>
+              <BadgeWithDot size="md" color="success">
+                {copy.live}
+              </BadgeWithDot>
+              <Button size="sm" color="secondary" iconLeading={Monitor01} onPress={() => setTv(true)}>
+                {copy.tv}
+              </Button>
+            </>
+          }
+          actionsClassName="items-center"
+        />
         <PageCard>
-          <div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
+          <PageCardBody spacious className="gap-5">
             {(materialsRelevant || many) && (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {materialsRelevant ? <ViewSwitch value={view} onChange={setView} /> : <span />}
@@ -118,9 +121,9 @@ export function DashboardPage() {
                 <p className="text-center text-xs text-tertiary">{copy.sample}</p>
               </>
             )}
-          </div>
+          </PageCardBody>
         </PageCard>
-      </div>
+      </Page>
       {tv && snap && <TvScreen snap={snap} siteName={site?.name ?? t.page.floorFallback} onExit={exitTv} />}
     </>
   );

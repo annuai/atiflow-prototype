@@ -3,6 +3,7 @@ import { ChartTooltipContent } from '@/components/application/charts/charts-base
 import { insights } from '../insightsCopy';
 import { withUnit, type MetricDef } from '../model/metrics';
 import type { SeriesPoint } from '../model/types';
+import { formatDate } from '@/i18n';
 
 const COLOR = '#14b8a6';
 /** A fleet figure over time (one point per hour for a day, per day for longer periods), with an optional target line (e.g. 85% availability). */
@@ -22,9 +23,7 @@ export function TrendChart({
   const data = points.map((p) => ({ t: p.t, value: p.value }));
   const id = `trend-${metric.id}`;
   const label = (t: number) =>
-    daily
-      ? new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-      : new Date(t).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    daily ? formatDate(t, 'day', { deviceZone: true }) : formatDate(t, 'time', { deviceZone: true });
   return (
     <div
       role="img"

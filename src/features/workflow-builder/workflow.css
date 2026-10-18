@@ -566,21 +566,6 @@ body.wf-dragging * {
   }
 }
 
-.bh h2 {
-  white-space: nowrap;
-}
-@media (max-width: 720px) {
-  .wf-title {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .wf-title .actions {
-    width: 100%;
-  }
-  .wf-title .actions > * {
-    flex: 1;
-  }
-}
 .wf-name {
   overflow: hidden;
   text-overflow: ellipsis;

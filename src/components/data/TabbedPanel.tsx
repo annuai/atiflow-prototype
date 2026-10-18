@@ -1,5 +1,6 @@
 import { useEffect, useRef, type FC, type ReactNode } from 'react';
 import { Tabs } from '@/components/application/tabs/tabs';
+import { CARD_BODY } from '@/components/page';
 import { cx } from '@/utils/cx';
 import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 
@@ -21,7 +22,7 @@ interface Props {
   barClassName?: string;
   /** extra classes of the tab list itself (for example `overflow-x-auto` when there are many tabs) */
   listClassName?: string;
-  /** the element that holds the chosen tab's content (default: the page card's scrolling body, `md-body`) */
+  /** the element that holds the chosen tab's content (default: the page card's scrolling body, `CARD_BODY`) */
   panelClassName?: string;
   /** the wrapper the content fades in inside (default: it fills the body and lays its children out in a column, like the card body does) */
   contentClassName?: string;
@@ -43,7 +44,7 @@ export function TabbedPanel({
   rootClassName = 'min-h-0 flex-1',
   barClassName = 'min-w-0 flex-none px-5 pt-6',
   listClassName,
-  panelClassName = 'md-body',
+  panelClassName = CARD_BODY,
   contentClassName,
   contentKey,
   children,
@@ -73,7 +74,11 @@ export function TabbedPanel({
           items={tabs}
         />
       </div>
-      <Tabs.Panel id={selected} className={panelClassName}>
+      <Tabs.Panel
+        id={selected}
+        className={panelClassName}
+        data-card-body={panelClassName === CARD_BODY ? '' : undefined}
+      >
         <TabPanelMotion tabKey={contentKey ?? selected} fill={!contentClassName} className={contentClassName}>
           {children}
         </TabPanelMotion>

@@ -8,6 +8,7 @@ import type { MaterialStats, Period } from '../model/types';
 import { t } from '../text';
 import { Bars } from './Bars';
 import { minutesText } from './format';
+import { formatDate } from '@/i18n';
 
 /** How a figure moved against the period before. `better` says which direction is good for THIS figure (a falling approval time is green). */
 function Change({
@@ -57,7 +58,7 @@ const KPIS: Def[] = [
   { id: 'approval', value: (s) => s.approvalMin, text: minutesText, better: 'lower' },
 ];
 
-const dayLabel = (d: Date) => d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+const dayLabel = (d: Date) => formatDate(d, 'day', { deviceZone: true });
 const hourLabel = (d: Date) => String(d.getHours()).padStart(2, '0');
 
 /**

@@ -1,4 +1,4 @@
-/* Robots / Hardware pages. Layout reuses .content / .title-block from app.css and the PageCard component; only the few extras live here (prefix dv-). */
+/* Robots / Hardware pages: only the few extras the shared page components do not cover (prefix dv-). */
 .dv-scroll {
   flex: 1;
   min-height: 0;
@@ -6,9 +6,6 @@
 }
 .dv-search {
   width: 220px;
-}
-.dv-detail {
-  padding-top: 12px; /* room above the header band (the other pages' title block has none: it is its own row) */
 }
 @media (max-width: 720px) {
   .dv-search {

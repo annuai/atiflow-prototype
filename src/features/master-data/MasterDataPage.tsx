@@ -4,7 +4,7 @@ import { Rows01, Settings02 } from '@untitledui/icons';
 import { copy } from './copy';
 import { MaterialsPanel } from './components/MaterialsPanel';
 import { StagingAreaPanel } from './components/StagingAreaPanel';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageHeader } from '@/components/page';
 
 /** Top tabs of the page. Add a tab here (+ its panel) and the route, heading and tab bar follow. */
 export const MASTER_DATA_BASE = '/configurator/master-data';
@@ -22,13 +22,8 @@ export function MasterDataPage() {
   if (!active) return <Navigate to={`${MASTER_DATA_BASE}/${TABS[0].id}`} replace />;
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{copy.title}</h1>
-            <p>{copy.tabs[active.id].subtitle}</p>
-          </div>
-        </div>
+      <Page>
+        <PageHeader title={copy.title} subtitle={copy.tabs[active.id].subtitle} />
         <PageCard>
           <TabbedPanel
             tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id].label, icon: t.icon }))}
@@ -39,7 +34,7 @@ export function MasterDataPage() {
             <active.Panel />
           </TabbedPanel>
         </PageCard>
-      </div>
+      </Page>
     </>
   );
 }

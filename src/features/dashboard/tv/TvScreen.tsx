@@ -10,7 +10,7 @@ import { KpiRow } from '../components/KpiRow';
 import { NeedsAttentionCard } from '../components/NeedsAttentionCard';
 import { StatusStrip } from '../components/StatusStrip';
 import { TripsCard } from '../components/TripsCard';
-import { getLocale } from '@/i18n';
+import { formatDate } from '@/i18n';
 
 const DESIGN_W = 1600; // the TV layout is drawn at 1600 px wide and scaled to the screen, so it looks the same on any display
 const noop = () => {};
@@ -19,12 +19,6 @@ const noop = () => {};
  * Wall-display mode: no controls, big type, everything that matters on one screen. It is a full-screen layer over the page (and asks the browser for real full screen);
  * Esc or the corner button leaves. The mouse pointer and the button fade after a few seconds without movement.
  */
-/** Dates and times in the language in use, with Western digits (English keeps the 24-hour British form). */
-const dateLocale = () => {
-  const l = getLocale();
-  return l === 'en' ? 'en-GB' : `${l}-IN-u-nu-latn`;
-};
-
 export function TvScreen({ snap, siteName, onExit }: { snap: DashboardSnapshot; siteName: string; onExit(): void }) {
   const [scale, setScale] = useState(() => window.innerWidth / DESIGN_W);
   const [height, setHeight] = useState(() => window.innerHeight / (window.innerWidth / DESIGN_W));
@@ -73,18 +67,14 @@ export function TvScreen({ snap, siteName, onExit }: { snap: DashboardSnapshot; 
         <header className="flex items-end justify-between">
           <div>
             <h1 className="text-4xl font-bold tracking-tight text-primary">{siteName}</h1>
-            <p className="text-lg text-tertiary">
-              {clock.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
+            <p className="text-lg text-tertiary">{formatDate(clock, 'weekdayDate')}</p>
           </div>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-2 text-lg text-secondary">
               <i className="size-3 animate-pulse rounded-full bg-success-solid" />
               {copy.live}
             </span>
-            <span className="text-5xl font-semibold tabular-nums text-primary">
-              {clock.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })}
-            </span>
+            <span className="text-5xl font-semibold tabular-nums text-primary">{formatDate(clock, 'time')}</span>
           </div>
         </header>
         <StatusStrip status={snap.status} tv />

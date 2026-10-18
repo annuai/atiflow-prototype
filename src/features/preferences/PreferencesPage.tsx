@@ -23,7 +23,7 @@ import {
   validatePreferences,
 } from './model/defaults';
 import type { Preferences } from './model/types';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageHeader } from '@/components/page';
 
 const ALL_TABS = [
   { id: 'alerts', icon: Bell01 },
@@ -94,13 +94,8 @@ export function PreferencesPage() {
   );
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{copy.title}</h1>
-            <p>{copy.tabs[active.id].subtitle}</p>
-          </div>
-        </div>
+      <Page>
+        <PageHeader title={copy.title} subtitle={copy.tabs[active.id].subtitle} />
         <PageCard>
           <TabbedPanel
             tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id].label, icon: t.icon }))}
@@ -211,7 +206,7 @@ export function PreferencesPage() {
             </div>
           </TabbedPanel>
         </PageCard>
-      </div>
+      </Page>
     </>
   );
 }

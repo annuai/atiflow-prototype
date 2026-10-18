@@ -20,7 +20,7 @@ import { TypeTabs } from './TypeTabs';
 import { useCommands } from './useCommands';
 import { useQueryState } from './useQueryState';
 import { useSearch } from './useSearch';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
 
 const PAGE = 20;
 
@@ -221,16 +221,11 @@ export function SearchPage() {
     go(a?.url ?? r.url);
   };
   return (
-    <div className="content">
+    <Page>
       <PageTitleName name={copy.ui.pageTitle} />
-      <div className="title-block">
-        <div>
-          <h1>{copy.ui.pageTitle}</h1>
-          <p>{q ? copy.ui.pageFor(q) : copy.ui.pageSubtitle}</p>
-        </div>
-      </div>
+      <PageHeader title={copy.ui.pageTitle} subtitle={q ? copy.ui.pageFor(q) : copy.ui.pageSubtitle} />
       <PageCard>
-        <div className="md-body !gap-4">
+        <PageCardBody>
           <QueryBox key={q} q={q} simple={simple} onSubmit={(text) => set({ q: text || null, type: null })} />
           <Controls
             q={q}
@@ -276,9 +271,9 @@ export function SearchPage() {
               onAction={run}
             />
           )}
-        </div>
+        </PageCardBody>
       </PageCard>
       {dialogs}
-    </div>
+    </Page>
   );
 }

@@ -1,4 +1,5 @@
 import { ClockRewind, Cube01, Download01, Map01, ReverseLeft, ReverseRight, Rocket01 } from '@untitledui/icons';
+import { PageCardHeader } from '@/components/page';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
@@ -49,7 +50,7 @@ export function EditorHeader({
   onExport?(): void;
 }) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-secondary py-(--bar-inset) pr-(--bar-inset) pl-4">
+    <PageCardHeader className="flex-wrap justify-between gap-3">
       <div className="flex min-w-0 items-center gap-3">
         <span className="flex shrink-0 items-center gap-2 text-sm font-semibold text-primary">
           <Map01 className="size-4" />
@@ -144,6 +145,6 @@ export function EditorHeader({
           </Button>
         )}
       </div>
-    </header>
+    </PageCardHeader>
   );
 }

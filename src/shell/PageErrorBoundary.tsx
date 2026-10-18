@@ -3,6 +3,7 @@ import { AlertCircle } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { reportError } from '@/platform';
 import { copy } from './copy';
+import { Page } from '@/components/page';
 
 /** A page that fails to draw must not leave a blank screen: say so, and offer to try again. (Keyed by the page, so moving to another page starts fresh.) */
 export class PageErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -16,7 +17,7 @@ export class PageErrorBoundary extends Component<{ children: ReactNode }, { fail
   render() {
     if (!this.state.failed) return this.props.children;
     return (
-      <div className="content grid place-items-center">
+      <Page className="grid place-items-center">
         <div className="flex max-w-sm flex-col items-center gap-3 text-center">
           <span className="grid size-12 place-items-center rounded-full bg-error-secondary text-fg-error-primary">
             <AlertCircle className="size-6" />
@@ -27,7 +28,7 @@ export class PageErrorBoundary extends Component<{ children: ReactNode }, { fail
             {copy.tryAgain}
           </Button>
         </div>
-      </div>
+      </Page>
     );
   }
 }

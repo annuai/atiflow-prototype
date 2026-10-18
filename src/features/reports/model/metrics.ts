@@ -1,5 +1,6 @@
 import { insights } from '../insightsCopy';
 import type { GroupId, MetricId } from './types';
+import { formatNumber } from '@/i18n';
 
 /**
  * THE catalog of report metrics. Everything the page says about a metric comes from here: its name, unit, group, whether a higher or lower value is
@@ -121,7 +122,4 @@ export const TREND_METRICS: MetricId[] = ['utilisation', 'throughput', 'deadlock
 /** A value with its unit: `78%`, `4.4 min`. */
 export const withUnit = (m: MetricDef, v: number | null) =>
   v === null ? '–' : m.unit === '%' ? `${formatMetric(m, v)}%` : `${formatMetric(m, v)}${m.unit ? ' ' + m.unit : ''}`;
-export const formatMetric = (m: MetricDef, v: number | null) =>
-  v === null
-    ? '–'
-    : v.toLocaleString(undefined, { minimumFractionDigits: m.decimals, maximumFractionDigits: m.decimals });
+export const formatMetric = (m: MetricDef, v: number | null) => (v === null ? '–' : formatNumber(v, m.decimals));

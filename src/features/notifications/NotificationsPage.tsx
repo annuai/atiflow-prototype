@@ -12,7 +12,7 @@ import { NotificationItem } from './components/NotificationItem';
 import { copy } from './copy';
 import { useNotificationStore, useWorkspaceNotifications } from './NotificationsProvider';
 import type { Audience, NotificationAction } from './types';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
 
 type Tab = 'all' | 'unread';
 /** One page for every user (`/supervisor/notifications`, `/configurator/notifications`). What it lists depends on the signed-in user: each workspace has its own sources (see `sources.ts`). */
@@ -44,29 +44,30 @@ export function NotificationsPage() {
           : navigate(LIVE_FLOOR_PATH, a.kind === 'locate' ? { state: { locate: a.robotId } } : undefined); // operators have no Live Floor: their alerts open the Action Center
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{copy.title}</h1>
-            <p>{copy.subtitle[role]}</p>
-          </div>
-          <div className="actions items-center">
-            <SegmentedTabs<Tab>
-              value={tab}
-              onChange={setTab}
-              label={localized('insights').notifications.ui.show}
-              items={[
-                { id: 'all', label: copy.all },
-                { id: 'unread', label: copy.unread(unread) },
-              ]}
-            />
-            <Button size="sm" color="secondary" isDisabled={!unread} onPress={() => st.markAllRead(role)}>
-              {copy.markAll}
-            </Button>
-          </div>
-        </div>
+      <Page>
+        <PageHeader
+          title={copy.title}
+          subtitle={copy.subtitle[role]}
+          actions={
+            <>
+              <SegmentedTabs<Tab>
+                value={tab}
+                onChange={setTab}
+                label={localized('insights').notifications.ui.show}
+                items={[
+                  { id: 'all', label: copy.all },
+                  { id: 'unread', label: copy.unread(unread) },
+                ]}
+              />
+              <Button size="sm" color="secondary" isDisabled={!unread} onPress={() => st.markAllRead(role)}>
+                {copy.markAll}
+              </Button>
+            </>
+          }
+          actionsClassName="items-center"
+        />
         <PageCard>
-          <div className="md-body flex flex-col gap-3 !px-5 !py-5 sm:!px-6">
+          <PageCardBody spacious className="gap-3">
             <TabPanelMotion tabKey={tab} className="flex flex-col gap-3">
               {!shown.length ? (
                 <EmptyState
@@ -92,9 +93,9 @@ export function NotificationsPage() {
                 </ul>
               )}
             </TabPanelMotion>
-          </div>
+          </PageCardBody>
         </PageCard>
-      </div>
+      </Page>
     </>
   );
 }

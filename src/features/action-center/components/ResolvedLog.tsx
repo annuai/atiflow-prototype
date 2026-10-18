@@ -2,12 +2,11 @@ import { Badge } from '@/components/base/badges/badges';
 import { DataTable, type Column } from '@/components/data/DataTable';
 import { FleetName } from '@/features/auth';
 import { fmtDuration } from '@/features/dashboard';
-import { localized } from '@/i18n';
+import { formatDate, localized } from '@/i18n';
 import { copy } from '../copy';
 import type { Call } from '../model/types';
 
-const when = (t: number) =>
-  new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+const when = (t: number) => formatDate(t, 'dateTime');
 const waited = (c: Call) => (c.resolvedAt ? Math.round((c.resolvedAt - c.openedAt) / 1000) : 0);
 const columns = (): Column<Call>[] => [
   {

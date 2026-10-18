@@ -22,7 +22,7 @@ import { useLoadPhase } from '@/components/skeleton/Skeleton';
 import { useCalls } from './data/useCalls';
 import { logToCsv } from './model/engine';
 import type { Call } from './model/types';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
 
 type Tab = 'open' | 'mine' | 'log';
 const download = (name: string, text: string) => {
@@ -75,22 +75,23 @@ export function ActionCenterPage() {
   const empty = tab === 'mine' ? [copy.empty.mine, copy.empty.mineHint] : [copy.empty.open, copy.empty.openHint];
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{copy.title}</h1>
-            <p>{copy.subtitle}</p>
-          </div>
-          <div className="actions items-center">
-            {tab === 'log' && (
-              <Button size="sm" color="secondary" iconLeading={Download01} onPress={exportLog}>
-                {copy.log.export}
-              </Button>
-            )}
-          </div>
-        </div>
+      <Page>
+        <PageHeader
+          title={copy.title}
+          subtitle={copy.subtitle}
+          actions={
+            <>
+              {tab === 'log' && (
+                <Button size="sm" color="secondary" iconLeading={Download01} onPress={exportLog}>
+                  {copy.log.export}
+                </Button>
+              )}
+            </>
+          }
+          actionsClassName="items-center"
+        />
         <PageCard>
-          <div className="md-body flex flex-col gap-4 !px-5 !py-5 sm:!px-6">
+          <PageCardBody spacious>
             {phase !== 'ready' ? (
               phase === 'skeleton' ? (
                 <ActionCenterSkeleton />
@@ -147,9 +148,9 @@ export function ActionCenterPage() {
                 </TabPanelMotion>
               </>
             )}
-          </div>
+          </PageCardBody>
         </PageCard>
-      </div>
+      </Page>
       <ResolveDialog
         call={resolving}
         onClose={() => setResolving(null)}

@@ -1,3 +1,4 @@
+import { formatDate } from '@/i18n';
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['year', 31_536_000_000],
   ['month', 2_592_000_000],
@@ -21,7 +22,6 @@ export function timeAgo(then: number, now: number, justNow = 'Just now'): string
   return justNow;
 }
 
-const DATE = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 /** For "last updated": "Just now", "12 min ago", "1 hour ago", "3 days ago", then the date ("28 Sep 2026"). */
 export function lastUpdated(then: number, now: number): string {
   const s = Math.max(0, Math.floor((now - then) / 1000));
@@ -31,5 +31,5 @@ export function lastUpdated(then: number, now: number): string {
   const h = Math.floor(m / 60);
   if (h < 24) return `${h} ${h === 1 ? 'hour' : 'hours'} ago`;
   const d = Math.floor(h / 24);
-  return d < 7 ? `${d} ${d === 1 ? 'day' : 'days'} ago` : DATE.format(then);
+  return d < 7 ? `${d} ${d === 1 ? 'day' : 'days'} ago` : formatDate(then, 'date');
 }

@@ -2,14 +2,16 @@ import { useEffect } from 'react';
 import { useAuth } from '@/features/auth';
 import { useMyPreferences } from '@/features/preferences';
 import { useSettings } from '@/features/settings';
-import { chooseLocale, showLocale } from '@/i18n';
+import { chooseLocale, setSiteTimeZone, showLocale } from '@/i18n';
 import { services } from '@/services';
 
-/** Keeps the language in step with who is signed in: the person's own choice, else this device's (sign-in screen), else the site default. Renders nothing. */
+/** Keeps the language (and the site time zone) in step with who is signed in: the person's own choice, else this device's (sign-in screen), else the site default. Renders nothing. */
 export function LocaleSync() {
   const signedIn = useAuth((s) => !!s.user);
   const mine = useMyPreferences().language;
   const site = useSettings((s) => s.general.language);
+  const zone = useSettings((s) => s.general.timeZone);
+  setSiteTimeZone(zone); // dates and times everywhere follow the site's time zone (set before the children draw)
   useEffect(() => {
     void showLocale(
       chooseLocale({

@@ -23,6 +23,7 @@ import {
   type CartLine,
 } from '@/features/requests';
 import { copy, t } from './text';
+import { PageCardBody } from '@/components/page';
 
 /** The materials this operator may request (published Tablet workflows with a Material step that list them). None = a fleet that only runs saved routes: no material requests at all. */
 export function useRequestableItems() {
@@ -74,7 +75,7 @@ export function RequestMaterialPane() {
   };
   return (
     <>
-      <div className="md-body !gap-4">
+      <PageCardBody>
         <div className="shrink-0">
           <h2 className="text-lg font-semibold text-primary">{copy.request.heading}</h2>
           <p className="text-sm text-tertiary">{copy.request.subtitle}</p>
@@ -133,7 +134,7 @@ export function RequestMaterialPane() {
             ))}
           </div>
         )}
-      </div>
+      </PageCardBody>
       {cartItems.length > 0 && (
         <div className="flex items-center justify-between gap-3 border-t border-secondary bg-primary px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
           <p className="text-md font-semibold text-primary">

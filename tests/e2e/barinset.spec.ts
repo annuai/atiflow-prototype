@@ -25,19 +25,18 @@ async function gaps(page: Page, header: string) {
 test('the gap after the last control equals the gap above it, in every page card header', async ({ page }) => {
   await signIn(page, 'meera');
   await page.goto('/supervisor/livefloor');
-  await expect(page.locator('.bh').first()).toBeVisible();
-  let g = await gaps(page, '.bh');
+  await expect(page.locator('[data-card-header]').first()).toBeVisible();
+  let g = await gaps(page, '[data-card-header]');
   expect(Math.abs(g.right - g.top), `Live Floor ${JSON.stringify(g)}`).toBeLessThanOrEqual(1);
 
   await page.goto('/configurator');
   await page.waitForURL(/\/configurator\/workflows\//);
-  await expect(page.locator('.bh').first()).toBeVisible();
-  g = await gaps(page, '.bh');
+  await expect(page.locator('[data-card-header]').first()).toBeVisible();
+  g = await gaps(page, '[data-card-header]');
   expect(Math.abs(g.right - g.top), `Workflow Builder ${JSON.stringify(g)}`).toBeLessThanOrEqual(1);
 
   await page.goto('/configurator/maps/main-assembly');
-  const header = page.locator('header', { has: page.getByText('Map Editor', { exact: true }) });
-  await expect(header.first()).toBeVisible();
-  g = await gaps(page, 'header:has(> div:first-child):has-text("Map Editor")');
+  await expect(page.locator('[data-card-header]').first()).toBeVisible();
+  g = await gaps(page, '[data-card-header]');
   expect(Math.abs(g.right - g.top), `Map Editor ${JSON.stringify(g)}`).toBeLessThanOrEqual(1);
 });

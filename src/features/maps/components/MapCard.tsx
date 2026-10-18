@@ -7,6 +7,7 @@ import { MapThumbnail } from './MapThumbnail';
 import { routingName } from '../model/routing';
 import type { FleetMap } from '../model/types';
 import { t } from '../text';
+import { formatDate } from '@/i18n';
 
 /** One map: preview, version + routing chip, name, the fleets that run on it and its station count. */
 export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
@@ -41,10 +42,7 @@ export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
           {map.name}
         </h2>
         {fleets.length ? row(copy.card.fleet, fleets.join(', ')) : row(copy.card.fleet, copy.card.unassigned, true)}
-        <div
-          className="flex items-baseline justify-between gap-4 text-sm"
-          title={new Date(map.updatedAt).toLocaleString()}
-        >
+        <div className="flex items-baseline justify-between gap-4 text-sm" title={formatDate(map.updatedAt, 'full')}>
           <span className="text-xs tracking-wide text-tertiary uppercase">{copy.card.updated}</span>
           <span className="text-right font-medium text-primary">{lastUpdated(map.updatedAt, now)}</span>
         </div>

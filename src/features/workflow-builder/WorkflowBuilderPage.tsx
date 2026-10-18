@@ -18,7 +18,7 @@ import { runSimulation, stopSimulation } from './sim/runner';
 import './workflow.css';
 import { copy } from './copy';
 import { PageTitleName } from '@/shell/PageTitle';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardHeader, PageHeader } from '@/components/page';
 
 /** Canvas stand-in shown until the user picks a fleet for the new workflow. */
 function SelectFleetPrompt() {
@@ -100,39 +100,41 @@ function Builder() {
   return (
     <>
       <PageTitleName name={hasFleet ? title : null} />
-      <div className="content">
-        <div className="title-block wf-title">
-          <div>
-            <h1>{copy.page.title}</h1>
-            <p>{copy.page.subtitle}</p>
-          </div>
-          <div className="actions">
-            <Button
-              size="sm"
-              color="secondary"
-              isDisabled={!hasFleet}
-              className={'sim-btn' + (sim.status === 'done' ? ' done' : '')}
-              iconLeading={sim.status === 'running' ? Stop : sim.status === 'done' ? CheckCircle : Play}
-              onPress={onSimulate}
-            >
-              {sim.status === 'running'
-                ? copy.page.stop
-                : sim.status === 'done'
-                  ? copy.page.completed
-                  : copy.page.simulate}
-              {sim.status === 'running' && <span className="bar" style={{ width: sim.progress + '%' }} />}
-            </Button>
-            <Button size="sm" color="secondary" isDisabled={!hasFleet} onPress={() => wfStore.getState().saveDraft()}>
-              {copy.page.saveDraft}
-            </Button>
-            <Button size="sm" color="primary" isDisabled={!hasFleet} isLoading={publishing} onPress={onPublish}>
-              {copy.page.publish}
-            </Button>
-          </div>
-        </div>
+      <Page>
+        <PageHeader
+          title={copy.page.title}
+          subtitle={copy.page.subtitle}
+          actions={
+            <>
+              <Button
+                size="sm"
+                color="secondary"
+                isDisabled={!hasFleet}
+                className={'sim-btn' + (sim.status === 'done' ? ' done' : '')}
+                iconLeading={sim.status === 'running' ? Stop : sim.status === 'done' ? CheckCircle : Play}
+                onPress={onSimulate}
+              >
+                {sim.status === 'running'
+                  ? copy.page.stop
+                  : sim.status === 'done'
+                    ? copy.page.completed
+                    : copy.page.simulate}
+                {sim.status === 'running' && <span className="bar" style={{ width: sim.progress + '%' }} />}
+              </Button>
+              <Button size="sm" color="secondary" isDisabled={!hasFleet} onPress={() => wfStore.getState().saveDraft()}>
+                {copy.page.saveDraft}
+              </Button>
+              <Button size="sm" color="primary" isDisabled={!hasFleet} isLoading={publishing} onPress={onPublish}>
+                {copy.page.publish}
+              </Button>
+            </>
+          }
+          className="max-[720px]:flex-wrap max-[720px]:gap-2"
+          actionsClassName="max-[720px]:w-full max-[720px]:*:flex-1"
+        />
         <div className="work">
           <PageCard className="m-0 min-w-0">
-            <div className="bh">
+            <PageCardHeader>
               <Dataflow03 className="size-4 text-[#66cbc4]" />
               {hasFleet ? (
                 <>
@@ -175,7 +177,7 @@ function Builder() {
               >
                 {(item) => <Select.Item {...item} />}
               </Select>
-            </div>
+            </PageCardHeader>
             {hasFleet ? (
               <WorkflowCanvas mapOpen={mapOpen} setMapOpen={setMapOpen} docked={docked} />
             ) : (
@@ -184,7 +186,7 @@ function Builder() {
           </PageCard>
           {docked && <MapPreview mode="docked" onClose={stopSimulation} />}
         </div>
-      </div>
+      </Page>
     </>
   );
 }

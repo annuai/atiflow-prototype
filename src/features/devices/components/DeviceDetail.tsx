@@ -23,7 +23,7 @@ import { robotTypeByLabel } from '@/data/robotTypes';
 import { DetailBreadcrumb, type Crumb } from './DetailBreadcrumb';
 import { StatusBadge } from './StatusBadge';
 import { t } from '../text';
-import { PageCard } from '@/components/data/PageCard';
+import { PageCard } from '@/components/page';
 
 const TAB_ICONS = [Rows01, Settings02, GamingPad01, RefreshCcw03];
 const detailOf = (f: { detail?: unknown }) =>

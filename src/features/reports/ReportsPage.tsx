@@ -20,7 +20,7 @@ import { reportSource } from './data/source';
 import { useReport } from './data/useReport';
 import { moves, summary } from './model/derive';
 import type { MetricId, RangeSelection } from './model/types';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
 
 /**
  * Supervisor Reports: how the fleet performed over a period, nothing about single robots (that is the Live Floor's job). The verdict first, the five KPIs that matter,
@@ -42,25 +42,26 @@ export function ReportsPage() {
   const origin = report?.origin;
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{copy.title}</h1>
-            <p>{copy.subtitle}</p>
-          </div>
-          <div className="actions items-center">
-            {origin && (
-              <BadgeWithDot size="md" color={origin.kind === 'live' ? 'success' : 'warning'}>
-                {origin.kind === 'live' ? copy.origin.live(origin.observedMin) : copy.origin.sample}
-              </BadgeWithDot>
-            )}
-            <Button size="sm" color="secondary" iconLeading={RefreshCcw01} isLoading={loading} onPress={refresh}>
-              {copy.range.refresh}
-            </Button>
-          </div>
-        </div>
+      <Page>
+        <PageHeader
+          title={copy.title}
+          subtitle={copy.subtitle}
+          actions={
+            <>
+              {origin && (
+                <BadgeWithDot size="md" color={origin.kind === 'live' ? 'success' : 'warning'}>
+                  {origin.kind === 'live' ? copy.origin.live(origin.observedMin) : copy.origin.sample}
+                </BadgeWithDot>
+              )}
+              <Button size="sm" color="secondary" iconLeading={RefreshCcw01} isLoading={loading} onPress={refresh}>
+                {copy.range.refresh}
+              </Button>
+            </>
+          }
+          actionsClassName="items-center"
+        />
         <PageCard>
-          <div className="md-body flex flex-col gap-5 !px-5 !py-5 sm:!px-6">
+          <PageCardBody spacious className="gap-5">
             <RangeBar value={range} onChange={setRange} generatedAt={report?.generatedAt ?? null} />
             {(materialsRelevant || many) && (
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -112,9 +113,9 @@ export function ReportsPage() {
             {!(materialsRelevant && view === 'materials') && (
               <p className="text-center text-xs text-tertiary">{copy.sample}</p>
             )}
-          </div>
+          </PageCardBody>
         </PageCard>
-      </div>
+      </Page>
     </>
   );
 }

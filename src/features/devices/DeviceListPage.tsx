@@ -13,7 +13,7 @@ import { AddDeviceModal } from './components/AddDeviceModal';
 import { DeviceEmptyState } from './components/DeviceEmptyState';
 import { DeviceTable } from './components/DeviceTable';
 import '@/ui/detailPages.css';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageHeader } from '@/components/page';
 
 /** Robots list / Hardware list. Same layout as the Workflow Builder page (title block + one card); everything kind-specific comes from `kind`. */
 export function DeviceListPage({ kind }: { kind: DeviceKind }) {
@@ -34,37 +34,37 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
   };
   return (
     <>
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <h1>{kind.plural}</h1>
-            <p>{kind.subtitle}</p>
-          </div>
-          <div className="actions">
-            {searching && (
-              <Input
-                size="sm"
-                aria-label={t.list.searchLabel(kind.plural)}
-                placeholder={t.list.searchLabel(kind.plural)}
-                value={q}
-                onChange={setQ}
-                autoFocus
-                wrapperClassName="dv-search"
+      <Page>
+        <PageHeader
+          title={kind.plural}
+          subtitle={kind.subtitle}
+          actions={
+            <>
+              {searching && (
+                <Input
+                  size="sm"
+                  aria-label={t.list.searchLabel(kind.plural)}
+                  placeholder={t.list.searchLabel(kind.plural)}
+                  value={q}
+                  onChange={setQ}
+                  autoFocus
+                  wrapperClassName="dv-search"
+                />
+              )}
+              <SearchToggle
+                label={t.list.search}
+                active={searching}
+                onToggle={() => {
+                  setSearching((s) => !s);
+                  setQ('');
+                }}
               />
-            )}
-            <SearchToggle
-              label={t.list.search}
-              active={searching}
-              onToggle={() => {
-                setSearching((s) => !s);
-                setQ('');
-              }}
-            />
-            <Button size="sm" color="primary" iconLeading={Plus} onPress={() => add()}>
-              {kind.addLabel}
-            </Button>
-          </div>
-        </div>
+              <Button size="sm" color="primary" iconLeading={Plus} onPress={() => add()}>
+                {kind.addLabel}
+              </Button>
+            </>
+          }
+        />
         <PageCard>
           {devices.length === 0 ? (
             <div className="dv-scroll flex flex-col">
@@ -82,7 +82,7 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
             </div>
           )}
         </PageCard>
-      </div>
+      </Page>
       <AddDeviceModal kind={kind} isOpen={adding} onOpenChange={setAdding} preset={preset} />
     </>
   );

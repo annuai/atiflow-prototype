@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 import { BottomSheet } from '@/components/modal/BottomSheet';
 import { copy, type BookedTrip } from '@/features/bookings';
 import { RequestStatusBadge, STATUS, useUserNames, type StatusEvent, type TripRequest } from '@/features/requests';
+import { formatDate } from '@/i18n';
 
-const stamp = (at: number) =>
-  new Date(at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+const stamp = (at: number) => formatDate(at, 'dateTime');
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (

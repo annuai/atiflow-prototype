@@ -10,7 +10,7 @@ import { copy } from '../copy';
 import { settingsStore, useSettings } from '../data/store';
 import { statusOf } from '../model/status';
 import type { ConnectionDef } from '../model/types';
-import { localized } from '@/i18n';
+import { formatDate, localized } from '@/i18n';
 
 /** One connection: who it is, whether it works and why (not), its values, and the actions. Neutral card: only the status badge carries the colour. */
 export function ConnectionCard({ def, onEdit }: { def: ConnectionDef; onEdit(): void }) {
@@ -83,7 +83,7 @@ export function ConnectionCard({ def, onEdit }: { def: ConnectionDef; onEdit(): 
             <dt className="text-tertiary">{copy.card.lastSynced}</dt>
             <dd
               className="font-medium text-primary"
-              title={state.lastSynced ? new Date(state.lastSynced).toLocaleString() : undefined}
+              title={state.lastSynced ? formatDate(state.lastSynced, 'full') : undefined}
             >
               {state.lastSynced ? timeAgo(state.lastSynced, now) : copy.card.never}
             </dd>
@@ -91,10 +91,7 @@ export function ConnectionCard({ def, onEdit }: { def: ConnectionDef; onEdit(): 
         )}
       </dl>
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
-        <p
-          className="text-xs text-tertiary"
-          title={state.lastTest ? new Date(state.lastTest.at).toLocaleString() : undefined}
-        >
+        <p className="text-xs text-tertiary" title={state.lastTest ? formatDate(state.lastTest.at, 'full') : undefined}>
           {state.lastTest
             ? copy.card.lastTest(state.lastTest.ok, timeAgo(state.lastTest.at, now))
             : copy.card.notTested}

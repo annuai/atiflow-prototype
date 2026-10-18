@@ -20,7 +20,7 @@ import { FLEETS_PATH, fleetPath } from './paths';
 import { profileOf, useFleets } from './model/store';
 import { t } from './text';
 import { PageTitleName } from '@/shell/PageTitle';
-import { PageCard } from '@/components/data/PageCard';
+import { Page, PageCard, PageHeader, PageSubtitle, PageTitle } from '@/components/page';
 
 /** Tabs of a fleet page. Add a tab (+ panel) here and the route, tab bar and count badge follow. */
 const TABS = [
@@ -60,27 +60,32 @@ export function FleetPage() {
   return (
     <>
       <PageTitleName name={name} />
-      <div className="content">
-        <div className="title-block">
-          <div>
-            <InlineNameEdit
-              value={name}
-              label={t.fleets.fleetName}
-              tooltip={copy.rename.tooltip}
-              display={<h1>{name}</h1>}
-              onSave={onRename}
-            />
-            <p>{map ? copy.meta.map(map.name, map.version) : copy.meta.noMap}</p>
-          </div>
-          <div className="actions hide-sm">
-            <Badge size="sm" type="pill-color" color="gray">
-              {copy.meta.robots(robots)}
-            </Badge>
-            <Badge size="sm" type="pill-color" color="gray">
-              {copy.meta.hardware(hardware)}
-            </Badge>
-          </div>
-        </div>
+      <Page>
+        <PageHeader
+          heading={
+            <div>
+              <InlineNameEdit
+                value={name}
+                label={t.fleets.fleetName}
+                tooltip={copy.rename.tooltip}
+                display={<PageTitle>{name}</PageTitle>}
+                onSave={onRename}
+              />
+              <PageSubtitle>{map ? copy.meta.map(map.name, map.version) : copy.meta.noMap}</PageSubtitle>
+            </div>
+          }
+          actions={
+            <>
+              <Badge size="sm" type="pill-color" color="gray">
+                {copy.meta.robots(robots)}
+              </Badge>
+              <Badge size="sm" type="pill-color" color="gray">
+                {copy.meta.hardware(hardware)}
+              </Badge>
+            </>
+          }
+          actionsClassName="hide-sm"
+        />
         <PageCard>
           <TabbedPanel
             tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id], icon: t.icon, badge: counts[t.id] }))}
@@ -92,7 +97,7 @@ export function FleetPage() {
             <active.Panel fleet={name} />
           </TabbedPanel>
         </PageCard>
-      </div>
+      </Page>
     </>
   );
 }

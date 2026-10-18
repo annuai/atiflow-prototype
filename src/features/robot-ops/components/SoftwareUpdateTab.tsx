@@ -6,9 +6,10 @@ import { useNow } from '@/hooks/use-now';
 import { copy } from '../copy';
 import { ins, noteLabel } from '../labels';
 import { useSoftware } from '../data/useSoftware';
-import { formatCheck, formatDate, updateAvailable } from '../model/software';
+import { formatCheck, updateAvailable } from '../model/software';
 import type { RobotRef } from '../model/types';
 import { RowSkeleton, TabHeader, TabState } from './TabParts';
+import { formatDate } from '@/i18n';
 
 /** The Software Update tab: the newest firmware on offer with Download to Robot (or Check for updates when the robot is current), and the history of updates. */
 export function SoftwareUpdateTab({
@@ -56,7 +57,8 @@ export function SoftwareUpdateTab({
                 {copy.software.installed}: <span className="font-semibold text-secondary">{s.installed ?? '—'}</span> ·{' '}
                 {copy.software.lastCheck}:{' '}
                 <span className="font-semibold text-secondary">{formatCheck(s.lastCheckedAt, now)}</span> ·{' '}
-                {copy.software.lastUpdated}: {s.lastUpdatedAt === null ? ins.time.never : formatDate(s.lastUpdatedAt)}
+                {copy.software.lastUpdated}:{' '}
+                {s.lastUpdatedAt === null ? ins.time.never : formatDate(s.lastUpdatedAt, 'date')}
               </p>
               {!outOfDate && <p className="mt-1 text-xs text-quaternary">{copy.software.upToDate}</p>}
               {outOfDate && !online && <p className="mt-1 text-xs text-quaternary">{copy.software.offline}</p>}
@@ -105,7 +107,7 @@ export function SoftwareUpdateTab({
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-primary">
-                        {h.version} <span className="font-normal text-tertiary">({formatDate(h.at)})</span>
+                        {h.version} <span className="font-normal text-tertiary">({formatDate(h.at, 'date')})</span>
                       </p>
                       <p className="text-sm text-secondary">{noteLabel(h)}</p>
                     </div>
