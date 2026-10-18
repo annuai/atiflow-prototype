@@ -1,7 +1,7 @@
 import { datasetStore } from '@/data/dataset';
 import { fleetScope } from '@/features/access';
 import { masterDataStore } from '@/features/master-data';
-import { fleetIdOf, fleetLiveOf, requestableItems, routeItems, type RequestableItem } from '@/features/requests';
+import { fleetLiveOf, requestableItems, routeItems, type RequestableItem } from '@/features/requests';
 import { wfStore } from '@/features/workflow-builder';
 import type { SearchContext } from '../types';
 
@@ -12,7 +12,7 @@ export function operatorItems(ctx: SearchContext): { materials: RequestableItem[
   const workflows = Object.values(wfStore.getState().workflows);
   const md = masterDataStore.getState();
   return {
-    materials: requestableItems(workflows, who, fleetIdOf, fleetLiveOf, md.materials, md.groups),
-    trips: routeItems(workflows, who, fleetIdOf, fleetLiveOf),
+    materials: requestableItems(workflows, who, fleetLiveOf, md.materials, md.groups),
+    trips: routeItems(workflows, who, fleetLiveOf),
   };
 }

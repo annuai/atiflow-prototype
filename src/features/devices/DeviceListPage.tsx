@@ -1,4 +1,5 @@
 import { NoResults } from '@/components/data/EmptyState';
+import { fleetDirectory } from '@/data/fleetDirectory';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from '@untitledui/icons';
@@ -25,7 +26,9 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
   const [q, setQ] = useState('');
   const rows = q.trim()
     ? devices.filter((d) =>
-        (nameOf(d) + ' ' + kind.typeOf(d) + ' ' + d.values.fleet).toLowerCase().includes(q.trim().toLowerCase()),
+        (nameOf(d) + ' ' + kind.typeOf(d) + ' ' + fleetDirectory.nameOf(String(d.values.fleet ?? '')))
+          .toLowerCase()
+          .includes(q.trim().toLowerCase()),
       )
     : devices;
   const add = (p?: Record<string, FieldValue>) => {

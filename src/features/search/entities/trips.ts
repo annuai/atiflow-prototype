@@ -1,4 +1,5 @@
 import { Route } from '@untitledui/icons';
+import { fleetDirectory } from '@/data/fleetDirectory';
 import { store } from '@/core/store';
 import { bookingsStore, type BookedTrip } from '@/features/bookings';
 import { STATUS, requestsStore, type TripRequest } from '@/features/requests';
@@ -86,11 +87,11 @@ export const tripEntity: SearchEntity<Row> = {
         subtitle: `${t.fromName} → ${t.toName}`,
         url: bookedUrl(t),
         at: t.history.at(-1)?.at ?? t.createdAt,
-        facets: { status: t.status, fleet: t.fleet },
+        facets: { status: t.status, fleet: fleetDirectory.nameOf(t.fleet) },
         metadata: [
           ...meta(copy.meta.status, STATUS[t.status].label),
           ...meta(copy.meta.robot, t.robotId ?? t.robotLabel),
-          ...meta(copy.meta.fleet, t.fleet),
+          ...meta(copy.meta.fleet, fleetDirectory.nameOf(t.fleet)),
         ],
       };
     }
@@ -100,10 +101,10 @@ export const tripEntity: SearchEntity<Row> = {
       subtitle: r.qty > 0 ? `${r.name} ×${r.qty}` : r.name,
       url: requestUrl(r),
       at: r.history.at(-1)?.at ?? r.createdAt,
-      facets: { status: r.status, fleet: r.fleet },
+      facets: { status: r.status, fleet: fleetDirectory.nameOf(r.fleet) },
       metadata: [
         ...meta(copy.meta.status, STATUS[r.status].label),
-        ...meta(copy.meta.fleet, r.fleet),
+        ...meta(copy.meta.fleet, fleetDirectory.nameOf(r.fleet)),
         ...meta(copy.meta.robot, r.robotId),
       ],
     };

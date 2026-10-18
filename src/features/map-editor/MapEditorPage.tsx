@@ -96,14 +96,14 @@ export function MapEditorPage() {
   const data: MapData | undefined = current?.data;
   const site = imported ? importedSite(mapName, data) : base?.site;
   const isDraft = current?.status === 'draft';
-  const fleetName = map ? fleetDirectory.byLiveId(map.fleetLive)?.name : undefined;
+  const fleetKey = map ? fleetDirectory.byLiveId(map.fleetLive)?.id : undefined;
   const tool: Tool = isDraft && mode === 'design' ? wantTool : SELECT; // a published version only allows looking
   const takenStations = useMemo(() => base?.live.stations.map((s) => s.id) ?? [], [base]);
   const takenAreas = useMemo(
     () => Object.values(allMaps).flatMap((h) => h.versions.flatMap((v) => v.data.stagingAreas.map((a) => a.id))),
     [allMaps],
   ); // an area id means one area in every map
-  const usedBy = (sid: string) => workflowsUsing(Object.values(workflows), fleetName, sid);
+  const usedBy = (sid: string) => workflowsUsing(Object.values(workflows), fleetKey, sid);
 
   const sim = useSimulationPanel(data, map?.fleetLive);
   const editor = useDraftEditor(id, current?.id, () => setDrawing([]));

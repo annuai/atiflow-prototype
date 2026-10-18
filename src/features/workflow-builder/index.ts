@@ -1,5 +1,5 @@
 /** Public entry of the workflow builder for other features. */
-export { useFleetNames, useWorkflow, wfStore, workflowsOfFleet } from './model/store';
+export { useWorkflow, wfStore, workflowsOfFleet } from './model/store';
 export { StationMap } from './components/StationMap';
 export { fleetScene, fleetStations, mapNow, stationLabel, useFleetScene, useMapData } from './model/stations';
 export { fleetsUsingMaterial } from './model/usage';

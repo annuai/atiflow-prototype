@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { FleetId } from '@/data/fleets';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import type { SceneModel } from '@/core/scene';
 import type { NavGraph, SiteLayout, Station } from '@/core/types';
@@ -48,17 +49,17 @@ export function useMapData(): MapData | null {
 }
 
 const isWork = (s: Station) => s.type !== 'charge' && s.type !== 'park';
-/** The lane-map fleet id a fleet name stands for. */
-export const liveIdOf = (fleet: string | null) => {
-  const f = fleet ? fleetDirectory.byName(fleet) : null;
+/** The lane-map fleet id a fleet (by its id) stands for. */
+export const liveIdOf = (fleet: FleetId | null) => {
+  const f = fleet ? fleetDirectory.byId(fleet) : null;
   return f ? (f.liveId ?? f.id) : null;
 };
 /** The work stations a fleet can use on the map (ids like STA-101), in map order. Empty until the map is loaded or for a fleet that has no map. */
-export function fleetStations(fleet: string | null, map: MapData | null = loaded): Station[] {
+export function fleetStations(fleet: FleetId | null, map: MapData | null = loaded): Station[] {
   const id = liveIdOf(fleet);
   return map && id ? map.live.stations.filter((s) => isWork(s) && s.fleets.includes(id)) : [];
 }
-export function useFleetStations(fleet: string | null): Station[] {
+export function useFleetStations(fleet: FleetId | null): Station[] {
   const m = useMapData();
   return m ? fleetStations(fleet, m) : [];
 }
@@ -67,7 +68,7 @@ export function useFleetStations(fleet: string | null): Station[] {
  * map). `undefined` while the floor is still loading; `null` when the fleet has no published map to show.
  */
 export function fleetScene(
-  fleet: string | null,
+  fleet: FleetId | null,
   map: MapData | null = loaded,
 ): { site: SiteLayout; nav: NavGraph } | null | undefined {
   if (!map?.scenes) return undefined;
@@ -75,7 +76,7 @@ export function fleetScene(
   const sc = id ? map.scenes.find((s) => s.fleetId === id) : undefined;
   return sc ? { site: sc.site, nav: sc.network } : null;
 }
-export function useFleetScene(fleet: string | null) {
+export function useFleetScene(fleet: FleetId | null) {
   const m = useMapData();
   return fleetScene(fleet, m);
 }

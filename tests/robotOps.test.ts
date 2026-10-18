@@ -1,3 +1,4 @@
+import { asFleetId } from '../src/data/fleets';
 import { describe, it, expect } from 'vitest';
 import { CONFIG_SCHEMA, LATEST_FIRMWARE } from '../src/fixtures/robotOps';
 import { calibrationBlocked, describeCalibration } from '../src/features/robot-ops/model/calibration';
@@ -119,10 +120,10 @@ describe('the dummy robot service', () => {
 describe("unassigning a fleet's map", () => {
   it('takes the map away and clears the station groups with it', () => {
     const f = fleetsStore.getState();
-    f.assignMap('Test Fleet', 'm1');
-    f.createGroup('Test Fleet', { name: 'G', stationId: 'STA-101', codes: ['A'] });
-    expect(fleetsStore.getState().profiles['Test Fleet'].groups).toHaveLength(1);
-    fleetsStore.getState().unassignMap('Test Fleet');
-    expect(fleetsStore.getState().profiles['Test Fleet']).toEqual({ mapId: null, groups: [] });
+    f.assignMap(asFleetId('test-fleet'), 'm1');
+    f.createGroup(asFleetId('test-fleet'), { name: 'G', stationId: 'STA-101', codes: ['A'] });
+    expect(fleetsStore.getState().profiles[asFleetId('test-fleet')].groups).toHaveLength(1);
+    fleetsStore.getState().unassignMap(asFleetId('test-fleet'));
+    expect(fleetsStore.getState().profiles[asFleetId('test-fleet')]).toEqual({ mapId: null, groups: [] });
   });
 });

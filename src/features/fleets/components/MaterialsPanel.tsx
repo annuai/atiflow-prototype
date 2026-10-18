@@ -8,10 +8,11 @@ import { FleetMaterials } from './FleetMaterials';
 import { FleetStationGroups } from './FleetStationGroups';
 import { GroupMaterialsModal } from './GroupMaterialsModal';
 import { t } from '../text';
+import type { FleetId } from '@/data/fleets';
 
 type Sub = 'all' | 'groups';
 /** Materials tab of a fleet: "All materials" and "Station groups" over the materials assigned to this fleet. */
-export function MaterialsPanel({ fleet }: { fleet: string }) {
+export function MaterialsPanel({ fleet }: { fleet: FleetId }) {
   const all = useMasterData((s) => s.materials);
   const masterGroups = useMasterData((s) => s.groups);
   const materials = all.filter((m) => m.fleets.includes(fleet));

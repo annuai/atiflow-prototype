@@ -3,6 +3,7 @@ import { createNode, createStart } from './factory';
 import { defaultWorkflowName } from './names';
 import type { WfNode, Workflow, Workflows } from './types';
 import { DEFAULT_ROBOT_TYPE, ROBOT_TYPE_LABELS } from '@/data/robotTypes';
+import type { FleetId } from '@/data/fleets';
 
 /** The starting workflows of the dummy data: one per seed fleet, brought up to the current shape, plus the samples. */
 export const seedWorkflows = (): Workflows => upgradeToV7(upgradeToV6(baseSeedWorkflows()));
@@ -94,10 +95,14 @@ export function upgradeToV7(workflows: Workflows): Workflows {
 
 let counter = 1;
 /** A new workflow with only Start and End. Without a fleet it has no name yet (it gets one when a fleet is chosen). */
-export function blankWorkflow(fleet: string | null = null, takenNames: string[] = []): Workflow {
+export function blankWorkflow(
+  fleet: FleetId | null = null,
+  takenNames: string[] = [],
+  fleetName: string = fleet ?? '', // (the caller looks the name up: the seed must not depend on the fleet list, services read this file)
+): Workflow {
   return {
     id: `w-${Date.now().toString(36)}-${counter++}`,
-    name: fleet ? defaultWorkflowName(fleet, takenNames) : '',
+    name: fleet ? defaultWorkflowName(fleetName, takenNames) : '',
     fleet,
     nodes: [createStart(), createNode('end')],
   };

@@ -1,3 +1,4 @@
+import { FLEET_ID } from '../src/data/fleets';
 import { describe, expect, it } from 'vitest';
 import { hasMaterialWorkflows } from '@/features/material-insights';
 import { byFleet, series, stats, topMaterials, waiting } from '@/features/material-insights/model/kpis';
@@ -9,7 +10,7 @@ const T0 = new Date(2026, 9, 15, 0, 0, 0).getTime();
 const at = (m: number) => T0 + m * MIN;
 const req = (id: string, over: Partial<MaterialRequest>): MaterialRequest => ({
   id,
-  fleet: 'Line Side Fleet',
+  fleet: FLEET_ID.lineSide,
   code: 'DCP-1001',
   name: 'Drive Chain Pin',
   qty: 10,
@@ -88,7 +89,7 @@ describe('what is open right now', () => {
 describe('top materials, fleets and the series', () => {
   const rows = [
     done('a', 10, 12, 14, 30, { qty: 20 }),
-    done('b', 20, 22, 24, 40, { qty: 30, code: 'DCP-1002', name: 'Plate', fleet: 'Assembly Fleet' }),
+    done('b', 20, 22, 24, 40, { qty: 30, code: 'DCP-1002', name: 'Plate', fleet: FLEET_ID.assembly }),
     done('c', 30, 32, 34, 70, { qty: 5 }),
   ];
   it('ranks by pieces delivered', () => {
@@ -100,8 +101,8 @@ describe('top materials, fleets and the series', () => {
   it('sums pieces per fleet', () => {
     expect(byFleet(rows, ...DAY)).toEqual(
       [
-        { fleet: 'Line Side Fleet', units: 25 },
-        { fleet: 'Assembly Fleet', units: 30 },
+        { fleet: FLEET_ID.lineSide, units: 25 },
+        { fleet: FLEET_ID.assembly, units: 30 },
       ].sort((a, b) => b.units - a.units),
     );
   });

@@ -26,12 +26,12 @@ describe('stores follow the services', () => {
       { id: 'night-fleet', name: 'Night Fleet', color: '#000000', liveId: undefined } as never,
     ];
     const dataset = JSON.stringify(other);
-    const fleets = JSON.stringify({ 'Night Fleet': { mapId: null, groups: [] } });
+    const fleets = JSON.stringify({ 'night-fleet': { mapId: null, groups: [] } });
     const m = memoryStorage({ [DATASET_KEY]: dataset, [FLEETS_KEY]: fleets });
     setServices(createDummyServices({ backend: m.backend }));
 
     expect(datasetStore.getState().fleets.some((f) => f.id === 'night-fleet')).toBe(true);
-    expect(Object.keys(fleetsStore.getState().profiles)).toEqual(['Night Fleet']);
+    expect(Object.keys(fleetsStore.getState().profiles)).toEqual(['night-fleet']);
     expect(userDirectory.getState().users.length).toBeGreaterThan(0);
     expect(masterDataStore.getState().materials.length).toBeGreaterThan(0);
     expect(settingsStore.getState().connections['fleet-manager']).toBeTruthy();

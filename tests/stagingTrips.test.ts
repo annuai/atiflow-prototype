@@ -1,3 +1,4 @@
+import { FLEET_ID } from '../src/data/fleets';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
@@ -82,7 +83,7 @@ describe('requests that use staging areas', () => {
     key: 'k',
     workflowId: 'w',
     workflowName: 'Store run',
-    fleet: 'Line Side Fleet',
+    fleet: FLEET_ID.lineSide,
     fleetLive: 'line-side',
     code,
     name: 'Chain Sprocket 24T',
@@ -99,7 +100,7 @@ describe('requests that use staging areas', () => {
   beforeEach(() => {
     mapVersionsStore.getState().reset();
     mapVersionsStore.getState().ensure('main-assembly', 5, seedMapData({ fleetLive: 'line-side' }, site, nav), 1);
-    fleetsStore.getState().assignMap('Line Side Fleet', 'main-assembly');
+    fleetsStore.getState().assignMap(FLEET_ID.lineSide, 'main-assembly');
     requestsStore.getState().reset();
     masterDataStore.setState({
       areas: [
@@ -175,11 +176,11 @@ describe('requests that use staging areas', () => {
     expect(area('SA-002').cells[key]).toMatchObject({ state: 'filled', materialCode: 'DCP-1001', quantity: 5 });
   });
   it('the robot is sent to the area’s entry station', () => {
-    expect(entryLegs({ fleet: 'Line Side Fleet', legs: ['SA-001', 'STA-107'], loadFrom: 1 })).toEqual({
+    expect(entryLegs({ fleet: FLEET_ID.lineSide, legs: ['SA-001', 'STA-107'], loadFrom: 1 })).toEqual({
       legs: ['STA-116', 'STA-107'],
       loadFrom: 1,
     });
-    expect(entryLegs({ fleet: 'Line Side Fleet', legs: ['STA-116', 'SA-001'], loadFrom: 1 })).toEqual({
+    expect(entryLegs({ fleet: FLEET_ID.lineSide, legs: ['STA-116', 'SA-001'], loadFrom: 1 })).toEqual({
       legs: ['STA-116'],
       loadFrom: 0,
     }); // the same stop twice is one

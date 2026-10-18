@@ -1,3 +1,4 @@
+import type { FleetId } from '@/data/fleets';
 import { ROBOT_TYPES } from '@/data/robotTypes';
 import { type Material, type MaterialGroup } from '@/features/master-data';
 import { type WfNode, type Workflow } from '@/features/workflow-builder';
@@ -52,17 +53,10 @@ export interface Operator {
 }
 /**
  * Workflows an operator can request from: published, started from a Tablet, in a fleet assigned to the operator, and listing the operator in its Start step.
- * `fleetIdOf` turns the workflow's fleet name into the fleet id the assignment uses.
  */
-export function visibleWorkflows(
-  workflows: Workflow[],
-  who: Operator,
-  fleetIdOf: (fleetName: string) => string | undefined,
-): Workflow[] {
+export function visibleWorkflows(workflows: Workflow[], who: Operator): Workflow[] {
   return workflows.filter((w) => {
-    if (!w.published || !w.fleet) return false;
-    const id = fleetIdOf(w.fleet);
-    if (!id || !who.fleets.includes(id)) return false;
+    if (!w.published || !w.fleet || !who.fleets.includes(w.fleet)) return false;
     return requestType(w.nodes) === TABLET_REQUEST && requesters(w.nodes).includes(who.username);
   });
 }
@@ -79,11 +73,10 @@ export const robotTypeIdOf = (label: unknown): string | undefined => ROBOT_TYPES
 export function routeItems(
   workflows: Workflow[],
   who: Operator,
-  fleetIdOf: (n: string) => string | undefined,
-  fleetLiveOf: (n: string) => string,
+  fleetLiveOf: (fleet: FleetId) => string,
 ): RequestableItem[] {
   const out: RequestableItem[] = [];
-  for (const w of visibleWorkflows(workflows, who, fleetIdOf)) {
+  for (const w of visibleWorkflows(workflows, who)) {
     if (!isRouteWorkflow(w.nodes)) continue;
     const { legs, actions } = workflowLegs(w.nodes);
     if (legs.length < 1) continue;
@@ -116,13 +109,12 @@ export function routeItems(
 export function requestableItems(
   workflows: Workflow[],
   who: Operator,
-  fleetIdOf: (n: string) => string | undefined,
-  fleetLiveOf: (n: string) => string,
+  fleetLiveOf: (fleet: FleetId) => string,
   materials: Material[],
   groups: MaterialGroup[],
 ): RequestableItem[] {
   const out: RequestableItem[] = [];
-  for (const w of visibleWorkflows(workflows, who, fleetIdOf)) {
+  for (const w of visibleWorkflows(workflows, who)) {
     const { legs, actions, loadFrom } = workflowLegs(w.nodes);
     if (!legs.length) continue;
     const approvalUsers = confirmApprovers(w.nodes);

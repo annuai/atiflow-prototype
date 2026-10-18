@@ -13,7 +13,6 @@ import {
   CartSheet,
   MaterialCard,
   dropLine,
-  fleetIdOf,
   fleetLiveOf,
   requestableItems,
   requestsStore,
@@ -32,7 +31,7 @@ export function useRequestableItems() {
   const materials = useMasterData((s) => s.materials),
     groups = useMasterData((s) => s.groups);
   return useMemo(
-    () => requestableItems(Object.values(workflows), me, fleetIdOf, fleetLiveOf, materials, groups),
+    () => requestableItems(Object.values(workflows), me, fleetLiveOf, materials, groups),
     [workflows, me, materials, groups],
   );
 }

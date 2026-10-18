@@ -42,7 +42,7 @@ export function createDummyServices(opts: DummyServicesOptions = {}): Services {
   return {
     ...createDummyIdentity({
       ...opts,
-      fleetIds: () => (dataset.read() ?? (seedDataset as DatasetData)).fleets.map((f) => f.id), // fleets added by someone count too
+      fleetIds: () => (dataset.read() ?? (seedDataset as unknown as DatasetData)).fleets.map((f) => f.id), // fleets added by someone count too
     }),
     workflows: createDummyWorkflows(opts.backend),
     requests: createDummyRequests(opts.backend),

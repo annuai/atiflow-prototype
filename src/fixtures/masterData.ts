@@ -1,6 +1,6 @@
 import { buildArea, type AreaSpec } from '@/features/master-data/model/areas';
 import type { Material, MaterialGroup, StagingArea } from '@/features/master-data/model/types';
-import { FLEET_NAME } from '@/data/fleets';
+import { FLEET_ID, type FleetId } from '@/data/fleets';
 
 const MIN = 60_000,
   H = 60 * MIN,
@@ -16,19 +16,19 @@ const GROUPS: [name: string, prefix: string, ageMs: number][] = [
   ['Seals & Gaskets', 'SEA', 7 * DAY],
   ['Paint & Coatings', 'PNT', 21 * DAY],
 ];
-const MATERIALS: [code: string, name: string, group: string, fleets: string[]][] = [
-  ['DCP-1001', 'Drive Chain Pin 8mm', 'Fasteners & Fixings', [FLEET_NAME.lineSide]],
-  ['DCP-1002', 'Drive Chain Plate 12mm', 'Sub-Assemblies', [FLEET_NAME.lineSide]],
-  ['DCP-1003', 'Chain Sprocket 24T', 'Sub-Assemblies', [FLEET_NAME.lineSide]],
-  ['DCP-1004', 'DC Power Cable 2m', 'Electrical', [FLEET_NAME.lineSide]],
-  ['DCP-1005', 'Drive Coupling Pad', 'Consumables', [FLEET_NAME.assembly]],
-  ['DCP-1006', 'Dust Cover Panel', 'Packaging', [FLEET_NAME.assembly]],
+const MATERIALS: [code: string, name: string, group: string, fleets: FleetId[]][] = [
+  ['DCP-1001', 'Drive Chain Pin 8mm', 'Fasteners & Fixings', [FLEET_ID.lineSide]],
+  ['DCP-1002', 'Drive Chain Plate 12mm', 'Sub-Assemblies', [FLEET_ID.lineSide]],
+  ['DCP-1003', 'Chain Sprocket 24T', 'Sub-Assemblies', [FLEET_ID.lineSide]],
+  ['DCP-1004', 'DC Power Cable 2m', 'Electrical', [FLEET_ID.lineSide]],
+  ['DCP-1005', 'Drive Coupling Pad', 'Consumables', [FLEET_ID.assembly]],
+  ['DCP-1006', 'Dust Cover Panel', 'Packaging', [FLEET_ID.assembly]],
 ];
 /** The demo areas and the fleet whose materials they hold (SA-003 is the second map's). */
-const AREAS: [id: string, spec: AreaSpec, fleet: string][] = [
-  ['SA-001', { name: 'SA 001', rows: 20, cols: 10, filled: 14, reserved: 2, blocked: 1 }, FLEET_NAME.lineSide],
-  ['SA-002', { name: 'SA 002', rows: 20, cols: 10, filled: 62, reserved: 6, blocked: 3 }, FLEET_NAME.lineSide],
-  ['SA-003', { name: 'SA 003', rows: 8, cols: 10, filled: 48, reserved: 4, blocked: 2 }, FLEET_NAME.lineSide],
+const AREAS: [id: string, spec: AreaSpec, fleet: FleetId][] = [
+  ['SA-001', { name: 'SA 001', rows: 20, cols: 10, filled: 14, reserved: 2, blocked: 1 }, FLEET_ID.lineSide],
+  ['SA-002', { name: 'SA 002', rows: 20, cols: 10, filled: 62, reserved: 6, blocked: 3 }, FLEET_ID.lineSide],
+  ['SA-003', { name: 'SA 003', rows: 8, cols: 10, filled: 48, reserved: 4, blocked: 2 }, FLEET_ID.lineSide],
 ];
 
 export function seedGroups(now: number): MaterialGroup[] {

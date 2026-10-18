@@ -21,7 +21,7 @@ export function robotRecords(d: Pick<DatasetData, 'robot' | 'fleets'>): RobotRec
   return d.robot.map((r) => ({
     id: String(r.values.name),
     type: robotTypeByLabel(r.values.sherpaType),
-    fleet: d.fleets.find((f) => f.name === r.values.fleet) ?? null,
+    fleet: d.fleets.find((f) => f.id === r.values.fleet) ?? null,
     status: r.status,
   }));
 }

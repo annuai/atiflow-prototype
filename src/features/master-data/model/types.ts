@@ -1,10 +1,11 @@
+import type { FleetId } from '@/data/fleets';
 export interface Material {
   code: string;
   name: string;
   /** MaterialGroup id, '' = no group. */
   group: string;
-  /** Fleet names this material is assigned to (assignment happens from the fleets page; empty = not assigned yet). */
-  fleets: string[];
+  /** Ids of the fleets this material is assigned to (assignment happens from the fleets page; empty = not assigned yet). */
+  fleets: FleetId[];
   updatedAt: number;
 }
 export interface MaterialGroup {

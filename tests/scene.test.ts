@@ -1,3 +1,4 @@
+import { FLEET_ID, asFleetId } from '../src/data/fleets';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { sceneIndexes, sliceNetwork } from '../src/core/scene';
@@ -11,9 +12,9 @@ import { fleetScene } from '../src/features/workflow-builder/model/stations';
 
 const baseSite = JSON.parse(readFileSync('public/sites/ecc/site.json', 'utf8')) as SiteLayout;
 const baseNav = JSON.parse(readFileSync('public/sites/ecc/nav.json', 'utf8')) as NavGraph;
-const lineSide: FleetRecord = { id: 'line-side', name: 'Line Side Fleet', color: '#14b8a6', liveId: 'line-side' };
-const assembly: FleetRecord = { id: 'assembly', name: 'Assembly Fleet', color: '#f59e0b', liveId: 'asrs' };
-const probe: FleetRecord = { id: 'probe', name: 'Probe Fleet', color: '#6366f1' };
+const lineSide: FleetRecord = { id: FLEET_ID.lineSide, name: 'Line Side Fleet', color: '#14b8a6', liveId: 'line-side' };
+const assembly: FleetRecord = { id: FLEET_ID.assembly, name: 'Assembly Fleet', color: '#f59e0b', liveId: 'asrs' };
+const probe: FleetRecord = { id: asFleetId('probe'), name: 'Probe Fleet', color: '#6366f1' };
 const MAPS: FleetMap[] = [
   { id: 'main-assembly', name: 'Main', version: 5, tag: '', fleetLive: 'line-side', updatedAt: 0, stations: [] },
   { id: 'assembly-east', name: 'East', version: 2, tag: '', fleetLive: 'asrs', updatedAt: 0, stations: [] },
@@ -74,7 +75,7 @@ const tiny = (): MapData => ({
 const input = (o: Partial<WorldInput> & { fleets: FleetRecord[] }): WorldInput => ({
   baseSite,
   baseNav,
-  profiles: { 'Line Side Fleet': { mapId: 'main-assembly' }, 'Assembly Fleet': { mapId: 'assembly-east' } },
+  profiles: { [FLEET_ID.lineSide]: { mapId: 'main-assembly' }, [FLEET_ID.assembly]: { mapId: 'assembly-east' } },
   maps: MAPS,
   published: () => null,
   structure: (d) => (d.structure ? { ...d.structure, floorPolygons: [] } : null),
@@ -86,7 +87,7 @@ const withImported = (data = tiny()) =>
     input({
       fleets: [lineSide, assembly, probe],
       maps: [...MAPS, imported],
-      profiles: { ...input({ fleets: [] }).profiles, 'Probe Fleet': { mapId: 'imp-x' } },
+      profiles: { ...input({ fleets: [] }).profiles, probe: { mapId: 'imp-x' } },
       published: (id) => (id === 'imp-x' ? data : null),
     }),
   );
@@ -120,7 +121,7 @@ describe('one scene per fleet, and one for the whole floor', () => {
     const w = buildWorld(
       input({
         fleets: [lineSide, assembly, probe],
-        profiles: { ...input({ fleets: [] }).profiles, 'Probe Fleet': { mapId: 'main-assembly' } },
+        profiles: { ...input({ fleets: [] }).profiles, probe: { mapId: 'main-assembly' } },
       }),
     );
     expect(w.scenes).toHaveLength(3);
@@ -160,12 +161,12 @@ describe('a fleet that is added later', () => {
     const before = withImported();
     const after = buildWorld(
       input({
-        fleets: [lineSide, assembly, probe, { id: 'late', name: 'Late Fleet', color: '#ec4899' }],
+        fleets: [lineSide, assembly, probe, { id: asFleetId('late'), name: 'Late Fleet', color: '#ec4899' }],
         maps: [...MAPS, imported],
         profiles: {
           ...input({ fleets: [] }).profiles,
-          'Probe Fleet': { mapId: 'imp-x' },
-          'Late Fleet': { mapId: 'assembly-east' },
+          probe: { mapId: 'imp-x' },
+          late: { mapId: 'assembly-east' },
         },
         published: (id) => (id === 'imp-x' ? tiny() : null),
       }),
@@ -227,20 +228,20 @@ describe('the workflow builder draws a fleet from its own scene, the latest publ
   const mapData = (w: ReturnType<typeof ecc>) => ({ site: baseSite, nav: baseNav, live: w.nav, scenes: w.scenes });
   it('each fleet gets its own map, not the base map', () => {
     const md = mapData(ecc());
-    const ls = fleetScene('Line Side Fleet', md)!,
-      as = fleetScene('Assembly Fleet', md)!;
+    const ls = fleetScene(FLEET_ID.lineSide, md)!,
+      as = fleetScene(FLEET_ID.assembly, md)!;
     expect(ls.nav.lanes.every((l) => l.fleets.includes('line-side'))).toBe(true);
     expect(as.nav.lanes.every((l) => l.fleets.includes('asrs'))).toBe(true);
     expect(ls.nav.lanes.length).not.toBe(as.nav.lanes.length);
   });
   it('a newly published version of the map is what the builder gets', () => {
-    const before = fleetScene('Line Side Fleet', mapData(ecc()))!;
+    const before = fleetScene(FLEET_ID.lineSide, mapData(ecc()))!;
     const edited = { ...seedMapData(MAPS[0], baseSite, baseNav) };
     edited.lanes = edited.lanes.slice(0, 10); // someone published a map with far fewer roads
     const w = buildWorld(
       input({ fleets: [lineSide, assembly], published: (id) => (id === 'main-assembly' ? edited : null) }),
     );
-    const after = fleetScene('Line Side Fleet', mapData(w))!;
+    const after = fleetScene(FLEET_ID.lineSide, mapData(w))!;
     expect(before.nav.lanes.length).toBeGreaterThan(after.nav.lanes.length);
     // the fleet's own roads are the published ones (lanes only it drives): the 10 that were kept, nothing of the old map
     const own = (n: typeof after.nav) => n.lanes.filter((l) => l.fleets.length === 1).map((l) => l.id);
@@ -254,8 +255,8 @@ describe('the workflow builder draws a fleet from its own scene, the latest publ
   });
   it('says "still loading" (undefined) before the floor is loaded and "no map" (null) for a fleet with none', () => {
     const md = mapData(ecc());
-    expect(fleetScene('Line Side Fleet', { ...md, scenes: undefined })).toBeUndefined();
-    expect(fleetScene('Nobody Fleet', md)).toBeNull();
+    expect(fleetScene(FLEET_ID.lineSide, { ...md, scenes: undefined })).toBeUndefined();
+    expect(fleetScene(asFleetId('nobody'), md)).toBeNull();
     expect(fleetScene(null, md)).toBeNull();
   });
 });

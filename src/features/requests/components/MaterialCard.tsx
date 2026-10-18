@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { fleetDirectory } from '@/data/fleetDirectory';
 import { Check } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
@@ -55,7 +56,7 @@ export function MaterialCard({
         )}
       </div>
       <p className="text-xs text-tertiary">
-        {item.workflowName} · {item.fleet}
+        {item.workflowName} · {fleetDirectory.nameOf(item.fleet)}
       </p>
       <footer className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-1">
         {item.qtyEditable ? (

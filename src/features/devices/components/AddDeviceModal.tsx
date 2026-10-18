@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FormField } from '@/components/form/FormField';
 import { ModalShell } from '@/components/modal/ModalShell';
-import { useFleetNames } from '@/features/workflow-builder';
+import { useFleetChoices } from '@/data/fleetDirectory';
 import { notify } from '@/ui/toast';
 import { deviceStore, useDevices } from '../model/store';
 import { blankValues, suggestName, validateNew } from '../model/validate';
@@ -26,7 +26,7 @@ function Body({
   errors: Record<string, string>;
   set(key: string): (v: FieldValue) => void;
 }) {
-  const fleets = useFleetNames();
+  const fleets = useFleetChoices();
   const fields = kind.fields.filter((f) => f.modal);
   const preview = kind.preview(values);
   // consecutive 'half' fields share a row

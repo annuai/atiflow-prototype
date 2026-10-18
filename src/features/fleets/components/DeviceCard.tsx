@@ -5,12 +5,13 @@ import { RowMenu } from '@/components/data/RowMenu';
 import { StatusBadge, type Device, type DeviceKind, nameOf } from '@/features/devices';
 import { copy } from '../copy';
 import { t } from '../text';
+import type { FleetId } from '@/data/fleets';
 
 interface Props {
   kind: DeviceKind;
   device: Device;
   layout: 'tile' | 'row';
-  /** Fleet page the card is shown on: the linked page shows Fleets > fleet > item in its breadcrumb. */ fleet: string;
+  /** Fleet page the card is shown on: the linked page shows Fleets > fleet > item in its breadcrumb. */ fleet: FleetId;
   /** Without it the card has no menu (robots that belong to no fleet). */
   onUnassign?(): void;
 }

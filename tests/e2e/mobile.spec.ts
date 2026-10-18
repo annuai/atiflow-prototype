@@ -48,7 +48,7 @@ test.describe('configurator on a phone', () => {
     await page.goto('/configurator/fleets');
     await expect(page.getByRole('heading', { name: 'Line Side Fleet' })).toBeVisible();
     expect((await sticksOut(page, '[data-page]')).bad).toEqual([]);
-    await page.goto('/configurator/fleets/Line%20Side%20Fleet/overview');
+    await page.goto('/configurator/fleets/line-side/overview');
     await expect(page.getByRole('heading', { name: 'Assigned map' })).toBeVisible();
     const r = await sticksOut(page, '[data-page]');
     expect(r.bad).toEqual([]);

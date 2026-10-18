@@ -1,4 +1,5 @@
 import { MapThumbnail } from '@/features/maps';
+import { useFleetName } from '@/data/fleetDirectory';
 import type { FC } from 'react';
 import { Cube01, Server01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/data/EmptyState';
@@ -19,6 +20,7 @@ import { fleetsStore, profileOf, useFleets } from '../model/store';
 import { AssignMapModal } from './AssignMapModal';
 import { AssignDevicesModal } from './AssignDevicesModal';
 import { DeviceCard } from './DeviceCard';
+import type { FleetId } from '@/data/fleets';
 
 function Section({
   title,
@@ -54,7 +56,8 @@ function Section({
 }
 
 /** Fleet overview: assigned map, assigned robots (tiles) and hardware (rows). Assign / unassign here updates the Robots and Hardware pages too. */
-export function OverviewPanel({ fleet }: { fleet: string }) {
+export function OverviewPanel({ fleet }: { fleet: FleetId }) {
+  const fleetName = useFleetName(fleet);
   const profile = useFleets((s) => profileOf(s.profiles, fleet));
   const map = useMap(profile.mapId);
   const user = useAuth((s) => s.user);
@@ -66,7 +69,7 @@ export function OverviewPanel({ fleet }: { fleet: string }) {
   const hardware = useDevices((s) => s.hardware).filter((d) => d.values.fleet === fleet);
   const unassign = (kind: DeviceKind, name: string) => () => {
     deviceStore.getState().update(kind.id, name, { fleet: '' });
-    const u = copy.overview.unassigned(name, fleet);
+    const u = copy.overview.unassigned(name, fleetName);
     notify.success(u.title, u.body, 'device-unassigned');
   };
   return (
@@ -173,12 +176,12 @@ export function OverviewPanel({ fleet }: { fleet: string }) {
       <ConfirmDialog
         isOpen={unassigningMap}
         onOpenChange={setUnassigningMap}
-        title={copy.overview.unassignMapTitle(fleet)}
+        title={copy.overview.unassignMapTitle(fleetName)}
         description={copy.overview.unassignMapBody(profile.groups.length)}
         confirmLabel={copy.overview.unassignMap}
         onConfirm={() => {
           fleetsStore.getState().unassignMap(fleet);
-          const d = copy.overview.mapUnassigned(map?.name ?? 'The map', fleet);
+          const d = copy.overview.mapUnassigned(map?.name ?? 'The map', fleetName);
           notify.success(d.title, d.body, 'map-unassigned');
         }}
       />

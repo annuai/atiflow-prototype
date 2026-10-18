@@ -1,3 +1,4 @@
+import type { FleetId } from '@/data/fleets';
 import { fleetAreas, isAreaId, masterDataStore, type CellPlan } from '@/features/master-data';
 
 /**
@@ -16,7 +17,7 @@ export const usesAreas = (legs: string[]) => legs.some(isAreaId);
 
 /** Reserve what a request needs in its staging areas. `failed` says why it cannot be done (nothing is changed then). */
 export function reserveCells(r: {
-  fleet: string;
+  fleet: FleetId;
   code: string;
   qty: number;
   legs: string[];
@@ -55,7 +56,7 @@ export function reserveCells(r: {
 
 /** The trip is over: give the cells back or commit them. Returns the plan marked as settled (or the same plan when there is nothing to do). */
 export function settleCells(
-  r: { fleet: string; tripId: string; cells?: CellPlan },
+  r: { fleet: FleetId; tripId: string; cells?: CellPlan },
   how: 'committed' | 'released',
 ): CellPlan | undefined {
   if (!r.cells || r.cells.settled) return r.cells;
@@ -64,7 +65,7 @@ export function settleCells(
 }
 
 /** Where a robot goes for a leg: a staging area is reached through its entry station. Consecutive legs that become the same station are one stop. */
-export function entryLegs(r: { fleet: string; legs: string[]; loadFrom: number }): {
+export function entryLegs(r: { fleet: FleetId; legs: string[]; loadFrom: number }): {
   legs: string[];
   loadFrom: number;
 } {

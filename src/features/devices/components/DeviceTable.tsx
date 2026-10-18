@@ -1,4 +1,5 @@
 import { Badge } from '@/components/base/badges/badges';
+import { fleetDirectory, useFleetName } from '@/data/fleetDirectory';
 import { DataTable, type Column } from '@/components/data/DataTable';
 import { nameOf } from '../model/validate';
 import type { Device, DeviceKind } from '../model/types';
@@ -31,9 +32,14 @@ export function DeviceTable({ kind, rows, onOpen }: { kind: DeviceKind; rows: De
     },
     {
       id: 'fleet',
-      sort: (d) => String(d.values.fleet ?? ''),
+      sort: (d) => fleetDirectory.nameOf(String(d.values.fleet ?? '')),
       header: t.list.columns.fleet,
-      cell: (d) => d.values.fleet || <span className="text-quaternary">{t.list.unassigned}</span>,
+      cell: (d) =>
+        d.values.fleet ? (
+          <FleetLabel id={String(d.values.fleet)} />
+        ) : (
+          <span className="text-quaternary">{t.list.unassigned}</span>
+        ),
     },
     {
       id: 'status',
@@ -46,4 +52,9 @@ export function DeviceTable({ kind, rows, onOpen }: { kind: DeviceKind; rows: De
   return (
     <DataTable label={kind.plural} rows={rows} rowKey={nameOf} columns={columns} onRowAction={onOpen} minWidth={640} />
   );
+}
+
+/** A fleet's current name (follows a rename). */
+function FleetLabel({ id }: { id: string }) {
+  return <>{useFleetName(id)}</>;
 }

@@ -17,6 +17,8 @@ import {
 } from './cells';
 import { assignToFleet, ensureGroup, mergeMaterials, unassignFromFleet } from './logic';
 import type { CellPlan, IncomingMaterial, Material, MaterialGroup, StagingArea } from './types';
+import type { FleetId } from '@/data/fleets';
+import { fleetRefs } from '@/data/fleetRef';
 
 export interface MasterDataState {
   materials: Material[];
@@ -25,13 +27,11 @@ export interface MasterDataState {
   /** Merge rows into the list (existing codes are skipped). Returns how many were added. */
   addMaterials(rows: IncomingMaterial[]): number;
   updateMaterial(code: string, patch: { name?: string; groupName?: string }): void;
-  setMaterialFleets(code: string, fleets: string[]): void;
-  assignMaterials(codes: string[], fleet: string): void;
-  /** The fleet was renamed: assigned materials follow it. */
-  renameFleet(from: string, to: string): void;
+  setMaterialFleets(code: string, fleets: FleetId[]): void;
+  assignMaterials(codes: string[], fleet: FleetId): void;
   /** The fleet was deleted: no material is assigned to it any more. */
-  removeFleet(name: string): void;
-  unassignMaterial(code: string, fleet: string): void;
+  removeFleet(id: FleetId): void;
+  unassignMaterial(code: string, fleet: FleetId): void;
   /** Take a material out of Master Data (callers check that no workflow uses it). */
   removeMaterial(code: string): void;
   /**
@@ -84,7 +84,7 @@ export const masterDataStore = createPersistedStore<
     read: load,
     save: (v) => services().masterData.save(v),
     pick: (s) => ({ materials: s.materials, groups: s.groups, areas: s.areas }),
-    apply: (d) => ({ ...d }),
+    apply: (d) => ({ ...d, materials: d.materials.map((m) => ({ ...m, fleets: fleetRefs(m.fleets) })) }), // (materials saved with fleet names point at the ids)
     watch: ['materials', 'groups', 'areas'],
     delayMs: 250,
   },
@@ -117,16 +117,10 @@ export const masterDataStore = createPersistedStore<
       },
       setMaterialFleets: (code, fleets) =>
         set({ materials: get().materials.map((m) => (m.code === code ? { ...m, fleets, updatedAt: Date.now() } : m)) }),
-      removeFleet: (name) =>
+      removeFleet: (id) =>
         set({
           materials: get().materials.map((m) =>
-            m.fleets.includes(name) ? { ...m, fleets: m.fleets.filter((f) => f !== name) } : m,
-          ),
-        }),
-      renameFleet: (from, to) =>
-        set({
-          materials: get().materials.map((m) =>
-            m.fleets.includes(from) ? { ...m, fleets: m.fleets.map((f) => (f === from ? to : f)) } : m,
+            m.fleets.includes(id) ? { ...m, fleets: m.fleets.filter((f) => f !== id) } : m,
           ),
         }),
       assignMaterials: (codes, fleet) => set({ materials: assignToFleet(get().materials, codes, fleet, Date.now()) }),

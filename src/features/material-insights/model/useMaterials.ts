@@ -33,24 +33,25 @@ export function toMaterialRequest(r: TripRequest): MaterialRequest {
  */
 export function useMaterialRequests(everyFleet = false): MaterialRequest[] {
   const fleets = useVisibleFleets();
-  const { name } = useFleetFilter();
+  const { fleetId } = useFleetFilter();
   const all = useRequests((s) => s.requests);
   return useMemo(() => {
-    const names = new Set(fleets.map((f) => f.name));
+    const ids = new Set<string>(fleets.map((f) => f.id));
+    const chosen = fleets.find((f) => (f.liveId ?? f.id) === fleetId)?.id; // (the filter's option ids are the map's ids)
     return all
-      .filter((r) => r.kind !== 'route' && names.has(r.fleet) && (everyFleet || !name || r.fleet === name))
+      .filter((r) => r.kind !== 'route' && ids.has(r.fleet) && (everyFleet || !chosen || r.fleet === chosen))
       .map(toMaterialRequest);
-  }, [all, fleets, name, everyFleet]);
+  }, [all, fleets, fleetId, everyFleet]);
 }
 
 /**
  * Do material insights make sense for this person? Only when one of their fleets runs a workflow with a Material step (or has material requests already). A fleet that only runs
  * saved routes (robots driving between stations, no material) gets no material views at all.
  */
-export function hasMaterialWorkflows(workflows: Record<string, Workflow>, fleetNames: string[]): boolean {
-  const names = new Set(fleetNames);
+export function hasMaterialWorkflows(workflows: Record<string, Workflow>, fleetIds: string[]): boolean {
+  const ids = new Set(fleetIds);
   return Object.values(workflows).some(
-    (w) => isKept(w) && w.fleet !== null && names.has(w.fleet) && flatten(w.nodes).some((n) => n.t === 'material'),
+    (w) => isKept(w) && w.fleet !== null && ids.has(w.fleet) && flatten(w.nodes).some((n) => n.t === 'material'),
   );
 }
 
@@ -63,7 +64,7 @@ export function useMaterialsRelevant(): boolean {
       requests.length > 0 ||
       hasMaterialWorkflows(
         workflows,
-        fleets.map((f) => f.name),
+        fleets.map((f) => f.id),
       ),
     [fleets, workflows, requests],
   );
@@ -79,7 +80,7 @@ const endOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate() +
 export function useMaterialsView(period: Period, tickMs = 30_000): MaterialsView {
   const real = useMaterialRequests();
   const fleets = useVisibleFleets();
-  const { name } = useFleetFilter();
+  const { fleetId } = useFleetFilter();
   const now = useNow(tickMs);
   return useMemo(() => {
     const from = period.from.getTime(),
@@ -88,8 +89,9 @@ export function useMaterialsView(period: Period, tickMs = 30_000): MaterialsView
       prevFrom = from - len;
     // a period that is still running (today) is compared with the same stretch of the one before it (yesterday up to this time), not with all of it
     const hasReal = real.some((r) => r.createdAt >= prevFrom - DAY && r.createdAt < endOf(period.to));
-    const fleetNames = name ? [name] : fleets.map((f) => f.name);
-    const data = hasReal ? real : sampleRequests(new Date(prevFrom), period.to, fleetNames, now);
+    const chosen = fleets.find((f) => (f.liveId ?? f.id) === fleetId);
+    const fleetIds = chosen ? [chosen.id] : fleets.map((f) => f.id);
+    const data = hasReal ? real : sampleRequests(new Date(prevFrom), period.to, fleetIds, now);
     const s = series(data, period.from, period.to);
     return {
       origin: hasReal ? 'live' : 'sample',
@@ -101,5 +103,5 @@ export function useMaterialsView(period: Period, tickMs = 30_000): MaterialsView
       byFleet: byFleet(data, from, to),
       waiting: waiting(data, to),
     };
-  }, [real, fleets, name, period, now]);
+  }, [real, fleets, fleetId, period, now]);
 }

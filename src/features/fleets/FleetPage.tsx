@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import type { FleetId } from '@/data/fleets';
 import { TabbedPanel } from '@/components/data/TabbedPanel';
 import { useDataset } from '@/data/dataset';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
@@ -31,29 +31,32 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
-/** One page for every fleet: `/configurator/fleets/:name/:tab`. The fleet name selects the data (map, robots, hardware, materials, groups, workflow). */
+/**
+ * One page for every fleet: `/configurator/fleets/:fleet/:tab`. The URL holds the fleet's ID (a name in an old link is turned into the id), so renaming a fleet never changes the address.
+ * The fleet selects the data (map, robots, hardware, materials, groups, workflows).
+ */
 export function FleetPage() {
-  const { name = '', tab = '' } = useParams();
-  const navigate = useNavigate();
-  const [renamedFrom, setRenamedFrom] = useState(''); // the old name of a fleet that was just renamed (its old URL is briefly unknown)
-  const known = useDataset((s) => s.fleets.some((f) => f.name === name));
+  const { name: param = '', tab = '' } = useParams();
+  const record = useDataset(
+    (s) => s.fleets.find((f) => f.id === param) ?? s.fleets.find((f) => f.name.toLowerCase() === param.toLowerCase()),
+  );
   const active = TABS.find((t) => t.id === tab);
-  const map = useMap(useFleets((s) => profileOf(s.profiles, name).mapId));
-  const robots = useDevices((s) => s.robot).filter((d) => d.values.fleet === name).length;
-  const hardware = useDevices((s) => s.hardware).filter((d) => d.values.fleet === name).length;
-  const workflows = useWorkflow((s) => workflowsOfFleet(s.workflows, name).filter(isKept).length);
-  const materials = useMasterData((s) => s.materials).filter((m) => m.fleets.includes(name)).length;
-  if (known && renamedFrom) setRenamedFrom('');
-  if (!known && renamedFrom !== name) return <Navigate to={FLEETS_PATH} replace />; // (a fleet that was just renamed is briefly unknown under its old URL)
-  if (!active) return <Navigate to={fleetPath(name)} replace />;
+  if (!record) return <Navigate to={FLEETS_PATH} replace />;
+  if (record.id !== param || !active) return <Navigate to={fleetPath(record.id, active?.id)} replace />;
+  return <FleetPageBody fleet={record.id} name={record.name} active={active} />;
+}
+
+function FleetPageBody({ fleet, name, active }: { fleet: FleetId; name: string; active: (typeof TABS)[number] }) {
+  const navigate = useNavigate();
+  const map = useMap(useFleets((s) => profileOf(s.profiles, fleet).mapId));
+  const robots = useDevices((s) => s.robot).filter((d) => d.values.fleet === fleet).length;
+  const hardware = useDevices((s) => s.hardware).filter((d) => d.values.fleet === fleet).length;
+  const workflows = useWorkflow((s) => workflowsOfFleet(s.workflows, fleet).filter(isKept).length);
+  const materials = useMasterData((s) => s.materials).filter((m) => m.fleets.includes(fleet)).length;
   const onRename = (to: string) => {
-    setRenamedFrom(name);
-    const e = renameFleet(name, to);
-    if (e) setRenamedFrom('');
-    if (!e && to.trim() !== name) {
-      navigate(fleetPath(to.trim(), active.id), { replace: true });
+    const e = renameFleet(fleet, to);
+    if (!e && to.trim() !== name)
       notify.success(copy.rename.done.title, copy.rename.done.body(name, to.trim()), 'fleet-renamed');
-    }
     return e;
   };
   const counts: Partial<Record<TabId, number>> = { materials, workflows };
@@ -90,11 +93,11 @@ export function FleetPage() {
           <TabbedPanel
             tabs={TABS.map((t) => ({ id: t.id, label: copy.tabs[t.id], icon: t.icon, badge: counts[t.id] }))}
             selected={active.id}
-            onSelect={(k) => navigate(fleetPath(name, k))}
+            onSelect={(k) => navigate(fleetPath(fleet, k))}
             label={name}
-            contentKey={`${name}/${active.id}`}
+            contentKey={`${fleet}/${active.id}`}
           >
-            <active.Panel fleet={name} />
+            <active.Panel fleet={fleet} />
           </TabbedPanel>
         </PageCard>
       </Page>

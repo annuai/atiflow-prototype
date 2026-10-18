@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { fleetDirectory } from '@/data/fleetDirectory';
 import { BottomSheet } from '@/components/modal/BottomSheet';
 import { copy, type BookedTrip } from '@/features/bookings';
 import { RequestStatusBadge, STATUS, useUserNames, type StatusEvent, type TripRequest } from '@/features/requests';
@@ -86,7 +87,7 @@ export function HistoryDetail({
               {item.robotId ?? (trip ? trip.robotLabel : (request?.robotType ?? d.robotNone))}
               {item.robotId && trip ? ` · ${trip.robotLabel}` : ''}
             </Row>
-            <Row label={d.fleet}>{item.fleet}</Row>
+            <Row label={d.fleet}>{fleetDirectory.nameOf(item.fleet)}</Row>
             {request && <Row label={d.workflow}>{request.workflowName}</Row>}
             <Row label={d.requestedBy}>{request ? request.requestedByName : trip?.bookedByName}</Row>
             <Row label={d.route}>{request ? request.legs.join(' → ') : `${trip?.fromName} → ${trip?.toName}`}</Row>

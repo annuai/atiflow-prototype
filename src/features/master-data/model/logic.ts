@@ -1,5 +1,6 @@
 import type { IncomingMaterial, Material, MaterialGroup } from './types';
 import { t } from '../text';
+import type { FleetId } from '@/data/fleets';
 
 const norm = (s: string) => s.trim().toLowerCase();
 export const sameCode = (a: string, b: string) => norm(a) === norm(b);
@@ -107,15 +108,15 @@ export function filterGroups(
 }
 
 /** Codes of the materials assigned to a fleet (what the Workflow Builder offers). */
-export const codesForFleet = (list: Material[], fleet: string) =>
+export const codesForFleet = (list: Material[], fleet: FleetId) =>
   list.filter((m) => m.fleets.includes(fleet)).map((m) => m.code);
 
 /** Assign materials to a fleet (already assigned ones are left alone). */
-export const assignToFleet = (list: Material[], codes: string[], fleet: string, now: number): Material[] =>
+export const assignToFleet = (list: Material[], codes: string[], fleet: FleetId, now: number): Material[] =>
   list.map((m) =>
     codes.includes(m.code) && !m.fleets.includes(fleet) ? { ...m, fleets: [...m.fleets, fleet], updatedAt: now } : m,
   );
-export const unassignFromFleet = (list: Material[], code: string, fleet: string, now: number): Material[] =>
+export const unassignFromFleet = (list: Material[], code: string, fleet: FleetId, now: number): Material[] =>
   list.map((m) => (m.code === code ? { ...m, fleets: m.fleets.filter((f) => f !== fleet), updatedAt: now } : m));
 
 /** Keep materials whose code starts with the prefix (empty prefix = all). */

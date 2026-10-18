@@ -1,7 +1,7 @@
 import { createNode, createStart } from '@/features/workflow-builder/model/factory';
 import { defaultWorkflowName } from '@/features/workflow-builder/model/names';
 import type { Workflow, Workflows } from '@/features/workflow-builder/model/types';
-import { FLEET_NAME } from '@/data/fleets';
+import { FLEET_ID, FLEET_NAME, type FleetId } from '@/data/fleets';
 
 /**
  * Starting data of the DUMMY workflow service: one workflow per seed fleet, the sample request workflows (one per material) and the sample trips. Real workflows come from the API;
@@ -14,7 +14,7 @@ export function baseSeedWorkflows(): Workflows {
     {
       id: 'w-line-side-1',
       name: defaultWorkflowName(FLEET_NAME.lineSide),
-      fleet: FLEET_NAME.lineSide,
+      fleet: FLEET_ID.lineSide,
       saved: true,
       nodes: [
         createStart({ users: ['rohan'] }),
@@ -33,7 +33,7 @@ export function baseSeedWorkflows(): Workflows {
     {
       id: 'w-assembly-1',
       name: defaultWorkflowName(FLEET_NAME.assembly),
-      fleet: FLEET_NAME.assembly,
+      fleet: FLEET_ID.assembly,
       saved: true,
       nodes: [
         createStart({ trigger: 'Auto', request: 'MES' }),
@@ -57,7 +57,7 @@ export function baseSeedWorkflows(): Workflows {
 const SAMPLES: {
   id: string;
   name: string;
-  fleet: string;
+  fleet: FleetId;
   code: string;
   qty: string;
   fromTablet: boolean;
@@ -69,7 +69,7 @@ const SAMPLES: {
   {
     id: 'w-sample-1001',
     name: 'Chain Pin to Workstation 1',
-    fleet: FLEET_NAME.lineSide,
+    fleet: FLEET_ID.lineSide,
     code: 'DCP-1001',
     qty: '20',
     fromTablet: true,
@@ -81,7 +81,7 @@ const SAMPLES: {
   {
     id: 'w-sample-1002',
     name: 'Chain Plate to Workstation 6',
-    fleet: FLEET_NAME.lineSide,
+    fleet: FLEET_ID.lineSide,
     code: 'DCP-1002',
     qty: '10',
     fromTablet: false,
@@ -92,7 +92,7 @@ const SAMPLES: {
   {
     id: 'w-sample-1003',
     name: 'Sprocket to Workstation 4',
-    fleet: FLEET_NAME.lineSide,
+    fleet: FLEET_ID.lineSide,
     code: 'DCP-1003',
     qty: '5',
     fromTablet: true,
@@ -104,7 +104,7 @@ const SAMPLES: {
   {
     id: 'w-sample-1004',
     name: 'Power Cable to Workstation 3',
-    fleet: FLEET_NAME.lineSide,
+    fleet: FLEET_ID.lineSide,
     code: 'DCP-1004',
     qty: '15',
     fromTablet: true,
@@ -115,7 +115,7 @@ const SAMPLES: {
   {
     id: 'w-sample-1005',
     name: 'Coupling Pad to Preparation 1',
-    fleet: FLEET_NAME.assembly,
+    fleet: FLEET_ID.assembly,
     code: 'DCP-1005',
     qty: '30',
     fromTablet: true,
@@ -127,7 +127,7 @@ const SAMPLES: {
   {
     id: 'w-sample-1006',
     name: 'Dust Cover to Preparation 2',
-    fleet: FLEET_NAME.assembly,
+    fleet: FLEET_ID.assembly,
     code: 'DCP-1006',
     qty: '8',
     fromTablet: false,
@@ -160,7 +160,7 @@ export function sampleWorkflows(): Workflow[] {
 const ROUTES: {
   id: string;
   name: string;
-  fleet: string;
+  fleet: FleetId;
   robot: string;
   stations: string[];
   requesters: string[];
@@ -170,7 +170,7 @@ const ROUTES: {
   {
     id: 'w-route-1',
     name: 'Store run to Workstations',
-    fleet: FLEET_NAME.lineSide,
+    fleet: FLEET_ID.lineSide,
     robot: 'Sherpa XT Lite',
     stations: ['STA-116', 'STA-107', 'STA-110'],
     requesters: ['rohan'],
@@ -178,7 +178,7 @@ const ROUTES: {
   {
     id: 'w-route-2',
     name: 'Pallet Mover shuttle: Store to Workstation 3',
-    fleet: FLEET_NAME.lineSide,
+    fleet: FLEET_ID.lineSide,
     robot: 'Pallet Mover',
     stations: ['STA-117', 'STA-105'],
     requesters: ['rohan'],
@@ -188,7 +188,7 @@ const ROUTES: {
   {
     id: 'w-route-3',
     name: 'Preparation round',
-    fleet: FLEET_NAME.assembly,
+    fleet: FLEET_ID.assembly,
     robot: 'Sherpa XT Lite',
     stations: ['STA-116', 'STA-113', 'STA-114'],
     requesters: ['sneha'],
@@ -196,7 +196,7 @@ const ROUTES: {
   {
     id: 'w-route-4',
     name: 'Full Line Side replenishment round: store to every workstation',
-    fleet: FLEET_NAME.lineSide,
+    fleet: FLEET_ID.lineSide,
     robot: 'Sherpa XT Lite',
     stations: ['STA-116', 'STA-117', 'STA-107', 'STA-105', 'STA-110', 'STA-108'],
     requesters: ['rohan'],

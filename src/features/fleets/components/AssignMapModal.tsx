@@ -1,4 +1,5 @@
 import { MapThumbnail, useMaps } from '@/features/maps';
+import { useFleetName } from '@/data/fleetDirectory';
 import { EmptyState } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { Map01 } from '@untitledui/icons';
@@ -10,8 +11,10 @@ import { cx } from '@/utils/cx';
 import { copy } from '../copy';
 import { availableMaps } from '../model/logic';
 import { fleetsStore, profileOf, useFleets } from '../model/store';
+import type { FleetId } from '@/data/fleets';
 
-function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean): void }) {
+function Body({ fleet, onOpenChange }: { fleet: FleetId; onOpenChange(o: boolean): void }) {
+  const fleetName = useFleetName(fleet);
   const all = useMaps();
   const profiles = useFleets((s) => s.profiles);
   const profile = profileOf(profiles, fleet);
@@ -23,7 +26,7 @@ function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean)
   const save = () => {
     fleetsStore.getState().assignMap(fleet, mapId);
     onOpenChange(false);
-    const d = t.done(MAPS.find((m) => m.id === mapId)!.name, fleet);
+    const d = t.done(MAPS.find((m) => m.id === mapId)!.name, fleetName);
     notify.success(d.title, d.body, 'map-assigned');
   };
   return (
@@ -31,7 +34,7 @@ function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean)
       isOpen
       onOpenChange={onOpenChange}
       icon={Map01}
-      title={changing ? t.changeTitle(fleet) : t.title(fleet)}
+      title={changing ? t.changeTitle(fleetName) : t.title(fleetName)}
       subtitle={t.subtitle}
       secondary={{ label: t.cancel, onPress: () => onOpenChange(false) }}
       primary={{
@@ -43,7 +46,12 @@ function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean)
       {MAPS.length === 0 ? (
         <EmptyState icon={Map01} title={copy.emptyTitle.maps} subtext={all.length ? t.taken : t.none} size="sm" />
       ) : (
-        <RadioGroup aria-label={t.title(fleet)} value={mapId} onChange={setMapId} className="flex flex-col gap-3 pt-2">
+        <RadioGroup
+          aria-label={t.title(fleetName)}
+          value={mapId}
+          onChange={setMapId}
+          className="flex flex-col gap-3 pt-2"
+        >
           {MAPS.map((m) => (
             <Radio
               key={m.id}
@@ -98,5 +106,5 @@ function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean)
   );
 }
 /** Pick a map for a fleet that has none. Mounted only while open. */
-export const AssignMapModal = (p: { fleet: string; isOpen: boolean; onOpenChange(o: boolean): void }) =>
+export const AssignMapModal = (p: { fleet: FleetId; isOpen: boolean; onOpenChange(o: boolean): void }) =>
   p.isOpen ? <Body fleet={p.fleet} onOpenChange={p.onOpenChange} /> : null;

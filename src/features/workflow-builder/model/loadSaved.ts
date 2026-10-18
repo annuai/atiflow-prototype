@@ -12,6 +12,7 @@ import {
 } from './seed';
 import type { FieldValue, WfNode, Workflows } from './types';
 import { prefillUsers } from './users';
+import { fleetRef } from '@/data/fleetRef';
 
 /**
  * Reads the workflows from the `workflows` service and brings them up to date: older saved versions (v2 to v6) are upgraded, robot names that match no robot become the default robot,
@@ -65,7 +66,7 @@ function loadSaved(): Saved {
               const id = `w-v2-${i}`;
               workflows[id] = {
                 id,
-                fleet,
+                fleet: fleetRef(fleet),
                 nodes: f.nodes,
                 published: f.published,
                 saved: true,
@@ -100,5 +101,7 @@ function migrateStations(ws: Workflows): Workflows {
 export function loadWorkflows(): Saved {
   const b = load();
   migrateStations(b.workflows);
+  // workflows saved with a fleet NAME point at the fleet's id from now on
+  for (const w of Object.values(b.workflows)) if (w.fleet) w.fleet = fleetRef(w.fleet);
   return b;
 }

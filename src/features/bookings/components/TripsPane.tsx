@@ -9,7 +9,7 @@ import { useFleetDirectory } from '@/data/fleetDirectory';
 import { robotsOnFloor, useRobotRecords } from '@/data/robots';
 import { ROBOT_TYPES } from '@/data/robotTypes';
 import { useAuth } from '@/features/auth';
-import { routeItems, useRequestsRunning, fleetIdOf, fleetLiveOf, useOperator } from '@/features/requests';
+import { routeItems, useRequestsRunning, fleetLiveOf, useOperator } from '@/features/requests';
 import { useWorkflow, fleetStations, stationLabel, useMapData, fleetScene } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
 import { CustomCallSheet } from './CustomCallSheet';
@@ -46,7 +46,7 @@ export function TripsPane() {
   const [robot, setRobot] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const stations = useMemo(() => (fleet ? fleetStations(fleet.name, map) : []), [fleet, map]);
+  const stations = useMemo(() => (fleet ? fleetStations(fleet.id, map) : []), [fleet, map]);
   // robots on the fleet's floor by type; "free now" comes from the live telemetry: no trip and enough battery to take one
   const fleetRobots = useMemo(() => Object.values(live).filter((r) => r.fleetId === fleetLive), [live, fleetLive]);
   const telemetry = fleetRobots.length > 0;
@@ -83,7 +83,7 @@ export function TripsPane() {
   const chosen = types.find((x) => x.type.id === robot)?.type;
   const error = bookingError({ robotType: robot, from, to });
   // saved routes (workflows with no material) the person may run: shown first, the custom trip is the other way in
-  const routes = useMemo(() => routeItems(Object.values(workflows), me, fleetIdOf, fleetLiveOf), [workflows, me]);
+  const routes = useMemo(() => routeItems(Object.values(workflows), me, fleetLiveOf), [workflows, me]);
   const showRoutes = mode === 'routes' && routes.length > 0;
   const [confirmCustom, setConfirmCustom] = useState(false);
   const book = () => {
@@ -92,7 +92,7 @@ export function TripsPane() {
     const t = bookingsStore.getState().book(
       { username: user.username, name: user.name },
       {
-        fleet: fleet.name,
+        fleet: fleet.id,
         fleetLive,
         robotType: chosen.id,
         robotLabel: chosen.label,
@@ -160,7 +160,7 @@ export function TripsPane() {
           ) : (
             <StationsStep
               robot={chosen}
-              map={fleet ? (fleetScene(fleet.name, map) ?? null) : null} // the chosen fleet's own map, the latest published version
+              map={fleet ? (fleetScene(fleet.id, map) ?? null) : null} // the chosen fleet's own map, the latest published version
               stations={stations}
               from={from}
               to={to}

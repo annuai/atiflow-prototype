@@ -7,7 +7,7 @@ import type { FleetMap } from '@/data/maps';
 /**
  * THE WORLD of the Live Floor: what the simulator drives on, what the 3D scene shows and what every page reads, built from FLEETS and their MAPS, never from a fixed list.
  *
- *  - a fleet runs on the map its profile points to (`profiles[fleet name].mapId`); several fleets may run on one map (they share its lanes: that is how a shared area works);
+ *  - a fleet runs on the map its profile points to (`profiles[fleet id].mapId`); several fleets may run on one map (they share its lanes: that is how a shared area works);
  *  - a map the Deployment Manager / Map Editor made (not one of the two ECC maps) is laid out beside the others, with its own ids, so two maps never clash;
  *  - the two ECC base fleets always run (the base lane map of `nav.json` serves them), as before;
  *  - a fleet whose map is not published yet, or has no roads / stations to drive between, is NOT in the world: the Live Floor says why instead of showing nothing.
@@ -159,7 +159,7 @@ function partSite(
 export function buildWorld(i: WorldInput): World {
   const baseIds = new Set(i.baseNav.fleets.map((f) => f.id));
   const mapOf = (f: FleetRecord) => {
-    const id = i.profiles[f.name]?.mapId;
+    const id = i.profiles[f.id]?.mapId;
     return id ? i.maps.find((m) => m.id === id) : undefined;
   };
   const isBaseMap = (m: FleetMap) => baseIds.has(m.fleetLive);

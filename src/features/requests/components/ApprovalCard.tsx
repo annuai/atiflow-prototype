@@ -1,4 +1,5 @@
 import { Badge } from '@/components/base/badges/badges';
+import { fleetDirectory } from '@/data/fleetDirectory';
 import { Button } from '@/components/base/buttons/button';
 import { timeAgo } from '@/utils/timeAgo';
 import { copy } from '../copy';
@@ -44,7 +45,7 @@ export function ApprovalCard({
       {step && <p className="text-sm font-medium text-secondary">{copy.approve.step(index, r.approvals.length)}</p>}
       <p className="text-sm text-secondary">{copy.approve.requestedBy(r.requestedByName, timeAgo(r.createdAt, now))}</p>
       <p className="text-xs text-tertiary">
-        {r.workflowName} · {r.fleet}
+        {r.workflowName} · {fleetDirectory.nameOf(r.fleet)}
       </p>
       <footer className="mt-auto flex gap-3 pt-1">
         <Button size="xl" color="secondary-destructive" className="flex-1" onPress={onReject}>

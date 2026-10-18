@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowUp, Package } from '@untitledui/icons';
+import { fleetDirectory } from '@/data/fleetDirectory';
 import { BadgeWithDot } from '@/components/base/badges/badges';
 import { Card, CardTitle } from '@/components/data/Card';
 import { EmptyState } from '@/components/data/EmptyState';
@@ -178,7 +179,7 @@ export function MaterialsReport({ period }: { period: Period }) {
                   {view.byFleet.map((f) => (
                     <li key={f.fleet}>
                       <div className="flex items-baseline justify-between text-sm">
-                        <span className="text-primary">{f.fleet}</span>
+                        <span className="text-primary">{fleetDirectory.nameOf(f.fleet)}</span>
                         <span className="text-tertiary tabular-nums">{t.units(f.units)}</span>
                       </div>
                       <div className="mt-1 h-1.5 rounded-full bg-quaternary">

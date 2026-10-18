@@ -1,3 +1,4 @@
+import { FLEET_ID, asFleetId, type FleetId } from '../src/data/fleets';
 import { datasetStore } from '../src/data/dataset';
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
@@ -16,16 +17,16 @@ import { publishProblem } from '../src/features/workflow-builder/model/validate'
 import { parsePrompt, applySteps } from '../src/features/workflow-builder/model/parsePrompt';
 import { NODE_TYPES, PALETTE } from '../src/features/workflow-builder/model/registry';
 
-const seedOf = (fleet: string) => Object.values(seedWorkflows()).find((w) => w.fleet === fleet)!.nodes;
-const fresh = () => blankWorkflow('Test Fleet').nodes;
+const seedOf = (fleet: FleetId) => Object.values(seedWorkflows()).find((w) => w.fleet === fleet)!.nodes;
+const fresh = () => blankWorkflow(asFleetId('test-fleet')).nodes;
 
 describe('workflow tree rules', () => {
   it('seed fleets match the reference: 11 + 8 main nodes, Line Side counts 13 with branches', () => {
     const f = Object.values(seedWorkflows());
-    const by = (n: string) => f.find((w) => w.fleet === n)!;
-    expect(by('Line Side Fleet').nodes.length).toBe(11);
-    expect(by('Assembly Fleet').nodes.length).toBe(8);
-    expect(countNodes(by('Line Side Fleet').nodes)).toBe(13);
+    const by = (n: FleetId) => f.find((w) => w.fleet === n)!;
+    expect(by(FLEET_ID.lineSide).nodes.length).toBe(11);
+    expect(by(FLEET_ID.assembly).nodes.length).toBe(8);
+    expect(countNodes(by(FLEET_ID.lineSide).nodes)).toBe(13);
   });
   it('inserts between Start and End, never before Start or after End', () => {
     let n = fresh();
@@ -91,7 +92,7 @@ describe('publish validation', () => {
     const l = createNode('logic');
     l.br!.o = [];
     expect(publishProblem(insertNode(fresh(), l, 'main').nodes)?.title).toMatch(/branch is empty/);
-    expect(publishProblem(seedOf('Line Side Fleet'))).toBeNull();
+    expect(publishProblem(seedOf(FLEET_ID.lineSide))).toBeNull();
   });
 });
 
@@ -117,7 +118,7 @@ describe('Ati AI prompt parser', () => {
     expect(parsePrompt('hello there')).toEqual([]);
   });
   it('applySteps keeps Start/End and replaces the middle', () => {
-    const base = seedOf('Assembly Fleet');
+    const base = seedOf(FLEET_ID.assembly);
     const out = applySteps(base, parsePrompt('pick up at STA-101'));
     expect(out[0].id).toBe(base[0].id);
     expect(out.at(-1)!.t).toBe('end');
@@ -139,13 +140,13 @@ describe('fleets and workflows in the store', () => {
     const id = s.startWorkflow();
     expect(wfStore.getState().workflows[id]).toMatchObject({ fleet: null, name: '' });
     expect(selectFleet(wfStore.getState())).toBe('');
-    wfStore.getState().assignFleet('Line Side Fleet');
+    wfStore.getState().assignFleet(FLEET_ID.lineSide);
     expect(wfStore.getState().workflows[id].name).toBe('Line Side Fleet_workflow_2'); // _1 exists in the seed
-    wfStore.getState().assignFleet('Assembly Fleet');
+    wfStore.getState().assignFleet(FLEET_ID.assembly);
     expect(wfStore.getState().workflows[id].name).toBe('Assembly Fleet_workflow_2');
     expect(wfStore.getState().renameWorkflow('  ')).toBe(false);
     expect(wfStore.getState().renameWorkflow('My flow')).toBe(true);
-    wfStore.getState().assignFleet('Line Side Fleet');
+    wfStore.getState().assignFleet(FLEET_ID.lineSide);
     expect(wfStore.getState().workflows[id].name).toBe('My flow'); // a user's name is kept
   });
   it('starting again reuses an untouched fleet-less draft but never a built one', async () => {
@@ -153,20 +154,20 @@ describe('fleets and workflows in the store', () => {
     const a = wfStore.getState().startWorkflow();
     const b = wfStore.getState().startWorkflow();
     expect(b).toBe(a);
-    const named = wfStore.getState().startWorkflow('Line Side Fleet');
+    const named = wfStore.getState().startWorkflow(FLEET_ID.lineSide);
     expect(named).not.toBe(a);
     expect(isBlankDraft(wfStore.getState().workflows[named])).toBe(false);
     wfStore.getState().openWorkflow(a);
-    wfStore.getState().assignFleet('Line Side Fleet');
+    wfStore.getState().assignFleet(FLEET_ID.lineSide);
     expect(wfStore.getState().startWorkflow()).not.toBe(a);
   });
   it('leaving a workflow that is neither saved nor published discards it; Save Draft or Publish keeps it', async () => {
     const { wfStore } = await import('../src/features/workflow-builder/model/store');
-    const a = wfStore.getState().startWorkflow('Assembly Fleet');
+    const a = wfStore.getState().startWorkflow(FLEET_ID.assembly);
     wfStore.getState().discardUnsaved();
     expect(wfStore.getState().workflows[a]).toBeUndefined();
     expect(wfStore.getState().current).toBeNull();
-    const b = wfStore.getState().startWorkflow('Assembly Fleet');
+    const b = wfStore.getState().startWorkflow(FLEET_ID.assembly);
     wfStore.getState().saveDraft();
     wfStore.getState().discardUnsaved();
     expect(wfStore.getState().workflows[b]).toMatchObject({ saved: true });
@@ -214,21 +215,21 @@ describe("stations come from the fleet's map", () => {
   it('a fleet offers the work stations of its lane map (never parking or chargers); the Assembly fleet has its own area plus the shared east strip', async () => {
     const { fleetStations } = await import('../src/features/workflow-builder/model/stations');
     const map = { site: {} as never, nav, live: nav };
-    const line = fleetStations('Line Side Fleet', map).map((s) => s.id),
-      asm = fleetStations('Assembly Fleet', map).map((s) => s.id);
+    const line = fleetStations(FLEET_ID.lineSide, map).map((s) => s.id),
+      asm = fleetStations(FLEET_ID.assembly, map).map((s) => s.id);
     expect(line).toContain('STA-101');
     expect(line).toContain('STA-124');
     expect(line.some((id) => id.startsWith('PARK') || id.startsWith('CHARGE'))).toBe(false);
     expect(asm).toContain('STA-113');
     expect(asm).not.toContain('STA-101');
     expect(asm).toContain('STA-116');
-    expect(fleetStations('Nope', map)).toEqual([]);
+    expect(fleetStations(asFleetId('nope'), map)).toEqual([]);
     expect(fleetStations(null, map)).toEqual([]);
   });
   it('clicking a station on the map sets a single station field, and adds or removes one in a branch', async () => {
     const { wfStore } = await import('../src/features/workflow-builder/model/store');
     const { stationField } = await import('../src/features/workflow-builder/model/stations');
-    const id = wfStore.getState().startWorkflow('Line Side Fleet');
+    const id = wfStore.getState().startWorkflow(FLEET_ID.lineSide);
     wfStore.getState().openWorkflow(id);
     wfStore.getState().addNode('station');
     const node = () =>
@@ -279,7 +280,7 @@ describe("stations come from the fleet's map", () => {
           ...(n.br ? ids([...n.br.t, ...n.br.o]) : []),
         ])
         .filter(Boolean);
-    for (const fleet of ['Line Side Fleet', 'Assembly Fleet']) {
+    for (const fleet of [FLEET_ID.lineSide, FLEET_ID.assembly]) {
       const ok = new Set(fleetStations(fleet, map).map((s) => s.id));
       for (const id of ids(seedOf(fleet))) expect(ok.has(id), `${fleet} ${id}`).toBe(true);
     }

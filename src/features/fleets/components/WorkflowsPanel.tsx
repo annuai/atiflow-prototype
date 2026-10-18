@@ -11,9 +11,10 @@ import { DataTable, type Column } from '@/components/data/DataTable';
 import { isKept, useWorkflow, wfStore, workflowsOfFleet } from '@/features/workflow-builder';
 import { workflowSummary, type WorkflowRow } from '../model/workflows';
 import { copy } from '../copy';
+import type { FleetId } from '@/data/fleets';
 
 /** Workflows tab: the fleet's workflow(s) read straight from the Workflow Builder. Rows and "Make New Workflow" open the builder on this fleet. */
-export function WorkflowsPanel({ fleet }: { fleet: string }) {
+export function WorkflowsPanel({ fleet }: { fleet: FleetId }) {
   const navigate = useNavigate();
   const workflows = useWorkflow((s) => s.workflows);
   const [text, setText] = useState('');

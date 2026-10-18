@@ -4,21 +4,29 @@ import { useState } from 'react';
 import { Flag01 } from '@untitledui/icons';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { ModalShell } from '@/components/modal/ModalShell';
-import { fleetsUsingMaterial, useFleetNames, wfStore } from '@/features/workflow-builder';
+import { fleetDirectory, useFleetChoices } from '@/data/fleetDirectory';
+import { fleetsUsingMaterial, wfStore } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { masterDataStore } from '../model/store';
 import type { Material } from '../model/types';
 
 function Body({ material, onOpenChange }: { material: Material; onOpenChange(o: boolean): void }) {
-  const fleets = useFleetNames();
+  const fleets = useFleetChoices();
   const [sel, setSel] = useState(material.fleets);
   const save = () => {
     const blocked = material.fleets.filter(
       (f) => !sel.includes(f) && fleetsUsingMaterial(wfStore.getState().workflows, material.code).includes(f),
     ); // unassigning a material a workflow still uses is refused
     if (blocked.length) {
-      notify.warning(copy.fleets.inUse.title, copy.fleets.inUse.body(material.code, blocked), 'material-in-use');
+      notify.warning(
+        copy.fleets.inUse.title,
+        copy.fleets.inUse.body(
+          material.code,
+          blocked.map((f) => fleetDirectory.nameOf(f)),
+        ),
+        'material-in-use',
+      );
       setSel([...sel, ...blocked]);
       return;
     }
@@ -41,11 +49,11 @@ function Body({ material, onOpenChange }: { material: Material; onOpenChange(o: 
         )}
         {fleets.map((f) => (
           <Checkbox
-            key={f}
+            key={f.id}
             size="sm"
-            label={f}
-            isSelected={sel.includes(f)}
-            onChange={(on) => setSel(on ? [...sel, f] : sel.filter((x) => x !== f))}
+            label={f.label}
+            isSelected={sel.includes(f.id)}
+            onChange={(on) => setSel(on ? [...sel, f.id] : sel.filter((x) => x !== f.id))}
           />
         ))}
       </div>

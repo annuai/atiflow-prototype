@@ -8,9 +8,10 @@ import { copy } from '../copy';
 import { freeStations, validateGroupForm } from '../model/logic';
 import { mapById } from '../model/maps';
 import { fleetsStore, profileOf, useFleets } from '../model/store';
+import type { FleetId } from '@/data/fleets';
 
 interface Props {
-  fleet: string;
+  fleet: FleetId;
   rows: PickerRow[];
   preselected: string[];
   onOpenChange(o: boolean): void;

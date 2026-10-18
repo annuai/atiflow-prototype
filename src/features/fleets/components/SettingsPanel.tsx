@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useFleetName } from '@/data/fleetDirectory';
 import { useNavigate } from 'react-router-dom';
 import { Trash01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
@@ -10,9 +11,11 @@ import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { deleteFleet, fleetImpact } from '../model/delete';
 import { FLEETS_PATH } from '../paths';
+import type { FleetId } from '@/data/fleets';
 
 /** Settings tab: for now only the danger zone (delete the fleet). Deleting asks for the fleet's name, says what it takes with it, and is refused while trips of the fleet are open. */
-export function SettingsPanel({ fleet }: { fleet: string }) {
+export function SettingsPanel({ fleet }: { fleet: FleetId }) {
+  const fleetName = useFleetName(fleet);
   const t = copy.settings;
   const navigate = useNavigate();
   const [asking, setAsking] = useState(false);
@@ -23,7 +26,7 @@ export function SettingsPanel({ fleet }: { fleet: string }) {
   const run = () => {
     if (!deleteFleet(fleet)) return;
     navigate(FLEETS_PATH, { replace: true });
-    const d = t.done(fleet);
+    const d = t.done(fleetName);
     notify.success(d.title, d.body, 'fleet-deleted');
   };
   return (
@@ -56,10 +59,10 @@ export function SettingsPanel({ fleet }: { fleet: string }) {
       <TypeToConfirmDialog
         isOpen={asking}
         onOpenChange={setAsking}
-        title={t.confirmTitle(fleet)}
+        title={t.confirmTitle(fleetName)}
         description={t.confirmBody}
-        phrase={fleet}
-        prompt={t.prompt(fleet)}
+        phrase={fleetName}
+        prompt={t.prompt(fleetName)}
         confirmLabel={t.confirm}
         onConfirm={run}
       />

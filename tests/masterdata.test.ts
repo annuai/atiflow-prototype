@@ -1,3 +1,4 @@
+import { FLEET_ID, asFleetId } from '../src/data/fleets';
 import { describe, expect, it } from 'vitest';
 import { countState, totalCells, utilised } from '../src/features/master-data/model/areas';
 import { classifyRows } from '../src/features/master-data/import/review';
@@ -96,12 +97,12 @@ describe('master data: lists and fleet assignment', () => {
     expect(filterGroups(groups, materials, { text: 'pkg', scope: 'all' })).toHaveLength(1);
   });
   it('only materials assigned to a fleet are offered to its workflows', () => {
-    expect(codesForFleet(materials, 'Line Side Fleet')).toEqual(['DCP-1001', 'DCP-1002', 'DCP-1003', 'DCP-1004']);
-    expect(codesForFleet(materials, 'Assembly Fleet')).toEqual(['DCP-1005', 'DCP-1006']);
-    expect(codesForFleet(materials, 'Nobody')).toEqual([]);
+    expect(codesForFleet(materials, FLEET_ID.lineSide)).toEqual(['DCP-1001', 'DCP-1002', 'DCP-1003', 'DCP-1004']);
+    expect(codesForFleet(materials, FLEET_ID.assembly)).toEqual(['DCP-1005', 'DCP-1006']);
+    expect(codesForFleet(materials, asFleetId('nobody'))).toEqual([]);
   });
   it('the Ati AI parser resolves materials from the fleet list only', () => {
-    const codes = codesForFleet(materials, 'Line Side Fleet');
+    const codes = codesForFleet(materials, FLEET_ID.lineSide);
     expect(resolveMaterial('material dcp 1003', codes)).toBe('DCP-1003');
     expect(resolveMaterial('material 1004', codes)).toBe('DCP-1004');
     expect(resolveMaterial('material 9999', codes)).toBe('DCP-1001');
@@ -203,7 +204,7 @@ describe('master data: staging areas', () => {
   it('seeded areas hold real materials of their fleet, with quantities and different storing times', () => {
     const mats = seedMaterials(0, seedGroups(0));
     const [a] = seedAreas(mats, 1_000_000_000);
-    const codes = new Set(mats.filter((m) => m.fleets.includes('Line Side Fleet')).map((m) => m.code));
+    const codes = new Set(mats.filter((m) => m.fleets.includes(FLEET_ID.lineSide)).map((m) => m.code));
     const filled = Object.values(a.cells).filter((c) => c.state === 'filled');
     expect(filled.length).toBe(14);
     expect(filled.every((c) => c.materialCode && codes.has(c.materialCode) && c.quantity && c.storedAt)).toBe(true);
@@ -226,13 +227,18 @@ describe('unassigning a used material', () => {
     const logic = createNode('logic', { material: 'B-2' });
     logic.br!.t.push(createNode('material', { code: 'C-3' }));
     const fleets = {
-      a: { id: 'a', name: 'n', fleet: 'One', nodes: [createStart(), createNode('material', { code: 'A-1' }), logic] },
-      b: { id: 'b', name: 'n', fleet: 'Two', nodes: [createStart()] },
+      a: {
+        id: 'a',
+        name: 'n',
+        fleet: asFleetId('one'),
+        nodes: [createStart(), createNode('material', { code: 'A-1' }), logic],
+      },
+      b: { id: 'b', name: 'n', fleet: asFleetId('two'), nodes: [createStart()] },
       c: { id: 'c', name: 'n', fleet: null, nodes: [createNode('material', { code: 'Z-9' })] },
     };
-    expect(fleetsUsingMaterial(fleets, 'A-1')).toEqual(['One']);
-    expect(fleetsUsingMaterial(fleets, 'B-2')).toEqual(['One']);
-    expect(fleetsUsingMaterial(fleets, 'C-3')).toEqual(['One']);
+    expect(fleetsUsingMaterial(fleets, 'A-1')).toEqual(['one']);
+    expect(fleetsUsingMaterial(fleets, 'B-2')).toEqual(['one']);
+    expect(fleetsUsingMaterial(fleets, 'C-3')).toEqual(['one']);
     expect(fleetsUsingMaterial(fleets, 'Z-9')).toEqual([]);
   });
 });

@@ -1,3 +1,4 @@
+import { FLEET_ID } from '../src/data/fleets';
 import { describe, expect, it } from 'vitest';
 import { KINDS } from '../src/features/devices/model/kinds';
 import { blankValues, findDevice, nameOf, validateNew } from '../src/features/devices/model/validate';
@@ -15,7 +16,7 @@ describe('device registry (robots + hardware share one model)', () => {
   it('seeds: 19 robots spread over two fleets (one unassigned), 4 hardware items', () => {
     expect(robot.seed).toHaveLength(19);
     expect(hardware.seed).toHaveLength(4);
-    expect(robot.seed.filter((d) => d.values.fleet === 'Line Side Fleet')).toHaveLength(9);
+    expect(robot.seed.filter((d) => d.values.fleet === FLEET_ID.lineSide)).toHaveLength(9);
     expect(robot.seed.filter((d) => d.values.fleet === '')).toHaveLength(1);
     expect(robot.seed.filter((d) => d.values.fleet).every((d) => d.status === 'online')).toBe(true);
     expect(hardware.seed.map((d) => d.values.hwType)).toEqual(['Summon Button', 'Hooter', 'Ati Eye', 'Hooter']);
@@ -62,11 +63,11 @@ describe('device registry (robots + hardware share one model)', () => {
 });
 
 describe('shared dataset', () => {
-  it('one document with the fleets and devices; fleet names in the devices exist in the fleet list', async () => {
+  it('one document with the fleets and devices; the fleet of every device exists in the fleet list (by id)', async () => {
     const { datasetStore, datasetDoc } = await import('../src/data/dataset');
     const d = datasetStore.getState();
-    const names = d.fleets.map((f) => f.name);
-    for (const dev of [...d.robot, ...d.hardware]) if (dev.values.fleet) expect(names).toContain(dev.values.fleet);
+    const ids = d.fleets.map((f) => f.id);
+    for (const dev of [...d.robot, ...d.hardware]) if (dev.values.fleet) expect(ids).toContain(dev.values.fleet);
     expect(
       datasetDoc.parse(datasetDoc.exportText({ version: 1, fleets: d.fleets, robot: d.robot, hardware: d.hardware })),
     ).toHaveProperty('value');

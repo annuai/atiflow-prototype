@@ -1,4 +1,5 @@
 import { Package } from '@untitledui/icons';
+import { useFleetName } from '@/data/fleetDirectory';
 import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useMemo, useState } from 'react';
 import { Plus, SearchLg, Trash01 } from '@untitledui/icons';
@@ -13,9 +14,10 @@ import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { stationsOfMaterial } from '../model/logic';
 import { fleetsStore, profileOf, useFleets } from '../model/store';
+import type { FleetId } from '@/data/fleets';
 
 interface Props {
-  fleet: string;
+  fleet: FleetId;
   materials: Material[];
   total: number;
   onAssign(): void;
@@ -25,6 +27,7 @@ interface Props {
 
 /** "All materials": the materials assigned to this fleet with the stations that stock them. Select rows to group them; ⋮ unassigns (refused while the fleet's workflow uses it). */
 export function FleetMaterials({ fleet, materials, total, onAssign, onGroup, toolbarLeft }: Props) {
+  const fleetName = useFleetName(fleet);
   const groups = useFleets((s) => profileOf(s.profiles, fleet).groups);
   const [text, setText] = useState('');
   const [sel, setSel] = useState<Set<string>>(new Set());
@@ -48,7 +51,7 @@ export function FleetMaterials({ fleet, materials, total, onAssign, onGroup, too
       n.delete(m.code);
       return n;
     });
-    const u = copy.materials.unassigned(m.code, fleet);
+    const u = copy.materials.unassigned(m.code, fleetName);
     notify.success(u.title, u.body, 'material-unassigned');
   };
   const columns: Column<Material>[] = [

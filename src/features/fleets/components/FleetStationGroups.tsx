@@ -15,9 +15,10 @@ import { copy } from '../copy';
 import { fleetsStore, profileOf, useFleets } from '../model/store';
 import { AddToGroupModal } from './AddToGroupModal';
 import { RenameGroupModal } from './RenameGroupModal';
+import type { FleetId } from '@/data/fleets';
 
 interface Props {
-  fleet: string;
+  fleet: FleetId;
   materials: Material[];
   masterGroups: MaterialGroup[];
   toolbarLeft: React.ReactNode;

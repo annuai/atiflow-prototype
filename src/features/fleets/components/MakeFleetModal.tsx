@@ -19,7 +19,7 @@ export function MakeFleetModal({ isOpen, onOpenChange }: { isOpen: boolean; onOp
   const make = () => {
     if (!wfStore.getState().createFleet(name)) return; // it says why (empty, already exists)
     close(false);
-    navigate(fleetPath(datasetStore.getState().fleets.at(-1)!.name));
+    navigate(fleetPath(datasetStore.getState().fleets.at(-1)!.id));
   };
   return (
     <ModalShell

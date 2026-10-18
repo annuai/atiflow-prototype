@@ -1,7 +1,8 @@
 import { Grid01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/data/EmptyState';
 import { useEffect, useMemo, useState } from 'react';
-import { useFleetOptions } from '@/features/auth';
+import { useFleetChoices } from '@/data/fleetDirectory';
+import type { FleetId } from '@/data/fleets';
 import { useFleets } from '@/features/fleets';
 import { useMaps } from '@/features/maps';
 import { seedMapData, mapVersionsStore, useMapVersions } from '@/features/map-editor';
@@ -60,7 +61,7 @@ function AreaCard({ area, selected, onSelect }: { area: StagingArea; selected: b
 /** Staging Area tab: area cards (utilisation) + the selected area's cell grid with View / Manage and a legend. */
 export function StagingAreaPanel() {
   const stored = useMasterData((s) => s.areas);
-  const fleets = useFleetOptions();
+  const fleets = useFleetChoices();
   const profiles = useFleets((s) => s.profiles);
   const maps = useMaps();
   const byMap = useMapVersions((s) => s.byMap);
@@ -81,8 +82,8 @@ export function StagingAreaPanel() {
   const groups = useMemo(
     () =>
       areasByFleet(
-        fleets.map((f) => f.label),
-        (f) => profiles[f]?.mapId ?? null,
+        fleets.map((f) => f.id),
+        (f) => profiles[f as FleetId]?.mapId ?? null,
         (id) => maps.find((m) => m.id === id)?.name ?? id,
         byMap,
         (id) => stored.find((a) => a.id === id),
@@ -104,7 +105,7 @@ export function StagingAreaPanel() {
         {groups.map((g) => (
           <div key={g.fleet} className="flex flex-col gap-3">
             <p className="text-sm font-semibold text-secondary">
-              {g.fleet}{' '}
+              {fleets.find((f) => f.id === g.fleet)?.label ?? g.fleet}{' '}
               <span className="font-normal text-tertiary">
                 · {g.mapName} v{g.version}
               </span>
@@ -236,7 +237,7 @@ export function StagingAreaPanel() {
             keys={editing}
             manage={mode === 'manage'}
             by={user.username}
-            allowed={materials.filter((m) => m.fleets.includes(fleetOfArea))}
+            allowed={materials.filter((m) => m.fleets.includes(fleetOfArea as FleetId))}
             names={names}
             onClose={() => setEditing(null)}
           />

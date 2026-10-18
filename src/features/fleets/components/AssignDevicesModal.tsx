@@ -1,4 +1,5 @@
 import { Server01 } from '@untitledui/icons';
+import { useFleetName } from '@/data/fleetDirectory';
 import { EmptyState } from '@/components/data/EmptyState';
 import { useState } from 'react';
 import { Badge } from '@/components/base/badges/badges';
@@ -7,8 +8,10 @@ import { ModalShell } from '@/components/modal/ModalShell';
 import { StatusBadge, deviceStore, useDevices, type Device, type DeviceKind, nameOf } from '@/features/devices';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
+import type { FleetId } from '@/data/fleets';
 
-function Body({ kind, fleet, onOpenChange }: { kind: DeviceKind; fleet: string; onOpenChange(o: boolean): void }) {
+function Body({ kind, fleet, onOpenChange }: { kind: DeviceKind; fleet: FleetId; onOpenChange(o: boolean): void }) {
+  const fleetName = useFleetName(fleet);
   const free = useDevices((s) => s[kind.id]).filter((d) => !d.values.fleet);
   const [sel, setSel] = useState<Set<string>>(new Set());
   const t = copy.assignDevices;
@@ -39,7 +42,7 @@ function Body({ kind, fleet, onOpenChange }: { kind: DeviceKind; fleet: string; 
   const save = () => {
     sel.forEach((n) => deviceStore.getState().update(kind.id, n, { fleet }));
     onOpenChange(false);
-    const d = t.done(sel.size, fleet);
+    const d = t.done(sel.size, fleetName);
     notify.success(d.title, d.body, 'devices-assigned');
   };
   return (
@@ -47,7 +50,7 @@ function Body({ kind, fleet, onOpenChange }: { kind: DeviceKind; fleet: string; 
       isOpen
       onOpenChange={onOpenChange}
       icon={kind.icon}
-      title={t.title(kind.singular, fleet)}
+      title={t.title(kind.singular, fleetName)}
       subtitle={t.subtitle(kind.plural)}
       size="lg"
       secondary={{ label: t.cancel, onPress: () => onOpenChange(false) }}
@@ -78,7 +81,7 @@ function Body({ kind, fleet, onOpenChange }: { kind: DeviceKind; fleet: string; 
 /** Pick unassigned robots / hardware and put them in the fleet. Mounted only while open. */
 export const AssignDevicesModal = (p: {
   kind: DeviceKind;
-  fleet: string;
+  fleet: FleetId;
   isOpen: boolean;
   onOpenChange(o: boolean): void;
 }) => (p.isOpen ? <Body kind={p.kind} fleet={p.fleet} onOpenChange={p.onOpenChange} /> : null);

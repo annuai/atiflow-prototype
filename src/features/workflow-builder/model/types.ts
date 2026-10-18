@@ -1,3 +1,4 @@
+import type { FleetId } from '@/data/fleets';
 export type NodeTypeId = 'start' | 'material' | 'logic' | 'container' | 'wait' | 'station' | 'confirm' | 'end';
 export type FieldValue = string | boolean | string[];
 
@@ -47,7 +48,7 @@ export interface NodeTypeSpec {
 export interface Workflow {
   id: string;
   name: string;
-  fleet: string | null;
+  fleet: FleetId | null;
   nodes: WfNode[];
   published?: boolean;
   saved?: boolean;

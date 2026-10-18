@@ -1,4 +1,5 @@
 import { createPersistedStore } from '@/data/persistedStore';
+import { fleetRef } from '@/data/fleetRef';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
 import { tripIds, tripNumber } from '@/data/tripIds';
@@ -36,7 +37,7 @@ export const bookingsStore = createPersistedStore<BookingsState, Saved>(
     pick: (s) => ({ trips: s.trips, seq: s.seq }),
     apply: (d) => {
       tripIds.ensureAtLeast(Math.max(0, ...d.trips.map((t) => tripNumber(t.tripId)))); // saved trips keep their ids: new ones count on from them
-      return { trips: d.trips, seq: d.seq };
+      return { trips: d.trips.map((t) => ({ ...t, fleet: fleetRef(t.fleet) })), seq: d.seq }; // (trips saved with a fleet NAME point at its id)
     },
     watch: ['trips', 'seq'],
     delayMs: 150,

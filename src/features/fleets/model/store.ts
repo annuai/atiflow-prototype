@@ -2,30 +2,33 @@ import { createPersistedStore } from '@/data/persistedStore';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { addGroup, addToGroup, deleteGroup, pruneMaterial, removeFromGroup, renameGroup } from './logic';
-import type { FleetProfile } from './types';
+import type { FleetProfile, FleetProfiles } from './types';
+import { fleetRef } from '@/data/fleetRef';
+import type { FleetId } from '@/data/fleets';
 
 export interface FleetsState {
-  profiles: Record<string, FleetProfile>;
+  profiles: FleetProfiles;
   /** Point the fleet at a map (ignored when another fleet already has it: a map belongs to one fleet only). Station groups belong to the old map's stations, so they are cleared when the map changes. */
-  assignMap(fleet: string, mapId: string): void;
+  assignMap(fleet: FleetId, mapId: string): void;
   /** Take the map away from the fleet. Its station groups belong to that map's stations, so they are cleared with it. */
-  unassignMap(fleet: string): void;
-  /** The fleet was renamed: move its profile to the new name. */
-  renameProfile(from: string, to: string): void;
+  unassignMap(fleet: FleetId): void;
   /** The fleet was deleted: drop its profile (map and station groups). */
-  removeProfile(fleet: string): void;
-  createGroup(fleet: string, g: { name: string; stationId: string; codes: string[] }): void;
-  renameGroup(fleet: string, id: string, name: string): void;
-  deleteGroup(fleet: string, id: string): void;
-  addToGroup(fleet: string, id: string, codes: string[]): void;
-  removeFromGroup(fleet: string, id: string, code: string): void;
+  removeProfile(fleet: FleetId): void;
+  createGroup(fleet: FleetId, g: { name: string; stationId: string; codes: string[] }): void;
+  renameGroup(fleet: FleetId, id: string, name: string): void;
+  deleteGroup(fleet: FleetId, id: string): void;
+  addToGroup(fleet: FleetId, id: string, codes: string[]): void;
+  removeFromGroup(fleet: FleetId, id: string, code: string): void;
   /** A material was unassigned from the fleet: drop it from the fleet's groups. */
-  pruneMaterial(fleet: string, code: string): void;
+  pruneMaterial(fleet: FleetId, code: string): void;
 }
-const load = (): Record<string, FleetProfile> => services().fleetProfiles.read();
+const load = (): FleetProfiles => services().fleetProfiles.read();
+/** Profiles saved under a fleet NAME are kept under its id from now on. */
+const byFleetId = (saved: Record<string, FleetProfile>): FleetProfiles =>
+  Object.fromEntries(Object.entries(saved).map(([k, v]) => [fleetRef(k), v])) as FleetProfiles;
 /** What a fleet that has no profile yet looks like. */
 export const EMPTY_PROFILE: FleetProfile = { mapId: null, groups: [] };
-export const profileOf = (profiles: Record<string, FleetProfile>, fleet: string) => profiles[fleet] ?? EMPTY_PROFILE;
+export const profileOf = (profiles: FleetProfiles, fleet: FleetId) => profiles[fleet] ?? EMPTY_PROFILE;
 
 export const fleetsStore = createPersistedStore<FleetsState, Record<string, FleetProfile>>(
   {
@@ -33,13 +36,13 @@ export const fleetsStore = createPersistedStore<FleetsState, Record<string, Flee
     read: load,
     save: (v) => services().fleetProfiles.save(v),
     pick: (s) => s.profiles,
-    apply: (d) => ({ profiles: d }),
+    apply: (d) => ({ profiles: byFleetId(d) }),
     watch: ['profiles'],
     delayMs: 250,
     devHandle: '__fleets',
   },
   (set, get) => {
-    const edit = (fleet: string, f: (g: FleetProfile['groups']) => FleetProfile['groups']) => {
+    const edit = (fleet: FleetId, f: (g: FleetProfile['groups']) => FleetProfile['groups']) => {
       const p = profileOf(get().profiles, fleet);
       set({ profiles: { ...get().profiles, [fleet]: { ...p, groups: f(p.groups) } } });
     };
@@ -47,10 +50,6 @@ export const fleetsStore = createPersistedStore<FleetsState, Record<string, Flee
       removeProfile: (fleet) => {
         const { [fleet]: _gone, ...rest } = get().profiles;
         set({ profiles: rest });
-      },
-      renameProfile: (from, to) => {
-        const { [from]: p, ...rest } = get().profiles;
-        if (p) set({ profiles: { ...rest, [to]: p } });
       },
       assignMap: (fleet, mapId) => {
         const p = profileOf(get().profiles, fleet);

@@ -27,7 +27,7 @@
         "ip": "192.168.1.44",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -42,7 +42,7 @@
         "ip": "192.168.1.45",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -57,7 +57,7 @@
         "ip": "192.168.1.46",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -72,7 +72,7 @@
         "ip": "192.168.1.47",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -87,7 +87,7 @@
         "ip": "192.168.1.48",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -102,7 +102,7 @@
         "ip": "192.168.1.49",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -117,7 +117,7 @@
         "ip": "192.168.1.50",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -132,7 +132,7 @@
         "ip": "192.168.1.51",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Assembly Fleet"
+        "fleet": "assembly"
       }
     },
     {
@@ -147,7 +147,7 @@
         "ip": "192.168.1.52",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Assembly Fleet"
+        "fleet": "assembly"
       }
     },
     {
@@ -162,7 +162,7 @@
         "ip": "192.168.1.53",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Assembly Fleet"
+        "fleet": "assembly"
       }
     },
     {
@@ -177,7 +177,7 @@
         "ip": "192.168.1.54",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Assembly Fleet"
+        "fleet": "assembly"
       }
     },
     {
@@ -192,7 +192,7 @@
         "ip": "192.168.1.55",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Assembly Fleet"
+        "fleet": "assembly"
       }
     },
     {
@@ -207,7 +207,7 @@
         "ip": "192.168.1.56",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Assembly Fleet"
+        "fleet": "assembly"
       }
     },
     {
@@ -222,7 +222,7 @@
         "ip": "192.168.1.57",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Assembly Fleet"
+        "fleet": "assembly"
       }
     },
     {
@@ -252,7 +252,7 @@
         "ip": "192.168.1.59",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -267,7 +267,7 @@
         "ip": "192.168.1.60",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -282,7 +282,7 @@
         "ip": "192.168.1.61",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Assembly Fleet"
+        "fleet": "assembly"
       }
     },
     {
@@ -297,7 +297,7 @@
         "ip": "192.168.1.62",
         "firmware": "v3.2.1",
         "lastCalibration": "Sep 15, 2026",
-        "fleet": "Assembly Fleet"
+        "fleet": "assembly"
       }
     }
   ],
@@ -310,7 +310,7 @@
         "hwType": "Summon Button",
         "hardwareId": "HW-2024-SMN-0101",
         "apiKey": "sk-hw-2024-smn-0101-c4d9e2a7",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -321,7 +321,7 @@
         "hwType": "Hooter",
         "hardwareId": "HW-2024-HTR-0205",
         "apiKey": "sk-hw-2024-htr-0205-c4d9e2a7",
-        "fleet": "Line Side Fleet"
+        "fleet": "line-side"
       }
     },
     {
@@ -332,7 +332,7 @@
         "hwType": "Ati Eye",
         "hardwareId": "HW-2024-EYE-0305",
         "apiKey": "sk-hw-2024-eye-0305-c4d9e2a7",
-        "fleet": "Assembly Fleet"
+        "fleet": "assembly"
       }
     },
     {

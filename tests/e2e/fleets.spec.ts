@@ -17,18 +17,25 @@ test.describe('fleets', () => {
     await expect(page.getByText('Map Editor')).toBeVisible();
   });
 
-  test('a fleet is renamed from its page and the address follows', async ({ page }) => {
-    await page.goto('/configurator/fleets/Assembly%20Fleet/overview');
+  test('a fleet is renamed from its page; its address (the fleet id) does not change', async ({ page }) => {
+    await page.goto('/configurator/fleets/assembly/overview');
     await page.getByRole('button', { name: 'Rename fleet' }).click();
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.type('Night Fleet');
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/Night%20Fleet/);
     await expect(page.getByRole('heading', { name: 'Night Fleet' })).toBeVisible();
+    await expect(page).toHaveURL(/\/configurator\/fleets\/assembly\/overview$/);
+    await expect(page.getByRole('button', { name: 'Night Fleet' })).toBeVisible(); // the sidebar follows too
+  });
+
+  test('an old address with the fleet NAME in it still opens the fleet, under its id', async ({ page }) => {
+    await page.goto('/configurator/fleets/Assembly%20Fleet/materials');
+    await expect(page).toHaveURL(/\/configurator\/fleets\/assembly\/materials$/);
+    await expect(page.getByRole('heading', { name: 'Assembly Fleet' })).toBeVisible();
   });
 
   test('a fleet is deleted from the danger zone of its Settings tab, after typing its name', async ({ page }) => {
-    await page.goto('/configurator/fleets/Assembly%20Fleet/settings');
+    await page.goto('/configurator/fleets/assembly/settings');
     await expect(page.getByRole('button', { name: 'Delete fleet' })).toHaveCount(0); // hidden until the danger zone is opened
     await page.getByRole('button', { name: 'Danger zone' }).click();
     await page.getByRole('button', { name: 'Delete fleet' }).click();
@@ -50,7 +57,7 @@ test.describe('fleets', () => {
           .map((e) => `${e.tagName}.${String(e.className).slice(0, 30)}`),
       );
     for (const tab of ['workflows', 'settings', 'materials']) {
-      await page.goto(`/configurator/fleets/Line%20Side%20Fleet/${tab}`);
+      await page.goto(`/configurator/fleets/line-side/${tab}`);
       await expect(page.getByRole('tab', { selected: true })).toBeVisible();
       await page.waitForTimeout(400);
       expect(await slid(), tab).toEqual([]);

@@ -1,11 +1,12 @@
 import type { FleetMap, StationGroup } from './types';
 import { t } from '../text';
+import type { FleetId } from '@/data/fleets';
 
 /** The maps a fleet may be given: a map belongs to ONE fleet, so those another fleet already runs on are left out (the fleet's own map stays, it is the current one). */
 export const availableMaps = <M extends { id: string }>(
   maps: M[],
   profiles: Record<string, { mapId: string | null }>,
-  fleet: string,
+  fleet: FleetId,
 ): M[] => maps.filter((m) => !Object.entries(profiles).some(([name, p]) => name !== fleet && p.mapId === m.id));
 
 /** Station ids whose group holds this material (the "Station goods at" column). */

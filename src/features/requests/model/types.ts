@@ -1,4 +1,5 @@
 import type { CellPlan } from '@/features/master-data';
+import type { FleetId } from '@/data/fleets';
 /**
  * One request = one material for one trip. Several requests made together share a `groupId` (an order) only so the person can see they were made together;
  * from then on every request lives its own life: its own approval, its own trip, its own cancel.
@@ -21,7 +22,8 @@ export interface TripRequest {
   groupId: string;
   workflowId: string;
   workflowName: string;
-  fleet: string;
+  /** id of the fleet (its current name is looked up when shown) */
+  fleet: FleetId;
   /** lane-map id of the fleet (what telemetry and orders use) */ fleetLive: string;
   /** What was asked for, as it was at that moment (names change, the request keeps what the person saw). */
   code: string;
@@ -56,7 +58,7 @@ export interface RequestableItem {
   key: string;
   workflowId: string;
   workflowName: string;
-  fleet: string;
+  fleet: FleetId;
   fleetLive: string;
   code: string;
   name: string;

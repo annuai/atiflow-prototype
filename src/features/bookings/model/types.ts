@@ -1,4 +1,5 @@
 import { type RequestStatus, type StatusEvent } from '@/features/requests';
+import type { FleetId } from '@/data/fleets';
 
 /**
  * A custom trip an operator booked: a robot of the chosen type drives from a start station to an end station. No material, no approval, no stops: it goes straight to the fleet
@@ -7,7 +8,8 @@ import { type RequestStatus, type StatusEvent } from '@/features/requests';
 export interface BookedTrip {
   id: string;
   /** TRP-xxx, from the shared trip counter */ tripId: string;
-  fleet: string;
+  /** id of the fleet (its current name is looked up when shown) */
+  fleet: FleetId;
   /** lane-map id of the fleet */ fleetLive: string;
   /** robot type id (telemetry `model`) and its name as it was shown */ robotType: string;
   robotLabel: string;
@@ -24,7 +26,7 @@ export interface BookedTrip {
   note?: string;
 }
 export interface BookingInput {
-  fleet: string;
+  fleet: FleetId;
   fleetLive: string;
   robotType: string;
   robotLabel: string;

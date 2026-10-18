@@ -17,7 +17,8 @@ interface Props {
   /** Disabled controls look dimmed (detail page, not editing). */
   disabled?: boolean;
   error?: string;
-  fleets: string[];
+  /** the choices of a `fleet` control (dataset id + name) */
+  fleets: { id: string; label: string }[];
   /** How a disabled value is shown: plain input, one badge or a row of badges. */
   display?: 'text' | 'badge' | 'badges';
   showTag?: boolean;
@@ -58,13 +59,16 @@ export function FormField({
   if (disabled && display !== 'text')
     control = <BadgeBox items={Array.isArray(value) ? value : value ? [value] : []} />;
   else if (def.control === 'select' || def.control === 'fleet') {
-    const opts = def.control === 'fleet' ? [UNASSIGNED, ...fleets] : (def.options ?? []);
+    const opts: { id: string; label: string }[] =
+      def.control === 'fleet'
+        ? [{ id: UNASSIGNED, label: misc.ui.unassigned }, ...fleets]
+        : (def.options ?? []).map((o) => ({ id: o, label: o }));
     control = (
       <Select
         aria-label={label}
         isDisabled={disabled}
         selectedKey={def.control === 'fleet' && !value ? UNASSIGNED : String(value)}
-        items={opts.map((o) => ({ id: o, label: o === UNASSIGNED ? misc.ui.unassigned : o }))}
+        items={opts}
         onSelectionChange={(k) => onChange(def.control === 'fleet' && k === UNASSIGNED ? '' : String(k))}
       >
         {(item) => <Select.Item {...item} />}

@@ -1,7 +1,8 @@
 import { createPersistedStore } from '@/data/persistedStore';
 import { useStore } from 'zustand';
 import { services } from '@/services';
-import type { FleetRecord } from './fleets';
+import { asFleetId, type FleetId, type FleetRecord } from './fleets';
+import { fleetIdIn } from './fleetRefs';
 import type { DatasetData } from './datasetTypes';
 import type { DatasetDevice as Device } from './datasetTypes';
 
@@ -17,10 +18,10 @@ type FieldValue = string | string[];
 export type { DatasetData } from './datasetTypes';
 export interface DatasetState extends DatasetData {
   addFleet(name: string): FleetRecord;
-  /** Renames the fleet and every robot / hardware assigned to it. */
-  renameFleet(from: string, to: string): void;
+  /** Gives the fleet another name (robots, workflows, materials... point at its id, so nothing else changes). */
+  renameFleet(id: FleetId, name: string): void;
   /** Removes the fleet; its robots and hardware stay registered and become unassigned. */
-  removeFleet(name: string): void;
+  removeFleet(id: FleetId): void;
   addDevice(kind: DeviceKindId, values: Record<string, FieldValue>): void;
   updateDevice(kind: DeviceKindId, name: string, values: Record<string, FieldValue>): void;
   removeDevice(kind: DeviceKindId, name: string): void;
@@ -52,6 +53,11 @@ export const datasetDoc = {
   },
 };
 
+/** Robots and hardware saved with a fleet NAME point at the fleet's id from now on. */
+const withFleetIds = (d: DatasetData, list: Device[]): Device[] =>
+  list.map((x) =>
+    x.values.fleet ? { ...x, values: { ...x.values, fleet: fleetIdIn(d.fleets, String(x.values.fleet)) } } : x,
+  );
 const nameOf = (d: Device) => String(d.values.name ?? '');
 const slug = (s: string) =>
   s
@@ -65,7 +71,7 @@ export const datasetStore = createPersistedStore<DatasetState, DatasetData>(
     read: () => services().dataset.read(),
     save: (v) => services().dataset.save(v),
     pick: (s) => ({ version: 1, fleets: s.fleets, robot: s.robot, hardware: s.hardware }),
-    apply: (d) => ({ ...d }),
+    apply: (d) => ({ ...d, robot: withFleetIds(d, d.robot), hardware: withFleetIds(d, d.hardware) }),
     watch: ['fleets', 'robot', 'hardware'],
     delayMs: 250,
     // another tab (e.g. a configurator editing robots while a supervisor watches the floor) saved the dataset: take it over, so every window shows the same robots
@@ -75,26 +81,20 @@ export const datasetStore = createPersistedStore<DatasetState, DatasetData>(
   (set, get) => ({
     addFleet(name) {
       const { fleets } = get();
-      let id = slug(name);
-      for (let n = 2; fleets.some((f) => f.id === id); n++) id = `${slug(name)}-${n}`;
+      let id = asFleetId(slug(name));
+      for (let n = 2; fleets.some((f) => f.id === id); n++) id = asFleetId(`${slug(name)}-${n}`);
       const f: FleetRecord = { id, name, color: COLORS[fleets.length % COLORS.length] };
       set({ fleets: [...fleets, f] });
       return f;
     },
-    renameFleet(from, to) {
-      const move = (list: Device[]) =>
-        list.map((d) => (d.values.fleet === from ? { ...d, values: { ...d.values, fleet: to } } : d));
-      set({
-        fleets: get().fleets.map((f) => (f.name === from ? { ...f, name: to } : f)),
-        robot: move(get().robot),
-        hardware: move(get().hardware),
-      });
+    renameFleet(id, name) {
+      set({ fleets: get().fleets.map((f) => (f.id === id ? { ...f, name } : f)) });
     },
-    removeFleet(name) {
+    removeFleet(id) {
       const free = (list: Device[]) =>
-        list.map((d) => (d.values.fleet === name ? { ...d, values: { ...d.values, fleet: '' } } : d));
+        list.map((d) => (d.values.fleet === id ? { ...d, values: { ...d.values, fleet: '' } } : d));
       set({
-        fleets: get().fleets.filter((f) => f.name !== name),
+        fleets: get().fleets.filter((f) => f.id !== id),
         robot: free(get().robot),
         hardware: free(get().hardware),
       });

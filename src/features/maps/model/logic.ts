@@ -3,11 +3,14 @@ import type { FleetMap } from './types';
 export type MapSort = 'name' | 'version';
 const norm = (s: string) => s.trim().toLowerCase();
 
-/** Names of the fleets that run on each map (map id -> fleet names). */
-export function fleetsByMap(profiles: Record<string, { mapId: string | null }>): Record<string, string[]> {
+/** Names of the fleets that run on each map (map id -> fleet names). `nameOf` turns a fleet id (the key of a profile) into its name. */
+export function fleetsByMap(
+  profiles: Record<string, { mapId: string | null }>,
+  nameOf: (fleet: string) => string,
+): Record<string, string[]> {
   const out: Record<string, string[]> = {};
   Object.entries(profiles).forEach(([fleet, p]) => {
-    if (p.mapId) (out[p.mapId] ??= []).push(fleet);
+    if (p.mapId) (out[p.mapId] ??= []).push(nameOf(fleet));
   });
   return out;
 }

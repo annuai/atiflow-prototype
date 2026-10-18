@@ -40,7 +40,7 @@ export function useAiContext(): () => Context {
   return useCallback((): Context => {
     const { user: u, fleet: f, map: m } = latest.current;
     const live = f ? (f.liveId ?? f.id) : '';
-    const stationList = f ? fleetStations(f.name, m) : [];
+    const stationList = f ? fleetStations(f.id, m) : [];
     const stations = stationList.map((s) => ({ id: s.id, name: s.name }));
     const nm = (id: string) => stations.find((s) => s.id === id)?.name ?? id;
     const telemetry = Object.values(appStore.getState().robots).filter((r) => r.fleetId === live);
@@ -107,7 +107,7 @@ export function useAiContext(): () => Context {
           const t = bookingsStore.getState().book(
             { username: u.username, name: u.name },
             {
-              fleet: f.name,
+              fleet: f.id,
               fleetLive: live,
               robotType: a.robotType,
               robotLabel: a.robotLabel,

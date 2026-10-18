@@ -12,7 +12,9 @@ import { WorkflowName } from './components/WorkflowName';
 import { WorkflowCanvas } from './components/WorkflowCanvas';
 import { MapPreview } from './components/MapPreview';
 import { countNodes } from './model/tree';
-import { selectFleet, selectNodes, useFleetNames, useWorkflow, wfStore } from './model/store';
+import { selectFleet, selectNodes, useWorkflow, wfStore } from './model/store';
+import { useFleetChoices } from '@/data/fleetDirectory';
+import { asFleetId } from '@/data/fleets';
 import { publishProblem } from './model/validate';
 import { runSimulation, stopSimulation } from './sim/runner';
 import './workflow.css';
@@ -22,7 +24,7 @@ import { Page, PageCard, PageCardHeader, PageHeader } from '@/components/page';
 
 /** Canvas stand-in shown until the user picks a fleet for the new workflow. */
 function SelectFleetPrompt() {
-  const fleets = useFleetNames();
+  const fleets = useFleetChoices();
   return (
     <div className="canvas wf-canvas wf-nofleet">
       <EmptyState icon={Dataflow03} size="lg" title={copy.noFleet.title} subtext={copy.noFleet.body}>
@@ -33,8 +35,8 @@ function SelectFleetPrompt() {
           selectedKey={null}
           placeholder={fleets.length ? copy.noFleet.placeholder : copy.noFleet.none}
           isDisabled={!fleets.length}
-          onSelectionChange={(k) => wfStore.getState().assignFleet(String(k))}
-          items={fleets.map((n) => ({ id: n, label: n }))}
+          onSelectionChange={(k) => wfStore.getState().assignFleet(asFleetId(String(k)))}
+          items={fleets}
         >
           {(item) => <Select.Item {...item} />}
         </Select>
@@ -59,7 +61,7 @@ export function WorkflowBuilderPage() {
 /** The builder for the open workflow. Chrome comes from AppShell; this file only assembles the page. */
 function Builder() {
   const current = useWorkflow((s) => s.current)!;
-  const fleets = useFleetNames();
+  const fleets = useFleetChoices();
   const fleet = useWorkflow(selectFleet);
   const nodes = useWorkflow(selectNodes);
   const title = useWorkflow((s) => s.workflows[s.current!].name);
@@ -172,8 +174,8 @@ function Builder() {
                 className="fleet-select"
                 selectedKey={fleet || null}
                 placeholder={copy.noFleet.placeholder}
-                onSelectionChange={(k) => wfStore.getState().assignFleet(String(k))}
-                items={fleets.map((n) => ({ id: n, label: n }))}
+                onSelectionChange={(k) => wfStore.getState().assignFleet(asFleetId(String(k)))}
+                items={fleets}
               >
                 {(item) => <Select.Item {...item} />}
               </Select>

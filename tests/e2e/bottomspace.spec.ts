@@ -6,7 +6,7 @@ const pages: [string, string][] = [
   ['kavin', '/configurator/robots/AMR-004'],
   ['kavin', '/configurator/master-data/materials'],
   ['kavin', '/configurator/fleets'],
-  ['kavin', '/configurator/fleets/Line%20Side%20Fleet/overview'],
+  ['kavin', '/configurator/fleets/line-side/overview'],
   ['arjun', '/supervisor/dashboard'],
   ['arjun', '/supervisor/reports'],
   ['arjun', '/supervisor/settings/alerts'],

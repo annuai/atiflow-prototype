@@ -1,4 +1,5 @@
 import { Cube01, Flag01, Users01, GitBranch01, Map01, Settings01, Server01, Hash02 } from '@untitledui/icons';
+import { fleetDirectory } from '@/data/fleetDirectory';
 import { datasetStore } from '@/data/dataset';
 import { USERS_PATH } from '@/features/access';
 import { toPublic, userDirectory, type PublicUser } from '@/features/auth';
@@ -14,6 +15,7 @@ import { copy } from '../copy';
 import type { SearchEntity } from '../types';
 import { focusUrl, meta } from './helpers';
 import { operatorItems } from './operatorData';
+import type { FleetId } from '@/data/fleets';
 
 type WorkflowRow = { w: Wf; operator?: RequestableItem };
 /** Workflows: configurators search all kept ones and open them in the editor; an operator only finds the ones they may order (the Book trip rules). */
@@ -38,18 +40,21 @@ export const workflowEntity: SearchEntity<WorkflowRow> = {
   },
   fields: [
     { get: (x) => x.w.name, weight: 4 },
-    { get: (x) => x.w.fleet ?? '', weight: 1 },
+    { get: (x) => (x.w.fleet ? fleetDirectory.nameOf(x.w.fleet) : ''), weight: 1 },
     { get: (x) => x.w.nodes.map((n) => Object.values(n.f).join(' ')).join(' '), weight: 0.5 },
   ],
   id: (x) => x.w.id,
   home: ['configurator', 'operator'],
   toResult: (x) => ({
     title: x.w.name,
-    subtitle: x.w.fleet ?? undefined,
+    subtitle: x.w.fleet ? fleetDirectory.nameOf(x.w.fleet) : undefined,
     url: x.operator
       ? '/operator/book' + (x.operator.kind === 'route' ? '?tab=trips' : '')
       : `/configurator/workflows/${x.w.id}`,
-    facets: { status: x.w.published ? 'published' : 'draft', fleet: x.w.fleet ?? undefined },
+    facets: {
+      status: x.w.published ? 'published' : 'draft',
+      fleet: x.w.fleet ? fleetDirectory.nameOf(x.w.fleet) : undefined,
+    },
     metadata: [
       ...meta(copy.meta.status, x.w.published ? 'published' : 'draft', x.w.published ? 'success' : 'gray'),
       ...meta(copy.meta.steps, x.w.nodes.length),
@@ -77,7 +82,7 @@ export const workflowEntity: SearchEntity<WorkflowRow> = {
         ],
 };
 
-type MaterialRow = { code: string; name: string; group: string; fleets: string[] };
+type MaterialRow = { code: string; name: string; group: string; fleets: FleetId[] };
 /**
  * The rows of Master Data as search rows. The same array is returned while Master Data is unchanged: the search index is rebuilt whenever it gets a different list,
  * and with tens of thousands of materials that must happen once, not on every search.
@@ -122,7 +127,10 @@ export const materialEntity: SearchEntity<MaterialRow> = {
     url: ctx.can('configurator.master-data')
       ? `/configurator/master-data/materials?code=${encodeURIComponent(m.code)}`
       : `/operator/book?add=${encodeURIComponent(m.code)}`,
-    metadata: [...meta(copy.meta.group, m.group), ...meta(copy.meta.fleets, m.fleets.join(', '))],
+    metadata: [
+      ...meta(copy.meta.group, m.group),
+      ...meta(copy.meta.fleets, m.fleets.map((f) => fleetDirectory.nameOf(f)).join(', ')),
+    ],
   }),
   actions: (m, ctx) =>
     ctx.can('configurator.master-data')
@@ -147,7 +155,7 @@ export const materialEntity: SearchEntity<MaterialRow> = {
 };
 
 interface FleetRow {
-  id: string;
+  id: FleetId;
   name: string;
   liveId?: string;
 }
@@ -162,12 +170,12 @@ export const fleetEntity: SearchEntity<FleetRow> = {
   home: ['configurator', 'supervisor'],
   toResult: (f, ctx) => ({
     title: f.name,
-    url: ctx.can('configurator.fleets') ? fleetPath(f.name) : focusUrl('fleet', f.liveId ?? f.id),
+    url: ctx.can('configurator.fleets') ? fleetPath(f.id) : focusUrl('fleet', f.liveId ?? f.id),
     metadata: [],
   }),
   actions: (f, ctx) => [
     ctx.can('configurator.fleets')
-      ? { id: 'open', label: copy.actions.openFleet, kind: 'navigate', url: fleetPath(f.name), primary: true }
+      ? { id: 'open', label: copy.actions.openFleet, kind: 'navigate', url: fleetPath(f.id), primary: true }
       : {
           id: 'show',
           label: copy.actions.showOnMap,
@@ -195,7 +203,7 @@ export const deviceEntity: SearchEntity<DeviceRow> = {
   fields: [
     { get: (x) => nameOf(x.d), weight: 4 },
     { get: (x) => KINDS[x.kind].typeOf(x.d), weight: 1.5 },
-    { get: (x) => String(x.d.values.fleet ?? ''), weight: 1 },
+    { get: (x) => fleetDirectory.nameOf(String(x.d.values.fleet ?? '')), weight: 1 },
   ],
   id: (x) => nameOf(x.d),
   home: ['configurator'],
@@ -203,10 +211,13 @@ export const deviceEntity: SearchEntity<DeviceRow> = {
     title: nameOf(x.d),
     subtitle: KINDS[x.kind].typeOf(x.d),
     url: `/configurator/${KINDS[x.kind].route}/${encodeURIComponent(nameOf(x.d))}`,
-    facets: { status: x.d.status, fleet: String(x.d.values.fleet ?? '') || undefined },
+    facets: {
+      status: x.d.status,
+      fleet: x.d.values.fleet ? fleetDirectory.nameOf(String(x.d.values.fleet)) : undefined,
+    },
     metadata: [
       ...meta(copy.meta.kind, KINDS[x.kind].singular),
-      ...meta(copy.meta.fleet, String(x.d.values.fleet ?? '')),
+      ...meta(copy.meta.fleet, x.d.values.fleet ? fleetDirectory.nameOf(String(x.d.values.fleet)) : ''),
       ...meta(copy.meta.status, x.d.status),
     ],
   }),

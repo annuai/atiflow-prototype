@@ -1,4 +1,5 @@
 import type { WfNode, Workflows } from './types';
+import type { FleetId } from '@/data/fleets';
 
 const walk = (nodes: WfNode[], visit: (n: WfNode) => void) =>
   nodes.forEach((n) => {
@@ -9,9 +10,9 @@ const walk = (nodes: WfNode[], visit: (n: WfNode) => void) =>
     }
   });
 
-/** Names of the fleets that have a workflow using a material code (a Material node or an If Logic condition, branches included). */
-export function fleetsUsingMaterial(workflows: Workflows, code: string): string[] {
-  const out = new Set<string>();
+/** Ids of the fleets that have a workflow using a material code (a Material node or an If Logic condition, branches included). */
+export function fleetsUsingMaterial(workflows: Workflows, code: string): FleetId[] {
+  const out = new Set<FleetId>();
   Object.values(workflows).forEach((w) => {
     if (!w.fleet) return;
     walk(w.nodes, (n) => {

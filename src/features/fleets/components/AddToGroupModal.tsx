@@ -6,6 +6,7 @@ import { ModalShell } from '@/components/modal/ModalShell';
 import { MaterialPicker, type PickerRow } from '@/features/master-data';
 import { copy } from '../copy';
 import { fleetsStore } from '../model/store';
+import type { FleetId } from '@/data/fleets';
 
 function Body({
   fleet,
@@ -14,7 +15,7 @@ function Body({
   rows,
   onOpenChange,
 }: {
-  fleet: string;
+  fleet: FleetId;
   groupId: string;
   groupName: string;
   rows: PickerRow[];
@@ -52,7 +53,7 @@ function Body({
 }
 /** Add fleet materials (not yet in this group) to a station group. */
 export const AddToGroupModal = (p: {
-  fleet: string;
+  fleet: FleetId;
   group: { id: string; name: string } | null;
   rows: PickerRow[];
   onOpenChange(o: boolean): void;

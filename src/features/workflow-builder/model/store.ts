@@ -7,13 +7,15 @@ import { fleetStations } from './stations';
 import { createNode } from './factory';
 import { applySteps, parsePrompt } from './parsePrompt';
 import { defaultWorkflowName, workflowNameError } from './names';
-import { datasetStore, useDataset } from '@/data/dataset';
+import { datasetStore } from '@/data/dataset';
 import { loadWorkflows } from './loadSaved';
 import { blankWorkflow, isBlankDraft, isKept } from './seed';
 import { insertNode, locate, moveNode, removeNode, updateField, type Problem } from './tree';
 import { publishProblem } from './validate';
 import type { FieldValue, ListKey, NodeTypeId, WfNode, Workflow, Workflows } from './types';
 import { copy } from '../copy';
+import type { FleetId } from '@/data/fleets';
+import { fleetDirectory } from '@/data/fleetDirectory';
 
 export interface SimState {
   status: 'idle' | 'running' | 'done';
@@ -52,14 +54,12 @@ export interface WfState {
   /** Open an existing workflow in the builder. */
   openWorkflow(id: string): void;
   /** Open a new workflow: with a fleet (named <fleet>_workflow_<n>) or without one (the user picks it on the canvas). Reuses an untouched fleet-less draft. Returns its id. */
-  startWorkflow(fleet?: string | null): string;
+  startWorkflow(fleet?: FleetId | null): string;
   /** Put the open workflow in a fleet; it gets that fleet's next default name unless the user already named it. */
-  assignFleet(fleet: string): void;
+  assignFleet(fleet: FleetId): void;
   createFleet(name: string): boolean;
-  /** Rename a fleet everywhere in the workflow store (list + each workflow's fleet). Workflow names are NOT changed. */
-  renameFleet(from: string, to: string): void;
   /** The fleet was deleted: so are its workflows (the open one closes). */
-  removeFleet(name: string): void;
+  removeFleet(id: FleetId): void;
   /** Keep the open workflow as a draft (it would otherwise be discarded when left). */
   saveDraft(): void;
   /** Remove the open workflow if it was never saved or published (called when the user leaves it). */
@@ -84,8 +84,8 @@ const EMPTY: WfNode[] = [];
 /** Nodes of the open workflow (stable empty array when none is open). */
 export const selectNodes = (s: WfState) => (s.current ? (s.workflows[s.current]?.nodes ?? EMPTY) : EMPTY);
 /** Fleet of the open workflow ('' while none is chosen). */
-export const selectFleet = (s: WfState) => (s.current ? (s.workflows[s.current]?.fleet ?? '') : '');
-export const workflowsOfFleet = (workflows: Workflows, fleet: string) =>
+export const selectFleet = (s: WfState): FleetId => (s.current ? (s.workflows[s.current]?.fleet ?? '') : '') as FleetId;
+export const workflowsOfFleet = (workflows: Workflows, fleet: FleetId) =>
   Object.values(workflows).filter((w) => w.fleet === fleet);
 
 export const wfStore = createPersistedStore<WfState, Workflows>(
@@ -137,7 +137,8 @@ export const wfStore = createPersistedStore<WfState, Workflows>(
           reuse ??
           blankWorkflow(
             fleet,
-            workflowsOfFleet(get().workflows, fleet ?? '').map((x) => x.name),
+            workflowsOfFleet(get().workflows, (fleet ?? '') as FleetId).map((x) => x.name),
+            fleet ? fleetDirectory.nameOf(fleet) : '',
           );
         set({ workflows: { ...get().workflows, [w.id]: w }, current: w.id, selected: null, sim: SIM_IDLE });
         return w.id;
@@ -150,8 +151,12 @@ export const wfStore = createPersistedStore<WfState, Workflows>(
         const others = workflowsOfFleet(workflows, fleet)
           .filter((x) => x.id !== current)
           .map((x) => x.name);
-        const wasDefault = !w.name || (w.fleet !== null && w.name.startsWith(`${w.fleet}_workflow_`));
-        patch(current, { fleet, name: wasDefault ? defaultWorkflowName(fleet, others) : w.name });
+        const wasDefault =
+          !w.name || (w.fleet !== null && w.name.startsWith(`${fleetDirectory.nameOf(w.fleet)}_workflow_`));
+        patch(current, {
+          fleet,
+          name: wasDefault ? defaultWorkflowName(fleetDirectory.nameOf(fleet), others) : w.name,
+        });
         set({ sim: SIM_IDLE });
       },
       saveDraft() {
@@ -177,16 +182,9 @@ export const wfStore = createPersistedStore<WfState, Workflows>(
         if (workflows[current].name !== name.trim()) patch(current, { name: name.trim() });
         return true;
       },
-      renameFleet(from, to) {
-        set({
-          workflows: Object.fromEntries(
-            Object.entries(get().workflows).map(([id, w]) => [id, w.fleet === from ? { ...w, fleet: to } : w]),
-          ),
-        });
-      },
-      removeFleet(name) {
+      removeFleet(fleet) {
         const { workflows, current, hist } = get();
-        const gone = Object.keys(workflows).filter((id) => workflows[id].fleet === name);
+        const gone = Object.keys(workflows).filter((id) => workflows[id].fleet === fleet);
         if (!gone.length) return;
         set({
           workflows: Object.fromEntries(Object.entries(workflows).filter(([id]) => !gone.includes(id))),
@@ -335,7 +333,7 @@ export const wfStore = createPersistedStore<WfState, Workflows>(
         }
         patch(current, { published: true, saved: true });
         notify.success(
-          copy.toasts.publishedTitle(fleetOf()),
+          copy.toasts.publishedTitle(fleetDirectory.nameOf(fleetOf())),
           copy.toasts.publishedBody(get().nodes().length),
           'publish',
         );
@@ -345,10 +343,5 @@ export const wfStore = createPersistedStore<WfState, Workflows>(
   },
 );
 export const useWorkflow = <T>(sel: (s: WfState) => T) => useStore(wfStore, sel);
-/** Names of all fleets (re-renders only when the list changes). */
-export const useFleetNames = () =>
-  useDataset((s) => s.fleets.map((f) => f.name).join('|'))
-    .split('|')
-    .filter(Boolean);
 
 // the list as loaded (upgraded from an older version, old robot names replaced, sample routes added) is saved straight away, not only after the next edit

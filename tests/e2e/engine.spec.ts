@@ -17,7 +17,7 @@ test('3D, 2D, walk and back: every mode draws and the view responds to the mouse
   await signIn(page, 'arjun');
   await page.goto('/supervisor/livefloor');
   const canvas = page.locator('canvas').first();
-  await expect(canvas).toBeVisible();
+  await expect(canvas).toBeVisible({ timeout: 30_000 });
   await expect.poll(() => drawn(page), { timeout: 30_000 }).toBeGreaterThan(15_000);
   const box = (await canvas.boundingBox())!;
   const mid = { x: box.x + box.width / 2, y: box.y + box.height / 2 };

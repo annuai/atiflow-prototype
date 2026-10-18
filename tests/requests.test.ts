@@ -1,3 +1,4 @@
+import { FLEET_ID } from '../src/data/fleets';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { seedWorkflows, upgradeToV7 } from '../src/features/workflow-builder/model/seed';
 import { sampleWorkflows } from '../src/fixtures/workflows';
@@ -21,9 +22,7 @@ import { SEED_USERS } from '../src/fixtures/users';
 import { toPublic } from '../src/features/auth/userDirectory';
 import type { Workflow } from '../src/features/workflow-builder/model/types';
 
-const fleetIds: Record<string, string> = { 'Line Side Fleet': 'line-side', 'Assembly Fleet': 'assembly' };
-const fleetIdOf = (n: string) => fleetIds[n];
-const fleetLiveOf = (n: string) => (n === 'Assembly Fleet' ? 'asrs' : 'line-side');
+const fleetLiveOf = (f: string) => (f === FLEET_ID.assembly ? 'asrs' : 'line-side');
 const groups = seedGroups(0),
   materials = seedMaterials(0, groups);
 const samples = sampleWorkflows();
@@ -35,7 +34,7 @@ const rohan = op('rohan'),
   sneha = op('sneha'),
   vikram = op('vikram');
 const items = (who: typeof rohan, ws: Workflow[] = samples) =>
-  requestableItems(ws, who, fleetIdOf, fleetLiveOf, materials, groups);
+  requestableItems(ws, who, fleetLiveOf, materials, groups);
 
 describe('which workflows and materials an operator sees', () => {
   it('the fleet must be assigned AND the operator must be listed in the Start step of the workflow', () => {
@@ -47,19 +46,19 @@ describe('which workflows and materials an operator sees', () => {
     expect(items({ ...sneha, fleets: ['line-side'] })).toEqual([]); // a fleet that is not hers
     const few = structuredClone(samples[0]);
     few.nodes[0].f.users = ['rohan', 'sneha'];
-    expect(visibleWorkflows([few], sneha, fleetIdOf)).toEqual([]); // listed, but the fleet is not hers
+    expect(visibleWorkflows([few], sneha)).toEqual([]); // listed, but the fleet is not hers
     expect(requesters(samples[0].nodes)).toEqual(['rohan']);
   });
   it('only published workflows started from the Tablet are offered', () => {
     const w = structuredClone(samples[0]);
     w.published = false;
-    expect(visibleWorkflows([w], rohan, fleetIdOf)).toEqual([]);
+    expect(visibleWorkflows([w], rohan)).toEqual([]);
     const mes = structuredClone(samples[0]);
     mes.nodes[0].f.request = 'MES';
-    expect(visibleWorkflows([mes], rohan, fleetIdOf)).toEqual([]);
+    expect(visibleWorkflows([mes], rohan)).toEqual([]);
     const call = structuredClone(samples[0]);
     call.nodes[0].f.request = 'Call Button';
-    expect(visibleWorkflows([call], rohan, fleetIdOf)).toEqual([]);
+    expect(visibleWorkflows([call], rohan)).toEqual([]);
   });
   it('a card has the material name, code and group from Master Data; the quantity is editable only when the workflow lets the tablet choose it', () => {
     const [pin, plate] = items(rohan);
@@ -75,7 +74,6 @@ describe('which workflows and materials an operator sees', () => {
       requestableItems(
         samples,
         rohan,
-        fleetIdOf,
         fleetLiveOf,
         materials.filter((m) => m.code !== 'DCP-1001'),
         groups,
@@ -157,7 +155,7 @@ describe('the sample workflows, the upgrade and the publish gate', () => {
       'w-x': {
         id: 'w-x',
         name: 'x',
-        fleet: 'Line Side Fleet',
+        fleet: FLEET_ID.lineSide,
         saved: true,
         nodes: [
           createStart({ user: ['rohan'] }),
@@ -197,7 +195,7 @@ describe('workflows saved before users were named', () => {
     const w = (request: string, users: string[] = []) => ({
       id: 'w',
       name: 'x',
-      fleet: 'Line Side Fleet',
+      fleet: FLEET_ID.lineSide,
       saved: true,
       nodes: [
         createStart({ request, users }),

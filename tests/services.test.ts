@@ -1,3 +1,4 @@
+import { asFleetId } from '../src/data/fleets';
 import { describe, it, expect, vi } from 'vitest';
 import { SEED_PROFILES } from '../src/fixtures/fleetProfiles';
 import { createServices, hydrateServices, setServices, services } from '../src/services';
@@ -44,7 +45,7 @@ describe('dummy services', () => {
     const { svc } = build({ 'atiflow.workflows.v5': JSON.stringify({ workflows: { a: { id: 'a', nodes: [] } } }) });
     expect(svc.workflows.snapshot()).toBeNull();
     expect(svc.workflows.readLegacy?.()).toMatchObject({ version: 5 });
-    await svc.workflows.save({ a: { id: 'a', name: 'A', fleet: 'f', nodes: [] } });
+    await svc.workflows.save({ a: { id: 'a', name: 'A', fleet: asFleetId('f'), nodes: [] } });
     expect(svc.workflows.snapshot()).toMatchObject({ a: { id: 'a' } });
   });
   it('a document changed in another tab reaches subscribers', () => {

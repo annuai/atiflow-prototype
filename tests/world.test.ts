@@ -1,3 +1,4 @@
+import { FLEET_ID, asFleetId } from '../src/data/fleets';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FleetSim } from '../src/adapters/sim';
@@ -12,9 +13,9 @@ import type { FleetMap } from '../src/features/maps';
 
 const baseSite = JSON.parse(readFileSync('public/sites/ecc/site.json', 'utf8')) as SiteLayout;
 const baseNav = JSON.parse(readFileSync('public/sites/ecc/nav.json', 'utf8')) as NavGraph;
-const lineSide: FleetRecord = { id: 'line-side', name: 'Line Side Fleet', color: '#14b8a6', liveId: 'line-side' };
-const assembly: FleetRecord = { id: 'assembly', name: 'Assembly Fleet', color: '#f59e0b', liveId: 'asrs' };
-const fresh: FleetRecord = { id: 'probe', name: 'Probe Fleet', color: '#6366f1' };
+const lineSide: FleetRecord = { id: FLEET_ID.lineSide, name: 'Line Side Fleet', color: '#14b8a6', liveId: 'line-side' };
+const assembly: FleetRecord = { id: FLEET_ID.assembly, name: 'Assembly Fleet', color: '#f59e0b', liveId: 'asrs' };
+const fresh: FleetRecord = { id: asFleetId('probe'), name: 'Probe Fleet', color: '#6366f1' };
 const MAPS: FleetMap[] = [
   { id: 'main-assembly', name: 'Main', version: 5, tag: '', fleetLive: 'line-side', updatedAt: 0, stations: [] },
   { id: 'assembly-east', name: 'East', version: 2, tag: '', fleetLive: 'asrs', updatedAt: 0, stations: [] },
@@ -74,7 +75,7 @@ const tiny = (): MapData => ({
 const input = (o: Partial<WorldInput> & { fleets: FleetRecord[] }): WorldInput => ({
   baseSite,
   baseNav,
-  profiles: { 'Line Side Fleet': { mapId: 'main-assembly' }, 'Assembly Fleet': { mapId: 'assembly-east' } },
+  profiles: { [FLEET_ID.lineSide]: { mapId: 'main-assembly' }, [FLEET_ID.assembly]: { mapId: 'assembly-east' } },
   maps: MAPS,
   published: () => null,
   structure: () => null,
@@ -93,7 +94,7 @@ describe('the world of the Live Floor is built from fleets and their maps', () =
     const w = buildWorld(
       input({
         fleets: [lineSide, assembly, fresh],
-        profiles: { ...input({ fleets: [] }).profiles, 'Probe Fleet': { mapId: 'main-assembly' } },
+        profiles: { ...input({ fleets: [] }).profiles, probe: { mapId: 'main-assembly' } },
       }),
     );
     expect(w.nav.fleets.map((f) => f.id)).toContain('probe'); // was: never in the list
@@ -108,7 +109,7 @@ describe('the world of the Live Floor is built from fleets and their maps', () =
           id: 'r',
           kind: 'robot',
           status: 'online',
-          values: { name: 'AMR-099', sherpaType: 'Sherpa XT Lite', fleet: 'Probe Fleet' },
+          values: { name: 'AMR-099', sherpaType: 'Sherpa XT Lite', fleet: 'probe' },
         },
       ] as never,
     });
@@ -128,7 +129,7 @@ describe('the world of the Live Floor is built from fleets and their maps', () =
   });
 
   it('an imported map that is only a draft is not on the floor; once published with roads it is, placed beside the base floor with its own ids', () => {
-    const profiles = { 'Probe Fleet': { mapId: 'imp-x' } };
+    const profiles = { probe: { mapId: 'imp-x' } };
     const draftOnly = buildWorld(input({ fleets: [lineSide, assembly, fresh], maps: [...MAPS, imported], profiles }));
     expect(draftOnly.idle[0]).toMatchObject({ fleetId: 'probe', why: 'not-published' });
     const w = buildWorld(
@@ -155,7 +156,7 @@ describe('the world of the Live Floor is built from fleets and their maps', () =
       input({
         fleets: [lineSide, assembly, fresh],
         maps: [...MAPS, imported],
-        profiles: { 'Probe Fleet': { mapId: 'imp-x' } },
+        profiles: { probe: { mapId: 'imp-x' } },
         published: () => noRoads,
       }),
     );
@@ -167,7 +168,7 @@ describe('the world of the Live Floor is built from fleets and their maps', () =
       input({
         fleets: [lineSide, assembly, fresh],
         maps: [...MAPS, imported],
-        profiles: { 'Probe Fleet': { mapId: 'imp-x' } },
+        profiles: { probe: { mapId: 'imp-x' } },
         published: (id) => (id === 'imp-x' ? tiny() : null),
       }),
     );
@@ -187,7 +188,7 @@ describe('the world of the Live Floor is built from fleets and their maps', () =
     const b = buildWorld(
       input({
         fleets: [lineSide, assembly, fresh],
-        profiles: { ...input({ fleets: [] }).profiles, 'Probe Fleet': { mapId: 'main-assembly' } },
+        profiles: { ...input({ fleets: [] }).profiles, probe: { mapId: 'main-assembly' } },
       }),
     );
     expect(a.signature).not.toBe(b.signature);
@@ -199,7 +200,7 @@ describe('areas of a fleet on a shared or imported map', () => {
     const w = buildWorld(
       input({
         fleets: [lineSide, assembly, fresh],
-        profiles: { ...input({ fleets: [] }).profiles, 'Probe Fleet': { mapId: 'main-assembly' } },
+        profiles: { ...input({ fleets: [] }).profiles, probe: { mapId: 'main-assembly' } },
       }),
     );
     const areasOf = (id: string) => w.nav.fleets.find((f) => f.id === id)!.areas;
@@ -211,7 +212,7 @@ describe('areas of a fleet on a shared or imported map', () => {
       input({
         fleets: [lineSide, assembly, fresh],
         maps: [...MAPS, imported],
-        profiles: { 'Probe Fleet': { mapId: 'imp-x' } },
+        profiles: { probe: { mapId: 'imp-x' } },
         published: (id) => (id === 'imp-x' ? tiny() : null),
       }),
     );

@@ -1,3 +1,4 @@
+import { FLEET_ID, asFleetId } from '../src/data/fleets';
 import { datasetStore } from '../src/data/dataset';
 import { describe, expect, it } from 'vitest';
 import {
@@ -21,16 +22,16 @@ import { seedGroups, seedMaterials } from '../src/fixtures/masterData';
 import { assignToFleet, unassignFromFleet } from '../src/features/master-data/model/logic';
 import { createNode, createStart } from '../src/features/workflow-builder/model/factory';
 
-const lineSide = SEED_PROFILES['Line Side Fleet'];
+const lineSide = SEED_PROFILES[FLEET_ID.lineSide];
 const map = mapById(lineSide.mapId)!;
 
 describe('fleet profiles: each fleet has its own data', () => {
   it('fleets point at different maps with their own stations and groups', () => {
     expect(map.name).toBe('Main_Assembly_Hall_Engine_Bay_All');
-    expect(mapById(SEED_PROFILES['Assembly Fleet'].mapId)!.stations.map((s) => s.name)).not.toEqual(
+    expect(mapById(SEED_PROFILES[FLEET_ID.assembly].mapId)!.stations.map((s) => s.name)).not.toEqual(
       map.stations.map((s) => s.name),
     );
-    expect(lineSide.groups.map((g) => g.name)).not.toEqual(SEED_PROFILES['Assembly Fleet'].groups.map((g) => g.name));
+    expect(lineSide.groups.map((g) => g.name)).not.toEqual(SEED_PROFILES[FLEET_ID.assembly].groups.map((g) => g.name));
     expect(EMPTY_PROFILE).toEqual({ mapId: null, groups: [] });
   });
   it('every seeded group sits on a station of its own map and only holds materials assigned to that fleet', () => {
@@ -45,14 +46,14 @@ describe('fleet profiles: each fleet has its own data', () => {
   it('robots and hardware are spread over fleets in the seed (including unassigned)', () => {
     const by = (list: { values: Record<string, unknown> }[], f: string) =>
       list.filter((d) => d.values.fleet === f).length;
-    expect(by(KINDS.robot.seed, 'Line Side Fleet')).toBe(9);
-    expect(by(KINDS.robot.seed, 'Assembly Fleet')).toBe(9);
+    expect(by(KINDS.robot.seed, FLEET_ID.lineSide)).toBe(9);
+    expect(by(KINDS.robot.seed, FLEET_ID.assembly)).toBe(9);
     expect(by(KINDS.robot.seed, '')).toBe(1);
-    expect(by(KINDS.hardware.seed, 'Line Side Fleet')).toBe(2);
-    expect(by(KINDS.hardware.seed, 'Assembly Fleet')).toBe(1);
+    expect(by(KINDS.hardware.seed, FLEET_ID.lineSide)).toBe(2);
+    expect(by(KINDS.hardware.seed, FLEET_ID.assembly)).toBe(1);
   });
-  it('fleet urls encode the name', () =>
-    expect(fleetPath('Line Side Fleet', 'materials')).toBe('/configurator/fleets/Line%20Side%20Fleet/materials'));
+  it('fleet urls hold the fleet id', () =>
+    expect(fleetPath(FLEET_ID.lineSide, 'materials')).toBe('/configurator/fleets/line-side/materials'));
   it('every map has stations with unique ids', () =>
     MAPS.forEach((m) => expect(new Set(m.stations.map((s) => s.id)).size).toBe(m.stations.length)));
 });
@@ -93,11 +94,11 @@ describe('station groups', () => {
 describe('fleet materials assignment (master data helpers)', () => {
   it('assign adds the fleet once; unassign removes only that fleet', () => {
     const list = seedMaterials(0, seedGroups(0));
-    const a = assignToFleet(list, ['DCP-1005'], 'Line Side Fleet', 1);
-    expect(a.find((m) => m.code === 'DCP-1005')!.fleets).toEqual(['Assembly Fleet', 'Line Side Fleet']);
-    expect(assignToFleet(a, ['DCP-1005'], 'Line Side Fleet', 2)).toEqual(a);
-    expect(unassignFromFleet(a, 'DCP-1005', 'Assembly Fleet', 3).find((m) => m.code === 'DCP-1005')!.fleets).toEqual([
-      'Line Side Fleet',
+    const a = assignToFleet(list, ['DCP-1005'], FLEET_ID.lineSide, 1);
+    expect(a.find((m) => m.code === 'DCP-1005')!.fleets).toEqual([FLEET_ID.assembly, FLEET_ID.lineSide]);
+    expect(assignToFleet(a, ['DCP-1005'], FLEET_ID.lineSide, 2)).toEqual(a);
+    expect(unassignFromFleet(a, 'DCP-1005', FLEET_ID.assembly, 3).find((m) => m.code === 'DCP-1005')!.fleets).toEqual([
+      FLEET_ID.lineSide,
     ]);
   });
 });
@@ -112,7 +113,7 @@ describe('workflows tab summary', () => {
       logic,
       createNode('end'),
     ];
-    expect(workflowSummary({ id: 'x', name: 'w', fleet: 'F', nodes })).toEqual({
+    expect(workflowSummary({ id: 'x', name: 'w', fleet: asFleetId('f'), nodes })).toEqual({
       id: 'x',
       name: 'w',
       nodes: 7,
@@ -120,50 +121,61 @@ describe('workflows tab summary', () => {
       trigger: 'Call Button',
       published: false,
     });
-    expect(workflowSummary({ id: 'x', name: 'w', fleet: 'F', nodes, published: true }).published).toBe(true);
+    expect(workflowSummary({ id: 'x', name: 'w', fleet: asFleetId('f'), nodes, published: true }).published).toBe(true);
   });
 });
 
+const BRAND_NEW = asFleetId('brand-new');
 describe('assigning a map', () => {
   it('a fleet without a map can be given one; changing the map clears station groups of the old map', async () => {
     const { fleetsStore, profileOf } = await import('../src/features/fleets/model/store');
-    expect(profileOf(fleetsStore.getState().profiles, 'Brand New Fleet').mapId).toBeNull();
-    fleetsStore.getState().assignMap('Brand New Fleet', 'assembly-east'); // the Assembly Fleet has it: a map belongs to one fleet, so nothing happens
-    expect(profileOf(fleetsStore.getState().profiles, 'Brand New Fleet').mapId).toBeNull();
-    fleetsStore.getState().unassignMap('Assembly Fleet');
-    fleetsStore.getState().assignMap('Brand New Fleet', 'assembly-east');
-    expect(profileOf(fleetsStore.getState().profiles, 'Brand New Fleet')).toEqual({
+    expect(profileOf(fleetsStore.getState().profiles, BRAND_NEW).mapId).toBeNull();
+    fleetsStore.getState().assignMap(BRAND_NEW, 'assembly-east'); // the Assembly Fleet has it: a map belongs to one fleet, so nothing happens
+    expect(profileOf(fleetsStore.getState().profiles, BRAND_NEW).mapId).toBeNull();
+    fleetsStore.getState().unassignMap(FLEET_ID.assembly);
+    fleetsStore.getState().assignMap(BRAND_NEW, 'assembly-east');
+    expect(profileOf(fleetsStore.getState().profiles, BRAND_NEW)).toEqual({
       mapId: 'assembly-east',
       groups: [],
     });
-    fleetsStore.getState().assignMap('Line Side Fleet', 'main-assembly');
-    expect(profileOf(fleetsStore.getState().profiles, 'Line Side Fleet').groups).toHaveLength(2); // same map: untouched
-    fleetsStore.getState().unassignMap('Brand New Fleet');
-    fleetsStore.getState().assignMap('Line Side Fleet', 'assembly-east');
-    expect(profileOf(fleetsStore.getState().profiles, 'Line Side Fleet').groups).toEqual([]);
+    fleetsStore.getState().assignMap(FLEET_ID.lineSide, 'main-assembly');
+    expect(profileOf(fleetsStore.getState().profiles, FLEET_ID.lineSide).groups).toHaveLength(2); // same map: untouched
+    fleetsStore.getState().unassignMap(BRAND_NEW);
+    fleetsStore.getState().assignMap(FLEET_ID.lineSide, 'assembly-east');
+    expect(profileOf(fleetsStore.getState().profiles, FLEET_ID.lineSide).groups).toEqual([]);
   });
 });
 
 describe('renaming a fleet', () => {
-  it('updates every reference but leaves workflow names alone; refuses empty and duplicate names', async () => {
+  it("changes only the fleet list: everything else points at the fleet's id and keeps working; refuses empty and duplicate names", async () => {
     const { renameFleet } = await import('../src/features/fleets/model/rename');
     const { wfStore } = await import('../src/features/workflow-builder/model/store');
     const { deviceStore } = await import('../src/features/devices/model/store');
     const { masterDataStore } = await import('../src/features/master-data/model/store');
     const { fleetsStore } = await import('../src/features/fleets/model/store');
-    expect(renameFleet('Line Side Fleet', '  ')).toMatch(/needs a name/);
-    expect(renameFleet('Line Side Fleet', 'assembly fleet')).toMatch(/already exists/);
-    const wfName = Object.values(wfStore.getState().workflows).find((w) => w.fleet === 'Line Side Fleet')!.name;
-    expect(renameFleet('Line Side Fleet', ' Line Feeding ')).toBe('');
+    expect(renameFleet(FLEET_ID.lineSide, '  ')).toMatch(/needs a name/);
+    expect(renameFleet(FLEET_ID.lineSide, 'assembly fleet')).toMatch(/already exists/);
+    const before = JSON.stringify([
+      wfStore.getState().workflows,
+      deviceStore.getState().robot,
+      masterDataStore.getState().materials,
+      fleetsStore.getState().profiles,
+    ]);
+    expect(renameFleet(FLEET_ID.lineSide, ' Line Feeding ')).toBe('');
     expect(datasetStore.getState().fleets.map((f) => f.name)).toContain('Line Feeding');
     expect(datasetStore.getState().fleets.map((f) => f.name)).not.toContain('Line Side Fleet');
-    expect(Object.values(wfStore.getState().workflows).find((w) => w.fleet === 'Line Feeding')!.name).toBe(wfName);
-    expect(deviceStore.getState().robot.filter((d) => d.values.fleet === 'Line Feeding')).toHaveLength(9);
-    expect(deviceStore.getState().hardware.filter((d) => d.values.fleet === 'Line Side Fleet')).toHaveLength(0);
-    expect(masterDataStore.getState().materials.filter((m) => m.fleets.includes('Line Feeding'))).toHaveLength(4);
-    expect(fleetsStore.getState().profiles['Line Feeding']).toBeDefined();
-    expect(fleetsStore.getState().profiles['Line Side Fleet']).toBeUndefined();
-    expect(renameFleet('Line Feeding', 'line feeding')).toBe(''); // changing only the case of its own name is fine
+    // nothing but the fleet list was touched
+    expect(
+      JSON.stringify([
+        wfStore.getState().workflows,
+        deviceStore.getState().robot,
+        masterDataStore.getState().materials,
+        fleetsStore.getState().profiles,
+      ]),
+    ).toBe(before);
+    expect(deviceStore.getState().robot.filter((d) => d.values.fleet === FLEET_ID.lineSide)).toHaveLength(9);
+    expect(masterDataStore.getState().materials.filter((m) => m.fleets.includes(FLEET_ID.lineSide))).toHaveLength(4);
+    expect(renameFleet(FLEET_ID.lineSide, 'line feeding')).toBe(''); // changing only the case of its own name is fine
   });
 });
 
@@ -181,7 +193,10 @@ describe('maps page logic', () => {
   };
   const ok = { name: 'floor_1', robot: 'AMR-001', runData: 'run', version: 'v5', zMin: '', zMax: '' };
   it('only the system maps are listed; fleets per map come from fleet profiles', () => {
-    const by = fleetsByMap({ A: { mapId: 'main-assembly' }, B: { mapId: 'main-assembly' }, C: { mapId: null } });
+    const by = fleetsByMap(
+      { A: { mapId: 'main-assembly' }, B: { mapId: 'main-assembly' }, C: { mapId: null } },
+      (id) => id,
+    );
     expect(by).toEqual({ 'main-assembly': ['A', 'B'] });
     expect(filterSortMaps(MAPS, by, '', 'name').map((m) => m.id)).toEqual(['assembly-east', 'main-assembly']);
     expect(filterSortMaps(MAPS, by, '', 'version')[0].version).toBe(5);

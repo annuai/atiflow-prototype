@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { fleetDirectory } from '@/data/fleetDirectory';
 import { FilterLines, Map01, Plus, SearchLg, Upload01 } from '@untitledui/icons';
 import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { Button } from '@/components/base/buttons/button';
@@ -22,7 +23,7 @@ export function MapsPage() {
   const [sort, setSort] = useState<MapSort>('name');
   const [generating, setGenerating] = useState(false);
   const [importing, setImporting] = useState(false);
-  const byMap = useMemo(() => fleetsByMap(profiles), [profiles]);
+  const byMap = useMemo(() => fleetsByMap(profiles, fleetDirectory.nameOf), [profiles]);
   const rows = useMemo(() => filterSortMaps(maps, byMap, text, sort), [maps, byMap, text, sort]);
   const actions = (primaryOnly?: boolean) => (
     <>

@@ -1,3 +1,4 @@
+import { FLEET_ID } from '../src/data/fleets';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import type { NavGraph, SiteLayout } from '../src/core/types';
@@ -102,7 +103,7 @@ describe('station edits (pure)', () => {
 });
 
 describe('the publish gate', () => {
-  const used = (id: string) => workflowsUsing(sampleWorkflows(), 'Line Side Fleet', id);
+  const used = (id: string) => workflowsUsing(sampleWorkflows(), FLEET_ID.lineSide, id);
   it('blocks an On route station no route reaches (an Off route one is fine), an unnamed or duplicate name, and a deleted station that a published workflow uses', () => {
     const base = lineSide();
     expect(publishProblems(base, base, used)).toEqual([]);
@@ -132,7 +133,7 @@ describe('the publish gate', () => {
   });
   it('workflows are matched by station in Station, Confirm and If Logic steps of PUBLISHED workflows of that fleet only', () => {
     expect(used('STA-116')).toEqual(['Chain Pin to Workstation 1']);
-    expect(workflowsUsing(sampleWorkflows(), 'Assembly Fleet', 'STA-116')).toEqual(['Coupling Pad to Preparation 1']);
+    expect(workflowsUsing(sampleWorkflows(), FLEET_ID.assembly, 'STA-116')).toEqual(['Coupling Pad to Preparation 1']);
     expect(used('STA-999')).toEqual([]);
   });
 });

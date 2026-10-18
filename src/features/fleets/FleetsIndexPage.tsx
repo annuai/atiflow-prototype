@@ -1,3 +1,4 @@
+import { asFleetId, type FleetId } from '@/data/fleets';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cube01, Dataflow03, SearchLg } from '@untitledui/icons';
@@ -32,15 +33,15 @@ export function FleetsIndexPage() {
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [making, setMaking] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<FleetId | null>(null);
   const unassigned = robots.filter((d) => !d.values.fleet);
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return fleets
-      .map((f) => ({ f, map: maps.find((m) => m.id === profileOf(profiles, f.name).mapId) ?? null }))
+      .map((f) => ({ f, map: maps.find((m) => m.id === profileOf(profiles, f.id).mapId) ?? null }))
       .filter(({ f, map }) => !q || f.name.toLowerCase().includes(q) || !!map?.name.toLowerCase().includes(q));
   }, [fleets, maps, profiles, query]);
-  const expanded = open ?? rows[0]?.f.name ?? null; // the first fleet is open until the person opens another
+  const expanded = open ?? rows[0]?.f.id ?? null; // the first fleet is open until the person opens another
   return (
     <>
       <Page>
@@ -87,7 +88,7 @@ export function FleetsIndexPage() {
                 {unassigned.length > 0 && (
                   <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     {unassigned.map((d) => (
-                      <DeviceCard key={nameOf(d)} kind={KINDS.robot} device={d} layout="tile" fleet="" />
+                      <DeviceCard key={nameOf(d)} kind={KINDS.robot} device={d} layout="tile" fleet={asFleetId('')} />
                     ))}
                   </div>
                 )}
@@ -117,22 +118,22 @@ export function FleetsIndexPage() {
                       key={f.id}
                       name={f.name}
                       map={map}
-                      robots={robots.filter((d) => d.values.fleet === f.name).length}
-                      hardware={hardware.filter((d) => d.values.fleet === f.name).length}
-                      open={expanded === f.name}
-                      onToggle={() => setOpen(expanded === f.name ? '' : f.name)}
+                      robots={robots.filter((d) => d.values.fleet === f.id).length}
+                      hardware={hardware.filter((d) => d.values.fleet === f.id).length}
+                      open={expanded === f.id}
+                      onToggle={() => setOpen(expanded === f.id ? ('' as FleetId) : f.id)}
                       menu={
                         <Dropdown.Root>
                           <Dropdown.DotsButton aria-label={copy.index.fleetMenu} />
                           <Dropdown.Popover className="w-48">
-                            <Dropdown.Menu onAction={() => navigate(fleetPath(f.name))}>
+                            <Dropdown.Menu onAction={() => navigate(fleetPath(f.id))}>
                               <Dropdown.Item id="open" label={copy.index.open} />
                             </Dropdown.Menu>
                           </Dropdown.Popover>
                         </Dropdown.Root>
                       }
                     >
-                      <OverviewPanel fleet={f.name} />
+                      <OverviewPanel fleet={f.id} />
                     </FleetAccordion>
                   ))
                 )}

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { fleetScope } from '@/features/access';
 import { fleetDirectory } from '@/data/fleetDirectory';
+import type { FleetId } from '@/data/fleets';
 import { useDataset } from '@/data/dataset';
 import { useAuth } from '@/features/auth';
 
@@ -15,8 +16,8 @@ export function useOperator(): { username: string; name: string; fleets: string[
     [user, all],
   );
 }
-export const fleetIdOf = (name: string) => fleetDirectory.byName(name)?.id;
-export const fleetLiveOf = (name: string) => {
-  const f = fleetDirectory.byName(name);
-  return f ? (f.liveId ?? f.id) : name;
+/** The id the Live Floor's lane map and the fleet's orders use for a fleet (its map id when it has one). */
+export const fleetLiveOf = (fleet: FleetId): string => {
+  const f = fleetDirectory.byId(fleet);
+  return f ? (f.liveId ?? f.id) : fleet;
 };

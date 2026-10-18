@@ -7,13 +7,14 @@ import { copy } from '../copy';
 import { validateGroupForm } from '../model/logic';
 import { fleetsStore, profileOf, useFleets } from '../model/store';
 import { t } from '../text';
+import type { FleetId } from '@/data/fleets';
 
 function Body({
   fleet,
   group,
   onOpenChange,
 }: {
-  fleet: string;
+  fleet: FleetId;
   group: { id: string; name: string };
   onOpenChange(o: boolean): void;
 }) {
@@ -56,7 +57,7 @@ function Body({
   );
 }
 export const RenameGroupModal = (p: {
-  fleet: string;
+  fleet: FleetId;
   group: { id: string; name: string } | null;
   onOpenChange(o: boolean): void;
 }) => (p.group ? <Body fleet={p.fleet} group={p.group} onOpenChange={p.onOpenChange} /> : null);

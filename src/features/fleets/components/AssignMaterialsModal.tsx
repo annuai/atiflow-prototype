@@ -1,4 +1,5 @@
 import { Package } from '@untitledui/icons';
+import { useFleetName } from '@/data/fleetDirectory';
 import { EmptyState } from '@/components/data/EmptyState';
 import { useMemo, useState } from 'react';
 import { PackagePlus } from '@untitledui/icons';
@@ -14,8 +15,10 @@ import {
 } from '@/features/master-data';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
+import type { FleetId } from '@/data/fleets';
 
-function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean): void }) {
+function Body({ fleet, onOpenChange }: { fleet: FleetId; onOpenChange(o: boolean): void }) {
+  const fleetName = useFleetName(fleet);
   const materials = useMasterData((s) => s.materials);
   const groups = useMasterData((s) => s.groups);
   const [text, setText] = useState('');
@@ -37,7 +40,7 @@ function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean)
   const save = () => {
     masterDataStore.getState().assignMaterials([...sel], fleet);
     onOpenChange(false);
-    const d = t.done(sel.size, fleet);
+    const d = t.done(sel.size, fleetName);
     notify.success(d.title, d.body, 'materials-assigned');
   };
   return (
@@ -45,7 +48,7 @@ function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean)
       isOpen
       onOpenChange={onOpenChange}
       icon={PackagePlus}
-      title={t.title(fleet)}
+      title={t.title(fleetName)}
       subtitle={t.subtitle}
       secondary={{ label: t.cancel, onPress: () => onOpenChange(false) }}
       primary={{ label: t.confirm(sel.size), isDisabled: sel.size === 0, onPress: save }}
@@ -66,5 +69,5 @@ function Body({ fleet, onOpenChange }: { fleet: string; onOpenChange(o: boolean)
   );
 }
 /** Assign materials from the Material Master Data to this fleet. Mounted only while open. */
-export const AssignMaterialsModal = (p: { fleet: string; isOpen: boolean; onOpenChange(o: boolean): void }) =>
+export const AssignMaterialsModal = (p: { fleet: FleetId; isOpen: boolean; onOpenChange(o: boolean): void }) =>
   p.isOpen ? <Body fleet={p.fleet} onOpenChange={p.onOpenChange} /> : null;

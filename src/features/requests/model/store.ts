@@ -1,4 +1,5 @@
 import { createPersistedStore } from '@/data/persistedStore';
+import { fleetRef } from '@/data/fleetRef';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
 import { tripIds, tripNumber } from '@/data/tripIds';
@@ -59,7 +60,7 @@ export function normalise(list: TripRequest[]): TripRequest[] {
       : withTrip.status === 'pending' && withTrip.legs?.length
         ? [{ users: legacy() }]
         : [];
-    return { ...withTrip, approvals };
+    return { ...withTrip, fleet: withTrip.fleet ? fleetRef(withTrip.fleet) : withTrip.fleet, approvals }; // (a request saved with a fleet NAME points at its id)
   });
 }
 export const requestsStore = createPersistedStore<RequestsState, RequestsDocument>(

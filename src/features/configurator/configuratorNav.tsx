@@ -15,7 +15,8 @@ import bellI from '@/ui/icons/bell.svg';
 import gearI from '@/ui/icons/settings.svg';
 import { KINDS } from '@/features/devices';
 import { fleetPath, FLEETS_PATH } from '@/features/fleets';
-import { useFleetNames, wfStore } from '@/features/workflow-builder';
+import { useFleetDirectory } from '@/data/fleetDirectory';
+import { wfStore } from '@/features/workflow-builder';
 import { datasetStore } from '@/data/dataset';
 import { useUnreadCount } from '@/features/notifications';
 import { USERS_PATH } from '@/features/access';
@@ -38,7 +39,7 @@ function NewFleet() {
     if (wfStore.getState().createFleet(n)) {
       setName('');
       setOpen(false);
-      navigate(fleetPath(datasetStore.getState().fleets.at(-1)!.name));
+      navigate(fleetPath(datasetStore.getState().fleets.at(-1)!.id));
     }
   };
   return (
@@ -71,7 +72,7 @@ function NewFleet() {
 
 /** Sidebar shared by every configurator page. The highlighted item follows the URL, so each page only has to be a route. */
 export function useConfiguratorNav(): NavModel {
-  const names = useFleetNames();
+  const fleets = useFleetDirectory();
   const unread = useUnreadCount();
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -146,12 +147,12 @@ export function useConfiguratorNav(): NavModel {
                 active: pathname === FLEETS_PATH,
                 onSelect: () => navigate(FLEETS_PATH),
               },
-              ...names.map((n) => ({
-                id: n,
-                label: n,
+              ...fleets.map((f) => ({
+                id: f.id,
+                label: f.name,
                 icon: fleetI,
-                active: pathname.startsWith(fleetPath(n, '')),
-                onSelect: () => navigate(fleetPath(n)),
+                active: pathname.startsWith(fleetPath(f.id, '')),
+                onSelect: () => navigate(fleetPath(f.id)),
               })),
             ],
             extra: <NewFleet />,

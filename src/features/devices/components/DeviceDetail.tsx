@@ -4,7 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { GamingPad01, RefreshCcw03, Rows01, Settings02, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
-import { useFleetNames } from '@/features/workflow-builder';
+import { useFleetChoices, useFleetName } from '@/data/fleetDirectory';
+import { asFleetId } from '@/data/fleets';
 import { notify } from '@/ui/toast';
 import { deviceStore } from '../model/store';
 import { nameOf } from '../model/validate';
@@ -35,12 +36,13 @@ const detailOf = (f: { detail?: unknown }) =>
 export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Device }) {
   const navigate = useNavigate();
   const name = nameOf(device);
-  const fleets = useFleetNames();
+  const fleets = useFleetChoices();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, FieldValue>>({});
   const [tab, setTab] = useState('Details');
   const [confirm, setConfirm] = useState(false);
-  const fleet = String(device.values.fleet ?? '');
+  const fleet = asFleetId(String(device.values.fleet ?? ''));
+  const fleetName = useFleetName(fleet);
   // opened from a fleet page (link state) while still in that fleet: Fleets > <fleet> > <name>; otherwise Robots / Hardware > <name>
   const from = (useLocation().state as { fleet?: string } | null)?.fleet;
   const viaFleet = !!from && from === fleet;
@@ -48,7 +50,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
   const trail: Crumb[] = viaFleet
     ? [
         { label: t.detail.fleets, onPress: () => navigate(FLEETS_PATH) },
-        { label: fleet, onPress: () => navigate(back) },
+        { label: fleetName, onPress: () => navigate(back) },
         { label: name },
       ]
     : [{ label: kind.plural, onPress: () => navigate(back) }, { label: name }];
@@ -66,7 +68,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
   };
   const unassign = () => {
     deviceStore.getState().update(kind.id, name, { fleet: '' });
-    const done = t.detail.unassigned(name, fleet);
+    const done = t.detail.unassigned(name, fleetName);
     notify.success(done.title, done.body, 'device-unassigned');
   };
   const remove = () => {
@@ -110,7 +112,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
           <>
             {fleet && (
               <Button color="secondary" size="md" onPress={unassign}>
-                {t.detail.unassign(fleet)}
+                {t.detail.unassign(fleetName)}
               </Button>
             )}
             <Button color="primary" size="md" isDisabled={f.disabled} onPress={f.onEdit}>
@@ -190,7 +192,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
               ))}
               {fleet && (
                 <Badge size="md" type="pill-color" color="indigo">
-                  {fleet}
+                  {fleetName}
                 </Badge>
               )}
               <StatusBadge status={device.status} type="pill-color" />

@@ -1,3 +1,4 @@
+import { FLEET_ID } from '../src/data/fleets';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { FleetSim } from '../src/adapters/sim';
@@ -19,7 +20,7 @@ import { toPublic } from '../src/features/auth/userDirectory';
 const site = JSON.parse(readFileSync('public/sites/ecc/site.json', 'utf8')) as SiteLayout,
   nav = JSON.parse(readFileSync('public/sites/ecc/nav.json', 'utf8')) as NavGraph;
 const input = (over: Partial<BookingInput> = {}): BookingInput => ({
-  fleet: 'Line Side Fleet',
+  fleet: FLEET_ID.lineSide,
   fleetLive: 'line-side',
   robotType: 'sherpa-xt-lite',
   robotLabel: 'Sherpa XT Lite',
@@ -113,7 +114,7 @@ describe('the consolidated history', () => {
     groupId: 'ORD-0001',
     workflowId: 'w',
     workflowName: 'Chain Pin to Workstation 1',
-    fleet: 'Line Side Fleet',
+    fleet: FLEET_ID.lineSide,
     fleetLive: 'line-side',
     code: 'DCP-1001',
     name: 'Drive Chain Pin 8mm',
@@ -175,13 +176,11 @@ describe('access', () => {
 });
 
 describe('saved routes (workflows with no material)', () => {
-  const fleetIdOf = (n: string) =>
-    (({ 'Line Side Fleet': 'line-side', 'Assembly Fleet': 'assembly' }) as Record<string, string>)[n];
-  const fleetLiveOf = (n: string) => (n === 'Assembly Fleet' ? 'asrs' : 'line-side');
+  const fleetLiveOf = (f: string) => (f === FLEET_ID.assembly ? 'asrs' : 'line-side');
   const who = (username: string, fleets: string[]) => ({ username, fleets });
   const all = [...routeSampleWorkflows(), ...sampleWorkflows()];
   it('a route is a published Tablet workflow with no Material step and at least one station, offered to the people listed in Start on their fleet', () => {
-    const r = routeItems(all, who('rohan', ['line-side']), fleetIdOf, fleetLiveOf);
+    const r = routeItems(all, who('rohan', ['line-side']), fleetLiveOf);
     expect(r.map((i) => i.workflowId)).toEqual(['w-route-1', 'w-route-2', 'w-route-4']); // the material workflows are not routes
     expect(r[0]).toMatchObject({
       kind: 'route',
@@ -192,11 +191,9 @@ describe('saved routes (workflows with no material)', () => {
       needsApproval: false,
     });
     expect(r[1]).toMatchObject({ robotType: 'pallet-mover', needsApproval: true, approvalUsers: [['vikram']] });
-    expect(routeItems(all, who('sneha', ['assembly']), fleetIdOf, fleetLiveOf).map((i) => i.workflowId)).toEqual([
-      'w-route-3',
-    ]);
-    expect(routeItems(all, who('vikram', ['line-side', 'assembly']), fleetIdOf, fleetLiveOf)).toEqual([]);
-    expect(routeItems(all, who('rohan', ['assembly']), fleetIdOf, fleetLiveOf)).toEqual([]); // not on his fleet
+    expect(routeItems(all, who('sneha', ['assembly']), fleetLiveOf).map((i) => i.workflowId)).toEqual(['w-route-3']);
+    expect(routeItems(all, who('vikram', ['line-side', 'assembly']), fleetLiveOf)).toEqual([]);
+    expect(routeItems(all, who('rohan', ['assembly']), fleetLiveOf)).toEqual([]); // not on his fleet
   });
   it('a workflow with a Material step, no station, or not published is not a trip; every other node (Empty Container, Wait, If Logic, any Confirm) is allowed, and one station is enough', () => {
     const base = routeSampleWorkflows()[0];
@@ -226,8 +223,7 @@ describe('saved routes (workflows with no material)', () => {
         ...base.nodes.slice(1),
       ],
     };
-    const ids = (ws: typeof all) =>
-      routeItems(ws, who('rohan', ['line-side']), fleetIdOf, fleetLiveOf).map((i) => i.workflowId);
+    const ids = (ws: typeof all) => routeItems(ws, who('rohan', ['line-side']), fleetLiveOf).map((i) => i.workflowId);
     expect(ids([withMat])).toEqual([]);
     expect(ids([none])).toEqual([]);
     expect(ids([one])).toEqual(['w-route-1']);
@@ -238,7 +234,7 @@ describe('saved routes (workflows with no material)', () => {
   });
   it('booking a route makes a request with no quantity: approved at once, or pending when a Tablet Confirm needs approval', () => {
     requestsStore.getState().reset();
-    const [a, b] = routeItems(all, who('rohan', ['line-side']), fleetIdOf, fleetLiveOf);
+    const [a, b] = routeItems(all, who('rohan', ['line-side']), fleetLiveOf);
     requestsStore.getState().submit({ username: 'rohan', name: 'Rohan Mehta' }, [{ item: a, qty: 1 }], 1000);
     requestsStore.getState().submit({ username: 'rohan', name: 'Rohan Mehta' }, [{ item: b, qty: 1 }], 2000);
     const rs = requestsStore.getState().requests;
@@ -256,7 +252,7 @@ describe('robot types saved in workflows', () => {
     const w = (robot: string) => ({
       id: 'w',
       name: 'x',
-      fleet: 'Line Side Fleet',
+      fleet: FLEET_ID.lineSide,
       saved: true,
       nodes: [createStart({ robot }), createNode('end')],
     });

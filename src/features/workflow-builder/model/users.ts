@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { fleetIdIn } from '@/data/fleetRefs';
 import { can, fleetScope } from '@/features/access';
 import { useDataset } from '@/data/dataset';
 import { type UserRecord, toPublic, userDirectory, useUsers } from '@/features/auth';
@@ -23,21 +24,18 @@ export function eligibleUsers(
     .map((u) => ({ id: u.username, label: `${u.name} (${u.username})` }));
 }
 /** For components: the people that can be picked, following the user list and the fleets. */
-export function useEligibleUsers(
-  fleetName: string | null,
-  permission: UserPermission,
-): { id: string; label: string }[] {
+export function useEligibleUsers(fleet: string | null, permission: UserPermission): { id: string; label: string }[] {
   const users = useUsers((s) => s.users);
   const fleets = useDataset((s) => s.fleets);
   return useMemo(
     () =>
       eligibleUsers(
         users,
-        fleets.find((f) => f.name === fleetName)?.id,
+        fleet ?? undefined,
         permission,
         fleets.map((f) => f.id),
       ),
-    [users, fleets, fleetName, permission],
+    [users, fleets, fleet, permission],
   );
 }
 
@@ -53,7 +51,7 @@ export function prefillUsers(
   const ids = fleets.map((f) => f.id);
   const out: Workflows = {};
   for (const [id, w] of Object.entries(workflows)) {
-    const fleetId = fleets.find((f) => f.name === w.fleet)?.id;
+    const fleetId = w.fleet ? fleetIdIn(fleets, w.fleet) : undefined; // (the fleet may still be a NAME here: it is turned into an id when the list is read)
     const req = eligibleUsers(users, fleetId, 'operator.book-trip', ids).map((u) => u.id);
     const app = eligibleUsers(users, fleetId, 'operator.approve', ids).map((u) => u.id);
     const empty = (n: WfNode) => !Array.isArray(n.f.users) || n.f.users.length === 0;

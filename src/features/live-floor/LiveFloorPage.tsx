@@ -193,7 +193,7 @@ export function LiveFloorPage() {
                 <b>{copy.idleFleet.title(idle.name)}</b>
                 <span>{copy.idleFleet.why[idle.why]}</span>
                 {canConfigure && fleetDirectory.byName(idle.name) && (
-                  <Link to={fleetPath(idle.name, 'overview')}>{copy.idleFleet.open}</Link>
+                  <Link to={fleetPath(fleetDirectory.byName(idle.name)!.id)}>{copy.idleFleet.open}</Link>
                 )}
               </div>
             )}
