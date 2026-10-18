@@ -224,17 +224,21 @@ export class MockSupportService implements SupportService {
     this.push(t, { from: 'system', text: 'You reopened this ticket.' });
     this.emit({ type: 'status', ticketId, status: 'open' });
   }
+  /** The scripted agent reply is always scheduled, and delivered only while support is online (outside the hours no agent writes: it waits and tries again), whatever the time the page opened at. */
+  private armScriptedReply(after: number) {
+    this.scriptedTimer = window.setTimeout(() => {
+      if (!this.online()) return this.armScriptedReply(5000 * this.speed);
+      const t = this.db.tickets.find((x) => x.id === SCRIPTED_REPLY.ticketId);
+      this.db.scripted = true;
+      if (t) this.push(t, { from: 'agent', author: AGENT, text: SCRIPTED_REPLY.text }, true);
+      else this.save();
+    }, after);
+  }
   /** PROD: a server-sent stream fed by Zendesk webhooks (agent replies, status changes). */
   subscribe(handler: (e: SupportEvent) => void): () => void {
     this.handlers.add(handler);
-    if (!this.db.scripted && this.scriptedTimer === undefined && this.online()) {
-      this.scriptedTimer = window.setTimeout(() => {
-        const t = this.db.tickets.find((x) => x.id === SCRIPTED_REPLY.ticketId);
-        this.db.scripted = true;
-        if (t) this.push(t, { from: 'agent', author: AGENT, text: SCRIPTED_REPLY.text }, true);
-        else this.save();
-      }, SCRIPTED_REPLY.afterMs * this.speed);
-    }
+    if (!this.db.scripted && this.scriptedTimer === undefined)
+      this.armScriptedReply(SCRIPTED_REPLY.afterMs * this.speed);
     return () => this.handlers.delete(handler);
   }
 }
