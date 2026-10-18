@@ -223,6 +223,8 @@ export const messages: Messages<typeof masterData> = {
       state: 'ಸ್ಥಿತಿ',
       material: 'ವಸ್ತು',
       materialPlaceholder: 'ವಸ್ತು ಆಯ್ಕೆಮಾಡಿ',
+      materialNone: 'ಹೊಂದಿಸಿಲ್ಲ',
+      materialHint: 'ಐಚ್ಛಿಕ. ಆಯ್ಕೆಮಾಡಿದರೆ ವಿನಂತಿಗಳು ಇಲ್ಲಿಂದ ಈ ವಸ್ತು ತೆಗೆದುಕೊಳ್ಳಬಹುದು.',
       quantity: 'ಪ್ರಮಾಣ (ತುಣುಕುಗಳು)',
       reason: 'ಕಾರಣ',
       reasonPlaceholder: 'ಏಕೆ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ? (ಐಚ್ಛಿಕ)',
@@ -240,7 +242,6 @@ export const messages: Messages<typeof masterData> = {
       nothingAssigned: 'ಈ ಫ್ಲೀಟ್‌ಗೆ ಇನ್ನೂ ಯಾವ ವಸ್ತುವೂ ನಿಯೋಜಿತವಾಗಿಲ್ಲ. ಫ್ಲೀಟ್ ಪುಟದಿಂದ ವಸ್ತುಗಳನ್ನು ನಿಯೋಜಿಸಿ.',
       pieces: (n) => `${n} ತುಣುಕುಗಳು`,
       errors: {
-        'material-required': 'ವಸ್ತು ಆಯ್ಕೆಮಾಡಿ.',
         'unknown-material': 'ಆ ವಸ್ತು ಮಾಸ್ಟರ್ ಡೇಟಾದಲ್ಲಿ ಇಲ್ಲ.',
         'not-assigned': 'ಆ ವಸ್ತು ಈ ಪ್ರದೇಶದ ಫ್ಲೀಟ್‌ಗೆ ನಿಯೋಜಿತವಾಗಿಲ್ಲ.',
         'bad-quantity': 'ಪ್ರಮಾಣ 1 ಅಥವಾ ಹೆಚ್ಚಿನ ಪೂರ್ಣಾಂಕ ಆಗಿರಬೇಕು.',

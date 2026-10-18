@@ -21,7 +21,7 @@ export type CellEdit =
   | { state: 'available' }
   | { state: 'filled'; materialCode: string; quantity?: number }
   | { state: 'blocked'; reason?: string };
-export type CellError = 'material-required' | 'unknown-material' | 'not-assigned' | 'bad-quantity' | 'reserved';
+export type CellError = 'unknown-material' | 'not-assigned' | 'bad-quantity' | 'reserved';
 export interface EditContext {
   /** every code in Master Data */
   known: ReadonlySet<string>;
@@ -36,9 +36,9 @@ export const validQuantity = (q: number | undefined) => q === undefined || (Numb
 /** What is wrong with an edit before any cell is looked at (null = nothing). */
 function checkEdit(edit: CellEdit, ctx: EditContext): CellError | null {
   if (edit.state !== 'filled') return null;
-  if (!edit.materialCode) return 'material-required';
-  if (!ctx.known.has(edit.materialCode)) return 'unknown-material';
-  if (ctx.allowed && !ctx.allowed.has(edit.materialCode)) return 'not-assigned';
+  // the material is optional: a cell can be Filled without saying with what (it then holds "Material not set" and no request can take it)
+  if (edit.materialCode && !ctx.known.has(edit.materialCode)) return 'unknown-material';
+  if (edit.materialCode && ctx.allowed && !ctx.allowed.has(edit.materialCode)) return 'not-assigned';
   return validQuantity(edit.quantity) ? null : 'bad-quantity';
 }
 
@@ -65,8 +65,8 @@ export function applyEdit(
     if (edit.state === 'filled')
       made = {
         state: 'filled',
-        materialCode: edit.materialCode,
-        quantity: edit.quantity,
+        materialCode: edit.materialCode || undefined,
+        quantity: edit.materialCode ? edit.quantity : undefined, // a quantity belongs to a material
         storedAt: cur?.state === 'filled' && cur.materialCode === edit.materialCode ? (cur.storedAt ?? now) : now,
         updatedAt: now,
         updatedBy: by,

@@ -219,6 +219,8 @@ export const messages: Messages<typeof masterData> = {
       state: 'स्थिति',
       material: 'सामग्री',
       materialPlaceholder: 'सामग्री चुनें',
+      materialNone: 'तय नहीं',
+      materialHint: 'वैकल्पिक। चुनें ताकि अनुरोध यहाँ से यह सामग्री ले सकें।',
       quantity: 'मात्रा (नग)',
       reason: 'कारण',
       reasonPlaceholder: 'ब्लॉक क्यों है? (वैकल्पिक)',
@@ -236,7 +238,6 @@ export const messages: Messages<typeof masterData> = {
       nothingAssigned: 'इस फ़्लीट को अभी कोई सामग्री असाइन नहीं है। फ़्लीट पेज से सामग्री असाइन करें।',
       pieces: (n) => `${n} नग`,
       errors: {
-        'material-required': 'एक सामग्री चुनें।',
         'unknown-material': 'यह सामग्री मास्टर डेटा में नहीं है।',
         'not-assigned': 'यह सामग्री इस एरिया के फ़्लीट को असाइन नहीं है।',
         'bad-quantity': 'मात्रा 1 या उससे अधिक की पूर्ण संख्या होनी चाहिए।',

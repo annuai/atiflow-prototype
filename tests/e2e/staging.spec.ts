@@ -25,7 +25,7 @@ test.describe('staging area cells hold materials', () => {
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByRole('heading', { name: label.replace(/^Row/, 'Row') })).toBeVisible();
     await dialog.getByRole('radio', { name: 'Filled' }).click();
-    await pick(page, 'Choose a material', /DCP-1001/);
+    await pick(page, 'Not set', /DCP-1001/);
     await dialog.getByLabel('Quantity (pieces)').fill('12');
     await dialog.getByRole('button', { name: 'Save' }).click();
     const filled = page.getByRole('gridcell', { name: new RegExp(`${label}: Filled, DCP-1001 .*12 pieces`) });
@@ -60,6 +60,18 @@ test.describe('staging area cells hold materials', () => {
     );
   });
 
+  test('a cell can be Filled without choosing a material (it is optional)', async ({ page }) => {
+    await open(page);
+    await manage(page);
+    const cell = page.getByRole('gridcell', { name: /Available/ }).first();
+    const label = (await cell.getAttribute('aria-label'))!.split(':')[0];
+    await cell.click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('radio', { name: 'Filled' }).click();
+    await dialog.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByRole('gridcell', { name: new RegExp(`${label}: Filled`) })).toBeVisible();
+  });
+
   test('Shift-click selects several cells and one edit fills them all', async ({ page }) => {
     await open(page);
     await manage(page);
@@ -70,7 +82,7 @@ test.describe('staging area cells hold materials', () => {
     await page.getByRole('button', { name: 'Edit cells' }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByRole('heading', { name: '2 cells' })).toBeVisible();
-    await pick(page, 'Choose a material', /DCP-1002/);
+    await pick(page, 'Not set', /DCP-1002/);
     await dialog.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByRole('gridcell', { name: /Filled, DCP-1002/ })).not.toHaveCount(0);
   });

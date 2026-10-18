@@ -95,8 +95,9 @@ function EditFields({
           <Select
             label={t.material}
             placeholder={t.materialPlaceholder}
-            selectedKey={value.code || null}
-            onSelectionChange={(k) => onChange({ code: String(k) })}
+            hint={t.materialHint}
+            selectedKey={value.code || NO_MATERIAL}
+            onSelectionChange={(k) => onChange({ code: k === NO_MATERIAL ? '' : String(k) })}
             items={options}
           >
             {(item) => <Select.Item {...item} />}
@@ -131,11 +132,16 @@ const initialFields = (c: StagingCell | undefined, many: boolean): Fields => ({
 });
 
 /** The materials of the fleet; a material that is no longer one of them (but is in the cell) stays in the list, marked. */
+/** The list entry that leaves a filled cell without a material. */
+const NO_MATERIAL = '__none';
+
 function materialOptions(allowed: Material[], current: string) {
   const list = allowed.map((m) => ({ id: m.code, label: `${m.code} · ${m.name}` }));
-  return current && !allowed.some((m) => m.code === current)
-    ? [...list, { id: current, label: copy.staging.cell.unknown(current) }]
-    : list;
+  const withCurrent =
+    current && !allowed.some((m) => m.code === current)
+      ? [...list, { id: current, label: copy.staging.cell.unknown(current) }]
+      : list;
+  return [{ id: NO_MATERIAL, label: copy.staging.cell.materialNone }, ...withCurrent];
 }
 
 const editOf = (f: Fields): CellEdit =>
@@ -195,7 +201,7 @@ export function CellEditor({
         secondary={{ label: editable ? t.cancel : t.close, onPress: onClose }}
         primary={
           editable
-            ? { label: t.save, onPress: save, isDisabled: fields.choice === 'filled' && !fields.code }
+            ? { label: t.save, onPress: save }
             : reserved && manage
               ? { label: t.release, destructive: true, onPress: release }
               : { label: t.close, onPress: onClose }

@@ -68,10 +68,13 @@ describe('editing cells', () => {
     expect(r.ok && r.cells['1-1']).toMatchObject({ state: 'blocked', reason: 'wet floor' });
     expect(r.ok && r.cells['1-1'].materialCode).toBeUndefined();
   });
+  it('a filled cell may have no material: it is filled, holds nothing a request can take, and drops a stray quantity', () => {
+    const r = applyEdit({}, ['1-1'], { state: 'filled', materialCode: '', quantity: 5 }, 'a', NOW, ctx);
+    expect(r.ok && r.cells['1-1']).toMatchObject({ state: 'filled', materialCode: undefined, quantity: undefined });
+  });
   it('refuses, and changes nothing, for a missing / unknown / unassigned material or a bad quantity', () => {
     const base = { '2-2': filled('M1', 1) };
     const bad = (edit: Parameters<typeof applyEdit>[2]) => applyEdit(base, ['1-1', '2-2'], edit, 'a', NOW, ctx);
-    expect(bad({ state: 'filled', materialCode: '' })).toMatchObject({ ok: false, error: 'material-required' });
     expect(bad({ state: 'filled', materialCode: 'ZZ' })).toMatchObject({ ok: false, error: 'unknown-material' });
     expect(bad({ state: 'filled', materialCode: 'M3' })).toMatchObject({ ok: false, error: 'not-assigned' }); // exists, but not this fleet's
     expect(bad({ state: 'filled', materialCode: 'M1', quantity: 0 })).toMatchObject({

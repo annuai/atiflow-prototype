@@ -209,6 +209,8 @@ export const masterData = {
       state: 'State',
       material: 'Material',
       materialPlaceholder: 'Choose a material',
+      materialNone: 'Not set',
+      materialHint: 'Optional. Choose one so requests can take this material from here.',
       quantity: 'Quantity (pieces)',
       reason: 'Reason',
       reasonPlaceholder: 'Why is it blocked? (optional)',
@@ -226,7 +228,6 @@ export const masterData = {
       nothingAssigned: 'No material is assigned to this fleet yet. Assign materials from the fleet page.',
       pieces: (n: number) => `${n} ${n === 1 ? 'piece' : 'pieces'}`,
       errors: {
-        'material-required': 'Choose a material.',
         'unknown-material': 'That material is not in Master Data.',
         'not-assigned': 'That material is not assigned to this area’s fleet.',
         'bad-quantity': 'The quantity must be a whole number of 1 or more.',

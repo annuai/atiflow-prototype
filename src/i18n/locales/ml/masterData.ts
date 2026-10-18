@@ -223,6 +223,8 @@ export const messages: Messages<typeof masterData> = {
       state: 'നില',
       material: 'മെറ്റീരിയൽ',
       materialPlaceholder: 'മെറ്റീരിയൽ തിരഞ്ഞെടുക്കുക',
+      materialNone: 'സജ്ജമാക്കിയിട്ടില്ല',
+      materialHint: 'ഓപ്ഷണൽ. തിരഞ്ഞെടുത്താൽ അഭ്യർത്ഥനകൾക്ക് ഇവിടെ നിന്ന് ഈ മെറ്റീരിയൽ എടുക്കാം.',
       quantity: 'അളവ് (എണ്ണം)',
       reason: 'കാരണം',
       reasonPlaceholder: 'എന്തുകൊണ്ട് ബ്ലോക്ക് ചെയ്തു? (ഓപ്ഷണൽ)',
@@ -240,7 +242,6 @@ export const messages: Messages<typeof masterData> = {
       nothingAssigned: 'ഈ ഫ്ലീറ്റിന് ഇതുവരെ മെറ്റീരിയലൊന്നും നൽകിയിട്ടില്ല. ഫ്ലീറ്റ് പേജിൽ നിന്ന് മെറ്റീരിയലുകൾ നൽകുക.',
       pieces: (n) => `${n} എണ്ണം`,
       errors: {
-        'material-required': 'ഒരു മെറ്റീരിയൽ തിരഞ്ഞെടുക്കുക.',
         'unknown-material': 'ആ മെറ്റീരിയൽ മാസ്റ്റർ ഡാറ്റയിൽ ഇല്ല.',
         'not-assigned': 'ആ മെറ്റീരിയൽ ഈ ഏരിയയുടെ ഫ്ലീറ്റിന് നൽകിയിട്ടില്ല.',
         'bad-quantity': 'അളവ് 1 ഓ അതിലധികമോ ഉള്ള പൂർണ്ണസംഖ്യ ആയിരിക്കണം.',
