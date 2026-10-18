@@ -14,6 +14,7 @@ const drawn = async (page: Page) => (await page.locator('canvas').first().screen
 
 test('3D, 2D, walk and back: every mode draws and the view responds to the mouse', async ({ page }) => {
   test.setTimeout(150_000); // software rendering: a frame of the whole floor takes a while
+  await page.setViewportSize({ width: 900, height: 600 }); // software rendering: a smaller canvas draws faster
   await signIn(page, 'arjun');
   await page.goto('/supervisor/livefloor');
   const canvas = page.locator('canvas').first();
