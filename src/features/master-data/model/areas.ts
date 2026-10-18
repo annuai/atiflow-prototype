@@ -1,7 +1,8 @@
-import type { CellState, StagingArea } from './types';
+import { cellKey } from './cells';
+import type { CellState, StagingArea, StagingCell } from './types';
 
-export const cellKey = (row: number, col: number) => `${row}-${col}`;
-export const countState = (a: StagingArea, s: CellState) => Object.values(a.cells).filter((c) => c === s).length;
+export { cellKey };
+export const countState = (a: StagingArea, s: CellState) => Object.values(a.cells).filter((c) => c.state === s).length;
 export const totalCells = (a: StagingArea) => a.rows * a.cols;
 /** Utilised cells = cells holding something. */
 export const utilised = (a: StagingArea) => countState(a, 'filled');
@@ -23,8 +24,11 @@ export interface AreaSpec {
   reserved: number;
   blocked: number;
 }
-/** Build an area with the requested number of cells in each state, spread pseudo-randomly. */
-export function buildArea(id: string, spec: AreaSpec, seed: number): StagingArea {
+/**
+ * Build an area with the requested number of cells in each state, spread pseudo-randomly. With `codes` the filled and reserved cells hold those materials (round robin from a seeded
+ * order, with quantities and storing times that differ, so FIFO and LIFO give different answers).
+ */
+export function buildArea(id: string, spec: AreaSpec, seed: number, codes: string[] = [], now = 0): StagingArea {
   const rand = rng(seed);
   const keys: string[] = [];
   for (let r = 1; r <= spec.rows; r++) for (let c = 1; c <= spec.cols; c++) keys.push(cellKey(r, c));
@@ -32,21 +36,21 @@ export function buildArea(id: string, spec: AreaSpec, seed: number): StagingArea
     const j = Math.floor(rand() * (i + 1));
     [keys[i], keys[j]] = [keys[j], keys[i]];
   }
-  const cells: Record<string, CellState> = {};
+  const cells: Record<string, StagingCell> = {};
   let k = 0;
-  (['filled', 'reserved', 'blocked'] as const).forEach((s) => {
-    for (let i = 0; i < spec[s]; i++) cells[keys[k++]] = s;
+  (['filled', 'reserved', 'blocked'] as const).forEach((state) => {
+    for (let i = 0; i < spec[state]; i++) {
+      const code = codes.length && state !== 'blocked' ? codes[Math.floor(rand() * codes.length)] : undefined;
+      const age = Math.floor(rand() * 72) * 3_600_000; // up to three days old
+      cells[keys[k++]] = {
+        state,
+        materialCode: code,
+        quantity: code ? 1 + Math.floor(rand() * 24) : undefined,
+        storedAt: code ? now - age : undefined,
+        updatedAt: now,
+        updatedBy: 'system',
+      };
+    }
   });
   return { id, name: spec.name, rows: spec.rows, cols: spec.cols, cells };
-}
-
-/** Manage mode: only Available <-> Blocked can be changed by hand; Reserved and Filled belong to workflows. */
-export function toggleBlocked(a: StagingArea, row: number, col: number): StagingArea {
-  const k = cellKey(row, col);
-  const cur = a.cells[k] ?? 'available';
-  if (cur !== 'available' && cur !== 'blocked') return a;
-  const cells = { ...a.cells };
-  if (cur === 'blocked') delete cells[k];
-  else cells[k] = 'blocked';
-  return { ...a, cells };
 }

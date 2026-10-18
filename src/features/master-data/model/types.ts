@@ -22,11 +22,49 @@ export interface IncomingMaterial {
 }
 
 export type CellState = 'available' | 'reserved' | 'blocked' | 'filled';
+/** The order a staging area gives its material out in: FIFO = the material that has been in the longest, LIFO = the material that was put in last. Always followed when material is requested. */
+export type Retrieval = 'fifo' | 'lifo';
+/** What a cell holds. An available cell is not stored (a missing key = available). */
+export interface StagingCell {
+  state: Exclude<CellState, 'available'>;
+  /** filled: what is in it (missing only in data saved before cells held materials); reserved: what it is held for. */
+  materialCode?: string;
+  /** pieces (whole number >= 1) */
+  quantity?: number;
+  /** blocked: why (free text, optional) */
+  reason?: string;
+  /** reserved: the request / trip that holds it */
+  reservedFor?: string;
+  /** when this material was put in: the clock of FIFO / LIFO (changing only the quantity does not change it) */
+  storedAt?: number;
+  updatedAt: number;
+  /** a username, or 'system' (a workflow, a migration) */
+  updatedBy: string;
+}
+/** A cell reduced to what the activity list shows. */
+export interface CellSnapshot {
+  state: CellState;
+  materialCode?: string;
+  quantity?: number;
+}
+/** One change, kept per area (newest first, capped). `key` is "row-col". */
+export interface CellLogEntry {
+  at: number;
+  by: string;
+  key: string;
+  from: CellSnapshot;
+  to: CellSnapshot;
+  /** the request / trip behind a change made by the system */
+  ref?: string;
+}
 export interface StagingArea {
   id: string;
   name: string;
   cols: number;
   rows: number;
   /** Cells that are not available, keyed "row-col" (1-based). A missing key means available. */
-  cells: Record<string, CellState>;
+  cells: Record<string, StagingCell>;
+  /** how the area gives material out: NOT stored here, it is set in the Map Editor with the area (default FIFO) */
+  retrieval?: Retrieval;
+  log?: CellLogEntry[];
 }

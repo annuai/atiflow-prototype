@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildArea, countState, toggleBlocked, totalCells, utilised } from '../src/features/master-data/model/areas';
+import { countState, totalCells, utilised } from '../src/features/master-data/model/areas';
 import { classifyRows } from '../src/features/master-data/import/review';
 import {
   closedFlow,
@@ -200,16 +200,14 @@ describe('master data: staging areas', () => {
     expect(countState(a, 'blocked')).toBe(1);
     expect(seedAreas()[0].cells).toEqual(a.cells);
   });
-  it('Manage mode toggles only Available <-> Blocked', () => {
-    const a = buildArea('X', { name: 'X', rows: 2, cols: 2, filled: 1, reserved: 1, blocked: 0 }, 1);
-    const free = Object.keys(a.cells).length < 4 ? ['1-1', '1-2', '2-1', '2-2'].find((k) => !a.cells[k])! : '';
-    const [r, c] = free.split('-').map(Number);
-    const blocked = toggleBlocked(a, r, c);
-    expect(blocked.cells[free]).toBe('blocked');
-    expect(toggleBlocked(blocked, r, c).cells[free]).toBeUndefined();
-    const fixed = Object.keys(a.cells)[0];
-    const [fr, fc] = fixed.split('-').map(Number);
-    expect(toggleBlocked(a, fr, fc)).toBe(a);
+  it('seeded areas hold real materials of their fleet, with quantities and different storing times', () => {
+    const mats = seedMaterials(0, seedGroups(0));
+    const [a] = seedAreas(mats, 1_000_000_000);
+    const codes = new Set(mats.filter((m) => m.fleets.includes('Line Side Fleet')).map((m) => m.code));
+    const filled = Object.values(a.cells).filter((c) => c.state === 'filled');
+    expect(filled.length).toBe(14);
+    expect(filled.every((c) => c.materialCode && codes.has(c.materialCode) && c.quantity && c.storedAt)).toBe(true);
+    expect(new Set(filled.map((c) => c.storedAt)).size).toBeGreaterThan(3);
   });
 });
 

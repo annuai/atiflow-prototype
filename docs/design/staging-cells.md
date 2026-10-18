@@ -107,3 +107,11 @@ Today a Material step names a material and the next Station steps say where the 
 ## 11. Build order
 
 1. Model + rules + migration + seed (`model/cells.ts`, tests). 2. `stagingCells` port + dummy adapter, store as cache. 3. Cell editor drawer, bulk actions, material filter, activity, texts in five languages. 4. Browser tests (desktop + phone). 5. Phase 2: area `stationId` in the Map Editor, Station step offers areas, request reservation / completion (`applyTripToCells`), request screens show the cell, search. 6. Tests for the whole path (request -> reserve -> robot picks -> cell empties -> drop fills).
+
+## 12. Retrieval order FIFO / LIFO (product owner, later the same day)
+
+Each staging area has a **retrieval order**: FIFO (the material that has been in longest goes out first) or LIFO (the material put in last goes out first). Once set, **every request follows it**: nobody picks a cell by hand. **It is set as a dropdown in the Map Editor** (the staging area form, next to Sherpa type), so it belongs to the area definition (`StagingAreaDef.retrieval`, default FIFO, older maps get FIFO on load) and takes effect when the map version is published. Master Data only shows it (badge on the area card and header). The clock of the order is `StagingCell.storedAt` (when this material was put in; changing only the quantity does not restart it); equal times go row by row. `pickOrder` / `chooseCells` in `master-data/model/cells.ts` are the one implementation; the material filter in the grid numbers the cells in that order so the rule is visible.
+
+## 13. Status
+
+Phase 1 is built: cell model, rules, migration of old saved data, seeded materials, the cell editor with bulk edit, material filter with pick numbers, activity log, texts in five languages, Map Editor dropdown. Phase 2 (workflows and requests reserving and filling cells) follows. Deviation from section 3: cell contents stay inside the `masterData` document (a separate `stagingCells` port is not needed until a real system owns them).

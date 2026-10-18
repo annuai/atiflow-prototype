@@ -117,6 +117,11 @@ export const messages: Messages<typeof mapEditor> = {
       name: 'ಸ್ಟೇಜಿಂಗ್ ಏರಿಯಾ ಹೆಸರು',
       id: 'ID',
       sherpa: 'ಶೆರ್ಪಾ ಪ್ರಕಾರ',
+      retrieval: 'ಹೊರತೆಗೆಯುವ ಕ್ರಮ',
+      retrievalOptions: {
+        fifo: 'FIFO (ಮೊದಲು ಬಂದದ್ದು ಮೊದಲು ಹೋಗುತ್ತದೆ)',
+        lifo: 'LIFO (ಕೊನೆಯಲ್ಲಿ ಬಂದದ್ದು ಮೊದಲು ಹೋಗುತ್ತದೆ)',
+      },
       rotation: 'ತಿರುಗುವಿಕೆ (°)',
       position: 'ಸ್ಥಾನ (A1 ಸೆಲ್ ಕೇಂದ್ರ)',
       x: 'X (m)',

@@ -117,6 +117,8 @@ export const messages: Messages<typeof mapEditor> = {
       name: 'स्टेजिंग एरिया का नाम',
       id: 'ID',
       sherpa: 'शेरपा प्रकार',
+      retrieval: 'निकासी क्रम',
+      retrievalOptions: { fifo: 'FIFO (पहले आया, पहले गया)', lifo: 'LIFO (आख़िर में आया, पहले गया)' },
       rotation: 'घुमाव (°)',
       position: 'स्थिति (A1 सेल का केंद्र)',
       x: 'X (m)',

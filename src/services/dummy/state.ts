@@ -70,7 +70,8 @@ export const createDummyMasterData = (backend?: Backend): MasterDataService =>
     seed: () => {
       const now = Date.now();
       const groups = seedGroups(now);
-      return { groups, materials: seedMaterials(now, groups), areas: seedAreas() } as never;
+      const materials = seedMaterials(now, groups);
+      return { groups, materials, areas: seedAreas(materials, now) } as never;
     },
   }) as unknown as MasterDataService;
 

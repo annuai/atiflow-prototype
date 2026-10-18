@@ -21,6 +21,7 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
       cols: 10,
       cellLength: 1.2,
       cellWidth: 1,
+      retrieval: 'fifo',
     },
     {
       id: 'SA-002',
@@ -33,6 +34,7 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
       cols: 10,
       cellLength: 1.2,
       cellWidth: 1,
+      retrieval: 'lifo',
     },
   ],
   asrs: [
@@ -47,6 +49,7 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
       cols: 10,
       cellLength: 1.2,
       cellWidth: 1,
+      retrieval: 'fifo',
     },
   ],
 };
@@ -112,7 +115,7 @@ export function normaliseData(
   return {
     ...d,
     roads: d.roads ?? roadsFromLanes(d.lanes),
-    stagingAreas: d.stagingAreas ?? [],
+    stagingAreas: (d.stagingAreas ?? []).map((a) => ({ ...a, retrieval: a.retrieval ?? 'fifo' })),
     zones: d.zones.map(normaliseZone),
   } as MapData;
 }

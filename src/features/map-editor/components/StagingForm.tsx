@@ -82,6 +82,22 @@ export function StagingForm({
           {(item) => <Select.Item {...item} />}
         </Select>
       </div>
+      <div className="flex flex-col gap-1.5">
+        <Label {...help('staging.retrieval')}>{f.retrieval}</Label>
+        <Select
+          size="sm"
+          aria-label={f.retrieval}
+          isDisabled={!editable}
+          selectedKey={area.retrieval ?? 'fifo'}
+          onSelectionChange={(k) => onPatch({ retrieval: k === 'lifo' ? 'lifo' : 'fifo' })}
+          items={[
+            { id: 'fifo', label: f.retrievalOptions.fifo },
+            { id: 'lifo', label: f.retrievalOptions.lifo },
+          ]}
+        >
+          {(item) => <Select.Item {...item} />}
+        </Select>
+      </div>
       <NumberInput
         {...help('staging.rotation')}
         label={f.rotation}

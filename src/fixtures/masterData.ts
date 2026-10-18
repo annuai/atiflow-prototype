@@ -24,10 +24,11 @@ const MATERIALS: [code: string, name: string, group: string, fleets: string[]][]
   ['DCP-1005', 'Drive Coupling Pad', 'Consumables', [FLEET_NAME.assembly]],
   ['DCP-1006', 'Dust Cover Panel', 'Packaging', [FLEET_NAME.assembly]],
 ];
-const AREAS: [id: string, spec: AreaSpec][] = [
-  ['SA-001', { name: 'SA 001', rows: 20, cols: 10, filled: 14, reserved: 2, blocked: 1 }],
-  ['SA-002', { name: 'SA 002', rows: 20, cols: 10, filled: 62, reserved: 6, blocked: 3 }],
-  ['SA-003', { name: 'SA 003', rows: 8, cols: 10, filled: 48, reserved: 4, blocked: 2 }],
+/** The demo areas and the fleet whose materials they hold (SA-003 is the second map's). */
+const AREAS: [id: string, spec: AreaSpec, fleet: string][] = [
+  ['SA-001', { name: 'SA 001', rows: 20, cols: 10, filled: 14, reserved: 2, blocked: 1 }, FLEET_NAME.lineSide],
+  ['SA-002', { name: 'SA 002', rows: 20, cols: 10, filled: 62, reserved: 6, blocked: 3 }, FLEET_NAME.lineSide],
+  ['SA-003', { name: 'SA 003', rows: 8, cols: 10, filled: 48, reserved: 4, blocked: 2 }, FLEET_NAME.lineSide],
 ];
 
 export function seedGroups(now: number): MaterialGroup[] {
@@ -47,4 +48,13 @@ export function seedMaterials(now: number, groups: MaterialGroup[]): Material[] 
     updatedAt: now - i * MIN,
   }));
 }
-export const seedAreas = (): StagingArea[] => AREAS.map(([id, spec], i) => buildArea(id, spec, 7 + i));
+export const seedAreas = (materials: Material[] = [], now = 0): StagingArea[] =>
+  AREAS.map(([id, spec, fleet], i) =>
+    buildArea(
+      id,
+      spec,
+      7 + i,
+      materials.filter((m) => m.fleets.includes(fleet)).map((m) => m.code),
+      now,
+    ),
+  );

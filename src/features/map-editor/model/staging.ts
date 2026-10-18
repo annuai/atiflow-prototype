@@ -72,6 +72,7 @@ export function addStagingArea(
     cols: 2,
     cellLength: 1.2,
     cellWidth: 1,
+    retrieval: 'fifo',
   };
   return { id, data: { ...data, stagingAreas: [...data.stagingAreas, a] } };
 }

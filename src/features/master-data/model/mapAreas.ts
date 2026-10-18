@@ -1,5 +1,5 @@
 import { type MapHistory, latestOf } from '@/features/map-editor';
-import type { CellState, StagingArea } from './types';
+import type { StagingArea, StagingCell } from './types';
 
 /**
  * Staging areas in Master Data come from MAPS: a fleet shows the areas of its assigned map's latest PUBLISHED version (never a draft). The map decides where an area is and how big
@@ -14,9 +14,11 @@ export interface FleetAreas {
   areas: StagingArea[];
 }
 
+/** What Master Data has saved for an area (cell contents, retrieval order, activity); the map supplies the rest. */
+export type StoredArea = Pick<StagingArea, 'cells'> & Partial<Pick<StagingArea, 'log'>>;
 export function areasOfHistory(
   history: MapHistory | undefined,
-  cellsOf: (areaId: string) => Record<string, CellState>,
+  storedOf: (areaId: string) => StoredArea | undefined,
 ): { version: number; areas: StagingArea[] } | null {
   const v = latestOf(history);
   if (!v) return null;
@@ -27,13 +29,19 @@ export function areasOfHistory(
       name: d.name,
       rows: d.rows,
       cols: d.cols,
-      cells: visibleCells(cellsOf(d.id), d.rows, d.cols),
+      cells: visibleCells(storedOf(d.id)?.cells ?? {}, d.rows, d.cols),
+      retrieval: d.retrieval ?? 'fifo', // set in the Map Editor, not kept here
+      log: storedOf(d.id)?.log,
     })),
   };
 }
 
 /** Only the cells that exist in the current grid. */
-export function visibleCells(cells: Record<string, CellState>, rows: number, cols: number): Record<string, CellState> {
+export function visibleCells(
+  cells: Record<string, StagingCell>,
+  rows: number,
+  cols: number,
+): Record<string, StagingCell> {
   return Object.fromEntries(
     Object.entries(cells).filter(([k]) => {
       const [r, c] = k.split('-').map(Number);
@@ -47,11 +55,11 @@ export function areasByFleet(
   mapIdOf: (fleet: string) => string | null,
   mapName: (mapId: string) => string,
   byMap: Record<string, MapHistory>,
-  cellsOf: (areaId: string) => Record<string, CellState>,
+  storedOf: (areaId: string) => StoredArea | undefined,
 ): FleetAreas[] {
   return fleets.map((fleet) => {
     const mapId = mapIdOf(fleet);
-    const r = mapId ? areasOfHistory(byMap[mapId], cellsOf) : null;
+    const r = mapId ? areasOfHistory(byMap[mapId], storedOf) : null;
     return { fleet, mapId, mapName: mapId ? mapName(mapId) : '', version: r?.version ?? null, areas: r?.areas ?? [] };
   });
 }

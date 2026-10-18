@@ -14,7 +14,7 @@ import {
 await loadAllCatalogs(); // the languages load on demand in the app; the tests compare all of them
 
 /** Product names and acronyms that stay in Latin script in every language. */
-const KEEP_LATIN = /^(Fleet Manager|MTBF|ASRS|KPI|SLA|MES|API|Ati Support|Ati AI)$/;
+const KEEP_LATIN = /^(Fleet Manager|MTBF|ASRS|KPI|SLA|MES|API|Ati Support|Ati AI|FIFO|LIFO)$/;
 const SCRIPT: Record<LocaleId, RegExp | null> = {
   en: null,
   hi: /[ऀ-ॿ]/,

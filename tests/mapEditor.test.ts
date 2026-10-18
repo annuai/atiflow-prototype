@@ -269,16 +269,17 @@ describe('staging areas: the map defines them, Master Data keeps the cell states
     mapVersionsStore.getState().reset();
     const st = mapVersionsStore.getState();
     st.ensure('m', 5, withArea(4, 4), 1);
-    const cells = { '1-1': 'filled', '4-4': 'blocked' } as const;
-    const get = () => areasOfHistory(mapVersionsStore.getState().byMap.m, () => ({ ...cells }))!;
+    const cell = (state: 'filled' | 'blocked') => ({ state, updatedAt: 0, updatedBy: 'system' }) as const;
+    const cells = { '1-1': cell('filled'), '4-4': cell('blocked') };
+    const get = () => areasOfHistory(mapVersionsStore.getState().byMap.m, () => ({ cells: { ...cells } }))!;
     expect(get().areas[0].cells).toEqual(cells);
     st.startDraft('m', 'K');
     st.updateDraft('m', () => withArea(2, 2));
     expect(get().areas[0].rows).toBe(4); // a draft is never shown
     st.publish('m', 'K');
     expect(get()).toMatchObject({ version: 6 });
-    expect(get().areas[0].cells).toEqual({ '1-1': 'filled' }); // 4-4 is outside now, hidden not deleted
-    expect(visibleCells({ '3-3': 'blocked' }, 2, 2)).toEqual({});
+    expect(get().areas[0].cells).toEqual({ '1-1': cell('filled') }); // 4-4 is outside now, hidden not deleted
+    expect(visibleCells({ '3-3': cell('blocked') }, 2, 2)).toEqual({});
   });
   it('areas are grouped by fleet through its assigned map; a fleet without a map or areas has none', () => {
     mapVersionsStore.getState().reset();
@@ -288,7 +289,7 @@ describe('staging areas: the map defines them, Master Data keeps the cell states
       (f) => (f === 'A' ? 'm' : null),
       () => 'Map M',
       mapVersionsStore.getState().byMap,
-      () => ({}),
+      () => undefined,
     );
     expect(g[0]).toMatchObject({ fleet: 'A', mapName: 'Map M', version: 5 });
     expect(g[0].areas).toHaveLength(1);

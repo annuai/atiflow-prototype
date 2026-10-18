@@ -60,6 +60,8 @@ export interface StagingAreaDef {
   cols: number;
   cellLength: number;
   cellWidth: number;
+  /** The order the area gives its material out in, set here with the rest of the area and followed by every request: FIFO (the material that has been in longest) or LIFO (put in last). Missing in older saved maps = FIFO. */
+  retrieval?: 'fifo' | 'lifo';
 }
 
 /**
