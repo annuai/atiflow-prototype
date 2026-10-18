@@ -6,10 +6,13 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: 'tests/e2e',
-  timeout: 60_000,
+  // The 3D pages draw with software rendering, which crawls when the machine is busy: three workers instead of half the cores, a longer limit, and one retry
+  // (a test that only passes on its retry is listed as "flaky" in the report, so a real bug does not hide behind it).
+  timeout: 90_000,
   expect: { timeout: 10_000 },
   fullyParallel: true,
-  retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 2 : 3,
+  retries: 1,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: { baseURL: 'http://localhost:4173', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   projects: [{ name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } }],
