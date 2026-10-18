@@ -107,9 +107,10 @@ export function StationMap({
   const reset = () => set(1, W / 2, H / 2);
 
   const u = vw / size.w; // metres per screen pixel: pins, labels and the robot keep their pixel size when zooming (like sections in Figma), so a cluster opens up as you zoom in
+  const zoomedIn = z >= 2.2;
   const arrows = useMemo(
-    () => (z >= 2.2 ? laneArrowPath(nav.lanes, (x, y) => [x - minX, maxY - y], u) : ''),
-    [nav, u, minX, maxY, z >= 2.2],
+    () => (zoomedIn ? laneArrowPath(nav.lanes, (x, y) => [x - minX, maxY - y], u) : ''),
+    [nav, u, minX, maxY, zoomedIn],
   ); // arrows only when zoomed in: the small overview map would be a clutter of them
   const pin = (s: NavGraph['stations'][number]) => {
     const n = nav.nodes.find((q) => q.id === s.nodeId)!;

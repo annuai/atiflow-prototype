@@ -16,14 +16,8 @@ export interface NavAudit {
   warnings: string[];
 }
 
-/**
- * Checks a lane map for the layouts that make robot traffic jam, before any robot drives on it: lanes too close for two robots to pass,
- * stations parked on through roads, stations inside intersections, and intersections that most routes depend on. Works on any nav.json.
- */
-export function auditNav(nav: NavGraph, maxRoutes = 800): NavAudit {
-  const g = new LaneGraph(nav);
-  const xs = g.intersections;
-  // 1. lanes too close to the lane running the other way
+/** 1. How much of the lane length has the lane running the other way closer than two robots need. */
+function laneClearance(nav: NavGraph) {
   const segs: { id: string; a: [number, number]; b: [number, number]; h: number }[] = [];
   for (const l of nav.lanes)
     for (let i = 0; i + 1 < l.geom.length; i++) {
@@ -51,20 +45,12 @@ export function auditNav(nav: NavGraph, maxRoutes = 800): NavAudit {
       } // (below 0.3 m the lanes simply cross)
     }
   }
-  // 2. stations
-  const nb = new Map<string, Set<string>>();
-  for (const l of nav.lanes) {
-    (nb.get(l.from) ?? nb.set(l.from, new Set()).get(l.from)!).add(l.to);
-    (nb.get(l.to) ?? nb.set(l.to, new Set()).get(l.to)!).add(l.from);
-  }
-  const onRoad = nav.stations.filter((s) => (nb.get(s.nodeId)?.size ?? 0) >= 2).map((s) => s.id);
-  const inX = nav.stations
-    .filter((s) => {
-      const n = g.nodes.get(s.nodeId)!;
-      return xs.near(n.x, n.y).length > 0;
-    })
-    .map((s) => s.id);
-  // 3. hubs: how many station-to-station routes pass through each intersection
+  return { sampled, narrow, narrowest };
+}
+
+/** 3. How many station-to-station routes pass through each intersection. */
+function hubUse(g: LaneGraph, nav: NavGraph, maxRoutes: number) {
+  const xs = g.intersections;
   const use = new Map<string, number>();
   let routes = 0;
   outer: for (const f of nav.fleets) {
@@ -83,6 +69,31 @@ export function auditNav(nav: NavGraph, maxRoutes = 800): NavAudit {
         seen.forEach((id) => use.set(id, (use.get(id) ?? 0) + 1));
       }
   }
+  return { use, routes };
+}
+
+/**
+ * Checks a lane map for the layouts that make robot traffic jam, before any robot drives on it: lanes too close for two robots to pass,
+ * stations parked on through roads, stations inside intersections, and intersections that most routes depend on. Works on any nav.json.
+ */
+export function auditNav(nav: NavGraph, maxRoutes = 800): NavAudit {
+  const g = new LaneGraph(nav);
+  const xs = g.intersections;
+  const { sampled, narrow, narrowest } = laneClearance(nav);
+  // 2. stations
+  const nb = new Map<string, Set<string>>();
+  for (const l of nav.lanes) {
+    (nb.get(l.from) ?? nb.set(l.from, new Set()).get(l.from)!).add(l.to);
+    (nb.get(l.to) ?? nb.set(l.to, new Set()).get(l.to)!).add(l.from);
+  }
+  const onRoad = nav.stations.filter((s) => (nb.get(s.nodeId)?.size ?? 0) >= 2).map((s) => s.id);
+  const inX = nav.stations
+    .filter((s) => {
+      const n = g.nodes.get(s.nodeId)!;
+      return xs.near(n.x, n.y).length > 0;
+    })
+    .map((s) => s.id);
+  const { use, routes } = hubUse(g, nav, maxRoutes);
   const hubs = [...use.entries()]
     .map(([id, n]) => ({ id, share: routes ? n / routes : 0 }))
     .sort((a, b) => b.share - a.share)

@@ -59,10 +59,17 @@ export function useViewport(b: Bounds) {
     },
     [b.minX, b.maxY, vx, vy, vw, vh, el],
   );
+  // these depend on the bounds only (not on zoom), so they keep their identity while the view moves
+  const P = useCallback(
+    (x: number, y: number) => `${(x - b.minX).toFixed(2)} ${(b.maxY - y).toFixed(2)}`,
+    [b.minX, b.maxY],
+  );
+  const X = useCallback((x: number) => x - b.minX, [b.minX]);
+  const Y = useCallback((y: number) => b.maxY - y, [b.maxY]);
   return useMemo(
     () => ({
-      /** pass as the container's `ref` (a callback ref) */
-      box,
+      /** call from the container's `ref` callback: `ref={(n) => vp.attach(n)}` */
+      attach: box,
       /** the container element once it exists */
       el,
       size,
@@ -74,10 +81,10 @@ export function useViewport(b: Bounds) {
       reset,
       focusOn,
       toSite,
-      P: (x: number, y: number) => `${(x - b.minX).toFixed(2)} ${(b.maxY - y).toFixed(2)}`,
-      X: (x: number) => x - b.minX,
-      Y: (y: number) => b.maxY - y,
+      P,
+      X,
+      Y,
     }),
-    [el, size, z, u, vx, vy, vw, vh, zoomAt, panBy, reset, focusOn, toSite, b.minX, b.maxY],
+    [box, el, size, z, u, vx, vy, vw, vh, zoomAt, panBy, reset, focusOn, toSite, P, X, Y],
   );
 }

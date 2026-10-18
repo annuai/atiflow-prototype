@@ -69,7 +69,7 @@ export function ImportModal({ flow, dispatch, source }: Props) {
     }
   }, [flow.open, flow.step, job.status, dispatch]);
 
-  const rows = outcome?.ok ? outcome.rows : [];
+  const rows = useMemo(() => (outcome?.ok ? outcome.rows : []), [outcome]);
   const review = useMemo(
     () =>
       rows.length === 0

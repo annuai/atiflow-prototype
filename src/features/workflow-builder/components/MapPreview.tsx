@@ -39,11 +39,7 @@ export function MapPreview({
   const usable = useMemo(() => new Set(stations.map((s) => s.id)), [stations]);
   const node = useMemo(() => (selected ? (locate(nodes, selected)?.node ?? null) : null), [selected, nodes]);
   const sf = stationField(node);
-  const highlighted = useMemo(
-    () => (sim.hlStation ? [sim.hlStation] : (sf?.ids ?? [])),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sim.hlStation, sf?.ids.join('|')],
-  );
+  const highlighted = sim.hlStation ? [sim.hlStation] : (sf?.ids ?? []);
   const running = sim.status === 'running';
   const pickable = !!sf && !running;
   const [route, setRoute] = useState<{ cur: Vec2[] | null; done: Vec2[][] }>({ cur: null, done: [] });

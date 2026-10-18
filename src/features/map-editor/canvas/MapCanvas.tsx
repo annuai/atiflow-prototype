@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { laneArrowPath } from '@/components/map/laneArrows';
 import type { SiteLayout } from '@/core/types';
 import { text } from '../text';
@@ -65,35 +65,29 @@ export function MapCanvas({
   locate,
 }: Props) {
   const vp = useViewport(site.bounds);
-  const { P } = vp;
+  const { P, X, Y, u, attach: attachBox } = vp;
+  const attach = useCallback((n: HTMLDivElement | null) => attachBox(n), [attachBox]);
   const [hover, setHover] = useState<string | null>(null);
   const nodes = useMemo(() => new Map(data.nodes.map((n) => [n.id, n])), [data.nodes]);
   const pointer = usePointerTools({ vp, tool, editable, nodes: data.nodes, canSelect, onSelect, onPoint, onMove });
   const { mode, cursor } = pointer;
 
-  // (the floor's paths depend on the bounds only, not on zoom: recomputed when the site changes)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const layers = useMemo(() => floorPaths(site, P), [site]);
+  // (the floor's paths depend on the bounds only, not on zoom: P keeps its identity while the view moves)
+  const layers = useMemo(() => floorPaths(site, P), [site, P]);
   const lanes = useMemo(
     () => data.lanes.map((l) => 'M' + l.geom.map(([x, y]) => P(x, y)).join('L')).join(''),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data.lanes],
+    [data.lanes, P],
   );
   useEffect(() => {
     if (locate) vp.focusOn(locate.x, locate.y, locate.span);
   }, [locate?.n]); // eslint-disable-line react-hooks/exhaustive-deps
-  const arrows = useMemo(
-    () => laneArrowPath(data.lanes, (x, y) => [vp.X(x), vp.Y(y)], vp.u),
-    [data.lanes, vp.u, vp.X, vp.Y],
-  );
+  const arrows = useMemo(() => laneArrowPath(data.lanes, (x, y) => [X(x), Y(y)], u), [data.lanes, u, X, Y]);
+  const xy = useMemo(() => ({ X, Y, P }), [X, Y, P]);
   const roadLines = useMemo(
-    () => data.roads.map((r) => ({ id: r.id, pts: r.points.map(([x, y]) => pt(vp, x, y)).join(' ') })),
-    [data.roads, vp.X, vp.Y], // eslint-disable-line react-hooks/exhaustive-deps
+    () => data.roads.map((r) => ({ id: r.id, pts: r.points.map(([x, y]) => pt(xy, x, y)).join(' ') })),
+    [data.roads, xy],
   );
-  const staging = useMemo(
-    () => stagingGeometry(data.stagingAreas, vp),
-    [data.stagingAreas, vp.X, vp.Y], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  const staging = useMemo(() => stagingGeometry(data.stagingAreas, xy), [data.stagingAreas, xy]);
 
   const placedStations = data.stations.filter((s) => !s.unplaced); // those waiting for a position are listed in the panel, not piled on the origin
   const isSelected = (kind: string, id: string) => selection?.kind === kind && selection.id === id;
@@ -101,7 +95,7 @@ export function MapCanvas({
   const preview = drawingPreview(tool, drawing, cursor);
   const movable = editable && mode === 'none';
   return (
-    <div ref={vp.box} className="relative size-full touch-none select-none overflow-hidden bg-[#f6f7f5]" data-no-pan>
+    <div ref={attach} className="relative size-full touch-none select-none overflow-hidden bg-[#f6f7f5]" data-no-pan>
       <svg
         width="100%"
         height="100%"

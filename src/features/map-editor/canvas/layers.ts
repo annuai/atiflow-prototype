@@ -30,7 +30,7 @@ export function floorPaths(site: SiteLayout, P: Vp['P']) {
 }
 
 /** Every staging area as the path of its cells and the points of its outline. */
-export function stagingGeometry(areas: MapData['stagingAreas'], vp: Vp) {
+export function stagingGeometry(areas: MapData['stagingAreas'], vp: Pick<Vp, 'X' | 'Y' | 'P'>) {
   return areas.map((a) => {
     const cells: string[] = [];
     const hl = a.cellLength / 2,

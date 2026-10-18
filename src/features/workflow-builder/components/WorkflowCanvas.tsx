@@ -28,14 +28,16 @@ export function WorkflowCanvas({
   const justAdded = useWorkflow((s) => s.justAdded);
   const simCur = useWorkflow((s) => s.sim.currentId);
 
+  const { apply } = cam;
   const lastFleet = useRef(current);
+  // a different fleet -> fit again (before paint); same fleet -> keep the view. `cam` is rebuilt every render, its functions are what we call.
   useLayoutEffect(() => {
     if (lastFleet.current !== current) {
       lastFleet.current = current;
       cam.resetFit();
     }
     cam.ensureFit();
-  }, [nodes, current]); // a different fleet -> fit again (before paint); same fleet -> keep the view   // eslint-disable-line react-hooks/exhaustive-deps
+  }, [nodes, current]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (justAdded)
       requestAnimationFrame(() => cam.reveal(inner.current?.querySelector(`[data-node-id="${justAdded}"]`) ?? null));
@@ -55,10 +57,10 @@ export function WorkflowCanvas({
   useEffect(() => {
     const c = canvas.current;
     if (!c) return;
-    const ro = new ResizeObserver(() => cam.apply());
+    const ro = new ResizeObserver(() => apply());
     ro.observe(c);
     return () => ro.disconnect();
-  }, [cam.apply]);
+  }, [apply]);
   // keyboard: Delete removes the selected node; Ctrl/Cmd+Z undo, +Shift redo
   useEffect(() => {
     const k = (e: KeyboardEvent) => {

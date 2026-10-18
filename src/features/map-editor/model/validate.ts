@@ -43,18 +43,8 @@ const unplacedProblem = (s: MapData['stations'][number]): MapProblem[] =>
     : [];
 /** The cell states Master Data keeps for an area (key "row-col"; a missing cell is available). */
 export type CellStatesOf = (areaId: string) => Record<string, 'available' | 'reserved' | 'blocked' | 'filled'>;
-/**
- * Publish gate (pure). `usedBy(stationId)` = the names of the published workflows that use a station; `cellStatesOf(areaId)` = what Master Data holds for a staging area.
- * BLOCKS: a station used by a published workflow was deleted; a station has no name or shares one or is not on a road; a road passes through a no-go zone; a staging area has bad values;
- * a staging area was deleted or made smaller while cells that would go are Filled or Reserved (Master Data owns those, and workflows rely on them).
- * Warns: a zone without a name; blocked cells that would go.
- */
-export function publishProblems(
-  next: MapData,
-  previous: MapData | null,
-  usedBy: (stationId: string) => string[],
-  cellStatesOf: CellStatesOf = () => ({}),
-): MapProblem[] {
+/** A station the previous version had and this one does not, while a published workflow still uses it. */
+function deletedStationProblems(next: MapData, previous: MapData | null, usedBy: (stationId: string) => string[]) {
   const out: MapProblem[] = [];
   const ids = new Set(next.stations.map((s) => s.id));
   for (const s of previous?.stations ?? [])
@@ -68,37 +58,12 @@ export function publishProblems(
           stationId: s.id,
         });
     }
-  const seen = new Map<string, string>();
-  for (const s of next.stations) {
-    out.push(...unplacedProblem(s));
-    const key = s.name.trim().toLowerCase();
-    if (!key) out.push({ level: 'block', title: text.problems.noName(s.id), stationId: s.id });
-    else if (seen.has(key))
-      out.push({ level: 'block', title: text.problems.shareName(s.id, seen.get(key) ?? '', s.name), stationId: s.id });
-    else seen.set(key, s.id);
-    if (s.onLane !== false && !onRoad(next, s.id))
-      out.push({
-        level: 'block',
-        title: text.problems.notReached(s.id, s.name),
-        detail: text.problems.notReachedDetail,
-        stationId: s.id,
-      });
-  }
-  const noGo = next.zones.filter((z) => z.type === 'no-go');
-  if (noGo.length)
-    for (const r of next.roads) {
-      const lanes = next.lanes.filter((l) => r.laneIds.includes(l.id));
-      const hit = noGo.find((z) => lanes.some((l) => l.geom.some(([x, y]) => pointInPolygon(x, y, z.polygon))));
-      if (hit)
-        out.push({
-          level: 'block',
-          title: text.problems.throughNoGo(r.name, hit.name),
-          detail: text.problems.throughNoGoDetail,
-        });
-    }
-  for (const a of next.stagingAreas)
-    for (const [field, problem] of Object.entries(stagingProblems(next, a)))
-      out.push({ level: 'block', title: `${a.name}: ${problem}`, detail: text.problems.field(field) });
+  return out;
+}
+
+/** Staging cells that would go because their area was deleted or made smaller: Filled / Reserved block, Blocked only warns. */
+function lostCellProblems(next: MapData, previous: MapData | null, cellStatesOf: CellStatesOf) {
+  const out: MapProblem[] = [];
   for (const old of previous?.stagingAreas ?? []) {
     const now = next.stagingAreas.find((a) => a.id === old.id);
     const states = cellStatesOf(old.id);
@@ -132,6 +97,55 @@ export function publishProblems(
           .join(', '),
       });
   }
+  return out;
+}
+
+/**
+ * Publish gate (pure). `usedBy(stationId)` = the names of the published workflows that use a station; `cellStatesOf(areaId)` = what Master Data holds for a staging area.
+ * BLOCKS: a station used by a published workflow was deleted; a station has no name or shares one or is not on a road; a road passes through a no-go zone; a staging area has bad values;
+ * a staging area was deleted or made smaller while cells that would go are Filled or Reserved (Master Data owns those, and workflows rely on them).
+ * Warns: a zone without a name; blocked cells that would go.
+ */
+export function publishProblems(
+  next: MapData,
+  previous: MapData | null,
+  usedBy: (stationId: string) => string[],
+  cellStatesOf: CellStatesOf = () => ({}),
+): MapProblem[] {
+  const out: MapProblem[] = [];
+  out.push(...deletedStationProblems(next, previous, usedBy));
+  const seen = new Map<string, string>();
+  for (const s of next.stations) {
+    out.push(...unplacedProblem(s));
+    const key = s.name.trim().toLowerCase();
+    if (!key) out.push({ level: 'block', title: text.problems.noName(s.id), stationId: s.id });
+    else if (seen.has(key))
+      out.push({ level: 'block', title: text.problems.shareName(s.id, seen.get(key) ?? '', s.name), stationId: s.id });
+    else seen.set(key, s.id);
+    if (s.onLane !== false && !onRoad(next, s.id))
+      out.push({
+        level: 'block',
+        title: text.problems.notReached(s.id, s.name),
+        detail: text.problems.notReachedDetail,
+        stationId: s.id,
+      });
+  }
+  const noGo = next.zones.filter((z) => z.type === 'no-go');
+  if (noGo.length)
+    for (const r of next.roads) {
+      const lanes = next.lanes.filter((l) => r.laneIds.includes(l.id));
+      const hit = noGo.find((z) => lanes.some((l) => l.geom.some(([x, y]) => pointInPolygon(x, y, z.polygon))));
+      if (hit)
+        out.push({
+          level: 'block',
+          title: text.problems.throughNoGo(r.name, hit.name),
+          detail: text.problems.throughNoGoDetail,
+        });
+    }
+  for (const a of next.stagingAreas)
+    for (const [field, problem] of Object.entries(stagingProblems(next, a)))
+      out.push({ level: 'block', title: `${a.name}: ${problem}`, detail: text.problems.field(field) });
+  out.push(...lostCellProblems(next, previous, cellStatesOf));
   for (const z of next.zones)
     if (!z.name.trim()) out.push({ level: 'warn', title: text.problems.zoneNoName(zoneType(z.type).label) });
   return out;

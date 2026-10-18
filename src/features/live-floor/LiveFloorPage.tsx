@@ -11,7 +11,8 @@ import { Cube01 } from '@untitledui/icons';
 import { loadRobotModels } from '@/engine/robotMesh';
 import { myPrefsNow } from '@/features/preferences';
 import { handle } from '@/ui/engineHandle';
-import { CameraModes, ZoomControl, FleetList, RobotPanel, RobotMini, StationPanel, MapLegend } from '@/ui/Panels';
+import { CameraModes, ZoomControl, FleetList, RobotPanel, RobotMini } from '@/ui/Panels';
+import { StationPanel, MapLegend } from '@/ui/StationPanels';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { useLoadPhase } from '@/components/skeleton/Skeleton';
 import { LiveFloorSkeleton } from './LiveFloorSkeleton';
@@ -43,6 +44,11 @@ export function LiveFloorPage() {
     zoneId = useApp((s) => s.activeZoneId),
     q = useApp((s) => s.query);
   const [noGl, setNoGl] = useState(() => webGlProblem() !== null);
+  // the scene is built once; it reads the address' state as it was when the page opened (a new state must not rebuild the scene)
+  const routeStateRef = useRef(routeState);
+  useEffect(() => {
+    routeStateRef.current = routeState;
+  });
   useEffect(() => {
     if (noGl) return;
     let dead = false;
@@ -76,7 +82,7 @@ export function LiveFloorPage() {
       showFor(eng, world, fleet ?? '');
       setReady(true);
       eng.updateRobots(Object.values(store.getState().robots)); // robots already on the floor (coming from the Dashboard or the Action Center) show at once: Locate needs their meshes
-      const target = (routeState as { locate?: string } | null)?.locate;
+      const target = (routeStateRef.current as { locate?: string } | null)?.locate;
       if (target) locateTarget(target);
     });
     return () => {

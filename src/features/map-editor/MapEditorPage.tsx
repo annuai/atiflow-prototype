@@ -1,23 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
-import { Skeleton } from '@/components/skeleton/Skeleton';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { useAuth } from '@/features/auth';
 import { useMap } from '@/features/maps';
 import { useMapData, useWorkflow } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
-import { MapCanvas } from './canvas/MapCanvas';
-import { SimLayer } from './canvas/SimLayer';
-import { DEFAULT_CHOICE, drawMode, SELECT, toolFor, type Tool } from './canvas/tools';
+import { DEFAULT_CHOICE, SELECT, toolFor, type Tool } from './canvas/tools';
 import { useDrawTools, useEditorShortcuts } from './canvas/useDrawTools';
 import type { P } from './canvas/layers';
 import { DeleteDialog } from './components/DeleteDialog';
 import { LeaveDialog } from './components/LeaveDialog';
 import { useLeaveGuard } from '@/hooks/use-leave-guard';
-import { DrawHint } from './components/DrawHint';
 import { EditorHeader } from './components/EditorHeader';
-import { ModuleToolbar, type Module } from './components/ModuleToolbar';
+import { type Module } from './components/ModuleToolbar';
+import { EditorStage } from './components/EditorStage';
+import { MapEditorSkeleton } from './components/MapEditorSkeleton';
 import { PublishDialog } from './components/PublishDialog';
 import { SidePanel } from './components/SidePanel';
 import type { StationsSub } from './components/StationsPanel';
@@ -25,11 +23,10 @@ import { VersionBanner } from './components/VersionBanner';
 import { VersionHistory } from './components/VersionHistory';
 import { copy } from './copy';
 import { cellStatesFromMasterData } from './model/cellStates';
-import { hintFor } from './model/hints';
 import { locateTarget } from './model/locate';
 import { deleteRoad } from './model/roads';
-import { deleteStagingArea, updateStagingArea } from './model/staging';
-import { deleteStation, moveStation } from './model/stations';
+import { deleteStagingArea } from './model/staging';
+import { deleteStation } from './model/stations';
 import { draftOf, latestOf, mapVersionsStore, useMapVersions } from './model/store';
 import type { MapData, Selection } from './model/types';
 import { useDraftEditor } from './model/useDraftEditor';
@@ -45,6 +42,102 @@ import { useSimulationPanel } from './sim/useSimulationPanel';
 import { PageTitleName } from '@/shell/PageTitle';
 import { Page, PageCard } from '@/components/page';
 
+/** Which module's panel belongs to a selected thing. */
+function moduleOfSelection(data: MapData, sel: NonNullable<Selection>): Module {
+  if (sel.kind === 'station' || sel.kind === 'staging') return 'stations';
+  if (sel.kind === 'road') return 'routes';
+  return zoneType(data.zones.find((z) => z.id === sel.id)?.type ?? '').module === 'exclusive' ? 'exclusive' : 'zones';
+}
+
+/** Removes the selected thing from the map. */
+function deleteSelected(m: MapData, d: NonNullable<Selection>): MapData {
+  if (d.kind === 'station') return deleteStation(m, d.id);
+  if (d.kind === 'staging') return deleteStagingArea(m, d.id);
+  if (d.kind === 'road') return deleteRoad(m, d.id);
+  return deleteZone(m, d.id);
+}
+
+type Viewing = 'draft' | number | null;
+type VersionOf = NonNullable<ReturnType<typeof draftOf>>;
+
+/** The version on screen: the one asked for, else the draft, else the latest published. */
+function versionShown(history: Parameters<typeof draftOf>[0], viewing: Viewing) {
+  const draft = draftOf(history),
+    latest = latestOf(history);
+  if (viewing === 'draft') return { draft, latest, current: draft };
+  if (typeof viewing === 'number')
+    return { draft, latest, current: history?.versions.find((v) => v.number === viewing && v.status === 'published') };
+  return { draft, latest, current: draft ?? latest };
+}
+
+/** The badge in the header: draft, the latest published version, or an older one being looked at. */
+function versionBadge(current: VersionOf, latest: VersionOf | undefined, isDraft: boolean) {
+  if (isDraft) return { label: copy.draft, color: 'warning' as const };
+  if (current.number === latest?.number) return { label: copy.published(current.number!), color: 'success' as const };
+  return { label: copy.viewing(current.number!), color: 'gray' as const };
+}
+
+type Zone = MapData['zones'][number];
+
+/** Keyboard shortcuts of the editor: undo / redo, Esc / Enter while drawing, and arrows / Delete for the selected zone. */
+function useZoneShortcuts({
+  tool,
+  canEdit,
+  editor,
+  draw,
+  zone,
+  askDelete,
+}: {
+  tool: Tool;
+  canEdit: boolean;
+  editor: ReturnType<typeof useDraftEditor>;
+  draw: ReturnType<typeof useDrawTools>;
+  zone: Zone | undefined;
+  askDelete: (d: NonNullable<Selection>) => void;
+}) {
+  useEditorShortcuts({
+    tool,
+    canEdit,
+    ...editor,
+    cancel: draw.cancel,
+    finish: draw.finish,
+    zone: zone
+      ? {
+          nudge: (dx, dy) =>
+            editor.edit((m) => setZoneShape(m, zone.id, moveShape(zone.shape, dx, dy)), `nudge:${zone.id}`),
+          remove: () => askDelete({ kind: 'zone', id: zone.id }),
+        }
+      : undefined,
+  });
+}
+
+/** What is on screen: the map, its history, the version shown (and its data, site and fleet), and the ids that other maps and workflows already hold. */
+function useShownMap(id: string, viewing: Viewing) {
+  const map = useMap(id);
+  const base = useMapData();
+  const history = useMapVersions((s) => s.byMap[id]);
+  const allMaps = useMapVersions((s) => s.byMap);
+  const workflows = useWorkflow((s) => s.workflows);
+  const imported = map?.source === 'imported';
+  // the first published version of a map is made from the real site and lane map, once
+  useEffect(() => {
+    if (map && base && !imported)
+      mapVersionsStore.getState().ensure(map.id, map.version, seedMapData(map, base.site, base.nav));
+  }, [map, base, imported]);
+  const { draft, latest, current } = versionShown(history, viewing);
+  const data: MapData | undefined = current?.data;
+  const isDraft = current?.status === 'draft';
+  const site = imported ? importedSite(map?.name ?? '', data) : base?.site;
+  const fleetKey = map ? fleetDirectory.byLiveId(map.fleetLive)?.id : undefined;
+  const takenStations = useMemo(() => base?.live.stations.map((s) => s.id) ?? [], [base]);
+  const takenAreas = useMemo(
+    () => Object.values(allMaps).flatMap((h) => h.versions.flatMap((v) => v.data.stagingAreas.map((a) => a.id))),
+    [allMaps],
+  ); // an area id means one area in every map
+  const usedBy = (sid: string) => workflowsUsing(Object.values(workflows), fleetKey, sid);
+  return { map, history, draft, latest, current, data, site, isDraft, takenStations, takenAreas, usedBy };
+}
+
 /**
  * The Map Editor (`/configurator/maps/:id`). A published version can only be looked at; "Edit as draft" makes the one draft, saved as you edit and turned into the next version by Publish.
  * The four modules float at the bottom of the map (Stations with staging areas, Routes, Traffic Gates, Zones): opening one puts its tool on the map and its panel on the right at once.
@@ -57,16 +150,9 @@ export function MapEditorPage() {
     document.documentElement.classList.add('map-editor-open'); // lets the touch sizes reach the editor's dialogs, which are drawn outside the page
     return () => document.documentElement.classList.remove('map-editor-open');
   }, []);
-  const map = useMap(id);
   const navigate = useNavigate();
-  const imported = map?.source === 'imported',
-    mapName = map?.name ?? '';
   const user = useAuth((s) => s.user)!;
-  const base = useMapData();
-  const history = useMapVersions((s) => s.byMap[id]);
-  const allMaps = useMapVersions((s) => s.byMap);
-  const workflows = useWorkflow((s) => s.workflows);
-  const [viewing, setViewing] = useState<'draft' | number | null>(null);
+  const [viewing, setViewing] = useState<Viewing>(null);
   const [module, setModule] = useState<Module | null>(null);
   const [sub, setSub] = useState<StationsSub>('stations');
   const [wantTool, setTool] = useState<Tool>(SELECT);
@@ -80,30 +166,13 @@ export function MapEditorPage() {
   const [updating, setUpdating] = useState(false);
   const [locateAt, setLocateAt] = useState<{ x: number; y: number; span: number; n: number } | null>(null);
 
-  // the first published version of a map is made from the real site and lane map, once
-  useEffect(() => {
-    if (map && base && !imported)
-      mapVersionsStore.getState().ensure(map.id, map.version, seedMapData(map, base.site, base.nav));
-  }, [map, base, imported]);
-  const draft = draftOf(history),
-    latest = latestOf(history);
-  const current =
-    viewing === 'draft'
-      ? draft
-      : typeof viewing === 'number'
-        ? history?.versions.find((v) => v.number === viewing && v.status === 'published')
-        : (draft ?? latest);
-  const data: MapData | undefined = current?.data;
-  const site = imported ? importedSite(mapName, data) : base?.site;
-  const isDraft = current?.status === 'draft';
-  const fleetKey = map ? fleetDirectory.byLiveId(map.fleetLive)?.id : undefined;
-  const tool: Tool = isDraft && mode === 'design' ? wantTool : SELECT; // a published version only allows looking
-  const takenStations = useMemo(() => base?.live.stations.map((s) => s.id) ?? [], [base]);
-  const takenAreas = useMemo(
-    () => Object.values(allMaps).flatMap((h) => h.versions.flatMap((v) => v.data.stagingAreas.map((a) => a.id))),
-    [allMaps],
-  ); // an area id means one area in every map
-  const usedBy = (sid: string) => workflowsUsing(Object.values(workflows), fleetKey, sid);
+  const { map, history, draft, latest, current, data, site, isDraft, takenStations, takenAreas, usedBy } = useShownMap(
+    id,
+    viewing,
+  );
+  const latestNumber = latest?.number ?? 0;
+  const editable = isDraft && mode === 'design';
+  const tool: Tool = editable ? wantTool : SELECT; // a published version only allows looking
 
   const sim = useSimulationPanel(data, map?.fleetLive);
   const editor = useDraftEditor(id, current?.id, () => setDrawing([]));
@@ -120,23 +189,13 @@ export function MapEditorPage() {
     takenStations,
     takenAreas,
   });
-  const selectedZone = selection?.kind === 'zone' ? data?.zones.find((z) => z.id === selection.id) : undefined;
-  useEditorShortcuts({
+  useZoneShortcuts({
     tool,
-    canEdit: !!isDraft && mode === 'design',
-    ...editor,
-    cancel: draw.cancel,
-    finish: draw.finish,
-    zone: selectedZone
-      ? {
-          nudge: (dx, dy) =>
-            editor.edit(
-              (m) => setZoneShape(m, selectedZone.id, moveShape(selectedZone.shape, dx, dy)),
-              `nudge:${selectedZone.id}`,
-            ),
-          remove: () => setDeleting({ kind: 'zone', id: selectedZone.id }),
-        }
-      : undefined,
+    canEdit: editable,
+    editor,
+    draw,
+    zone: selection?.kind === 'zone' ? data?.zones.find((z) => z.id === selection.id) : undefined,
+    askDelete: setDeleting,
   });
 
   // a different version is shown: nothing is selected, drawn or simulated any more
@@ -171,37 +230,14 @@ export function MapEditorPage() {
     setDrawing([]);
     setSelection(sel);
     if (!sel || !data) return;
-    if (sel.kind === 'station') {
-      setModule('stations');
-      setSub('stations');
-    } else if (sel.kind === 'staging') {
-      setModule('stations');
-      setSub('staging');
-    } else if (sel.kind === 'road') setModule('routes');
-    else
-      setModule(
-        zoneType(data.zones.find((z) => z.id === sel.id)?.type ?? '').module === 'exclusive' ? 'exclusive' : 'zones',
-      );
+    setModule(moduleOfSelection(data, sel));
+    if (sel.kind === 'station') setSub('stations');
+    if (sel.kind === 'staging') setSub('staging');
   };
 
   if (!map) return <Navigate to="/configurator/maps" replace />;
-  if (!site || !data || !current)
-    return (
-      <Page>
-        <PageCard>
-          <div className="flex flex-col gap-3 p-4" role="status" aria-label="Loading the map">
-            <Skeleton className="h-8 w-72" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-[420px] w-full" />
-          </div>
-        </PageCard>
-      </Page>
-    );
-  const state = isDraft
-    ? { label: copy.draft, color: 'warning' as const }
-    : current.number === latest?.number
-      ? { label: copy.published(current.number!), color: 'success' as const }
-      : { label: copy.viewing(current.number!), color: 'gray' as const };
+  if (!site || !data || !current) return <MapEditorSkeleton />;
+  const state = versionBadge(current, latest, !!isDraft);
   const exportZip = async () => {
     try {
       download(await buildMapZip(map, data), `${map.name}.zip`);
@@ -241,18 +277,9 @@ export function MapEditorPage() {
     if (t) setLocateAt({ ...t, n: Date.now() });
   };
   const doDelete = (d: NonNullable<Selection>) => {
-    editor.edit((m) =>
-      d.kind === 'station'
-        ? deleteStation(m, d.id)
-        : d.kind === 'staging'
-          ? deleteStagingArea(m, d.id)
-          : d.kind === 'road'
-            ? deleteRoad(m, d.id)
-            : deleteZone(m, d.id),
-    );
+    editor.edit((m) => deleteSelected(m, d));
     setSelection(null);
   };
-  const editable = !!isDraft && mode === 'design';
   return (
     <Page className="map-editor">
       <PageTitleName name={map.name} />
@@ -285,43 +312,23 @@ export function MapEditorPage() {
           onUpdate={() => setUpdating(true)}
         />
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-          <div className="relative min-h-[360px] min-w-0 flex-1">
-            <MapCanvas
-              site={site}
-              data={data}
-              tool={tool}
-              editable={editable}
-              locate={locateAt}
-              selection={selection}
-              canSelect={(s) => mode === 'design' || s.kind === 'station'}
-              onSelect={mode === 'simulation' ? sim.pick : pick}
-              overlay={mode === 'simulation' ? (vp) => <SimLayer vp={vp} marks={sim.marks} /> : undefined}
-              drawing={drawing}
-              onPoint={draw.onPoint}
-              onFinish={draw.finish}
-              onZoneShape={(zid, shape) => editor.edit((m) => setZoneShape(m, zid, shape), `shape:${zid}`)}
-              onMove={(kind, sid, to) =>
-                editor.edit(
-                  (m) =>
-                    kind === 'station'
-                      ? moveStation(m, sid, to)
-                      : updateStagingArea(m, sid, { x: Math.round(to.x * 100) / 100, y: Math.round(to.y * 100) / 100 }),
-                  `move:${kind}:${sid}`,
-                )
-              }
-            />
-            {mode === 'design' && tool.kind !== 'select' && (
-              <DrawHint
-                text={hintFor(tool, drawing.length)}
-                showFinish={drawMode(tool) === 'many'}
-                canFinish={drawing.length >= 2}
-                onFinish={draw.finish}
-                onCancel={draw.cancel}
-                cancelLabel={drawing.length ? copy.hint.cancel : copy.hint.done}
-              />
-            )}
-            {mode === 'design' && <ModuleToolbar tool={tool} choices={choices} onSelect={selectTool} onTool={arm} />}
-          </div>
+          <EditorStage
+            site={site}
+            data={data}
+            tool={tool}
+            editable={editable}
+            locateAt={locateAt}
+            selection={selection}
+            mode={mode}
+            sim={sim}
+            pick={pick}
+            drawing={drawing}
+            draw={draw}
+            editor={editor}
+            choices={choices}
+            onSelectTool={selectTool}
+            onArm={arm}
+          />
           <SidePanel
             mode={mode}
             module={module}
@@ -370,7 +377,7 @@ export function MapEditorPage() {
         isOpen={publishOpen}
         onOpenChange={setPublishOpen}
         problems={problems}
-        nextNumber={(latest?.number ?? 0) + 1}
+        nextNumber={latestNumber + 1}
         onPublish={publish}
         onShow={(sid) => pick({ kind: 'station', id: sid })}
       />
@@ -392,9 +399,9 @@ export function MapEditorPage() {
       <ConfirmDialog
         isOpen={updating}
         onOpenChange={setUpdating}
-        title={copy.historyPanel.restoreTitle(latest?.number ?? 0)}
+        title={copy.historyPanel.restoreTitle(latestNumber)}
         description={copy.historyPanel.restoreBody}
-        confirmLabel={copy.banner.update(latest?.number ?? 0)}
+        confirmLabel={copy.banner.update(latestNumber)}
         onConfirm={() => latest?.number && restore(latest.number)}
       />
     </Page>
