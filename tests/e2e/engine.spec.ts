@@ -13,6 +13,7 @@ test.afterEach(({ page }) => expect(errors.get(page), 'errors in the page').toEq
 const drawn = async (page: Page) => (await page.locator('canvas').first().screenshot()).length;
 
 test('3D, 2D, walk and back: every mode draws and the view responds to the mouse', async ({ page }) => {
+  test.setTimeout(150_000); // software rendering: a frame of the whole floor takes a while
   await signIn(page, 'arjun');
   await page.goto('/supervisor/livefloor');
   const canvas = page.locator('canvas').first();

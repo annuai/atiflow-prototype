@@ -1,6 +1,4 @@
-import { createStore } from 'zustand/vanilla';
-import { registerStoreInit } from '@/data/storeInit';
-import { createPersister, withoutSaving } from '@/data/persist';
+import { createPersistedStore } from '@/data/persistedStore';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { addGroup, addToGroup, deleteGroup, pruneMaterial, removeFromGroup, renameGroup } from './logic';
@@ -29,46 +27,45 @@ const load = (): Record<string, FleetProfile> => services().fleetProfiles.read()
 export const EMPTY_PROFILE: FleetProfile = { mapId: null, groups: [] };
 export const profileOf = (profiles: Record<string, FleetProfile>, fleet: string) => profiles[fleet] ?? EMPTY_PROFILE;
 
-export const fleetsStore = createStore<FleetsState>((set, get) => {
-  const edit = (fleet: string, f: (g: FleetProfile['groups']) => FleetProfile['groups']) => {
-    const p = profileOf(get().profiles, fleet);
-    set({ profiles: { ...get().profiles, [fleet]: { ...p, groups: f(p.groups) } } });
-  };
-  return {
-    profiles: load(),
-    removeProfile: (fleet) => {
-      const { [fleet]: _gone, ...rest } = get().profiles;
-      set({ profiles: rest });
-    },
-    renameProfile: (from, to) => {
-      const { [from]: p, ...rest } = get().profiles;
-      if (p) set({ profiles: { ...rest, [to]: p } });
-    },
-    assignMap: (fleet, mapId) => {
+export const fleetsStore = createPersistedStore<FleetsState, Record<string, FleetProfile>>(
+  {
+    name: 'fleet profiles',
+    read: load,
+    save: (v) => services().fleetProfiles.save(v),
+    pick: (s) => s.profiles,
+    apply: (d) => ({ profiles: d }),
+    watch: ['profiles'],
+    delayMs: 250,
+    devHandle: '__fleets',
+  },
+  (set, get) => {
+    const edit = (fleet: string, f: (g: FleetProfile['groups']) => FleetProfile['groups']) => {
       const p = profileOf(get().profiles, fleet);
-      if (p.mapId === mapId) return;
-      if (Object.entries(get().profiles).some(([name, q]) => name !== fleet && q.mapId === mapId)) return; // a map belongs to one fleet only
-      set({ profiles: { ...get().profiles, [fleet]: { mapId, groups: [] } } });
-    },
-    unassignMap: (fleet) => set({ profiles: { ...get().profiles, [fleet]: { mapId: null, groups: [] } } }),
-    createGroup: (fleet, g) => edit(fleet, (gs) => addGroup(gs, g)),
-    renameGroup: (fleet, id, name) => edit(fleet, (gs) => renameGroup(gs, id, name)),
-    deleteGroup: (fleet, id) => edit(fleet, (gs) => deleteGroup(gs, id)),
-    addToGroup: (fleet, id, codes) => edit(fleet, (gs) => addToGroup(gs, id, codes)),
-    removeFromGroup: (fleet, id, code) => edit(fleet, (gs) => removeFromGroup(gs, id, code)),
-    pruneMaterial: (fleet, code) => edit(fleet, (gs) => pruneMaterial(gs, code)),
-  };
-});
-export const useFleets = <T>(sel: (s: FleetsState) => T) => useStore(fleetsStore, sel);
-
-const persist = createPersister(
-  'fleet profiles',
-  (v: Record<string, FleetProfile>) => services().fleetProfiles.save(v),
-  { delayMs: 250 },
+      set({ profiles: { ...get().profiles, [fleet]: { ...p, groups: f(p.groups) } } });
+    };
+    return {
+      removeProfile: (fleet) => {
+        const { [fleet]: _gone, ...rest } = get().profiles;
+        set({ profiles: rest });
+      },
+      renameProfile: (from, to) => {
+        const { [from]: p, ...rest } = get().profiles;
+        if (p) set({ profiles: { ...rest, [to]: p } });
+      },
+      assignMap: (fleet, mapId) => {
+        const p = profileOf(get().profiles, fleet);
+        if (p.mapId === mapId) return;
+        if (Object.entries(get().profiles).some(([name, q]) => name !== fleet && q.mapId === mapId)) return; // a map belongs to one fleet only
+        set({ profiles: { ...get().profiles, [fleet]: { mapId, groups: [] } } });
+      },
+      unassignMap: (fleet) => set({ profiles: { ...get().profiles, [fleet]: { mapId: null, groups: [] } } }),
+      createGroup: (fleet, g) => edit(fleet, (gs) => addGroup(gs, g)),
+      renameGroup: (fleet, id, name) => edit(fleet, (gs) => renameGroup(gs, id, name)),
+      deleteGroup: (fleet, id) => edit(fleet, (gs) => deleteGroup(gs, id)),
+      addToGroup: (fleet, id, codes) => edit(fleet, (gs) => addToGroup(gs, id, codes)),
+      removeFromGroup: (fleet, id, code) => edit(fleet, (gs) => removeFromGroup(gs, id, code)),
+      pruneMaterial: (fleet, code) => edit(fleet, (gs) => pruneMaterial(gs, code)),
+    };
+  },
 );
-fleetsStore.subscribe((s, p) => {
-  if (s.profiles !== p.profiles) persist.queue(s.profiles);
-});
-
-registerStoreInit(() => withoutSaving(() => fleetsStore.setState({ profiles: load() })));
-if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __fleets: fleetsStore }); // dev-only handle for console testing
+export const useFleets = <T>(sel: (s: FleetsState) => T) => useStore(fleetsStore, sel);

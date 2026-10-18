@@ -1,6 +1,4 @@
-import { createStore } from 'zustand/vanilla';
-import { registerStoreInit } from '@/data/storeInit';
-import { createPersister, withoutSaving } from '@/data/persist';
+import { createPersistedStore } from '@/data/persistedStore';
 import { useStore } from 'zustand';
 import type { OrderUpdate } from '@/core/types';
 import { tripIds, tripNumber } from '@/data/tripIds';
@@ -30,93 +28,85 @@ const push = (t: BookedTrip, status: RequestStatus, at: number, by?: string, not
   status,
   history: [...t.history, { status, at, by, note }],
 });
-const boot: Saved = services().bookings.snapshot() as Saved;
-tripIds.ensureAtLeast(Math.max(0, ...boot.trips.map((t) => tripNumber(t.tripId))));
-
-export const bookingsStore = createStore<BookingsState>((set, get) => ({
-  ...boot,
-  book(who, input, now = Date.now()) {
-    if (bookingError(input)) return null;
-    const seq = get().seq + 1;
-    const trip: BookedTrip = push(
-      {
-        id: `BKG-${String(seq).padStart(4, '0')}`,
-        tripId: tripIds.next(),
-        ...input,
-        status: 'approved',
-        history: [],
-        bookedBy: who.username,
-        bookedByName: who.name,
-        createdAt: now,
-      },
-      'approved',
-      now,
-      who.name,
-      'Booked',
-    );
-    set({ seq, trips: [...get().trips, trip] });
-    return trip;
+export const bookingsStore = createPersistedStore<BookingsState, Saved>(
+  {
+    name: 'booked trips',
+    read: () => services().bookings.snapshot() as Saved,
+    save: (v) => services().bookings.save(v),
+    pick: (s) => ({ trips: s.trips, seq: s.seq }),
+    apply: (d) => {
+      tripIds.ensureAtLeast(Math.max(0, ...d.trips.map((t) => tripNumber(t.tripId)))); // saved trips keep their ids: new ones count on from them
+      return { trips: d.trips, seq: d.seq };
+    },
+    watch: ['trips', 'seq'],
+    delayMs: 150,
+    devHandle: '__bookings',
   },
-  cancel(id, who, now = Date.now()) {
-    const t = get().trips.find((x) => x.id === id);
-    if (!t || !canCancelBooking(t, who)) return false;
-    set({ trips: get().trips.map((x) => (x.id === id ? push(x, 'cancelled', now, who.username) : x)) });
-    return true;
-  },
-  apply(u, now = Date.now()) {
-    const t = get().trips.find((x) => x.id === u.id);
-    if (!t) return;
-    const to: RequestStatus = u.status;
-    if (t.status === to && !(to === 'ongoing' && u.tripId && u.tripId !== t.tripId)) return;
-    if (!isAllowedNext(t.status, to) && !(t.status === 'ongoing' && to === 'ongoing')) return;
-    set({
-      trips: get().trips.map((x) =>
-        x.id === u.id
-          ? {
-              ...push(x, to, now, 'Fleet', u.reason),
-              tripId: u.tripId ?? x.tripId,
-              robotId: u.robotId ?? x.robotId,
-              note: u.reason ?? x.note,
-            }
-          : x,
-      ),
-    });
-  },
-  requeueOngoing(now = Date.now()) {
-    if (!get().trips.some((t) => t.status === 'ongoing')) return;
-    set({
-      trips: get().trips.map((t) =>
-        t.status === 'ongoing'
-          ? {
-              ...push(t, 'approved', now, 'Fleet', 'The fleet restarted: waiting for a robot again'),
-              robotId: undefined,
-            }
-          : t,
-      ),
-    });
-  },
-  reset() {
-    services().bookings.resetToSeed?.();
-    set({ trips: [], seq: 0 });
-  },
-}));
-export const useBookings = <T>(sel: (s: BookingsState) => T) => useStore(bookingsStore, sel);
-
-const persist = createPersister(
-  'booked trips',
-  (v: { trips: BookedTrip[]; seq: number }) => services().bookings.save(v),
-  { delayMs: 150 },
+  (set, get) => ({
+    book(who, input, now = Date.now()) {
+      if (bookingError(input)) return null;
+      const seq = get().seq + 1;
+      const trip: BookedTrip = push(
+        {
+          id: `BKG-${String(seq).padStart(4, '0')}`,
+          tripId: tripIds.next(),
+          ...input,
+          status: 'approved',
+          history: [],
+          bookedBy: who.username,
+          bookedByName: who.name,
+          createdAt: now,
+        },
+        'approved',
+        now,
+        who.name,
+        'Booked',
+      );
+      set({ seq, trips: [...get().trips, trip] });
+      return trip;
+    },
+    cancel(id, who, now = Date.now()) {
+      const t = get().trips.find((x) => x.id === id);
+      if (!t || !canCancelBooking(t, who)) return false;
+      set({ trips: get().trips.map((x) => (x.id === id ? push(x, 'cancelled', now, who.username) : x)) });
+      return true;
+    },
+    apply(u, now = Date.now()) {
+      const t = get().trips.find((x) => x.id === u.id);
+      if (!t) return;
+      const to: RequestStatus = u.status;
+      if (t.status === to && !(to === 'ongoing' && u.tripId && u.tripId !== t.tripId)) return;
+      if (!isAllowedNext(t.status, to) && !(t.status === 'ongoing' && to === 'ongoing')) return;
+      set({
+        trips: get().trips.map((x) =>
+          x.id === u.id
+            ? {
+                ...push(x, to, now, 'Fleet', u.reason),
+                tripId: u.tripId ?? x.tripId,
+                robotId: u.robotId ?? x.robotId,
+                note: u.reason ?? x.note,
+              }
+            : x,
+        ),
+      });
+    },
+    requeueOngoing(now = Date.now()) {
+      if (!get().trips.some((t) => t.status === 'ongoing')) return;
+      set({
+        trips: get().trips.map((t) =>
+          t.status === 'ongoing'
+            ? {
+                ...push(t, 'approved', now, 'Fleet', 'The fleet restarted: waiting for a robot again'),
+                robotId: undefined,
+              }
+            : t,
+        ),
+      });
+    },
+    reset() {
+      services().bookings.resetToSeed?.();
+      set({ trips: [], seq: 0 });
+    },
+  }),
 );
-let saved = bookingsStore.getState();
-bookingsStore.subscribe((s) => {
-  if (s.trips === saved.trips && s.seq === saved.seq) return;
-  saved = s;
-  persist.queue({ trips: s.trips, seq: s.seq });
-});
-registerStoreInit(() => {
-  const b = services().bookings.snapshot() as Saved;
-  tripIds.ensureAtLeast(Math.max(0, ...b.trips.map((t) => tripNumber(t.tripId))));
-  withoutSaving(() => bookingsStore.setState({ trips: b.trips, seq: b.seq }));
-  saved = bookingsStore.getState();
-});
-if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __bookings: bookingsStore });
+export const useBookings = <T>(sel: (s: BookingsState) => T) => useStore(bookingsStore, sel);

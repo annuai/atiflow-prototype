@@ -1,6 +1,4 @@
-import { createStore } from 'zustand/vanilla';
-import { registerStoreInit } from '@/data/storeInit';
-import { createPersister, withoutSaving } from '@/data/persist';
+import { createPersistedStore } from '@/data/persistedStore';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { authStore, useAuth } from '@/features/auth';
@@ -14,20 +12,23 @@ export interface PreferencesState {
   save(username: string, p: Preferences): void;
   reset(username: string): void;
 }
-export const preferencesStore = createStore<PreferencesState>((set, get) => ({
-  byUser: load(),
-  save: (username, p) => set({ byUser: { ...get().byUser, [username]: p } }),
-  reset: (username) => {
-    const { [username]: _gone, ...rest } = get().byUser;
-    set({ byUser: rest });
+export const preferencesStore = createPersistedStore<PreferencesState, Record<string, Partial<Preferences>>>(
+  {
+    name: 'preferences',
+    read: load,
+    save: (v) => services().preferences.save(v),
+    pick: (s) => s.byUser,
+    apply: (d) => ({ byUser: d }),
+    watch: ['byUser'],
   },
-}));
-const persist = createPersister('preferences', (v: Record<string, Partial<Preferences>>) =>
-  services().preferences.save(v),
+  (set, get) => ({
+    save: (username, p) => set({ byUser: { ...get().byUser, [username]: p } }),
+    reset: (username) => {
+      const { [username]: _gone, ...rest } = get().byUser;
+      set({ byUser: rest });
+    },
+  }),
 );
-preferencesStore.subscribe((s, p) => {
-  if (s.byUser !== p.byUser) persist.queue(s.byUser);
-});
 
 export const prefsOf = (username: string | null | undefined): Preferences =>
   username ? withDefaults(preferencesStore.getState().byUser[username]) : DEFAULT_PREFERENCES;
@@ -38,5 +39,3 @@ export function useMyPreferences(): Preferences {
   const saved = useStore(preferencesStore, (s) => (u ? s.byUser[u] : undefined));
   return withDefaults(saved);
 }
-
-registerStoreInit(() => withoutSaving(() => preferencesStore.setState({ byUser: load() })));

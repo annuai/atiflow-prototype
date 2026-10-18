@@ -1,6 +1,4 @@
-import { createStore } from 'zustand/vanilla';
-import { registerStoreInit } from './storeInit';
-import { createPersister, withoutSaving } from './persist';
+import { createPersistedStore } from '@/data/persistedStore';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import type { FleetRecord } from './fleets';
@@ -61,61 +59,58 @@ const slug = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '') || 'fleet';
 
-export const datasetStore = createStore<DatasetState>((set, get) => ({
-  ...services().dataset.read(),
-  addFleet(name) {
-    const { fleets } = get();
-    let id = slug(name);
-    for (let n = 2; fleets.some((f) => f.id === id); n++) id = `${slug(name)}-${n}`;
-    const f: FleetRecord = { id, name, color: COLORS[fleets.length % COLORS.length] };
-    set({ fleets: [...fleets, f] });
-    return f;
+export const datasetStore = createPersistedStore<DatasetState, DatasetData>(
+  {
+    name: 'fleets, robots and hardware',
+    read: () => services().dataset.read(),
+    save: (v) => services().dataset.save(v),
+    pick: (s) => ({ version: 1, fleets: s.fleets, robot: s.robot, hardware: s.hardware }),
+    apply: (d) => ({ ...d }),
+    watch: ['fleets', 'robot', 'hardware'],
+    delayMs: 250,
+    // another tab (e.g. a configurator editing robots while a supervisor watches the floor) saved the dataset: take it over, so every window shows the same robots
+    listen: (cb) => services().dataset.subscribe(cb),
+    devHandle: '__dataset',
   },
-  renameFleet(from, to) {
-    const move = (list: Device[]) =>
-      list.map((d) => (d.values.fleet === from ? { ...d, values: { ...d.values, fleet: to } } : d));
-    set({
-      fleets: get().fleets.map((f) => (f.name === from ? { ...f, name: to } : f)),
-      robot: move(get().robot),
-      hardware: move(get().hardware),
-    });
-  },
-  removeFleet(name) {
-    const free = (list: Device[]) =>
-      list.map((d) => (d.values.fleet === name ? { ...d, values: { ...d.values, fleet: '' } } : d));
-    set({
-      fleets: get().fleets.filter((f) => f.name !== name),
-      robot: free(get().robot),
-      hardware: free(get().hardware),
-    });
-  },
-  // new records start Offline: they have not connected yet
-  addDevice: (kind, values) => set({ [kind]: [...get()[kind], { status: 'offline', values }] } as Partial<DatasetData>),
-  updateDevice: (kind, name, values) =>
-    set({
-      [kind]: get()[kind].map((d) => (nameOf(d) === name ? { ...d, values: { ...d.values, ...values } } : d)),
-    } as Partial<DatasetData>),
-  removeDevice: (kind, name) => set({ [kind]: get()[kind].filter((d) => nameOf(d) !== name) } as Partial<DatasetData>),
-  replace: (data) => set({ ...data }),
-  reset: () => set({ ...datasetDoc.reset() }),
-}));
+  (set, get) => ({
+    addFleet(name) {
+      const { fleets } = get();
+      let id = slug(name);
+      for (let n = 2; fleets.some((f) => f.id === id); n++) id = `${slug(name)}-${n}`;
+      const f: FleetRecord = { id, name, color: COLORS[fleets.length % COLORS.length] };
+      set({ fleets: [...fleets, f] });
+      return f;
+    },
+    renameFleet(from, to) {
+      const move = (list: Device[]) =>
+        list.map((d) => (d.values.fleet === from ? { ...d, values: { ...d.values, fleet: to } } : d));
+      set({
+        fleets: get().fleets.map((f) => (f.name === from ? { ...f, name: to } : f)),
+        robot: move(get().robot),
+        hardware: move(get().hardware),
+      });
+    },
+    removeFleet(name) {
+      const free = (list: Device[]) =>
+        list.map((d) => (d.values.fleet === name ? { ...d, values: { ...d.values, fleet: '' } } : d));
+      set({
+        fleets: get().fleets.filter((f) => f.name !== name),
+        robot: free(get().robot),
+        hardware: free(get().hardware),
+      });
+    },
+    // new records start Offline: they have not connected yet
+    addDevice: (kind, values) =>
+      set({ [kind]: [...get()[kind], { status: 'offline', values }] } as Partial<DatasetData>),
+    updateDevice: (kind, name, values) =>
+      set({
+        [kind]: get()[kind].map((d) => (nameOf(d) === name ? { ...d, values: { ...d.values, ...values } } : d)),
+      } as Partial<DatasetData>),
+    removeDevice: (kind, name) =>
+      set({ [kind]: get()[kind].filter((d) => nameOf(d) !== name) } as Partial<DatasetData>),
+    replace: (data) => set({ ...data }),
+    reset: () => set({ ...datasetDoc.reset() }),
+  }),
+);
 export const useDataset = <T>(sel: (s: DatasetState) => T) => useStore(datasetStore, sel);
-
-const persist = createPersister('fleets, robots and hardware', (v: DatasetData) => services().dataset.save(v), {
-  delayMs: 250,
-});
-datasetStore.subscribe((s, p) => {
-  if (s.fleets === p.fleets && s.robot === p.robot && s.hardware === p.hardware) return;
-  persist.queue({ version: 1, fleets: s.fleets, robot: s.robot, hardware: s.hardware });
-});
-// another tab (e.g. a configurator editing robots while a supervisor watches the floor) saved the dataset: take it over, so every window shows the same robots
-const listen = () => services().dataset.subscribe((data) => datasetStore.setState({ ...data }));
-let unlisten = listen();
-// the services were replaced: read the new ones and listen to them
-registerStoreInit(() => {
-  unlisten();
-  withoutSaving(() => datasetStore.setState({ ...services().dataset.read() }));
-  unlisten = listen();
-});
-if (import.meta.env?.DEV && typeof window !== 'undefined')
-  Object.assign(window, { __dataset: datasetStore, __datasetDoc: datasetDoc }); // dev-only: inspect / export / import from the console
+if (import.meta.env?.DEV && typeof window !== 'undefined') Object.assign(window, { __datasetDoc: datasetDoc }); // dev-only: inspect / export / import from the console
