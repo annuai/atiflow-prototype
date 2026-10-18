@@ -8,10 +8,7 @@
   width: 220px;
 }
 .dv-detail {
-  /* no bottom padding: the card has its own 12px margin below it, which is already the gap every other page card keeps (padding + margin made this card end 12px higher) */
-  padding-bottom: 0;
-  padding-top: 12px;
-  min-height: 0;
+  padding-top: 12px; /* room above the header band (the other pages' title block has none: it is its own row) */
 }
 @media (max-width: 720px) {
   .dv-search {
