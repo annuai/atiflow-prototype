@@ -11,7 +11,8 @@
   width: 220px;
 }
 .dv-detail {
-  padding-bottom: 12px;
+  /* no bottom padding: the card has its own 12px margin below it, which is already the gap every other page card keeps (padding + margin made this card end 12px higher) */
+  padding-bottom: 0;
   padding-top: 12px;
   min-height: 0;
 }

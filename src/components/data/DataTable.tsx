@@ -99,9 +99,8 @@ export function DataTable<T>({
           ? { selectionMode: 'multiple' as const, selectedKeys, onSelectionChange, disabledKeys: disabled }
           : {})}
       >
-        <Table.Header
-          className={cx(plain && 'bg-primary', stickyHeader && 'sticky top-[var(--table-sticky-top,0px)] z-10')}
-        >
+        {/* only the heading CELLS are sticky (Safari does not stick a thead, and a sticky thead behind sticky cells left a strip of its own background showing under the heading) */}
+        <Table.Header className={cx(plain && 'bg-primary')}>
           {columns.map((c, i) => (
             <Table.Head
               key={c.id}
@@ -111,6 +110,7 @@ export function DataTable<T>({
               label={c.header}
               tooltip={c.hint}
               className={cx(
+                'px-4', // the same side padding as the cells below, so a heading sits exactly above its column's content
                 stickyHeader && 'sticky top-[var(--table-sticky-top,0px)] z-10',
                 plain ? 'bg-primary' : stickyHeader && 'bg-secondary',
                 c.headClassName,
