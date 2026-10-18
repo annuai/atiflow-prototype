@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { feed } from '@/features/live-floor';
+import { entryLegs } from './cells';
 import { requestsStore } from './store';
 import type { TripRequest } from './types';
 
@@ -11,8 +12,7 @@ const orderOf = (r: TripRequest) => ({
   id: r.id,
   tripId: r.tripId,
   fleetId: r.fleetLive,
-  legs: r.legs,
-  loadFrom: r.loadFrom,
+  ...entryLegs(r), // (a staging area is reached through its entry station)
   payload: { kind: r.name, qty: r.qty },
   ...(r.robotType ? { robotModel: r.robotType } : {}),
 }); // a saved route carries nothing (loadFrom = after its last station)

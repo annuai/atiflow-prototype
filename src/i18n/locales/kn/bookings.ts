@@ -101,6 +101,12 @@ export const messages: Messages<typeof bookings> = {
       workflow: 'ವರ್ಕ್‌ಫ್ಲೋ',
       requestedBy: 'ವಿನಂತಿಸಿದವರು',
       route: 'ಮಾರ್ಗ',
+      cells: 'ಸ್ಟೇಜಿಂಗ್ ಪ್ರದೇಶ',
+      takenFrom: (area, list) => `${area} ನಿಂದ ತೆಗೆದದ್ದು: ${list}`,
+      storedIn: (area, where, done) =>
+        done ? `${area} ನಲ್ಲಿ ಇಡಲಾಗಿದೆ, ${where}` : `${area} ನಲ್ಲಿ ಇಡಲಾಗುತ್ತದೆ, ${where}`,
+      cellAt: (row, col) => `ಸಾಲು ${row}, ಕಾಲಮ್ ${col}`,
+      pieces: (n) => `${n} ತುಣುಕುಗಳು`,
       approvals: 'ಅನುಮೋದನೆಗಳು',
       step: (i, n) => `ಅನುಮೋದನೆ ${i} / ${n}`,
       done: (by) => `${by} ಅನುಮೋದಿಸಿದರು`,

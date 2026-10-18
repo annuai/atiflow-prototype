@@ -110,6 +110,12 @@ export const messages: Messages<typeof bookings> = {
       workflow: 'பணிப்பாய்வு',
       requestedBy: 'கோரியவர்',
       route: 'பாதை',
+      cells: 'ஸ்டேஜிங் பகுதி',
+      takenFrom: (area, list) => `${area} இலிருந்து எடுக்கப்பட்டது: ${list}`,
+      storedIn: (area, where, done) =>
+        done ? `${area} இல் சேமிக்கப்பட்டது, ${where}` : `${area} இல் சேமிக்கப்படும், ${where}`,
+      cellAt: (row, col) => `வரிசை ${row}, நெடுவரிசை ${col}`,
+      pieces: (n) => `${n} எண்ணிக்கை`,
       approvals: 'அங்கீகாரங்கள்',
       step: (i, n) => `அங்கீகாரம் ${i} / ${n}`,
       done: (by) => `${by} அங்கீகரித்தார்`,

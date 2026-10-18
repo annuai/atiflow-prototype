@@ -123,6 +123,8 @@ export const messages: Messages<typeof mapEditor> = {
       name: 'ஸ்டேஜிங் பகுதிப் பெயர்',
       id: 'ஐடி',
       sherpa: 'Sherpa வகை',
+      entry: 'நுழைவு நிலையம்',
+      entryNone: 'எதுவும் இல்லை (பணிப்பாய்வுகள் இந்தப் பகுதியைப் பயன்படுத்த முடியாது)',
       retrieval: 'வெளியேற்ற வரிசை',
       retrievalOptions: { fifo: 'FIFO (முதலில் வந்தது முதலில் போகும்)', lifo: 'LIFO (கடைசியாக வந்தது முதலில் போகும்)' },
       rotation: 'சுழற்சி (°)',

@@ -106,14 +106,18 @@ describe('which workflows and materials an operator sees', () => {
     expect(needsApproval([createNode('confirm', { op: 'Dispatch Button' })])).toBe(false);
   });
   it('the trip follows the Station steps of the flow; the load is carried from after the first Pick Up', () => {
-    expect(workflowLegs(samples[0].nodes)).toEqual({ legs: ['STA-116', 'STA-107'], loadFrom: 1 });
+    expect(workflowLegs(samples[0].nodes)).toEqual({
+      legs: ['STA-116', 'STA-107'],
+      actions: ['Pick Up', 'Drop Off'],
+      loadFrom: 1,
+    });
     expect(
       workflowLegs([
         createStart(),
         createNode('station', { action: 'Drop Off', station: 'STA-5' }),
         createNode('station', { action: 'Drop Off', station: 'STA-5' }),
       ]),
-    ).toEqual({ legs: ['STA-5'], loadFrom: 0 });
+    ).toEqual({ legs: ['STA-5'], actions: ['Drop Off'], loadFrom: 0 });
   });
   it("the Start and Confirm steps offer the users who hold Request / Approve on the workflow's fleet", () => {
     const all = ['line-side', 'assembly'];

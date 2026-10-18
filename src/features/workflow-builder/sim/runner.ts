@@ -1,3 +1,4 @@
+import { findFleetArea, isAreaId } from '@/features/master-data';
 import { LaneGraph } from '@/core/lanes';
 import type { Vec2 } from '@/core/types';
 import { wfStore, SIM_IDLE, selectFleet } from '../model/store';
@@ -89,8 +90,9 @@ async function drive(pts: Vec2[], len: number, tok: number) {
 function legBetween(from: string | null, to: string): { pts: Vec2[]; len: number } | null {
   const g = laneGraph(),
     fleet = liveIdOf(selectFleet(S()));
-  const a = from ? g?.stationNode(from) : null,
-    b = g?.stationNode(to);
+  const entry = (id: string) => (isAreaId(id) ? (findFleetArea(selectFleet(S()), id)?.stationId ?? id) : id); // a staging area is driven to through its entry station
+  const a = from ? g?.stationNode(entry(from)) : null,
+    b = g?.stationNode(entry(to));
   if (!g || !fleet || !a || !b || a.id === b.id) return null;
   const lanes = g.route(a.id, b.id, fleet);
   if (!lanes?.length) return null;

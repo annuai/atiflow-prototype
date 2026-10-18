@@ -1,4 +1,4 @@
-import type { CellLogEntry, CellSnapshot, CellState, Retrieval, StagingArea, StagingCell } from './types';
+import type { CellLogEntry, CellPlan, CellSnapshot, CellState, Retrieval, StagingArea, StagingCell } from './types';
 
 /** Pure rules of the cells of a staging area: what a cell may hold, the allowed changes, the FIFO / LIFO order, and the upgrade of data saved before cells held materials. No React, no storage. */
 export const LOG_LIMIT = 500;
@@ -173,3 +173,135 @@ export function normaliseCells(raw: Saved | undefined): Record<string, StagingCe
 }
 export const normaliseAreas = (areas: (Omit<StagingArea, 'cells'> & { cells: Saved })[]): StagingArea[] =>
   areas.map((a) => ({ ...a, cells: normaliseCells(a.cells) }));
+
+// ---- trips: a request takes material out of an area and / or puts it into one
+
+type Cells = Record<string, StagingCell>;
+const refLog = (
+  at: number,
+  key: string,
+  from: StagingCell | undefined,
+  to: StagingCell | undefined,
+  ref: string,
+): CellLogEntry => ({
+  at,
+  by: 'system',
+  key,
+  from: snapshotOf(from),
+  to: snapshotOf(to),
+  ref,
+});
+
+/** How the pieces of a pick-up are taken: cells in the area's order, the last one only partly. null when the area does not hold that many pieces. */
+export function planPick(
+  a: Pick<StagingArea, 'cells' | 'retrieval'>,
+  code: string,
+  qty: number,
+): NonNullable<CellPlan['pick']>['items'] | null {
+  const items: { key: string; take: number; storedAt?: number }[] = [];
+  let need = qty;
+  for (const key of pickOrder(a, code)) {
+    if (need <= 0) break;
+    const have = a.cells[key].quantity ?? 1;
+    const take = Math.min(need, have);
+    items.push({ key, take, storedAt: a.cells[key].storedAt });
+    need -= take;
+  }
+  return need > 0 ? null : items;
+}
+/** Take the planned pieces out now (a cell that is emptied becomes available), so a second request cannot take them again. */
+export function takePick(
+  cells: Cells,
+  plan: NonNullable<CellPlan['pick']>,
+  tripId: string,
+  now: number,
+): { cells: Cells; log: CellLogEntry[] } {
+  const next = { ...cells };
+  const log: CellLogEntry[] = [];
+  for (const { key, take } of plan.items) {
+    const cur = cells[key];
+    if (!cur) continue;
+    const left = (cur.quantity ?? 1) - take;
+    const made: StagingCell | undefined =
+      left > 0 ? { ...cur, quantity: left, updatedAt: now, updatedBy: 'system' } : undefined;
+    if (made) next[key] = made;
+    else delete next[key];
+    log.push(refLog(now, key, cur, made, tripId));
+  }
+  return { cells: next, log };
+}
+/** Give the pieces back (the request was cancelled or failed): into the same cell when it still holds the material or is free, otherwise into the first free cell. Returns what could not be put back. */
+export function giveBack(
+  a: Pick<StagingArea, 'cells' | 'rows' | 'cols'>,
+  plan: NonNullable<CellPlan['pick']>,
+  tripId: string,
+  now: number,
+) {
+  const cells = { ...a.cells };
+  const log: CellLogEntry[] = [];
+  let lost = 0;
+  for (const { key, take, storedAt } of plan.items) {
+    const cur = cells[key];
+    let at = key;
+    if (cur && !(cur.state === 'filled' && cur.materialCode === plan.code))
+      at = freeCells({ rows: a.rows, cols: a.cols, cells })[0] ?? '';
+    if (!at) {
+      lost += take;
+      continue;
+    }
+    const before = cells[at];
+    const made: StagingCell = {
+      state: 'filled',
+      materialCode: plan.code,
+      quantity: (before?.state === 'filled' ? (before.quantity ?? 1) : 0) + take,
+      storedAt: before?.storedAt ?? storedAt ?? now,
+      updatedAt: now,
+      updatedBy: 'system',
+    };
+    cells[at] = made;
+    log.push(refLog(now, at, before, made, tripId));
+  }
+  return { cells, log, lost };
+}
+/** Hold the first free cell (row by row) for material that is on its way in. null when the area is full. */
+export function reserveDrop(
+  a: Pick<StagingArea, 'cells' | 'rows' | 'cols'>,
+  code: string,
+  qty: number,
+  tripId: string,
+  now: number,
+) {
+  const key = freeCells(a)[0];
+  if (!key) return null;
+  const made: StagingCell = {
+    state: 'reserved',
+    materialCode: code,
+    quantity: qty,
+    reservedFor: tripId,
+    updatedAt: now,
+    updatedBy: 'system',
+  };
+  return { key, cells: { ...a.cells, [key]: made }, log: [refLog(now, key, undefined, made, tripId)] };
+}
+/** The material has arrived: the reserved cell becomes filled, and its storing time (the clock of FIFO / LIFO) starts now. */
+export function commitDrop(cells: Cells, key: string, tripId: string, now: number) {
+  const cur = cells[key];
+  if (!cur || cur.state !== 'reserved' || cur.reservedFor !== tripId) return { cells, log: [] as CellLogEntry[] };
+  const made: StagingCell = {
+    state: 'filled',
+    materialCode: cur.materialCode,
+    quantity: cur.quantity,
+    storedAt: now,
+    updatedAt: now,
+    updatedBy: 'system',
+  };
+  return { cells: { ...cells, [key]: made }, log: [refLog(now, key, cur, made, tripId)] };
+}
+/** The trip will not arrive: the reserved cell is free again. */
+export function releaseDrop(cells: Cells, key: string, tripId: string, now: number) {
+  const cur = cells[key];
+  if (!cur || cur.state !== 'reserved' || cur.reservedFor !== tripId) return { cells, log: [] as CellLogEntry[] };
+  const next = { ...cells };
+  delete next[key];
+  return { cells: next, log: [refLog(now, key, cur, undefined, tripId)] };
+}

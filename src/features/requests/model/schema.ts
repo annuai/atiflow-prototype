@@ -8,6 +8,17 @@ export const ApprovalStepSchema = z.object({
   by: z.string().optional(),
   at: z.number().optional(),
 });
+const CellPlanSchema = z.object({
+  pick: z
+    .object({
+      areaId: z.string(),
+      code: z.string(),
+      items: z.array(z.object({ key: z.string(), take: z.number(), storedAt: z.number().optional() })),
+    })
+    .optional(),
+  drop: z.object({ areaId: z.string(), code: z.string(), key: z.string(), qty: z.number() }).optional(),
+  settled: z.enum(['committed', 'released']).optional(),
+});
 export const TripRequestSchema = z.object({
   id: z.string(),
   groupId: z.string(),
@@ -21,6 +32,8 @@ export const TripRequestSchema = z.object({
   qty: z.number(),
   legs: z.array(z.string()),
   loadFrom: z.number(),
+  legActions: z.array(z.string()).optional(),
+  cells: CellPlanSchema.optional(),
   /** missing in requests saved before approvals existed: filled in by `normalise` */
   approvals: z.array(ApprovalStepSchema).optional(),
   needsApproval: z.boolean(),

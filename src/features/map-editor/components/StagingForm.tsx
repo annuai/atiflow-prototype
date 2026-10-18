@@ -14,6 +14,7 @@ import { LocateButton } from './LocateButton';
 import { Hint } from './Hint';
 import { NumberInput } from './NumberInput';
 
+const NONE = '__none';
 /** One staging area (the old tool's "Add staging area"): name, robot type, rotation, where the A1 cell is, how many rows and columns, the size of a cell. */
 export function StagingForm({
   onLocate,
@@ -93,6 +94,24 @@ export function StagingForm({
           items={[
             { id: 'fifo', label: f.retrievalOptions.fifo },
             { id: 'lifo', label: f.retrievalOptions.lifo },
+          ]}
+        >
+          {(item) => <Select.Item {...item} />}
+        </Select>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label {...help('staging.entry')}>{f.entry}</Label>
+        <Select
+          size="sm"
+          aria-label={f.entry}
+          isDisabled={!editable}
+          selectedKey={area.stationId ?? NONE}
+          onSelectionChange={(k) => onPatch({ stationId: k === NONE ? undefined : String(k) })}
+          items={[
+            { id: NONE, label: f.entryNone },
+            ...data.stations
+              .filter((s) => s.type !== 'charge' && s.type !== 'park' && !s.unplaced)
+              .map((s) => ({ id: s.id, label: `${s.id} · ${s.name}` })),
           ]}
         >
           {(item) => <Select.Item {...item} />}

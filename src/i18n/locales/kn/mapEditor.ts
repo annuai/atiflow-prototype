@@ -117,6 +117,8 @@ export const messages: Messages<typeof mapEditor> = {
       name: 'ಸ್ಟೇಜಿಂಗ್ ಏರಿಯಾ ಹೆಸರು',
       id: 'ID',
       sherpa: 'ಶೆರ್ಪಾ ಪ್ರಕಾರ',
+      entry: 'ಪ್ರವೇಶ ಸ್ಟೇಷನ್',
+      entryNone: 'ಯಾವುದೂ ಇಲ್ಲ (ವರ್ಕ್‌ಫ್ಲೋಗಳು ಈ ಪ್ರದೇಶವನ್ನು ಬಳಸಲಾಗದು)',
       retrieval: 'ಹೊರತೆಗೆಯುವ ಕ್ರಮ',
       retrievalOptions: {
         fifo: 'FIFO (ಮೊದಲು ಬಂದದ್ದು ಮೊದಲು ಹೋಗುತ್ತದೆ)',

@@ -106,4 +106,19 @@ test.describe('staging area cells hold materials', () => {
     await page.getByRole('option', { name: /LIFO/ }).click();
     await expect(order).toContainText('LIFO');
   });
+
+  test('a Station step of a workflow offers staging areas that have an entry station', async ({ page }) => {
+    await page.goto('/configurator');
+    await page.waitForURL(/\/configurator\/workflows\//);
+    await page.getByRole('button', { name: 'Select a fleet' }).first().click();
+    await page.getByRole('option', { name: 'Line Side Fleet' }).click();
+    await page.getByRole('button', { name: 'Add Station node' }).click(); // the palette tile adds a Station step
+    await page
+      .getByText(/^STA-101 · PCBA WIP 1$/)
+      .first()
+      .click(); // the new Station step starts on the first station: open its dropdown
+    await expect(page.getByRole('option', { name: /SA-001 · SA 001/ })).toBeVisible();
+    await expect(page.getByRole('option', { name: /SA-002 · SA 002/ })).toBeVisible();
+    await expect(page.getByRole('option', { name: /SA-003/ })).toHaveCount(0); // that one is on the other fleet's map
+  });
 });

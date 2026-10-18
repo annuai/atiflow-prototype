@@ -8,7 +8,7 @@ import { fleetDirectory } from '@/data/fleetDirectory';
 import { robotRecords, robotsOnFloor } from '@/data/robots';
 import { scopeKey } from '@/features/access';
 import { fleetsStore } from '@/features/fleets';
-import { latestOf, mapVersionsStore } from '@/features/map-editor';
+import { latestOf, mapVersionsStore, seedMapData } from '@/features/map-editor';
 import { mapsStore } from '@/data/maps';
 import { layoutOf } from '@/features/map-import';
 import { visibleLiveIds } from '@/features/auth';
@@ -83,6 +83,9 @@ function load() {
     fetch(`/sites/${SITE}/site.json`).then((r) => r.json() as Promise<SiteLayout>),
     fetch(`/sites/${SITE}/nav.json`).then((r) => r.json() as Promise<NavGraph>),
   ]).then(([site, nav]) => ({ site, nav }))).then((b) => {
+    // every map has its first version from the start (staging areas, entry stations and retrieval orders are read from the maps' versions wherever they are needed: requests, workflows, Master Data)
+    for (const m of mapsStore.getState().maps)
+      mapVersionsStore.getState().ensure(m.id, m.version, seedMapData(m, b.site, b.nav));
     const w = refreshWorld(b);
     // `site` / `nav` are the BASE (what the Map Editor seeds a first map version from); `live` and `world` are what the floor runs on
     return { site: b.site, nav: b.nav, live: w.nav, world: w };

@@ -115,6 +115,8 @@ export const mapEditor = {
       name: 'Staging area name',
       id: 'ID',
       sherpa: 'Sherpa type',
+      entry: 'Entry station',
+      entryNone: 'None (workflows cannot use this area)',
       retrieval: 'Retrieval order',
       retrievalOptions: { fifo: 'FIFO (first in, first out)', lifo: 'LIFO (last in, first out)' },
       rotation: 'Rotation (°)',

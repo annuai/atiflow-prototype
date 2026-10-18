@@ -62,6 +62,8 @@ export interface StagingAreaDef {
   cellWidth: number;
   /** The order the area gives its material out in, set here with the rest of the area and followed by every request: FIFO (the material that has been in longest) or LIFO (put in last). Missing in older saved maps = FIFO. */
   retrieval?: 'fifo' | 'lifo';
+  /** The station a robot drives to for this area (its entry). A workflow can only use the area when it has one. */
+  stationId?: string;
 }
 
 /**

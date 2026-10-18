@@ -27,8 +27,9 @@ export const requesters = (nodes: WfNode[]): string[] => {
  * The stations a trip of this workflow drives to (the Station steps of the main flow, in order) and the leg from which the load is carried:
  * after the first Pick Up the robot is loaded; with no Pick Up the load is carried from the start. Branch stations (If Logic) are not part of a request.
  */
-export function workflowLegs(nodes: WfNode[]): { legs: string[]; loadFrom: number } {
+export function workflowLegs(nodes: WfNode[]): { legs: string[]; actions: string[]; loadFrom: number } {
   const legs: string[] = [];
+  const actions: string[] = [];
   let loadFrom = -1;
   for (const n of nodes) {
     if (n.t !== 'station') continue;
@@ -36,9 +37,10 @@ export function workflowLegs(nodes: WfNode[]): { legs: string[]; loadFrom: numbe
     if (!st) continue;
     if (legs[legs.length - 1] === st) continue; // the same station twice in a row is one stop
     legs.push(st);
+    actions.push(String(n.f.action ?? ''));
     if (loadFrom < 0 && n.f.action === 'Pick Up') loadFrom = legs.length;
   }
-  return { legs, loadFrom: loadFrom < 0 ? 0 : Math.min(loadFrom, Math.max(0, legs.length - 1)) };
+  return { legs, actions, loadFrom: loadFrom < 0 ? 0 : Math.min(loadFrom, Math.max(0, legs.length - 1)) };
 }
 
 /** How a workflow is started (the Start step's Request Type). */
@@ -83,7 +85,7 @@ export function routeItems(
   const out: RequestableItem[] = [];
   for (const w of visibleWorkflows(workflows, who, fleetIdOf)) {
     if (!isRouteWorkflow(w.nodes)) continue;
-    const { legs } = workflowLegs(w.nodes);
+    const { legs, actions } = workflowLegs(w.nodes);
     if (legs.length < 1) continue;
     const approvalUsers = confirmApprovers(w.nodes);
     const robot = w.nodes.find((n) => n.t === 'start')?.f.robot;
@@ -101,6 +103,7 @@ export function routeItems(
       approvalUsers,
       needsApproval: approvalUsers.length > 0,
       legs,
+      legActions: actions,
       loadFrom: legs.length,
       kind: 'route',
       robotType: robotTypeIdOf(robot),
@@ -120,7 +123,7 @@ export function requestableItems(
 ): RequestableItem[] {
   const out: RequestableItem[] = [];
   for (const w of visibleWorkflows(workflows, who, fleetIdOf)) {
-    const { legs, loadFrom } = workflowLegs(w.nodes);
+    const { legs, actions, loadFrom } = workflowLegs(w.nodes);
     if (!legs.length) continue;
     const approvalUsers = confirmApprovers(w.nodes);
     for (const n of w.nodes) {
@@ -143,6 +146,7 @@ export function requestableItems(
         approvalUsers,
         needsApproval: approvalUsers.length > 0,
         legs,
+        legActions: actions,
         loadFrom,
       });
     }

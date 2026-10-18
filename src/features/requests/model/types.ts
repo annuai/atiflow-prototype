@@ -1,3 +1,4 @@
+import type { CellPlan } from '@/features/master-data';
 /**
  * One request = one material for one trip. Several requests made together share a `groupId` (an order) only so the person can see they were made together;
  * from then on every request lives its own life: its own approval, its own trip, its own cancel.
@@ -27,9 +28,13 @@ export interface TripRequest {
   name: string;
   group: string;
   qty: number;
-  /** The stations of the workflow's flow and the leg from which the load is carried. */
+  /** The stations (and staging areas, SA-xxx) of the workflow's flow and the leg from which the load is carried. */
   legs: string[];
   loadFrom: number;
+  /** 'Pick Up' / 'Drop Off' of each leg (missing in older requests) */
+  legActions?: string[];
+  /** The staging-area cells this request holds (taken pieces, a reserved cell); settled when the trip ends. */
+  cells?: CellPlan;
   /** One approval per Tablet Confirm step of the workflow, in order: each is done by one of that step's approval users. The trip starts only after all are done. */
   approvals: ApprovalStep[];
   needsApproval: boolean;
@@ -63,6 +68,8 @@ export interface RequestableItem {
   needsApproval: boolean;
   legs: string[];
   loadFrom: number;
+  /** 'Pick Up' / 'Drop Off' of each leg */
+  legActions: string[];
   /** 'route' = a saved route (no material, quantity 1 in the cart, 0 on the request). */ kind?: 'route';
   robotType?: string;
 }

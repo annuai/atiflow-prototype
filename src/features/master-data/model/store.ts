@@ -3,9 +3,22 @@ import { registerStoreInit } from '@/data/storeInit';
 import { createPersister, withoutSaving } from '@/data/persist';
 import { useStore } from 'zustand';
 import { services } from '@/services';
-import { applyEdit, pushLog, releaseCells, normaliseAreas, type CellEdit, type CellError } from './cells';
+import {
+  applyEdit,
+  commitDrop,
+  giveBack,
+  normaliseAreas,
+  planPick,
+  pushLog,
+  releaseCells,
+  releaseDrop,
+  reserveDrop,
+  takePick,
+  type CellEdit,
+  type CellError,
+} from './cells';
 import { assignToFleet, ensureGroup, mergeMaterials, unassignFromFleet } from './logic';
-import type { IncomingMaterial, Material, MaterialGroup, StagingArea } from './types';
+import type { CellPlan, IncomingMaterial, Material, MaterialGroup, StagingArea } from './types';
 
 export interface MasterDataState {
   materials: Material[];
@@ -34,6 +47,27 @@ export interface MasterDataState {
     by: string,
     allowed?: ReadonlySet<string> | null,
   ): { error: CellError; key: string } | null;
+  /**
+   * A request takes material out of an area (pieces are removed now, in the area's FIFO / LIFO order) and / or reserves a cell in an area for what arrives. All or nothing: when an area does not
+   * hold enough, or is full, nothing changes and the reason is returned.
+   */
+  reserveForTrip(spec: {
+    tripId: string;
+    pick?: { area: StagingArea; code: string; qty: number };
+    drop?: { area: StagingArea; code: string; qty: number };
+  }):
+    | { ok: true; plan: CellPlan }
+    | {
+        ok: false;
+        reason: { kind: 'not-enough' | 'full'; areaId: string; areaName: string; code: string; have: number };
+      };
+  /** The trip is over: its material arrived (`committed`: the reserved cell is filled) or it will not happen (`released`: the pieces go back, the cell is free). */
+  settleTrip(
+    plan: CellPlan,
+    tripId: string,
+    how: 'committed' | 'released',
+    areas: (id: string) => StagingArea | undefined,
+  ): CellPlan;
   /** A person lets go of reservations. */
   releaseCells(area: StagingArea, keys: string[], by: string): void;
 }
@@ -98,6 +132,83 @@ export const masterDataStore = createStore<MasterDataState>((set, get) => {
       if (!r.ok) return { error: r.error, key: r.key };
       write(base, { cells: r.cells, log: pushLog(base.log, r.log) });
       return null;
+    },
+    reserveForTrip({ tripId, pick, drop }) {
+      const now = Date.now();
+      const stored = (id: string) => get().areas.find((a) => a.id === id)?.cells ?? {};
+      const plan: CellPlan = {};
+      // check both before changing anything
+      let pickItems: ReturnType<typeof planPick> = null;
+      if (pick) {
+        pickItems = planPick({ cells: stored(pick.area.id), retrieval: pick.area.retrieval }, pick.code, pick.qty);
+        if (!pickItems) {
+          const have = Object.values(stored(pick.area.id)).reduce(
+            (n, c) => n + (c.state === 'filled' && c.materialCode === pick.code ? (c.quantity ?? 1) : 0),
+            0,
+          );
+          return {
+            ok: false,
+            reason: { kind: 'not-enough', areaId: pick.area.id, areaName: pick.area.name, code: pick.code, have },
+          };
+        }
+      }
+      // (taking out first, so that a trip that picks up and drops off in the same area can use the room it makes)
+      let working: StagingArea | undefined;
+      if (pick && pickItems) {
+        const base = get().areas.find((a) => a.id === pick.area.id) ?? { ...pick.area, cells: {} };
+        const taken = takePick(base.cells, { areaId: pick.area.id, code: pick.code, items: pickItems }, tripId, now);
+        working = { ...base, cells: taken.cells, log: pushLog(base.log, taken.log) };
+        plan.pick = { areaId: pick.area.id, code: pick.code, items: pickItems };
+      }
+      let reservedKey: string | null = null;
+      if (drop) {
+        const same = working && working.id === drop.area.id;
+        const base = same ? working! : (get().areas.find((a) => a.id === drop.area.id) ?? { ...drop.area, cells: {} });
+        const r = reserveDrop(
+          { rows: drop.area.rows, cols: drop.area.cols, cells: base.cells },
+          drop.code,
+          drop.qty,
+          tripId,
+          now,
+        );
+        if (!r)
+          return {
+            ok: false,
+            reason: { kind: 'full', areaId: drop.area.id, areaName: drop.area.name, code: drop.code, have: 0 },
+          };
+        reservedKey = r.key;
+        const next = { ...base, cells: r.cells, log: pushLog(base.log, r.log) };
+        if (same) working = next;
+        else write(base, { cells: next.cells, log: next.log });
+        plan.drop = { areaId: drop.area.id, code: drop.code, key: r.key, qty: drop.qty };
+      }
+      if (working) write(working, { cells: working.cells, log: working.log });
+      void reservedKey;
+      return { ok: true, plan };
+    },
+    settleTrip(plan, tripId, how, areas) {
+      if (plan.settled) return plan;
+      const now = Date.now();
+      const rec = (id: string) =>
+        get().areas.find((a) => a.id === id) ?? (areas(id) ? { ...areas(id)!, cells: {} } : undefined);
+      if (plan.drop) {
+        const a = rec(plan.drop.areaId);
+        if (a) {
+          const r =
+            how === 'committed'
+              ? commitDrop(a.cells, plan.drop.key, tripId, now)
+              : releaseDrop(a.cells, plan.drop.key, tripId, now);
+          if (r.log.length) write(a, { cells: r.cells, log: pushLog(a.log, r.log) });
+        }
+      }
+      if (plan.pick && how === 'released') {
+        const a = rec(plan.pick.areaId);
+        if (a) {
+          const r = giveBack(a, plan.pick, tripId, now);
+          write(a, { cells: r.cells, log: pushLog(a.log, r.log) });
+        }
+      }
+      return { ...plan, settled: how };
     },
     releaseCells(area, keys, by) {
       const base = get().areas.find((a) => a.id === area.id) ?? { ...area, cells: {} };

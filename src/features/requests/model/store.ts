@@ -8,6 +8,7 @@ import { services } from '@/services';
 import type { RequestsDocument } from './schema';
 import { can } from '@/features/access';
 import { toPublic, userDirectory } from '@/features/auth';
+import { reserveCells, settleCells } from './cells';
 import { canApprove, canCancel, currentStep, isAllowedNext, type Person } from './rules';
 import type { CartLine, RequestableItem, RequestStatus, TripRequest } from './types';
 
@@ -88,6 +89,7 @@ export const requestsStore = createStore<RequestsState>((set, get) => ({
         ...(item.kind ? { kind: item.kind } : {}),
         ...(item.robotType ? { robotType: item.robotType } : {}),
         legs: item.legs,
+        legActions: item.legActions,
         loadFrom: item.loadFrom,
         approvals: item.approvalUsers.map((users) => ({ users })),
         needsApproval: item.needsApproval,
@@ -98,9 +100,13 @@ export const requestsStore = createStore<RequestsState>((set, get) => ({
         createdAt: now,
         tripId: tripIds.next(),
       };
+      // staging areas: take the material / reserve the cell now; when that cannot be done the request fails at once, saying why
+      const held = reserveCells(base);
+      if (held.failed) return { ...push(base, 'failed', now, 'Staging area', held.failed), note: held.failed };
+      const made = held.plan ? { ...base, cells: held.plan } : base;
       return item.needsApproval
-        ? push(base, 'pending', now, who.name)
-        : push(base, 'approved', now, 'No approval needed');
+        ? push(made, 'pending', now, who.name)
+        : push(made, 'approved', now, 'No approval needed');
     });
     set({ seq, requests: [...get().requests, ...made] });
     return groupId;
@@ -130,7 +136,9 @@ export const requestsStore = createStore<RequestsState>((set, get) => ({
     if (!r || !canApprove(r, who)) return false;
     set({
       requests: get().requests.map((x) =>
-        x.id === id ? { ...push(x, 'rejected', now, who.name, reason), note: reason } : x,
+        x.id === id
+          ? { ...push(x, 'rejected', now, who.name, reason), note: reason, cells: settleCells(x, 'released') }
+          : x,
       ),
     });
     return true;
@@ -138,7 +146,11 @@ export const requestsStore = createStore<RequestsState>((set, get) => ({
   cancel(id, who, now = Date.now()) {
     const r = get().requests.find((x) => x.id === id);
     if (!r || !canCancel(r, who)) return false;
-    set({ requests: get().requests.map((x) => (x.id === id ? push(x, 'cancelled', now, who.name) : x)) });
+    set({
+      requests: get().requests.map((x) =>
+        x.id === id ? { ...push(x, 'cancelled', now, who.name), cells: settleCells(x, 'released') } : x,
+      ),
+    });
     return true;
   },
   apply(u, now = Date.now()) {
@@ -155,6 +167,12 @@ export const requestsStore = createStore<RequestsState>((set, get) => ({
               tripId: u.tripId ?? x.tripId,
               robotId: u.robotId ?? x.robotId,
               note: u.reason ?? x.note,
+              cells:
+                to === 'completed'
+                  ? settleCells(x, 'committed')
+                  : to === 'failed'
+                    ? settleCells(x, 'released')
+                    : x.cells,
             }
           : x,
       ),

@@ -117,6 +117,8 @@ export const messages: Messages<typeof mapEditor> = {
       name: 'स्टेजिंग एरिया का नाम',
       id: 'ID',
       sherpa: 'शेरपा प्रकार',
+      entry: 'प्रवेश स्टेशन',
+      entryNone: 'कोई नहीं (वर्कफ़्लो इस एरिया का उपयोग नहीं कर सकते)',
       retrieval: 'निकासी क्रम',
       retrievalOptions: { fifo: 'FIFO (पहले आया, पहले गया)', lifo: 'LIFO (आख़िर में आया, पहले गया)' },
       rotation: 'घुमाव (°)',

@@ -466,6 +466,8 @@ export const insights = {
     'station.angle':
       'The direction the robot faces when it stops here, in degrees. 0° points east (right on the map), 90° points north (up).',
     'staging.sherpa': 'The type of robot that works this staging area.',
+    'staging.entry':
+      'The station a robot drives to for this staging area. Workflows can only use the area (Station step: pick up from / drop off at it) once it has one.',
     'staging.retrieval':
       'How the area gives its material out. FIFO: the material that has been in longest goes first. LIFO: the material put in last goes first. Every request follows this setting.',
     'staging.rotation': 'How the grid is turned on the map, in degrees. 0° runs the columns east (right).',

@@ -92,6 +92,12 @@ export const bookings = {
       workflow: 'Workflow',
       requestedBy: 'Requested by',
       route: 'Route',
+      cells: 'Staging area',
+      takenFrom: (area: string, list: string) => `Taken from ${area}: ${list}`,
+      storedIn: (area: string, where: string, done: boolean) =>
+        done ? `Stored in ${area}, ${where}` : `Will be stored in ${area}, ${where}`,
+      cellAt: (row: number, col: number) => `row ${row}, column ${col}`,
+      pieces: (n: number) => `${n} ${n === 1 ? 'piece' : 'pieces'}`,
       approvals: 'Approvals',
       step: (i: number, n: number) => `Approval ${i} of ${n}`,
       done: (by: string) => `Approved by ${by}`,

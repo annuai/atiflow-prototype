@@ -64,7 +64,17 @@ export interface StagingArea {
   rows: number;
   /** Cells that are not available, keyed "row-col" (1-based). A missing key means available. */
   cells: Record<string, StagingCell>;
+  /** the station robots drive to for this area: from the map, not stored here */
+  stationId?: string;
   /** how the area gives material out: NOT stored here, it is set in the Map Editor with the area (default FIFO) */
   retrieval?: Retrieval;
   log?: CellLogEntry[];
+}
+
+/** The cells a request holds, kept ON the request so they can be given back or committed later. Pick-up: the pieces taken out of cells at request time (nothing can be taken twice). Drop-off: one cell reserved for what arrives. */
+export interface CellPlan {
+  pick?: { areaId: string; code: string; items: { key: string; take: number; storedAt?: number }[] };
+  drop?: { areaId: string; code: string; key: string; qty: number };
+  /** set once it has been settled, so a late report cannot do it twice */
+  settled?: 'committed' | 'released';
 }

@@ -37,6 +37,21 @@ function Timeline({ events }: { events: StatusEvent[] }) {
 }
 
 /** What a history entry is now: its status in words, where it waits (and with whom), who and what it involves, and every step it went through. A request (material, called saved trip or one the person approved) or a trip booked by the person. */
+/** What the request did to the cells of staging areas, in words: where the pieces came from and where they go. */
+function cellsText(c: NonNullable<TripRequest['cells']>, done: boolean): string {
+  const d = copy.history.detail;
+  const at = (key: string) => {
+    const [row, col] = key.split('-').map(Number);
+    return d.cellAt(row, col);
+  };
+  return [
+    c.pick ? d.takenFrom(c.pick.areaId, c.pick.items.map((i) => `${d.pieces(i.take)} (${at(i.key)})`).join('; ')) : '',
+    c.drop ? d.storedIn(c.drop.areaId, at(c.drop.key), done) : '',
+  ]
+    .filter(Boolean)
+    .join('. ');
+}
+
 export function HistoryDetail({
   title,
   request,
@@ -75,6 +90,7 @@ export function HistoryDetail({
             {request && <Row label={d.workflow}>{request.workflowName}</Row>}
             <Row label={d.requestedBy}>{request ? request.requestedByName : trip?.bookedByName}</Row>
             <Row label={d.route}>{request ? request.legs.join(' → ') : `${trip?.fromName} → ${trip?.toName}`}</Row>
+            {request?.cells && <Row label={d.cells}>{cellsText(request.cells, request.status === 'completed')}</Row>}
           </dl>
           {request && request.approvals.length > 0 && (
             <section className="mt-4">

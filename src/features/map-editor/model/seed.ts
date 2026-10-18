@@ -22,6 +22,7 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
       cellLength: 1.2,
       cellWidth: 1,
       retrieval: 'fifo',
+      stationId: 'STA-116',
     },
     {
       id: 'SA-002',
@@ -35,6 +36,7 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
       cellLength: 1.2,
       cellWidth: 1,
       retrieval: 'lifo',
+      stationId: 'STA-117',
     },
   ],
   asrs: [
@@ -50,6 +52,7 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
       cellLength: 1.2,
       cellWidth: 1,
       retrieval: 'fifo',
+      stationId: 'STA-118',
     },
   ],
 };

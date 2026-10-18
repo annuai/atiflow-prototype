@@ -4,7 +4,7 @@ import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
-import { useFleetMaterialCodes } from '@/features/master-data';
+import { useFleetAreas, useFleetMaterialCodes } from '@/features/master-data';
 import { TagMultiSelect } from '@/components/form/TagMultiSelect';
 import { selectFleet, useWorkflow, wfStore } from '../model/store';
 import { useEligibleUsers } from '../model/users';
@@ -80,15 +80,19 @@ export function FieldControl({ node, spec, inBranch }: { node: WfNode; spec: Fie
   const set = wfStore.getState().setField;
   const materialCodes = useFleetMaterialCodes(useWorkflow(selectFleet));
   const stations = useFleetStations(useWorkflow(selectFleet));
-  const names = Object.fromEntries(stations.map((s) => [s.id, stationLabel(s)]));
   const fleet = useWorkflow(selectFleet);
+  const areas = useFleetAreas(fleet); // staging areas that have an entry station: a Station step can pick up from / drop off at one
+  const names = Object.fromEntries([
+    ...stations.map((s) => [s.id, stationLabel(s)]),
+    ...areas.map((a) => [a.id, `${a.id} · ${a.name}`]),
+  ]);
   const userOpts = useEligibleUsers(fleet, fd.optsFrom === 'approvalUsers' ? 'operator.approve' : 'operator.book-trip');
   if (fd.showIf && !fd.showIf(node)) return null;
   const opts =
     fd.optsFrom === 'fleetMaterials'
       ? materialCodes
       : fd.optsFrom === 'fleetStations'
-        ? stations.map((s) => s.id)
+        ? [...stations.map((s) => s.id), ...areas.map((a) => a.id)]
         : (fd.opts ?? []);
   const emptyHint =
     fd.optsFrom === 'fleetMaterials' && opts.length === 0

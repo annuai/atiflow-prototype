@@ -119,6 +119,8 @@ export const messages: Messages<typeof mapEditor> = {
       name: 'സ്റ്റേജിംഗ് ഏരിയയുടെ പേര്',
       id: 'ID',
       sherpa: 'ഷെർപ്പ തരം',
+      entry: 'എൻട്രി സ്റ്റേഷൻ',
+      entryNone: 'ഒന്നുമില്ല (വർക്ക്ഫ്ലോകൾക്ക് ഈ ഏരിയ ഉപയോഗിക്കാനാവില്ല)',
       retrieval: 'എടുക്കുന്ന ക്രമം',
       retrievalOptions: { fifo: 'FIFO (ആദ്യം വന്നത് ആദ്യം പോകും)', lifo: 'LIFO (അവസാനം വന്നത് ആദ്യം പോകും)' },
       rotation: 'തിരിവ് (°)',
