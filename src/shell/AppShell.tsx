@@ -7,7 +7,7 @@ import { workspaceById, workspaceHome, workspaceOfPath, workspacesOf, type Works
 import { authStore, useAuth } from '@/features/auth/authStore';
 import { AtiAiDock, atiAiStore } from '@/features/ati-ai';
 import { SupportWidget, toggleSupport, useSupportUnread } from '@/features/support';
-import { Sidebar } from './Sidebar';
+import { Sidebar } from './sidebar';
 import { Topbar } from './Topbar';
 import type { NavModel } from './types';
 import { copy } from './copy';
@@ -65,7 +65,7 @@ export function AppShell({ useNavModel, searchPlaceholder, children }: Props) {
         }
       />
       <AnimatePresence>
-        {navOpen && <Scrim key="scrim" className="scrim" onClick={() => setNavOpen(false)} />}
+        {navOpen && <Scrim key="scrim" className="sb-scrim" onClick={() => setNavOpen(false)} />}
       </AnimatePresence>
       <div className="main">
         <Topbar

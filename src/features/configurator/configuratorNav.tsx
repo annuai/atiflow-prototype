@@ -21,6 +21,7 @@ import { useUnreadCount } from '@/features/notifications';
 import { USERS_PATH } from '@/features/access';
 import { useAccess } from '@/features/auth';
 import { localized } from '@/i18n';
+import { SidebarButton } from '@/shell/sidebar';
 
 const nav = localized('nav');
 
@@ -42,15 +43,10 @@ function NewFleet() {
   };
   return (
     <>
-      <button className="sb-item" onClick={() => setOpen((o) => !o)}>
-        <span>
-          <img src={plusI} alt="" />
-          <span className="t">{nav.items.createFleet}</span>
-        </span>
-      </button>
+      <SidebarButton icon={plusI} label={nav.items.createFleet} onPress={() => setOpen((o) => !o)} />
       {open && (
         <form
-          className="new-fleet"
+          className="sb-new-fleet"
           onSubmit={(e) => {
             e.preventDefault();
             add();

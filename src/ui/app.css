@@ -32,181 +32,7 @@ img {
   gap: 0;
 }
 
-/* ---------- sidebar ---------- */
-.sidebar {
-  width: 280px;
-  flex: none;
-  transition: width 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  padding: var(--sp-2xl) 12px 12px;
-  border-radius: var(--r-xl);
-  color: var(--sb-text);
-  overflow: hidden;
-  .sidebar > * {
-    flex-shrink: 0;
-  } /* the logo, the workspace switcher and the footer (notifications, settings, account) never move or shrink */
-  background: var(--surface-sidebar);
-  box-shadow: 0 10px 15px rgba(15, 23, 32, 0.45);
-}
-.sb-ws {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 6px var(--sp-2xl);
-}
-.sb-logo {
-  display: flex;
-  align-items: center;
-  height: 32px;
-}
-.sb-logo img {
-  display: block;
-  height: 32px;
-  width: auto;
-}
-.sb-logo .sb-logo-mark {
-  display: none; /* only the narrow rail shows the plain Ati mark, with no "Flow" text */
-}
-.sb-ver {
-  background: rgba(94, 234, 212, 0.12);
-  color: var(--sb-accent);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 16px;
-  padding: 1px 6px;
-  border-radius: var(--r-sm);
-}
-.sb-switch {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  cursor: pointer;
-  text-align: left;
-}
-.sb-switch:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-.sb-head {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--r-lg);
-  padding: 8px 12px;
-  font-weight: 700;
-  color: var(--sb-text);
-}
-.sb-group {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-bottom: 6px;
-}
-.sb-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 8px 4px;
-  font-size: var(--text-xs);
-  line-height: var(--lh-xs);
-  font-weight: 500;
-  color: var(--sb-label);
-}
-.sb-label img {
-  width: 14px;
-  height: 14px;
-}
-.sb-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: var(--r-md);
-  border: 0;
-  border-left: 3px solid transparent;
-  background: none;
-  color: var(--sb-text);
-  font-weight: 500;
-  text-align: left;
-  width: 100%;
-  justify-content: space-between;
-}
-.sb-item > span {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.sb-item img {
-  width: 16px;
-  height: 16px;
-}
-.sb-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-.sb-item {
-  position: relative;
-}
-.sb-item.active {
-  font-weight: 600;
-}
-/* the highlight is one element that slides from the old item to the new one (motion layoutId), not a style of the item */
-.sb-pill {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: var(--r-lg);
-  border-left: 3px solid var(--sb-accent);
-  background: linear-gradient(90deg, rgba(94, 234, 212, 0.18), rgba(94, 234, 212, 0.06));
-  pointer-events: none;
-}
-.sb-item > span,
-.sb-item .sb-badge {
-  position: relative;
-  z-index: 1;
-}
-.sb-item .t {
-  white-space: nowrap;
-  overflow: hidden;
-  max-width: 220px;
-  transition:
-    opacity 0.15s ease,
-    max-width 0.2s ease;
-}
-/* the part between the workspace switcher and the footer: when there are more items than fit it scrolls (swipe up) and only it scrolls */
-.sidebar > .sb-scroll {
-  flex: 1 1 0;
-  min-height: 12px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.sb-scroll::-webkit-scrollbar {
-  display: none;
-}
-.sb-foot {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.sb-user {
-  width: 100%;
-  text-align: left;
-  border: 0;
-  cursor: pointer;
-  color: inherit;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
-  padding: 10px 6px 4px;
-  margin-top: 4px;
-}
+/* ---------- avatar (legacy, used by the Live Floor chips) ---------- */
 .avatar {
   position: relative;
   width: 40px;
@@ -229,17 +55,6 @@ img {
   border-radius: 50%;
   background: var(--fg-success);
   border: 1.5px solid #fff;
-}
-.sb-user b {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
-  display: block;
-}
-.sb-user small {
-  font-size: 12px;
-  line-height: 16px;
-  display: block;
 }
 
 /* ---------- main ---------- */
@@ -702,55 +517,15 @@ img {
 }
 
 /* ---------- responsive ---------- */
-.menu-btn,
-.sb-close,
-.scrim {
+.menu-btn {
   display: none;
 }
 @media (max-width: 1024px) {
   .app {
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
-  .sidebar {
-    position: fixed;
-    z-index: 60;
-    left: 8px;
-    top: 8px;
-    bottom: 8px;
-    width: min(300px, calc(100vw - 16px));
-    transform: translateX(-115%);
-    transition: transform 0.25s ease;
-  }
-  .sidebar.open {
-    transform: none;
-  }
-  .sb-close {
-    display: grid;
-    place-items: center;
-    position: absolute;
-    top: 14px;
-    right: 12px;
-    width: 28px;
-    height: 28px;
-    border: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--sb-text);
-    font-size: 18px;
-    z-index: 2;
-  }
-  .scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 32, 0.45);
-    z-index: 55;
-  }
   .menu-btn {
     display: grid;
-  }
-  .sb-ver {
-    display: none;
   }
   .topbar {
     padding: 0 12px;
@@ -979,98 +754,6 @@ img {
   }
 }
 
-/* ---------- collapsible sidebar (desktop only; <=1024px uses the drawer) ---------- */
-.sb-collapse {
-  margin-left: 8px;
-  width: 24px;
-  height: 24px;
-  flex: none;
-  border: 0;
-  border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--sb-text);
-  font-size: 16px;
-  line-height: 1;
-  display: grid;
-  place-items: center;
-}
-.sb-collapse:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-.sb-ws {
-  gap: 4px;
-}
-.sb-ws .sb-ver {
-  margin-left: auto;
-}
-@media (min-width: 1025px) {
-  .sidebar.collapsed {
-    width: 72px;
-    padding-left: 8px;
-    padding-right: 8px;
-  }
-  .sidebar.collapsed .sb-ver,
-  .sidebar.collapsed .sb-head,
-  .sidebar.collapsed .sb-label {
-    display: none;
-  }
-  .sidebar.collapsed .sb-logo .sb-logo-full {
-    display: none;
-  }
-  .sidebar.collapsed .sb-logo .sb-logo-mark {
-    display: block;
-  }
-  .sidebar.collapsed .sb-ws {
-    flex-direction: column;
-    gap: 10px;
-    padding: 0 0 var(--sp-2xl);
-  }
-  .sidebar.collapsed .sb-ws .sb-collapse {
-    margin: 0;
-  }
-  .sidebar.collapsed .sb-item {
-    justify-content: center;
-    padding: 9px 0;
-    border-left-width: 0;
-    position: relative;
-  }
-  .sidebar.collapsed .sb-item > span {
-    gap: 0;
-  }
-  .sidebar.collapsed .t:not(.sb-item .t) {
-    display: none;
-  }
-  .sidebar.collapsed .sb-item .t {
-    opacity: 0;
-    max-width: 0;
-  } /* labels fade while the rail narrows */
-  .sidebar.collapsed .sb-pill {
-    border-left-width: 0;
-  }
-  .sidebar.collapsed .sb-item .sb-badge-pop {
-    position: absolute;
-    top: 0;
-    right: 6px;
-    z-index: 2;
-  }
-  .sidebar.collapsed .sb-group {
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-  }
-  .sidebar.collapsed .sb-group:first-of-type {
-    border-top: 0;
-  }
-  .sidebar.collapsed .sb-user {
-    justify-content: center;
-    padding: 8px 0;
-  }
-}
-@media (max-width: 1024px) {
-  .sb-collapse {
-    display: none;
-  }
-}
-
 /* ---------- Untitled UI integration ---------- */
 .counts .cnt {
   border: 0;
@@ -1128,7 +811,6 @@ body {
   user-select: none;
 } /* all gestures belong to the 3D view */
 .float,
-.sidebar,
 .topbar,
 [data-card-header] {
   -webkit-user-select: none;
@@ -1200,9 +882,6 @@ body {
 }
 @media (pointer: coarse) {
   /* comfortable thumb targets (>= 40-48 px) */
-  .sb-item {
-    min-height: 46px;
-  }
   .ritem {
     min-height: 50px;
   }
@@ -1226,10 +905,6 @@ body {
     width: 168px;
     height: 56px;
   }
-  .sb-close {
-    width: 40px;
-    height: 40px;
-  }
   .modes {
     gap: 6px;
   }
@@ -1248,23 +923,6 @@ body {
 }
 
 /* shell: account menu trigger + collapsible group labels */
-.sb-user:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-.sb-user:focus-visible {
-  outline: 2px solid var(--sb-accent);
-  outline-offset: 2px;
-}
-.sb-label {
-  width: 100%;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  text-align: left;
-}
-.sb-label:hover {
-  color: var(--sb-text);
-}
 
 .zoom .zpct {
   min-width: 46px;
@@ -1280,20 +938,6 @@ body {
 }
 .zoom .zpct:hover {
   background: var(--bg-tertiary);
-}
-
-/* configurator sidebar: inline "new fleet" form (hidden when the sidebar is collapsed) */
-.new-fleet {
-  display: flex;
-  gap: 6px;
-  padding: 4px 4px 6px;
-}
-.new-fleet > div {
-  flex: 1;
-  min-width: 0;
-}
-.sidebar.collapsed .new-fleet {
-  display: none;
 }
 
 /* trip section in the robot window */
@@ -1361,10 +1005,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
     animation: none;
-  }
-  .sidebar,
-  .sb-item .t {
-    transition: none;
   }
 }
 

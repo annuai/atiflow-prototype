@@ -26,3 +26,20 @@ describe('page cards', () => {
     ).toEqual([]);
   });
 });
+
+/** The sidebar's styles live in `shell/sidebar/sidebar.css` only; its state is `data-*` attributes, not extra classes. */
+describe('sidebar', () => {
+  const files = walk('src');
+  it('only sidebar.css styles the sidebar', () => {
+    const offenders = files
+      .filter((f) => f.endsWith('.css') && !f.endsWith('shell/sidebar/sidebar.css'))
+      .filter((f) => /(^|[\s,}])\.(sidebar|sb-[a-z-]+|scrim)\b/m.test(readFileSync(f, 'utf8')));
+    expect(offenders).toEqual([]);
+  });
+  it('no component sets the old state classes', () => {
+    const offenders = files.filter((f) =>
+      /className=[^\n]*'sidebar'|sidebar open|sidebar collapsed|sb-item active/.test(readFileSync(f, 'utf8')),
+    );
+    expect(offenders).toEqual([]);
+  });
+});

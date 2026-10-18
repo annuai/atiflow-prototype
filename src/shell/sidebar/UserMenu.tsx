@@ -3,7 +3,7 @@ import { LogOut01 } from '@untitledui/icons';
 import { Avatar } from '@/components/base/avatar/avatar';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
 import type { PublicUser } from '@/features/auth/types';
-import { copy } from './copy';
+import { copy } from '../copy';
 import { copy as floor } from '@/ui/copy';
 
 /** Avatar block at the bottom of the sidebar. Click opens an account menu with Log out. */

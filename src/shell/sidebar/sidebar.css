@@ -1,0 +1,368 @@
+/*
+ * THE sidebar's styles: every rule of the sidebar (and the drawer it becomes on small screens) is here and nowhere else, so changing it never means hunting through app.css.
+ * Imported by `Sidebar.tsx`. State comes from attributes the components set (`data-open`, `data-collapsed`, `data-active`), not from extra classes. Class names are prefixed `sb-`.
+ * Sections: surface, header, groups and items, footer and account, collapsed rail (desktop), drawer (<= 1024 px), touch, reduced motion.
+ */
+
+/* ---------- surface ---------- */
+.sidebar {
+  width: 280px;
+  flex: none;
+  transition: width 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-2xl) 12px 12px;
+  border-radius: var(--r-xl);
+  color: var(--sb-text);
+  overflow: hidden;
+  background: var(--surface-sidebar);
+  box-shadow: 0 10px 15px rgba(15, 23, 32, 0.45);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* the logo, the workspace switcher and the footer (notifications, settings, account) never move or shrink; only the middle scrolls */
+.sidebar > * {
+  flex-shrink: 0;
+}
+.sidebar > .sb-scroll {
+  flex: 1 1 0;
+  min-height: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.sb-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------- header: logo, version, collapse button, workspace switcher ---------- */
+.sb-ws {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 0 6px var(--sp-2xl);
+}
+.sb-logo {
+  display: flex;
+  align-items: center;
+  height: 32px;
+}
+.sb-logo img {
+  display: block;
+  height: 32px;
+  width: auto;
+}
+.sb-logo .sb-logo-mark {
+  display: none; /* only the narrow rail shows the plain Ati mark, with no "Flow" text */
+}
+.sb-ver {
+  margin-left: auto;
+  background: rgba(94, 234, 212, 0.12);
+  color: var(--sb-accent);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  padding: 1px 6px;
+  border-radius: var(--r-sm);
+}
+.sb-collapse {
+  margin-left: 8px;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--sb-text);
+  font-size: 16px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+.sb-collapse:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.sb-head {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--r-lg);
+  padding: 8px 12px;
+  font-weight: 700;
+  color: var(--sb-text);
+}
+.sb-switch {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+.sb-switch:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- groups and items ---------- */
+.sb-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 6px;
+}
+.sb-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px 8px 4px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+  font-weight: 500;
+  color: var(--sb-label);
+}
+.sb-label:hover {
+  color: var(--sb-text);
+}
+.sb-label img {
+  width: 14px;
+  height: 14px;
+}
+.sb-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--sb-text);
+  font-weight: 500;
+  text-align: left;
+}
+.sb-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.sb-item[data-active] {
+  font-weight: 600;
+}
+.sb-item > span {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sb-item img {
+  width: 16px;
+  height: 16px;
+}
+.sb-item .sb-badge {
+  position: relative;
+  z-index: 1;
+}
+.sb-item .t {
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 220px;
+  transition:
+    opacity 0.15s ease,
+    max-width 0.2s ease;
+}
+/* the highlight is one element that slides from the old item to the new one (motion layoutId), not a style of the item */
+.sb-pill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--r-lg);
+  border-left: 3px solid var(--sb-accent);
+  background: linear-gradient(90deg, rgba(94, 234, 212, 0.18), rgba(94, 234, 212, 0.06));
+  pointer-events: none;
+}
+/* the configurator's inline "new fleet" form */
+.sb-new-fleet {
+  display: flex;
+  gap: 6px;
+  padding: 4px 4px 6px;
+}
+.sb-new-fleet > div {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- footer and account ---------- */
+.sb-foot {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sb-user {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 10px 6px 4px;
+  margin-top: 4px;
+}
+.sb-user:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.sb-user:focus-visible {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: 2px;
+}
+.sb-user b {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  display: block;
+}
+.sb-user small {
+  font-size: 12px;
+  line-height: 16px;
+  display: block;
+}
+
+/* ---------- collapsed rail (desktop only; on small screens the drawer is used instead) ---------- */
+@media (min-width: 1025px) {
+  .sidebar[data-collapsed] {
+    width: 72px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .sidebar[data-collapsed] .sb-ver,
+  .sidebar[data-collapsed] .sb-head,
+  .sidebar[data-collapsed] .sb-label,
+  .sidebar[data-collapsed] .sb-new-fleet,
+  .sidebar[data-collapsed] .sb-user .t,
+  .sidebar[data-collapsed] .sb-logo .sb-logo-full {
+    display: none;
+  }
+  .sidebar[data-collapsed] .sb-logo .sb-logo-mark {
+    display: block;
+  }
+  .sidebar[data-collapsed] .sb-ws {
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 0 var(--sp-2xl);
+  }
+  .sidebar[data-collapsed] .sb-ws .sb-collapse {
+    margin: 0;
+  }
+  .sidebar[data-collapsed] .sb-item {
+    justify-content: center;
+    padding: 9px 0;
+    border-left-width: 0;
+  }
+  .sidebar[data-collapsed] .sb-item > span {
+    gap: 0;
+  }
+  .sidebar[data-collapsed] .sb-item .t {
+    opacity: 0;
+    max-width: 0;
+  } /* labels fade while the rail narrows */
+  .sidebar[data-collapsed] .sb-pill {
+    border-left-width: 0;
+  }
+  .sidebar[data-collapsed] .sb-item .sb-badge-pop {
+    position: absolute;
+    top: 0;
+    right: 6px;
+    z-index: 2;
+  }
+  .sidebar[data-collapsed] .sb-group {
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .sidebar[data-collapsed] .sb-group:first-of-type {
+    border-top: 0;
+  }
+  .sidebar[data-collapsed] .sb-user {
+    justify-content: center;
+    padding: 8px 0;
+  }
+}
+
+/* ---------- drawer (<= 1024 px): the sidebar slides in over the page, a dim layer behind it ---------- */
+.sb-close,
+.sb-scrim {
+  display: none;
+}
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    z-index: 60;
+    left: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: min(300px, calc(100vw - 16px));
+    transform: translateX(-115%);
+    transition: transform 0.25s ease;
+  }
+  .sidebar[data-open] {
+    transform: none;
+  }
+  .sb-close {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    top: 14px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--sb-text);
+    font-size: 18px;
+    z-index: 2;
+  }
+  .sb-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 32, 0.45);
+    z-index: 55;
+  }
+  .sb-ver,
+  .sb-collapse {
+    display: none;
+  }
+}
+
+/* ---------- touch and motion preferences ---------- */
+@media (pointer: coarse) {
+  .sb-item {
+    min-height: 46px; /* comfortable thumb target */
+  }
+  .sb-close {
+    width: 40px;
+    height: 40px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sb-item .t {
+    transition: none;
+  }
+}
