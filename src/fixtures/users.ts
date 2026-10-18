@@ -3,6 +3,9 @@ import type { UserRecord } from '@/features/auth/types';
 import arjun from './avatars/arjun.png';
 import kavin from './avatars/kavin.png';
 import meera from './avatars/meera.png';
+import rohan from './avatars/rohan.png';
+import sneha from './avatars/sneha.png';
+import vikram from './avatars/vikram.png';
 
 /**
  * DUMMY DATA. The STARTING users (the live list is the editable directory, `features/auth/userDirectory.ts`, which the Users page manages). Example e-mail addresses are
@@ -73,7 +76,7 @@ export const SEED_REVISION = 8;
 export const SEED_GRANTS: Record<string, { since: number; permissions: string[] }> = {
   sneha: { since: 8, permissions: ['operator.approve'] },
 };
-export const AVATARS: Record<string, string> = { arjun, kavin, meera };
+export const AVATARS: Record<string, string> = { arjun, kavin, meera, rohan, sneha, vikram };
 
 /** DUMMY credentials of the starting users (plain text on purpose, prototype only). Read by the dummy sign-in service and by nothing else. */
 export const SEED_CREDENTIALS: Record<string, string> = Object.fromEntries(SEED_USERS.map((u) => [u.username, '1234']));
