@@ -2,7 +2,7 @@ import { USERS_PATH, WORKSPACES } from '@/features/access';
 import { localized } from '@/i18n';
 
 /** The product name: never translated. */
-export const BRAND = 'Ati Flow';
+const BRAND = 'Ati Flow';
 const names = localized('nav');
 const auth = localized('auth');
 const floor = localized('floor');

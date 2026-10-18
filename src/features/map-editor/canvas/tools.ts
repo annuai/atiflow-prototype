@@ -31,7 +31,7 @@ export function drawMode(t: Tool): 'none' | 'one' | 'two' | 'many' {
 }
 
 /** What each module lets you draw (the arrow next to its icon): ids are the `choice`. Labels come from `copy`/the zone registry. */
-export const CHOICES: Record<Exclude<Module, 'zones'>, string[]> = {
+const CHOICES: Record<Exclude<Module, 'zones'>, string[]> = {
   stations: ['station', 'staging'],
   routes: ['road', 'one-way'],
   exclusive: ['line', 'box'],

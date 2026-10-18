@@ -13,8 +13,8 @@ import type { AuthService, SessionService, UserService } from '../ports';
  */
 export const USERS_KEY = 'atiflow.users.v1';
 export const CREDENTIALS_KEY = 'atiflow.credentials.v1';
-export const SEED_REVISION_KEY = 'atiflow.users.seedRevision';
-export const SESSION_KEY = 'atiflow.session';
+const SEED_REVISION_KEY = 'atiflow.users.seedRevision';
+const SESSION_KEY = 'atiflow.session';
 
 const UserSchema = z.object({
   username: z.string(),

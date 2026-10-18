@@ -19,11 +19,3 @@ export interface NavModel {
   groups: NavGroup[];
   footerItems: NavItem[];
 }
-export interface SearchHit {
-  kind: string;
-  title: string;
-  sub?: string;
-  go?(): void;
-  /** Route to open (the top bar navigates there), with optional router state. */ to?: string;
-  state?: unknown;
-}

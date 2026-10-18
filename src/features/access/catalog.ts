@@ -126,9 +126,6 @@ export const WORKSPACES: Workspace[] = RAW.map((w) => {
 
 export const ALL_PERMISSIONS: PermissionId[] = WORKSPACES.flatMap((w) => w.features.map((f) => f.id));
 export const workspaceById = (id: WorkspaceId): Workspace => WORKSPACES.find((w) => w.id === id)!;
-export const featureById = (id: PermissionId): Feature | undefined =>
-  WORKSPACES.flatMap((w) => w.features).find((f) => f.id === id);
-export const workspaceOfPermission = (id: PermissionId): WorkspaceId => id.split('.')[0] as WorkspaceId;
 
 /** Pages that exist for a signed-in user outside any permission (the Users page has its own capability: see policy.ts). */
 export const USERS_PATH = '/configurator/users';

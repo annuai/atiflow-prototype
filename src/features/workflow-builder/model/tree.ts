@@ -13,7 +13,7 @@ export interface Problem {
   body: string;
 }
 
-export const listByKey = (nodes: WfNode[], key: ListKey): WfNode[] | null => {
+const listByKey = (nodes: WfNode[], key: ListKey): WfNode[] | null => {
   if (key === 'main') return nodes;
   const [id, b] = key.split(':');
   const n = nodes.find((x) => x.id === id);
@@ -32,7 +32,7 @@ export function locate(nodes: WfNode[], id: string): Located | null {
   return null;
 }
 /** Insert position in the main flow: after Start, before End. */
-export function clampMain(nodes: WfNode[], i: number) {
+function clampMain(nodes: WfNode[], i: number) {
   const hasEnd = nodes.length > 0 && nodes[nodes.length - 1].t === 'end';
   return Math.max(1, Math.min(i, hasEnd ? nodes.length - 1 : nodes.length));
 }

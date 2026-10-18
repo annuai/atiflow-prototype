@@ -1,6 +1,6 @@
 # Global Search: design (for sign-off)
 
-Status: **proposal, nothing built yet.** Decisions already taken with the user: client-side providers behind an interface (no backend), current site only, reuse the existing permission checks, live robot / trip data, one input for palette and results page, replace the top-bar search and the Live Floor search box (page filters stay), analytics = placeholder, recent searches per person through the `device` service, five-language chrome, **build "Send to charger"**, do **not** build "send a robot to a location" (operators do it from Book trip).
+Status: **built** (CLAUDE.md section 69; what is not built is listed in section 5 below). The design text that follows is the original proposal. Decisions already taken with the user: client-side providers behind an interface (no backend), current site only, reuse the existing permission checks, live robot / trip data, one input for palette and results page, replace the top-bar search and the Live Floor search box (page filters stay), analytics = placeholder, recent searches per person through the `device` service, five-language chrome, **build "Send to charger"**, do **not** build "send a robot to a location" (operators do it from Book trip).
 
 ## 1. What changes for people
 

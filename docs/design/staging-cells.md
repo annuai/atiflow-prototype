@@ -1,6 +1,6 @@
 # Staging area cells hold materials: design
 
-Status: PROPOSAL, nothing built yet. Written after reading the current Master Data staging code. Decisions that need the product owner are marked **Q1-Q6** (see the end).
+Status: **built** (phases 1 and 2, see section 13; CLAUDE.md section 82). Written after reading the Master Data staging code; the product owner's decisions are in section 9.
 
 ## 1. What exists today
 

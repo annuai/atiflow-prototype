@@ -12,7 +12,7 @@ export interface JobState {
   done: number;
 }
 const IDLE: JobState = { status: 'idle', fileName: '', total: 0, done: 0 };
-export const jobStore = createStore<JobState>(() => IDLE);
+const jobStore = createStore<JobState>(() => IDLE);
 export const useImportJob = <T>(sel: (s: JobState) => T) => useStore(jobStore, sel);
 
 const TICKS = 12,

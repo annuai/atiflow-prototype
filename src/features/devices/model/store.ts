@@ -27,4 +27,3 @@ export const useDevices = <T>(sel: (s: Facade) => T): T => {
     hardware = useDataset((s) => s.hardware);
   return sel({ ...view(datasetStore.getState()), robot, hardware });
 };
-export type DeviceState = Facade;

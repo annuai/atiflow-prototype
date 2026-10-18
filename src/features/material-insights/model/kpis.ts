@@ -93,6 +93,3 @@ export function series(
   }
   return { bucket: oneDay ? 'hour' : 'day', points };
 }
-
-/** Whole minutes for display ("4 min", "1 h 5 min"): the words come from the caller. */
-export const roundMinutes = (m: number | null) => (m === null ? null : Math.max(0, Math.round(m)));

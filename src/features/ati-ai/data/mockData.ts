@@ -4,7 +4,7 @@ import type { Range, WorkflowDraft } from '../types';
  * ALL the dummy numbers of the assistant's supervisor and configurator answers, in one place and internally consistent: the daily series, the shift, the robot failures and the sample
  * workflows below describe the same fictional fortnight, so every answer agrees with the others. Operator answers use the app's own live data instead (see `useAiContext`).
  */
-export const DAYS = 30;
+const DAYS = 30;
 /** Small deterministic generator: the same numbers on every run. */
 function rng(seed: number) {
   let s = seed >>> 0;
@@ -26,15 +26,12 @@ export const TRIPS_PER_DAY = Array.from({ length: DAYS }, (_, i) => {
   const v = Math.round(base + (r() - 0.5) * 50 + i * 1.2);
   return i === 28 ? Math.round(v * 0.72) : v;
 });
-export const IDLE_PCT_PER_DAY = Array.from(
-  { length: DAYS },
-  (_, i) => Math.round((i === 28 ? 31 : 18 + r() * 6) * 10) / 10,
-);
-export const AVAILABILITY_PER_DAY = Array.from(
+const IDLE_PCT_PER_DAY = Array.from({ length: DAYS }, (_, i) => Math.round((i === 28 ? 31 : 18 + r() * 6) * 10) / 10);
+const AVAILABILITY_PER_DAY = Array.from(
   { length: DAYS },
   (_, i) => Math.round((i === 28 ? 88 : 95 + r() * 3) * 10) / 10,
 );
-export const SLA_PER_DAY = Array.from({ length: DAYS }, (_, i) => Math.round((i === 28 ? 79 : 90 + r() * 6) * 10) / 10);
+const SLA_PER_DAY = Array.from({ length: DAYS }, (_, i) => Math.round((i === 28 ? 79 : 90 + r() * 6) * 10) / 10);
 /** Today so far, by hour from 06:00 (one shift): trips finished. */
 export const SHIFT_HOURS = ['06', '07', '08', '09', '10', '11', '12', '13'];
 export const SHIFT_TRIPS = [38, 44, 49, 47, 52, 41, 36, 45];

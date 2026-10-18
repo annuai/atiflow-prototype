@@ -6,10 +6,10 @@ import { cellState } from '../model/cellStates';
 import type { StagingArea, StagingCell } from '../model/types';
 
 /** The few characters that tell a material apart inside a 52 px cell: the part of its code after the last dash ("DCP-1003" -> "1003"). */
-export const shortCode = (code: string) => (code.split('-').pop() || code).slice(0, 6);
+const shortCode = (code: string) => (code.split('-').pop() || code).slice(0, 6);
 
 /** What a screen reader and the tooltip say about a cell beyond its state. */
-export function cellDetail(c: StagingCell | undefined, names: ReadonlyMap<string, string>): string | undefined {
+function cellDetail(c: StagingCell | undefined, names: ReadonlyMap<string, string>): string | undefined {
   if (!c) return undefined;
   if (c.state === 'blocked') return c.reason;
   if (!c.materialCode) return c.state === 'filled' ? copy.staging.cell.notSet : undefined;

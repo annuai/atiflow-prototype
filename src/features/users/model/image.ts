@@ -1,7 +1,7 @@
 /** Profile pictures: what is accepted, and shrinking a chosen photo to a small square so it fits in the saved user list. */
 export const AVATAR_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
-export const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
-export const AVATAR_SIZE = 256;
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+const AVATAR_SIZE = 256;
 
 export const validAvatarFile = (f: { type: string; size: number }) =>
   AVATAR_TYPES.includes(f.type) && f.size <= AVATAR_MAX_BYTES;

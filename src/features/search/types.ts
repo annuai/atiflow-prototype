@@ -85,7 +85,7 @@ export interface SearchResultPage {
   /** the closest known word when nothing matched */ didYouMean?: string;
   /** an exact ID was typed: this result is pinned and Enter opens it */ exact?: SearchResult;
 }
-export interface Suggestion {
+interface Suggestion {
   text: string;
   type?: EntityType;
 }

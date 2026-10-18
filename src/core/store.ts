@@ -3,7 +3,7 @@ import { useStore } from 'zustand';
 import { RulesIndex, type TrafficZoneState } from './rules';
 import type { CameraMode, FleetDef, LayerKey, NavGraph, RobotTelemetry, SiteLayout } from './types';
 
-export interface AppEvent {
+interface AppEvent {
   ts: number;
   robotId: string;
   text: string;

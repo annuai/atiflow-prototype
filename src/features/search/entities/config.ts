@@ -1,4 +1,4 @@
-import { Cube01, Flag01, Users01, GitBranch01, Map01, Settings01, Server01, Hash02 } from '@untitledui/icons';
+import { Cube01, Flag01, Users01, GitBranch01, Map01, Server01, Hash02 } from '@untitledui/icons';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { datasetStore } from '@/data/dataset';
 import { USERS_PATH } from '@/features/access';
@@ -318,4 +318,3 @@ export const metricEntity: SearchEntity<(typeof METRICS)[keyof typeof METRICS]> 
     { id: 'open', label: copy.actions.open, kind: 'navigate', url: '/supervisor/reports', primary: true },
   ],
 };
-export const SettingsIcon = Settings01;

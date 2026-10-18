@@ -29,13 +29,4 @@ export const STATUS: Record<RequestStatus, StatusDef> = {
   rejected: status('rejected', 'error', false, true),
   failed: status('failed', 'error', false, true),
 };
-export const STATUS_ORDER: RequestStatus[] = [
-  'pending',
-  'approved',
-  'ongoing',
-  'completed',
-  'cancelled',
-  'rejected',
-  'failed',
-];
 export const isActive = (s: RequestStatus) => !STATUS[s].terminal;

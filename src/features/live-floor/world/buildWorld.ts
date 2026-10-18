@@ -31,7 +31,7 @@ export interface Structure {
   equipment: SiteLayout['equipment'];
   floorPolygons: SiteLayout['floorPolygons'];
 }
-export type NotRunning = 'no-map' | 'not-published' | 'no-network';
+type NotRunning = 'no-map' | 'not-published' | 'no-network';
 export interface World {
   /** Everything on one floor (the base site and every placed map): what the simulation and the rules checker run on. */
   site: SiteLayout;
@@ -51,7 +51,7 @@ const navId = (f: FleetRecord) => f.liveId ?? f.id;
 const uniq = <T>(a: T[]) => [...new Set(a)];
 
 /** A map is something robots can drive on when it has roads and at least two stations that have a position. */
-export const hasNetwork = (d: MapData) => d.lanes.length > 0 && d.stations.filter((s) => !s.unplaced).length >= 2;
+const hasNetwork = (d: MapData) => d.lanes.length > 0 && d.stations.filter((s) => !s.unplaced).length >= 2;
 
 const retag = (fleets: string[], from: string, to: string[]) => uniq(fleets.flatMap((f) => (f === from ? to : [f])));
 

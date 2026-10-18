@@ -25,7 +25,3 @@ export class NotificationCenter {
     return this.items.filter((n) => !n.read).length;
   }
 }
-
-export const isNotificationList = (v: unknown): v is AppNotification[] =>
-  Array.isArray(v) &&
-  v.every((n) => n && typeof n.id === 'string' && typeof n.title === 'string' && typeof n.at === 'number');

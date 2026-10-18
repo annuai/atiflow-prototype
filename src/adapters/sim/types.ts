@@ -5,7 +5,7 @@ import type { TripIdSource } from '../../data/tripIds';
 export type Circle = { x: number; y: number; r: number };
 export type Pose = { x: number; y: number; th: number };
 /** One permit request along a route: the traffic zones and intersections it passes through, within `GROUP_GAP` of each other, taken all together or not at all. */
-export interface Span {
+interface Span {
   id: string;
   exitS: number;
   lanes?: string[];

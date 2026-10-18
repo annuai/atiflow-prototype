@@ -27,7 +27,7 @@ import { SidebarButton } from '@/shell/sidebar';
 const nav = localized('nav');
 
 export const SETTINGS_PATH = '/configurator/settings';
-export const WORKFLOWS_PATH = '/configurator'; // "Workflows": opens a new workflow; /configurator/workflows/<id> shows one
+const WORKFLOWS_PATH = '/configurator'; // "Workflows": opens a new workflow; /configurator/workflows/<id> shows one
 
 /** "Create new fleet" row + inline name form (sidebar group extra). Creating a fleet opens its fleet page. */
 function NewFleet() {

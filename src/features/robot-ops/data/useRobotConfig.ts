@@ -69,4 +69,3 @@ export function useRobotConfig(robot: RobotRef) {
     },
   };
 }
-export type RobotConfigSession = ReturnType<typeof useRobotConfig>;

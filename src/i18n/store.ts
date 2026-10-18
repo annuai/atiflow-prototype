@@ -20,7 +20,7 @@ export async function showLocale(next: LocaleId) {
   await loadCatalog(next);
   if (wanted === next) setLocale(next);
 }
-export const subscribeLocale = (cb: () => void) => {
+const subscribeLocale = (cb: () => void) => {
   listeners.add(cb);
   return () => listeners.delete(cb);
 };

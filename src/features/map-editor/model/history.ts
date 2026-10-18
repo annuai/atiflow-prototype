@@ -8,7 +8,7 @@ export interface History<T> {
   key?: string;
   at: number;
 }
-export const MAX_STEPS = 100,
+const MAX_STEPS = 100,
   COALESCE_MS = 700;
 export const emptyHistory = <T>(): History<T> => ({ past: [], future: [], at: 0 });
 

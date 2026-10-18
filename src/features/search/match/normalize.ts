@@ -13,7 +13,7 @@ const WORDS: Record<string, string> = {
   ten: '10',
 };
 /** Words that mean the same (the first is what they all become). Add a synonym here and nowhere else. */
-export const ALIASES: string[][] = [
+const ALIASES: string[][] = [
   ['robot', 'amr', 'bot', 'sherpa'],
   ['trip', 'trp', 'journey'],
   ['line', 'l', 'bay'],

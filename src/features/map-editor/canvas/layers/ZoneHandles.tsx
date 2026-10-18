@@ -26,7 +26,7 @@ const ROTATE_ARROW =
     })
     .join('') +
   '</svg>';
-export const ROTATE_CURSOR = `url("data:image/svg+xml,${ROTATE_ARROW.replace(/"/g, "'").replace(/#/g, '%23').replace(/</g, '%3C').replace(/>/g, '%3E')}") 12 12, grab`;
+const ROTATE_CURSOR = `url("data:image/svg+xml,${ROTATE_ARROW.replace(/"/g, "'").replace(/#/g, '%23').replace(/</g, '%3C').replace(/>/g, '%3E')}") 12 12, grab`;
 
 type Vp = ReturnType<typeof useViewport>;
 type P = [number, number];

@@ -6,7 +6,7 @@ import type { ZoneProp, ZoneTypeId } from './types';
  * kind of zone is one more entry here. `code` is the name the fleet manager uses for it. Today every type in the Zones menu has a name, a polygon and one generic value; a type
  * gets its own settings (`fields`) when its properties are defined.
  */
-export interface ZoneField {
+interface ZoneField {
   key: string;
   label: string;
   kind: 'number' | 'text' | 'select' | 'boolean';

@@ -13,7 +13,7 @@ export function visibleScenes(w: World, fleetId: string): SceneModel[] {
 }
 
 /** A scene as the engine takes it: its building, its network and the fleets whose robots belong to it. */
-export const toSource = (m: SceneModel): SceneSource => ({
+const toSource = (m: SceneModel): SceneSource => ({
   key: m.key,
   site: m.site,
   nav: m.network,

@@ -1,5 +1,7 @@
 # Phase 0: architecture audit of Ati Flow (front end)
 
+> Historical snapshot from before phase 1. The findings were fixed or are tracked in `audit-2.md` and CLAUDE.md sections 58-62 and 85-89; statements below such as "not built" describe that moment.
+
 Scope: everything under `src/` (388 files we wrote, plus 60 files of Untitled UI library code). The findings below were measured **before** Prettier was applied (about 14,400 lines, 14% of them over 160 characters); `audit-data.md` is regenerated after formatting (about 34,500 lines, because the formatter splits the very long lines, which also shows the real size of the biggest files: `adapters/sim.ts` and `engine/Engine.ts` are each over 1,100 lines). The numbers come from `npm run audit:architecture` and can be regenerated at any time.
 
 ## 1. Verdict in one paragraph

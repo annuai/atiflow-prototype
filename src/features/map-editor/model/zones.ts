@@ -6,7 +6,7 @@ import type { MapData, MapZone, ZoneProp, ZoneShape, ZoneTypeId } from './types'
 /** Pure edits of zones. A zone is a rectangle (or a Line gate) of a type from the registry (`zoneTypes.ts`); its outline is derived from the shape. */
 type P = [number, number];
 const nextId = (d: MapData) => `Z${Math.max(0, ...d.zones.map((z) => parseInt(z.id.replace(/\D/g, ''), 10) || 0)) + 1}`;
-export function defaultProps(type: ZoneTypeId, extra: Record<string, ZoneProp> = {}): Record<string, ZoneProp> {
+function defaultProps(type: ZoneTypeId, extra: Record<string, ZoneProp> = {}): Record<string, ZoneProp> {
   return { ...Object.fromEntries(zoneType(type).fields.map((f) => [f.key, f.default])), ...extra };
 }
 export function addZone(

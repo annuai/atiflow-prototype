@@ -171,7 +171,6 @@ export const SCRIPTED_REPLY = {
   text: 'Update: I cleared the dock fault remotely. Please check AMR-003 and tell me if it is moving.',
   afterMs: 20_000,
 };
-export const KB_SEVERITY_ORDER = ['blocking', 'degraded', 'question'] as const;
 /** English names kept in the ticket (the agent reads English whatever language the screen is in). */
 export const CATEGORY_EN: Record<Category, string> = {
   robot: 'Robot',

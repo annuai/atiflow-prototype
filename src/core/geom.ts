@@ -1,4 +1,3 @@
-import type { Vec2 } from './types';
 export type Poly = [number, number][];
 export const pointInPoly = (x: number, y: number, p: Poly): boolean => {
   let c = false;
@@ -7,10 +6,6 @@ export const pointInPoly = (x: number, y: number, p: Poly): boolean => {
       c = !c;
   return c;
 };
-export const polyCenter = (p: Poly): Vec2 => ({
-  x: p.reduce((a, q) => a + q[0], 0) / p.length,
-  y: p.reduce((a, q) => a + q[1], 0) / p.length,
-});
 /** Shortest signed angle from a to b in (-pi, pi]; safe for unwrapped (accumulated) angles. */
 export const angleDiff = (a: number, b: number) => {
   let d = (b - a) % (Math.PI * 2);

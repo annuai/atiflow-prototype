@@ -4,10 +4,10 @@ import { settingsStore } from '@/features/settings';
 import { FALLBACK_ROBOTS } from './data/mockSupportData';
 import type { SupportContext } from './types';
 
-export const ATI_FLOW_VERSION = '4.0';
-export const FIRMWARE_VERSION = '3.2.1';
+const ATI_FLOW_VERSION = '4.0';
+const FIRMWARE_VERSION = '3.2.1';
 /** PLACEHOLDER customer account until the customer record exists. */
-export const ACCOUNT = 'Ati Demo Customer';
+const ACCOUNT = 'Ati Demo Customer';
 
 const deviceLabel = () => {
   const ua = typeof navigator === 'undefined' ? '' : navigator.userAgent;

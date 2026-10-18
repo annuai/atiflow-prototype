@@ -92,7 +92,7 @@ function seriesOf(m: Measured): Partial<Record<MetricId, SeriesPoint[]>> {
 }
 
 /** The fleet figures of one period (used for the period before, where only the cards' numbers are needed). */
-export const fleetValues = (m: Measured): MetricValues => values(totals(m.robots), m);
+const fleetValues = (m: Measured): MetricValues => values(totals(m.robots), m);
 
 export function buildReport(
   range: ResolvedRange,

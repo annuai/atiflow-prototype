@@ -29,9 +29,9 @@ export function useNotificationStore(): NotificationStore {
   if (!s) throw new Error('useNotifications needs <NotificationsProvider> above it');
   return s;
 }
-export const useNotifications = <T,>(sel: (s: NotificationState) => T): T => useStore(useNotificationStore(), sel);
+const useNotifications = <T,>(sel: (s: NotificationState) => T): T => useStore(useNotificationStore(), sel);
 /** The workspace that is open (from the address); notifications and the unread count show only that workspace's own. */
-export const useOpenAudience = (): Audience => {
+const useOpenAudience = (): Audience => {
   const ws = workspaceOfPath(useLocation().pathname);
   return ws === 'configurator' || ws === 'operator' ? ws : 'supervisor';
 };

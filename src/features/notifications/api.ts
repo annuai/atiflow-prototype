@@ -3,7 +3,7 @@ import { enterableWorkspaces } from '@/features/access';
 import type { Audience, NewNotification, NotificationApi, SourcesByAudience } from './types';
 
 /** The audiences a user belongs to: the workspaces they can enter that have notifications. */
-export const audiencesOf = (user: Parameters<typeof enterableWorkspaces>[0]): Audience[] =>
+const audiencesOf = (user: Parameters<typeof enterableWorkspaces>[0]): Audience[] =>
   enterableWorkspaces(user)
     .map((w) => w.id)
     .filter((id): id is Audience => id === 'supervisor' || id === 'configurator' || id === 'operator');

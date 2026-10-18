@@ -1,6 +1,6 @@
 import type { Metadata } from '../types';
 
-export const LIVE_FLOOR = '/supervisor/livefloor';
+const LIVE_FLOOR = '/supervisor/livefloor';
 export const focusUrl = (kind: 'robot' | 'station' | 'zone' | 'fleet', id: string) =>
   `${LIVE_FLOOR}?focus=${kind}:${encodeURIComponent(id)}`;
 export const meta = (label: string, value: string | number | undefined | null, tone?: Metadata['tone']): Metadata[] =>

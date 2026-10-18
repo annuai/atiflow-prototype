@@ -12,7 +12,6 @@ const byPosition = (a: string, b: string) => {
     [br, bc] = parseKey(b);
   return ar - br || ac - bc;
 };
-export const stateOf = (c?: StagingCell): CellState => c?.state ?? 'available';
 export const snapshotOf = (c?: StagingCell): CellSnapshot =>
   c ? { state: c.state, materialCode: c.materialCode, quantity: c.quantity } : { state: 'available' };
 
@@ -31,7 +30,7 @@ export interface EditContext {
 export type Applied =
   { ok: true; cells: Record<string, StagingCell>; log: CellLogEntry[] } | { ok: false; error: CellError; key: string };
 
-export const validQuantity = (q: number | undefined) => q === undefined || (Number.isInteger(q) && q >= 1);
+const validQuantity = (q: number | undefined) => q === undefined || (Number.isInteger(q) && q >= 1);
 
 /** What is wrong with an edit before any cell is looked at (null = nothing). */
 function checkEdit(edit: CellEdit, ctx: EditContext): CellError | null {
@@ -128,7 +127,7 @@ export const unknownCodes = (a: Pick<StagingArea, 'cells'>, known: ReadonlySet<s
 
 // ---- FIFO / LIFO
 
-export const retrievalOf = (a: Pick<StagingArea, 'retrieval'>): Retrieval => a.retrieval ?? 'fifo';
+const retrievalOf = (a: Pick<StagingArea, 'retrieval'>): Retrieval => a.retrieval ?? 'fifo';
 /**
  * The cells holding a material in the order the area gives them out: FIFO = stored longest ago first, LIFO = stored most recently first; cells stored at the same moment (or with no time
  * at all: older data) go in row, then column order. The area's setting always decides: nobody picks a cell by hand.

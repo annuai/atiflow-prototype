@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { RequestStatusSchema, StatusEventSchema } from '@/data/statusSchema';
 
 /** The saved shape of the booked-trips document (`atiflow.bookings.v1`). The type below is what `BookedTrip` / the store use; this is the check applied when it is read back. */
-export const BookedTripSchema = z.object({
+const BookedTripSchema = z.object({
   id: z.string(),
   tripId: z.string(),
   fleet: z.string(),

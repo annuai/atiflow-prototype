@@ -14,7 +14,7 @@ import type { ConditionClock } from './trackers';
 import { t } from '../text';
 
 /** Pure functions: telemetry in, dashboard numbers out. Thresholds are constants here so the rules are in one place. */
-export const WAIT_WARN_S = 45,
+const WAIT_WARN_S = 45,
   WAIT_CRITICAL_S = 120,
   BATTERY_LOW = 25,
   BATTERY_CRITICAL = 10;
@@ -37,7 +37,7 @@ export const GROUPS: { id: StateGroup; label: string; color: string }[] = [
   group('attention', '#ef4444'),
   group('offline', '#d4d4d4'),
 ];
-export const emptyCounts = (): Record<StateGroup, number> => ({
+const emptyCounts = (): Record<StateGroup, number> => ({
   moving: 0,
   working: 0,
   waiting: 0,

@@ -5,7 +5,7 @@ import { ROBOT_TYPE_LABELS, robotTypeByLabel } from '@/data/robotTypes';
 import { t } from '../text';
 
 /** Hardware type -> icon. The Figma file only has a placeholder square for these (annotation: "need appropriate icons"), so these are Untitled icons. */
-export const HARDWARE_ICONS = { 'Summon Button': StopSquare, Hooter: VolumeMax, 'Ati Eye': Camera01 } as const;
+const HARDWARE_ICONS = { 'Summon Button': StopSquare, Hooter: VolumeMax, 'Ati Eye': Camera01 } as const;
 const hwIcon = (type: string) => HARDWARE_ICONS[type as keyof typeof HARDWARE_ICONS] ?? StopSquare;
 
 const MANUFACTURER = ['Ati Robotics'];

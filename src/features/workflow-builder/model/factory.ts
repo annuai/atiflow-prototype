@@ -2,7 +2,7 @@ import { NODE_TYPES } from './registry';
 import type { FieldValue, NodeTypeId, WfNode } from './types';
 
 let uid = 1;
-export const newId = () => 'n' + uid++;
+const newId = () => 'n' + uid++;
 /** After loading saved workflows, continue numbering above every existing id. */
 export function syncIds(nodes: WfNode[]) {
   const walk = (list: WfNode[]) =>

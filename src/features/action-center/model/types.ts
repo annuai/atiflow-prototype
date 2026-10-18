@@ -1,6 +1,6 @@
 /** What a robot can call for help about. */
 export type CallKind = 'blocked' | 'fault' | 'deadlock' | 'stuck' | 'battery' | 'rule';
-export type CallStatus = 'open' | 'acknowledged' | 'resolved';
+type CallStatus = 'open' | 'acknowledged' | 'resolved';
 export type Severity = 'warn' | 'critical';
 
 /** One call for help. A deadlock ring is ONE call that lists all its robots. */

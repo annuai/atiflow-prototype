@@ -3,7 +3,7 @@ import { RequestStatusSchema, StatusEventSchema } from '@/data/statusSchema';
 
 /** The saved shape of the requests document (`atiflow.requests.v1`): checked when it is read back. The types the store uses are in `types.ts`; a test keeps the two in step. */
 /** `users` is optional on read: requests saved before approvals named users are brought up to date by `normalise`. */
-export const ApprovalStepSchema = z.object({
+const ApprovalStepSchema = z.object({
   users: z.array(z.string()).optional(),
   by: z.string().optional(),
   at: z.number().optional(),
@@ -19,7 +19,7 @@ const CellPlanSchema = z.object({
   drop: z.object({ areaId: z.string(), code: z.string(), key: z.string(), qty: z.number() }).optional(),
   settled: z.enum(['committed', 'released']).optional(),
 });
-export const TripRequestSchema = z.object({
+const TripRequestSchema = z.object({
   id: z.string(),
   groupId: z.string(),
   workflowId: z.string(),

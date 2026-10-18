@@ -33,7 +33,7 @@ export interface Named {
   name: string;
 }
 /** How well a typed place matches a station (0 = not at all): exact id or name beats a name that contains it, which beats a partial overlap. Pure. */
-export function stationScore(query: string, s: Named): number {
+function stationScore(query: string, s: Named): number {
   const q = squash(query);
   if (!q) return 0;
   const id = squash(s.id);

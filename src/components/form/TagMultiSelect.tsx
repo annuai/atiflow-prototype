@@ -6,7 +6,7 @@ import { localized } from '@/i18n';
 
 const misc = localized('misc');
 
-export interface TagOption {
+interface TagOption {
   id: string;
   label: string;
   /** shown on the tag instead of an avatar */ icon?: SelectItemType['icon'];

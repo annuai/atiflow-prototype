@@ -15,7 +15,3 @@ export const canNow = (perm: PermissionId) => {
   const u = authStore.getState().user;
   return !!u && can(u, perm);
 };
-export const canManageUsersNow = () => {
-  const u = authStore.getState().user;
-  return !!u && canManageUsers(u);
-};

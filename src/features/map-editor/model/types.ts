@@ -83,12 +83,12 @@ export interface MapBase {
 }
 
 /** Walls and machines for the 3D view, in metres from the map origin. */
-export interface MapStructure {
+interface MapStructure {
   walls: Wall[];
   equipment: Equipment[];
 }
 /** A client drawing (DWG, already turned into walls by the DWG import) laid over the map: `layout` as imported, `transform` = how it was moved onto the map. */
-export interface MapDwg {
+interface MapDwg {
   name: string;
   layout: MapStructure & { floorPolygons: [number, number][][] };
   transform: { scale: number; rot: number; dx: number; dy: number };
@@ -114,7 +114,7 @@ export interface MapData {
   path?: [number, number][];
 }
 
-export type VersionStatus = 'published' | 'draft';
+type VersionStatus = 'published' | 'draft';
 /** A published version is read-only for good; the draft is the only thing that can be edited. */
 export interface MapVersion {
   id: string;

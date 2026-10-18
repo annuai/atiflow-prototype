@@ -34,7 +34,7 @@ export interface LoadedScene {
 }
 
 /** Frees everything below `root`: geometries, materials and the textures they hold. */
-export function disposeTree(root: THREE.Object3D) {
+function disposeTree(root: THREE.Object3D) {
   const seen = new Set<unknown>();
   const free = (o: { dispose(): void }) => {
     if (seen.has(o)) return;

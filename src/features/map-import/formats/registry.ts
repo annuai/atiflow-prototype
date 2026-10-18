@@ -2,7 +2,7 @@ import { ImportError, type Entries, type ImportedMap, type ImportOptions, type M
 import { deploymentManager } from './deploymentManager';
 
 /** Every map file format we can read. Add a format = write its importer file and list it here. */
-export const IMPORTERS: MapImporter[] = [deploymentManager];
+const IMPORTERS: MapImporter[] = [deploymentManager];
 
 /** Picks the importer that recognises the files best and reads them. A zip nobody recognises is refused with a clear reason. */
 export function importEntries(entries: Entries, options: ImportOptions = {}, importers = IMPORTERS): ImportedMap {

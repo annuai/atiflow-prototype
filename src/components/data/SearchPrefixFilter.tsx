@@ -2,7 +2,7 @@ import { SearchLg } from '@untitledui/icons';
 import { Input } from '@/components/base/input/input';
 import { Label } from '@/components/base/input/label';
 
-export interface SearchPrefixLabels {
+interface SearchPrefixLabels {
   searchLabel: string;
   searchPlaceholder: string;
   prefixLabel: string;

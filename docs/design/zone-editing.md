@@ -1,4 +1,4 @@
-# Zone editing: rectangles, handles, directional line gates (design, not built yet)
+# Zone editing: rectangles, handles, directional line gates (built, CLAUDE.md section 72)
 
 ## Decisions (from the user)
 - Every zone is a **rotated rectangle** (traffic zones, box gates, no-go, work areas and every Zones-menu type). Existing polygons are converted by fitting the smallest rotated rectangle around them (never smaller than the old shape).

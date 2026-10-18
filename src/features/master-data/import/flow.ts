@@ -1,12 +1,12 @@
 export type Method = 'api' | 'file' | 'manual';
 export type Step = 'method' | 'api' | 'upload' | 'review' | 'progress' | 'manual';
 /** Steps of each add method, in order. The "Step n of m" text counts only `numbered` steps. */
-export const METHOD_STEPS: Record<Method, Step[]> = {
+const METHOD_STEPS: Record<Method, Step[]> = {
   api: ['api'],
   file: ['upload', 'review', 'progress'],
   manual: ['manual'],
 };
-export const NUMBERED: Step[] = ['upload', 'review'];
+const NUMBERED: Step[] = ['upload', 'review'];
 
 export interface FlowState {
   open: boolean;

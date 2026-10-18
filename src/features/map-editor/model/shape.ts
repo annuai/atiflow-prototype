@@ -5,7 +5,6 @@ type P = [number, number];
 const round = (v: number) => Math.round(v * 100) / 100;
 export { MIN_SIZE };
 export const DEFAULT_DEPTH = 3;
-export const DEFAULT_GATE_LENGTH = 4;
 
 /** Where a handle sits on a rectangle: -1 / 0 / +1 along its own x and y (so `[1, 1]` is the corner at +x +y, `[1, 0]` the middle of the +x edge). */
 export type Handle = [-1 | 0 | 1, -1 | 0 | 1];
@@ -32,7 +31,7 @@ export const toWorld = (r: Rect, lx: number, ly: number): P => {
   return [r.cx + x, r.cy + y];
 };
 /** A site point in the rectangle's own frame. */
-export const toLocal = (r: Rect, x: number, y: number): P => rot(x - r.cx, y - r.cy, -r.rot);
+const toLocal = (r: Rect, x: number, y: number): P => rot(x - r.cx, y - r.cy, -r.rot);
 
 /** The unit normal of a gate towards the side it applies to (the side robots come from). */
 export const gateNormal = (g: Gate): P => {
@@ -41,7 +40,7 @@ export const gateNormal = (g: Gate): P => {
     l = Math.hypot(dx, dy) || 1;
   return [(-dy / l) * g.side, (dx / l) * g.side];
 };
-export const gateLength = (g: Gate) => Math.hypot(g.b[0] - g.a[0], g.b[1] - g.a[1]);
+const gateLength = (g: Gate) => Math.hypot(g.b[0] - g.a[0], g.b[1] - g.a[1]);
 /** The rectangle a gate controls: the line grown `depth` metres to its controlled side. */
 export function gateRect(g: Gate): Rect {
   const n = gateNormal(g),

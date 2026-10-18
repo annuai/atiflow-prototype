@@ -17,7 +17,7 @@ export interface Column<T> {
   className?: string;
   headClassName?: string;
 }
-export interface RowSelection {
+interface RowSelection {
   selected: Set<string>;
   onChange(next: Set<string>): void;
   /** Rows shown checked but not changeable (e.g. already added). */

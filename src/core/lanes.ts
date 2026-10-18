@@ -383,9 +383,9 @@ export class Intersections {
   }
 }
 
-export const CORNER_RADIUS = 0.75;
+const CORNER_RADIUS = 0.75;
 /** Rounds every corner of a polyline with a quadratic curve (corner radius `R`), so a robot follows a continuous tangent instead of turning on the spot at each vertex. */
-export function smoothPolyline(
+function smoothPolyline(
   src: Vec2[],
   laneSrc: (string | null)[],
   R = CORNER_RADIUS,

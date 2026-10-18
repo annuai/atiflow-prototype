@@ -4,7 +4,7 @@ import type { RobotTelemetry, SiteLayout, Station } from '@/core/types';
  * What the dashboard needs from the outside world, in one object. A `DashboardSource` produces it: today from the live simulator feed (`source.ts`),
  * later from the real fleet API. Nothing below this file knows where the data comes from.
  */
-export interface FleetInfo {
+interface FleetInfo {
   id: string;
   name: string;
   color: string;

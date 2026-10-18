@@ -1,6 +1,6 @@
 import { ImportError } from './types';
 
-export type NpyData =
+type NpyData =
   Uint8Array | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array | Float32Array | Float64Array;
 export interface NpyArray {
   dtype: string;
@@ -9,7 +9,7 @@ export interface NpyArray {
 }
 
 /** Biggest array we will read (cells). The sample map is 16 million; a 16k x 16k grid is 268 million, which no browser should be asked to decode. */
-export const MAX_NPY_CELLS = 256 * 1024 * 1024;
+const MAX_NPY_CELLS = 256 * 1024 * 1024;
 
 const MAGIC = [0x93, 0x4e, 0x55, 0x4d, 0x50, 0x59]; // \x93NUMPY
 

@@ -16,7 +16,7 @@ export function installTripIdCounter(next: TripIdCounter) {
 const counter = () => source;
 const current = () => (seq ??= counter().read()); // read on first use, so the services chosen at start-up are the ones used
 const save = () => counter().write(current());
-export const formatTripId = (n: number) => `TRP-${String(n).padStart(3, '0')}`;
+const formatTripId = (n: number) => `TRP-${String(n).padStart(3, '0')}`;
 export const tripNumber = (id: string) => parseInt(id.slice(4), 10) || 0;
 export interface TripIdSource {
   next(): string;

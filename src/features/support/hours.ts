@@ -2,11 +2,11 @@
  * When support is reachable. ONE team in Bengaluru, so every rule runs on Asia/Kolkata time (never the device's clock zone): a customer abroad still sees the right answer.
  * India has no daylight saving, so IST is a fixed UTC+5:30.
  */
-export const SUPPORT_TZ = 'Asia/Kolkata';
+const SUPPORT_TZ = 'Asia/Kolkata';
 /** Days support works (0 = Sunday ... 6 = Saturday). ASSUMPTION: Monday to Saturday; add 0 here if Sunday needs cover. */
-export const SUPPORT_DAYS: readonly number[] = [1, 2, 3, 4, 5, 6];
-export const OPEN_MINUTE = 9 * 60;
-export const CLOSE_MINUTE = 19 * 60;
+const SUPPORT_DAYS: readonly number[] = [1, 2, 3, 4, 5, 6];
+const OPEN_MINUTE = 9 * 60;
+const CLOSE_MINUTE = 19 * 60;
 /** The support phone number. */
 export const SUPPORT_PHONE = '+91 9645738621';
 export const SUPPORT_PHONE_HREF = 'tel:+919645738621';
@@ -19,8 +19,8 @@ const clock = (minute: number) => {
   return `${h % 12 || 12}:${String(minute % 60).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
 };
 /** "9:00 AM", "7:00 PM" (IST). */
-export const OPEN_LABEL = clock(OPEN_MINUTE);
-export const CLOSE_LABEL = clock(CLOSE_MINUTE);
+const OPEN_LABEL = clock(OPEN_MINUTE);
+const CLOSE_LABEL = clock(CLOSE_MINUTE);
 /** "Mon-Sat, 9:00 AM-7:00 PM IST", built from the constants above. */
 export function hoursLabel(): string {
   const first = SUPPORT_DAYS[0];
@@ -30,7 +30,7 @@ export function hoursLabel(): string {
   return `${days}, ${OPEN_LABEL}–${CLOSE_LABEL} IST`;
 }
 /** Day of week and minute of the day in India for an instant. */
-export function istParts(now: Date): { dow: number; minute: number } {
+function istParts(now: Date): { dow: number; minute: number } {
   const t = new Date(now.getTime() + IST_OFFSET_MS);
   return { dow: t.getUTCDay(), minute: t.getUTCHours() * 60 + t.getUTCMinutes() };
 }

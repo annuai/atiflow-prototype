@@ -4,7 +4,7 @@ import { CARD_BODY } from '@/components/page';
 import { cx } from '@/utils/cx';
 import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 
-export interface TabItem {
+interface TabItem {
   id: string;
   label: string;
   icon?: FC<{ className?: string }>;

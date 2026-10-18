@@ -42,7 +42,7 @@ const listeners = new Set<(b: RobotTelemetry[]) => void>(),
 const orderUpdateListeners = new Set<(u: OrderUpdate) => void>(),
   orderStartListeners = new Set<() => void>();
 let rosterKey = '';
-export const liveStats = new StatsTracker();
+const liveStats = new StatsTracker();
 /** KPI building blocks measured from the live telemetry and events (read by the Reports page). It keeps collecting while the feed runs. */
 export const measurements = new MeasurementLog();
 

@@ -2,7 +2,7 @@ import { unzipSync } from 'fflate';
 import { ImportError, type Entries } from './types';
 
 /** Limits against a zip that expands into something huge (zip bombs) or holds absurdly many files. */
-export const ZIP_LIMITS = { entries: 200, entryBytes: 100 * 1024 * 1024, totalBytes: 300 * 1024 * 1024 };
+const ZIP_LIMITS = { entries: 200, entryBytes: 100 * 1024 * 1024, totalBytes: 300 * 1024 * 1024 };
 
 const junk = (path: string) =>
   path.endsWith('/') || path.split('/').some((p) => p === '__MACOSX' || p.startsWith('.') || p === 'Thumbs.db');
@@ -33,5 +33,3 @@ export function findEntry(entries: Entries, name: string): Uint8Array | undefine
   const k = Object.keys(entries).find((p) => p === name || p.endsWith('/' + name));
   return k ? entries[k] : undefined;
 }
-export const entryPath = (entries: Entries, name: string) =>
-  Object.keys(entries).find((p) => p === name || p.endsWith('/' + name));

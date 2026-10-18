@@ -16,8 +16,8 @@ import { ImportPreview } from './ImportPreview';
 import { RoutingVersionPicker } from './RoutingVersionPicker';
 
 /** The map folder as a zip, and the size limit. (More formats = more importers in the map-import feature.) */
-export const MAP_FILE_EXTENSIONS = ['.zip'];
-export const MAP_FILE_MAX_BYTES = 50 * 1024 * 1024;
+const MAP_FILE_EXTENSIONS = ['.zip'];
+const MAP_FILE_MAX_BYTES = 50 * 1024 * 1024;
 const mb = (b: number) => Math.round(b / 1024 / 1024);
 
 type Step =

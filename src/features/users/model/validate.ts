@@ -18,7 +18,7 @@ export interface UserForm {
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
   USERNAME = /^[a-z0-9._-]{3,}$/i;
 export const passwordError = (p: string) => (p.length >= 4 ? '' : misc.userValidation.passwordShort);
-export const emailError = (e: string) =>
+const emailError = (e: string) =>
   !e.trim() ? localized('common').required : EMAIL.test(e.trim()) ? '' : misc.userValidation.emailInvalid;
 
 /** Problems of a new user, by field key ('' / missing = fine). `taken` says whether a username already exists (ignoring case). */

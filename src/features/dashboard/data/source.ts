@@ -39,7 +39,7 @@ export const createLiveSource = (fleet?: string): DashboardSource => ({
     };
   },
 });
-export const liveSource: DashboardSource = createLiveSource();
+const liveSource: DashboardSource = createLiveSource();
 
 /** The dashboard's numbers as a React hook: runs the engine on every input and hands out a fresh snapshot about twice a second. */
 export function useDashboard(source: DashboardSource = liveSource, refreshMs = 500): DashboardSnapshot | null {

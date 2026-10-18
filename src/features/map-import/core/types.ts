@@ -28,7 +28,7 @@ export interface GridImage {
   alpha: Uint8Array;
 }
 
-export type WarningLevel = 'info' | 'warn' | 'error';
+type WarningLevel = 'info' | 'warn' | 'error';
 /** What the review step tells the person. `code` picks the text (translated); `args` fill it in. */
 export interface ImportWarning {
   code: string;

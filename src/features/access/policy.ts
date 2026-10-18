@@ -35,7 +35,7 @@ export function workspacesOf(p: AccessProfile): Workspace[] {
   const held = effective(p);
   return WORKSPACES.filter((w) => w.features.some((f) => held.has(f.id)));
 }
-export const hasWorkspace = (p: AccessProfile, id: WorkspaceId) => workspacesOf(p).some((w) => w.id === id);
+const hasWorkspace = (p: AccessProfile, id: WorkspaceId) => workspacesOf(p).some((w) => w.id === id);
 /** The workspaces the user can actually enter (they have pages). */
 export const enterableWorkspaces = (p: AccessProfile) => workspacesOf(p).filter((w) => w.built);
 
@@ -95,5 +95,3 @@ export const assignableRoles = (): RoleId[] => ['configurator', 'supervisor', 'o
 /** May the actor delete this user? Anyone who manages users can, except themselves (everything else, including their own role and permissions, they may change). */
 export const canDeleteUser = (actor: AccessProfile & { username: string }, target: { username: string }): boolean =>
   canManageUsers(actor) && actor.username !== target.username;
-export const permissionsOfWorkspace = (p: AccessProfile, id: WorkspaceId) =>
-  workspaceById(id).features.filter((f) => effective(p).has(f.id));

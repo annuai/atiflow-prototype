@@ -17,7 +17,7 @@ export const toPublic = (u: UserRecord): PublicUser => ({
   avatar: u.avatar ?? AVATARS[u.username],
 });
 
-export type NewUser = Pick<UserRecord, 'username' | 'firstName' | 'lastName' | 'email' | 'role'> & {
+type NewUser = Pick<UserRecord, 'username' | 'firstName' | 'lastName' | 'email' | 'role'> & {
   /** handed to the sign-in service, never kept on the profile */
   password: string;
   title?: string;

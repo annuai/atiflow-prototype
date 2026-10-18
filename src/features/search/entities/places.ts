@@ -1,4 +1,4 @@
-import { BatteryCharging01, MarkerPin01, Grid01 } from '@untitledui/icons';
+import { MarkerPin01, Grid01 } from '@untitledui/icons';
 import type { Station, Zone } from '@/core/types';
 import { mapNow } from '@/features/workflow-builder';
 import { copy } from '../copy';
@@ -40,7 +40,6 @@ export const stationEntity: SearchEntity<Station> = {
         ? [{ id: 'book', label: copy.actions.book, kind: 'navigate', url: '/operator/book?tab=trips', primary: true }]
         : [{ id: 'maps', label: copy.actions.openMap, kind: 'navigate', url: '/configurator/maps', primary: true }],
 };
-export const chargerIcon = BatteryCharging01;
 
 /** The active areas of the floor. */
 export const zoneEntity: SearchEntity<Zone> = {

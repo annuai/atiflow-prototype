@@ -5,7 +5,7 @@ import { FeaturedIcon } from '@/components/foundations/featured-icon/featured-ic
 import { Dialog, Modal, ModalOverlay } from '@/components/application/modals/modal';
 import { cx } from '@/utils/cx';
 
-export interface ModalAction {
+interface ModalAction {
   label: string;
   onPress?(): void;
   isDisabled?: boolean;

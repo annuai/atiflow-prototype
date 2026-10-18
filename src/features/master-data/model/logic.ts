@@ -3,14 +3,14 @@ import { t } from '../text';
 import type { FleetId } from '@/data/fleets';
 
 const norm = (s: string) => s.trim().toLowerCase();
-export const sameCode = (a: string, b: string) => norm(a) === norm(b);
-export const hasCode = (list: Material[], code: string) => list.some((m) => sameCode(m.code, code));
+const sameCode = (a: string, b: string) => norm(a) === norm(b);
+const hasCode = (list: Material[], code: string) => list.some((m) => sameCode(m.code, code));
 /** Every code of the list, normalised, for fast "is it already there" checks over big lists. */
 export const codeSet = (list: Material[]) => new Set(list.map((m) => norm(m.code)));
 export const inCodeSet = (codes: Set<string>, code: string) => codes.has(norm(code));
 
 /** Next free group id: GRP-001, GRP-002... */
-export function nextGroupId(groups: MaterialGroup[]): string {
+function nextGroupId(groups: MaterialGroup[]): string {
   const max = groups.reduce((n, g) => Math.max(n, +g.id.replace(/\D/g, '') || 0), 0);
   return `GRP-${String(max + 1).padStart(3, '0')}`;
 }

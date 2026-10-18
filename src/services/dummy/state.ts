@@ -32,13 +32,13 @@ const device = z.object({ status: z.string(), values: rec });
 export const DATASET_KEY = 'atiflow.dataset.v1';
 export const FLEETS_KEY = 'atiflow.fleets.v1';
 export const MASTERDATA_KEY = 'atiflow.masterdata.v1';
-export const MAPNAMES_KEY = 'atiflow.mapnames.v1';
-export const MAPVERSIONS_KEY = 'atiflow.mapversions.v1';
-export const MAPCATALOG_KEY = 'atiflow.mapcatalog.v1';
+const MAPNAMES_KEY = 'atiflow.mapnames.v1';
+const MAPVERSIONS_KEY = 'atiflow.mapversions.v1';
+const MAPCATALOG_KEY = 'atiflow.mapcatalog.v1';
 export const SETTINGS_KEY = 'atiflow.settings.v1';
-export const PREFERENCES_KEY = 'atiflow.preferences.v1';
+const PREFERENCES_KEY = 'atiflow.preferences.v1';
 export const ACTIONLOG_KEY = 'atiflow.actioncenter.v1';
-export const ROBOTOPS_KEY = 'atiflow.robotops.v1';
+const ROBOTOPS_KEY = 'atiflow.robotops.v1';
 export const notificationsKey = (username: string) => `atiflow.notifications.v1.${username}`;
 
 export const createDummyDataset = (backend?: Backend): DatasetService =>

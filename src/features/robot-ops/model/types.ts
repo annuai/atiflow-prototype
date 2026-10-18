@@ -31,10 +31,10 @@ export interface NumberParam extends ParamBase {
   integer?: boolean;
   unit?: string;
 }
-export interface ToggleParam extends ParamBase {
+interface ToggleParam extends ParamBase {
   kind: 'toggle';
 }
-export interface ChoiceParam extends ParamBase {
+interface ChoiceParam extends ParamBase {
   kind: 'choice';
   options: string[];
 }

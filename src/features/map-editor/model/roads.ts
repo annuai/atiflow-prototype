@@ -6,16 +6,16 @@ import type { MapData, MapRoad, RoadHeading } from './types';
  * Roads (pure). A road is one drawn line; it becomes TWO paired one-way lanes (keep right, 0.5 m off the centre line) joined to the nodes at its ends, or one lane when one-way.
  * Robots never reverse, so a two-way aisle is always two lanes. Ends snap to a node that is already there (a station, a junction, another road's end).
  */
-export const LANE_OFFSET = 0.5,
+const LANE_OFFSET = 0.5,
   SNAP = 1.5,
   LANE_SPEED = 1.2;
 type P = [number, number];
 const round = (v: number) => Math.round(v * 100) / 100;
-export const pathLength = (pts: P[]) =>
+const pathLength = (pts: P[]) =>
   pts.reduce((s, p, i) => (i ? s + Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) : 0), 0);
 
 /** The line moved `d` metres to the RIGHT of its direction of travel; bends use the mean of the two neighbouring normals (limited, so a sharp bend does not spike). */
-export function offsetPolyline(pts: P[], d: number): P[] {
+function offsetPolyline(pts: P[], d: number): P[] {
   const normal = (a: P, b: P): P => {
     const dx = b[0] - a[0],
       dy = b[1] - a[1],

@@ -60,7 +60,7 @@ export function BaseLayer({ base, vp }: { base: MapBase; vp: Vp }) {
 }
 
 /** The path the robot drove while it mapped: a thin dashed guide for drawing roads. */
-export function PathLayer({ path, vp }: { path: [number, number][]; vp: Vp }) {
+function PathLayer({ path, vp }: { path: [number, number][]; vp: Vp }) {
   if (path.length < 2) return null;
   return (
     <polyline

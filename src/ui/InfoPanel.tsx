@@ -8,12 +8,12 @@ import { ProgressBar } from '@/components/base/progress-indicators/progress-indi
 import { BAR_CLASS, type BarTone } from './tones';
 import { copy } from './copy';
 
-export interface InfoStat {
+interface InfoStat {
   label: string;
   value: ReactNode;
   bar?: { pct: number; tone: BarTone };
 }
-export interface InfoAlert {
+interface InfoAlert {
   text: string;
   severity: 'info' | 'warn' | 'critical';
 }

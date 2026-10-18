@@ -13,7 +13,7 @@ const areaLeg = (legs: string[], actions: string[] | undefined, action: 'Pick Up
   const hits = legs.map((id, i) => ({ id, i })).filter(({ id, i }) => isAreaId(id) && (actions?.[i] ?? '') === action);
   return (last ? hits[hits.length - 1] : hits[0])?.id;
 };
-export const usesAreas = (legs: string[]) => legs.some(isAreaId);
+const usesAreas = (legs: string[]) => legs.some(isAreaId);
 
 /** Reserve what a request needs in its staging areas. `failed` says why it cannot be done (nothing is changed then). */
 export function reserveCells(r: {

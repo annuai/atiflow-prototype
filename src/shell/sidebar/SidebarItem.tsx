@@ -10,7 +10,7 @@ import type { NavItem } from '../types';
 export const CollapsedCtx = createContext(false);
 export const SelectCtx = createContext<() => void>(() => {});
 
-export const SidebarIcon = ({ icon }: { icon: NavItem['icon'] }) => {
+const SidebarIcon = ({ icon }: { icon: NavItem['icon'] }) => {
   const Icon = icon as FC<{ className?: string }>;
   return typeof icon === 'string' ? <img src={icon} alt="" /> : <Icon className="size-4 shrink-0" />;
 };

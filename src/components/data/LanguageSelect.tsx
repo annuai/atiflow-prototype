@@ -3,7 +3,7 @@ import { LANGUAGES, isLocale, showLocale, useLocale, type LocaleId } from '@/i18
 import { services } from '@/services';
 
 /** Remember the language chosen on this device (the sign-in screen, before anyone is known) and switch to it. */
-export function chooseLanguage(id: LocaleId) {
+function chooseLanguage(id: LocaleId) {
   services().device.set('locale', id);
   void showLocale(id);
 }

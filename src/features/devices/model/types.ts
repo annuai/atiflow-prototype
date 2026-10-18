@@ -11,7 +11,7 @@ export interface Device {
   values: Record<string, FieldValue>;
 }
 
-export interface EmptyStateDef {
+interface EmptyStateDef {
   headline: string;
   description: string;
   hint?: string;

@@ -32,7 +32,7 @@ export interface ConnectionState {
   lastSynced?: number;
   lastTest?: TestResult;
 }
-export type ConnectionStatus = 'connected' | 'issues';
+type ConnectionStatus = 'connected' | 'issues';
 export interface StatusView {
   status: ConnectionStatus;
   headline: string;

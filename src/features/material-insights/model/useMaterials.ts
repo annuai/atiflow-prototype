@@ -9,7 +9,7 @@ import { sampleRequests } from './sample';
 import type { MaterialRequest, MaterialsView, Period } from './types';
 
 /** A stored request as the insights read it: when each status was first reached comes from its history. */
-export function toMaterialRequest(r: TripRequest): MaterialRequest {
+function toMaterialRequest(r: TripRequest): MaterialRequest {
   const at: MaterialRequest['at'] = {};
   for (const e of r.history) if (at[e.status] === undefined) at[e.status] = e.at;
   return {
@@ -31,7 +31,7 @@ export function toMaterialRequest(r: TripRequest): MaterialRequest {
  * The material requests of the person's fleets, or of the fleet chosen in the page's fleet filter (saved routes carry no material, so they are not material requests).
  * `everyFleet` ignores the filter (used to decide whether material views make sense at all).
  */
-export function useMaterialRequests(everyFleet = false): MaterialRequest[] {
+function useMaterialRequests(everyFleet = false): MaterialRequest[] {
   const fleets = useVisibleFleets();
   const { fleetId } = useFleetFilter();
   const all = useRequests((s) => s.requests);

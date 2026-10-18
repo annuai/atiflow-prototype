@@ -19,7 +19,7 @@ const ICON: Record<Module, FC<{ className?: string }>> = {
 };
 const MODULES: Module[] = ['stations', 'routes', 'exclusive', 'zones'];
 /** What a choice is called in the arrow menu. */
-export const choiceLabel = (m: Module, id: string): string =>
+const choiceLabel = (m: Module, id: string): string =>
   m === 'stations'
     ? id === 'staging'
       ? copy.stations.createStaging

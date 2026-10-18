@@ -3,11 +3,11 @@ import { localized } from '@/i18n';
 import type { Candidate, Thresholds } from './types';
 
 /** Pure: what is asking for help right now. Nothing here knows about React, storage or the simulator: it reads telemetry (the same for a real fleet). */
-export const RULE_CODES = ['FORBIDDEN_ZONE', 'FLEET_BOUNDARY', 'OFF_LANE', 'WRONG_WAY', 'TRAFFIC_VIOLATION'];
+const RULE_CODES = ['FORBIDDEN_ZONE', 'FLEET_BOUNDARY', 'OFF_LANE', 'WRONG_WAY', 'TRAFFIC_VIOLATION'];
 
 const D = () => localized('insights').actionCenter.detect;
 /** Getters, so the text follows the language in use when a call is made. */
-export const SUGGESTION = {
+const SUGGESTION = {
   get blocked() {
     return localized('insights').actionCenter.suggestion.blocked;
   },

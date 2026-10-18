@@ -17,7 +17,7 @@ import type { CartLine, RequestableItem, RequestStatus, TripRequest } from './ty
  */
 type Saved = { requests: TripRequest[]; seq: number };
 
-export interface Requester {
+interface Requester {
   username: string;
   name: string;
 }

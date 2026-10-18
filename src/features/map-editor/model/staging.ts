@@ -4,7 +4,7 @@ import type { MapData, StagingAreaDef } from './types';
 
 /** Pure edits and geometry of staging areas: rows x columns of cells laid out from the centre of the A1 cell. */
 const round = (v: number) => Math.round(v * 100) / 100;
-export const colLetter = (c: number): string => {
+const colLetter = (c: number): string => {
   let s = '',
     n = c;
   while (n > 0) {

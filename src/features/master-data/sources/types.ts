@@ -22,14 +22,14 @@ export interface ErpResult {
 }
 
 /** One line of a bill of materials. NOT used by any screen yet: the contract is kept open so a BOM view can be added without changing the port. */
-export interface ErpBomLine {
+interface ErpBomLine {
   code: string;
   name: string;
   type?: string;
   quantity: number;
   uom: string;
 }
-export interface ErpBom {
+interface ErpBom {
   code: string;
   version: number;
   active: boolean;
