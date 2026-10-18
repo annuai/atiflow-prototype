@@ -1,8 +1,8 @@
 {
-  "total": 24,
+  "total": 23,
   "rules": {
     "complexity": 3,
-    "max-lines": 3,
+    "max-lines": 2,
     "react-hooks/exhaustive-deps": 7,
     "react-hooks/refs": 9,
     "react-hooks/use-memo": 2
