@@ -1,5 +1,5 @@
 import { angleDiff } from '../../core/geom';
-import type { PathPlan } from '../../core/lanes';
+import { pointAt, type PathPlan } from '../../core/lanes';
 import { ACC, CLAIM, DEC, FAULT_RATE, REROUTE_AFTER, SAMPLE, TD, TURN_RATE, V } from './constants';
 import { ROBOT_R, TURN_R, robotCircles, trolleyCircles } from './footprint';
 import { headingAt, poseAt } from './path';
@@ -178,7 +178,8 @@ export class Mover {
       const dth = Math.max(-TURN_RATE * dt, Math.min(TURN_RATE * dt, d));
       if (b.v > 0.05 || !this.traffic.touches(b, robotCircles({ ...b.pos, th: b.theta + dth }, TURN_R), claims))
         b.theta += dth;
-    } // a robot standing still only swings its corners out when nobody is there b.lane = pointAt(plan, b.s).lane;
+    } // (a robot standing still only swings its corners out when nobody is there)
+    b.lane = pointAt(plan, b.s).lane;
     b.trailer = this.traffic.trailerPose(b);
     b.speed = ds / dt;
     const held = gate || blocked;

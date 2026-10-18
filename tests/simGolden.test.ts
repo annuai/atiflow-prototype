@@ -53,3 +53,18 @@ describe('FleetSim behaviour is unchanged', () => {
   it('seed 11, plain', () => expect(fingerprint(11, false)).toBe('7a200a15'));
   it('seed 3 with a charge command, a relocalize and an order', () => expect(fingerprint(3, true)).toBe('fa0a8d13'));
 });
+
+describe('telemetry', () => {
+  it('a robot on the road reports the lane it is driving (laneId), a parked one none', () => {
+    const sim = new FleetSim(nav, nav.siteId, 14, 7, undefined, { faults: false });
+    for (let t = 0; t < 60; t += 0.1) sim.step(0.1);
+    const snap = sim.snapshot();
+    const driving = snap.filter((r) => r.state === 'moving' && r.speed > 0.1);
+    expect(driving.length).toBeGreaterThan(0);
+    for (const r of driving)
+      expect(
+        nav.lanes.some((l) => l.id === r.laneId),
+        `${r.id} ${r.laneId}`,
+      ).toBe(true);
+  });
+});
