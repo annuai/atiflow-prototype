@@ -107,8 +107,9 @@ describe('the next robot name', () => {
 
 describe('auto-hitch add-ons belong to three robot types', () => {
   const names = (type: string) => shownFields(robot, { sherpaType: type }).map((f) => f.key);
-  it('are asked for only on Sherpa XT Lite, Tug 5T and Tug 1.5T', () => {
-    for (const t of ['Sherpa XT Lite', 'Sherpa Tug 5T', 'Sherpa Tug 1.5T']) expect(names(t)).toContain('addons');
+  it('are asked for only on Sherpa XT Lite, XT, Tug 5T and Tug 1.5T', () => {
+    for (const t of ['Sherpa XT Lite', 'Sherpa XT', 'Sherpa Tug 5T', 'Sherpa Tug 1.5T'])
+      expect(names(t)).toContain('addons');
     for (const t of ['Pallet Mover', 'Sherpa Lifter 1T', 'Sherpa Flex Fork']) expect(names(t)).not.toContain('addons');
   });
   it('are cleared from a record whose type has none', () => {
