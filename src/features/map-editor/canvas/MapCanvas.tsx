@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { laneArrowPath } from '@/components/map/laneArrows';
 import type { SiteLayout } from '@/core/types';
 import { text } from '../text';
@@ -13,7 +13,7 @@ import { ZoneHandles } from './layers/ZoneHandles';
 import { ZoomControls } from './layers/ZoomControls';
 import type { Tool } from './tools';
 import { usePointerTools } from './usePointerTools';
-import { boundsKey, rememberPlanView } from './lastView';
+import { boundsKey, rememberPlanView, takeView3d } from './lastView';
 import { useViewport } from './useViewport';
 
 interface Props {
@@ -110,6 +110,14 @@ export function MapCanvas({
 }: Props) {
   const vp = useViewport(site.bounds);
   const { P, X, Y, u, attach: attachBox } = vp;
+  const { showArea } = vp;
+  const opened = useRef(false);
+  useEffect(() => {
+    if (opened.current || !vp.measured) return; // once, when the plan first has a size: open where the 3D view was left
+    opened.current = true;
+    const v = takeView3d(boundsKey(site.bounds));
+    if (v) showArea(v.x, v.y, v.width);
+  }, [vp.measured, showArea, site.bounds]);
   useEffect(() => {
     const [vx, vy, vw, vh] = vp.viewBox.split(' ').map(Number);
     rememberPlanView({

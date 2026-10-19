@@ -128,6 +128,15 @@ export class Engine {
     const tilt = THREE.MathUtils.degToRad(55);
     this.rig.flyTo(new THREE.Vector3(t.x, d * Math.sin(tilt), t.z + d * Math.cos(tilt)), t, dur);
   }
+  /** The patch of floor in the middle of the picture: its centre in site metres and how many metres wide the picture is there (what a plan view should show to match this one). */
+  viewArea(): { x: number; y: number; width: number } {
+    const c = this.s.camera,
+      t = this.s.controls.target;
+    const { x, y } = fromScene(t.x, 0, t.z);
+    const width =
+      2 * c.position.distanceTo(t) * Math.tan(THREE.MathUtils.degToRad(c.fov / 2)) * Math.max(0.5, c.aspect);
+    return { x, y, width };
+  }
   home() {
     this.rig.home();
   }

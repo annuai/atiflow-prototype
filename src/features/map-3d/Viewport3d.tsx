@@ -19,6 +19,8 @@ interface Props {
   multi: boolean;
   /** the place the plan was showing: the view opens on it */
   start?: { x: number; y: number; width: number } | null;
+  /** called as the view is left, with the patch of floor it was showing */
+  onLeave?(area: { x: number; y: number; width: number }): void;
   onPick(id: string | null, additive: boolean): void;
   onBox(ids: string[], additive: boolean): void;
 }
@@ -27,15 +29,15 @@ interface Props {
  * The structure of the map in 3D, live: the same engine as the Live Floor with the map's lanes and stations, redrawn whenever the draft changes (the camera stays where it is). Click picks an
  * element and outlines it; Shift (or Select multiple) adds to the selection and a drag draws a box round elements. The engine lives while this is on screen and is freed when it is not.
  */
-export function Viewport3d({ site, nav, selectedIds, multi, start, onPick: pick, onBox }: Props) {
+export function Viewport3d({ site, nav, selectedIds, multi, start, onLeave, onPick: pick, onBox }: Props) {
   const holder = useRef<HTMLDivElement>(null);
   const engine = useRef<Engine | null>(null);
   const [ready, setReady] = useState(false);
   const [noGl, setNoGl] = useState(() => webGlProblem() !== null);
   const [box, setBox] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
-  const live = useRef({ pick, onBox, multi });
+  const live = useRef({ pick, onBox, multi, onLeave });
   useEffect(() => {
-    live.current = { pick, onBox, multi }; // (the listeners below read the latest callbacks)
+    live.current = { pick, onBox, multi, onLeave }; // (the listeners below read the latest callbacks)
   });
   const hasSite = !!site;
 
@@ -81,6 +83,7 @@ export function Viewport3d({ site, nav, selectedIds, multi, start, onPick: pick,
     el.addEventListener('pointerdown', down, { capture: true });
     setReady(true); // eslint-disable-line react-hooks/set-state-in-effect -- the engine is an external system built in this effect; `ready` only hides the loading skeleton
     return () => {
+      live.current.onLeave?.(eng.viewArea());
       off();
       el.removeEventListener('pointerdown', down, { capture: true });
       eng.dispose();

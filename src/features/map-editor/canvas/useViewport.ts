@@ -19,9 +19,13 @@ export function useViewport(b: Bounds) {
   // the container is kept in state through a callback ref: effects run when it appears, and no ref object is read while rendering
   const [el, box] = useState<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ w: 600, h: 500 });
+  const [measured, setMeasured] = useState(false); // the real size of the container is known
   useEffect(() => {
     if (!el) return;
-    const ro = new ResizeObserver(() => setSize({ w: Math.max(80, el.clientWidth), h: Math.max(80, el.clientHeight) }));
+    const ro = new ResizeObserver(() => {
+      setSize({ w: Math.max(80, el.clientWidth), h: Math.max(80, el.clientHeight) });
+      setMeasured(true);
+    });
     ro.observe(el);
     return () => ro.disconnect();
   }, [el]);
@@ -46,6 +50,12 @@ export function useViewport(b: Bounds) {
         x - b.minX,
         b.maxY - y,
       ),
+    [size, fit, set, b.minX, b.maxY],
+  );
+  /** Show a patch of floor: centred on (x, y) and `width` metres wide on screen. */
+  const showArea = useCallback(
+    (x: number, y: number, width: number) =>
+      set(Math.min(MAX_ZOOM, Math.max(1, (size.w * fit) / Math.max(1, width))), x - b.minX, b.maxY - y),
     [size, fit, set, b.minX, b.maxY],
   );
   const reset = useCallback(() => set(1, W / 2, H / 2), [set, W, H]);
@@ -80,11 +90,13 @@ export function useViewport(b: Bounds) {
       panBy,
       reset,
       focusOn,
+      showArea,
+      measured,
       toSite,
       P,
       X,
       Y,
     }),
-    [box, el, size, z, u, vx, vy, vw, vh, zoomAt, panBy, reset, focusOn, toSite, P, X, Y],
+    [box, el, size, z, u, vx, vy, vw, vh, zoomAt, panBy, reset, focusOn, showArea, measured, toSite, P, X, Y],
   );
 }

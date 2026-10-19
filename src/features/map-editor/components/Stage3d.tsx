@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Viewport3d, navOf, siteOf } from '@/features/map-3d';
-import { planViewOf } from '../canvas/lastView';
+import { planViewOf, rememberView3d } from '../canvas/lastView';
 import { ViewSwitch } from './ViewSwitch';
 import { pickElement, selectIds } from '../model/structure/select';
 import type { MapData, Selection } from '../model/types';
@@ -39,6 +39,7 @@ export function Stage3d({
         selectedIds={ids}
         multi={multi}
         start={start}
+        onLeave={(area) => rememberView3d({ key: planKey, ...area })}
         onPick={(id, additive) =>
           onSelection(id ? pickElement(selection, id, additive || multi) : additive || multi ? selection : null)
         }

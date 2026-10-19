@@ -13,3 +13,14 @@ export const rememberPlanView = (v: PlanView) => {
 export const planViewOf = (key: string): PlanView | null => (last && last.key === key ? last : null);
 export const boundsKey = (b: { minX: number; maxX: number; minY: number; maxY: number }) =>
   `${b.minX},${b.maxX},${b.minY},${b.maxY}`;
+
+/** The patch of floor the 3D view was showing when it was left: the plan opens on it (once). */
+let from3d: PlanView | null = null;
+export const rememberView3d = (v: PlanView) => {
+  from3d = v;
+};
+export const takeView3d = (key: string): PlanView | null => {
+  const v = from3d && from3d.key === key ? from3d : null;
+  from3d = null;
+  return v;
+};
