@@ -96,6 +96,16 @@ export function addImportedMap(map: FleetMap) {
   mapsStore.setState({ maps: [...mapsStore.getState().maps, map] });
   catalogPersist.queue(mapsStore.getState().maps.filter((m) => m.source === 'imported'));
 }
+/** Take an imported map out of the list (and its saved name). The built-in maps are code and cannot be removed. */
+export function removeImportedMap(id: string): boolean {
+  const m = mapsStore.getState().maps.find((q) => q.id === id);
+  if (!m || m.source !== 'imported') return false;
+  mapsStore.setState({ maps: mapsStore.getState().maps.filter((q) => q.id !== id) });
+  catalogPersist.queue(mapsStore.getState().maps.filter((q) => q.source === 'imported'));
+  const { [id]: _gone, ...names } = savedNames();
+  namePersist.queue(names);
+  return true;
+}
 registerStoreInit(() => mapsStore.setState({ maps: allMaps() }));
 export const useMaps = () => useStore(mapsStore, (s) => s.maps);
 export const useMap = (id: string | null) => useStore(mapsStore, (s) => s.maps.find((m) => m.id === id) ?? null);

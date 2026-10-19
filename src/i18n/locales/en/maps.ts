@@ -8,6 +8,16 @@ export const maps = {
   sortBy: (label: string) => `Sort By: ${label}`,
   sorts: { name: 'Name', version: 'Version' },
   card: { fleet: 'Fleet', updated: 'Last updated', unassigned: 'Unassigned', version: (v: number) => `v${v}` },
+  cardMenu: {
+    menu: 'Map actions',
+    delete: 'Delete map',
+    assigned: (fleets: string) => `Assigned to ${fleets}. Unassign it from the fleet first.`,
+    builtIn: 'Built-in maps cannot be deleted.',
+    title: (name: string) => `Delete ${name}?`,
+    body: 'The map, all its versions and drafts, and its stored files are removed for good. This cannot be undone.',
+    confirm: 'Delete map',
+    done: (name: string) => `${name} was deleted.`,
+  },
   noMatch: (q: string) => `No maps match “${q}”.`,
   empty: {
     title: 'Create a new map to get started',

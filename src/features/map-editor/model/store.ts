@@ -31,6 +31,8 @@ export interface MapVersionsState {
   /** Put a published version's data into the draft (starts one when there is none): "restore" / "update to the latest". */
   restoreToDraft(mapId: string, fromNumber: number, by: string, now?: number): MapVersion | null;
   discardDraft(mapId: string): void;
+  /** Forget a map's whole history (when the map itself is deleted). */
+  removeMap(mapId: string): void;
   /** Turn the draft into the next published version; returns its number. */
   publish(mapId: string, by: string, now?: number): number | null;
   /** Gives the Work areas that were made from an older saved zone their real outline and tint again (once; nothing else changes, published versions included). */
@@ -164,6 +166,10 @@ export const mapVersionsStore = createPersistedStore<MapVersionsState, Saved>(
         ),
       });
       return next;
+    },
+    removeMap(mapId) {
+      const { [mapId]: _gone, ...rest } = get().byMap;
+      set({ byMap: rest });
     },
     discardDraft(mapId) {
       const h = get().byMap[mapId];

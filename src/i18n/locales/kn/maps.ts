@@ -10,6 +10,16 @@ export const messages: Messages<typeof maps> = {
   sortBy: (label) => `ವಿಂಗಡಿಸಿ: ${label}`,
   sorts: { name: 'ಹೆಸರು', version: 'ಆವೃತ್ತಿ' },
   card: { fleet: 'ಫ್ಲೀಟ್', updated: 'ಕೊನೆಯ ಅಪ್‌ಡೇಟ್', unassigned: 'ನಿಯೋಜಿಸಿಲ್ಲ', version: (v) => `v${v}` },
+  cardMenu: {
+    menu: 'ನಕ್ಷೆಯ ಕ್ರಿಯೆಗಳು',
+    delete: 'ನಕ್ಷೆ ಅಳಿಸಿ',
+    assigned: (fleets: string) => `${fleets} ಗೆ ನಿಯೋಜಿಸಲಾಗಿದೆ. ಮೊದಲು ಫ್ಲೀಟ್‌ನಿಂದ ತೆಗೆಯಿರಿ.`,
+    builtIn: 'ಅಂತರ್ನಿರ್ಮಿತ ನಕ್ಷೆಗಳನ್ನು ಅಳಿಸಲಾಗುವುದಿಲ್ಲ.',
+    title: (name: string) => `${name} ಅಳಿಸಬೇಕೆ?`,
+    body: 'ನಕ್ಷೆ, ಅದರ ಎಲ್ಲಾ ಆವೃತ್ತಿಗಳು ಮತ್ತು ಕರಡುಗಳು, ಹಾಗೂ ಉಳಿಸಿದ ಫೈಲ್‌ಗಳನ್ನು ಶಾಶ್ವತವಾಗಿ ತೆಗೆಯಲಾಗುತ್ತದೆ. ಇದನ್ನು ಹಿಂಪಡೆಯಲಾಗದು.',
+    confirm: 'ನಕ್ಷೆ ಅಳಿಸಿ',
+    done: (name: string) => `${name} ಅಳಿಸಲಾಗಿದೆ.`,
+  },
   noMatch: (q) => `“${q}” ಗೆ ಹೊಂದುವ ನಕ್ಷೆಗಳಿಲ್ಲ.`,
   empty: {
     title: 'ಆರಂಭಿಸಲು ಹೊಸ ನಕ್ಷೆ ರಚಿಸಿ',

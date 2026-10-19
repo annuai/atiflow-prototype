@@ -10,6 +10,16 @@ export const messages: Messages<typeof maps> = {
   sortBy: (label) => `क्रमबद्ध करें: ${label}`,
   sorts: { name: 'नाम', version: 'संस्करण' },
   card: { fleet: 'फ़्लीट', updated: 'पिछला अपडेट', unassigned: 'असाइन नहीं', version: (v) => `v${v}` },
+  cardMenu: {
+    menu: 'मैप के विकल्प',
+    delete: 'मैप हटाएँ',
+    assigned: (fleets: string) => `${fleets} को सौंपा गया है। पहले इसे फ़्लीट से हटाएँ।`,
+    builtIn: 'बिल्ट-इन मैप हटाए नहीं जा सकते।',
+    title: (name: string) => `${name} हटाएँ?`,
+    body: 'मैप, उसके सभी संस्करण और ड्राफ़्ट, और उसकी सहेजी फ़ाइलें हमेशा के लिए हट जाएँगी। इसे वापस नहीं किया जा सकता।',
+    confirm: 'मैप हटाएँ',
+    done: (name: string) => `${name} हटा दिया गया।`,
+  },
   noMatch: (q) => `“${q}” से कोई मैप मेल नहीं खाता।`,
   empty: {
     title: 'शुरू करने के लिए नया मैप बनाएँ',
