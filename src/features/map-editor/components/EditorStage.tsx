@@ -14,6 +14,7 @@ import { setZoneShape } from '../model/zones';
 import type { MapData, Selection } from '../model/types';
 import type { useDraftEditor } from '../model/useDraftEditor';
 import type { useSimulationPanel } from '../sim/useSimulationPanel';
+import { ViewSwitch } from './ViewSwitch';
 import { DrawHint } from './DrawHint';
 import { ModuleToolbar, type Module } from './ModuleToolbar';
 import type { SiteLayout } from '@/core/types';
@@ -36,7 +37,7 @@ interface Props {
   structureOpen: boolean;
   /** Select multiple (a button of the tool bar): clicks toggle elements, dragging the floor draws a selection box */
   multi: boolean;
-  onMulti(): void;
+  onView(v: '2d' | '3d'): void;
   onMarquee(a: P, b: P, additive: boolean): void;
   onSelectTool: () => void;
   onArm: (m: Module, choice?: string) => void;
@@ -65,8 +66,8 @@ export function EditorStage({
   choices,
   structureOpen,
   multi,
-  onMulti,
   onMarquee,
+  onView,
   onSelectTool,
   onArm,
 }: Props): ReactNode {
@@ -86,6 +87,7 @@ export function EditorStage({
         drawing={drawing}
         onPoint={draw.onPoint}
         structureOpen={structureOpen && designing}
+        elementsPickable={designing}
         multi={multi && structureOpen}
         onMarquee={onMarquee}
         onElementMove={(id, dx, dy) => {
@@ -125,15 +127,8 @@ export function EditorStage({
           cancelLabel={drawing.length ? copy.hint.cancel : copy.hint.done}
         />
       )}
-      {designing && (
-        <ModuleToolbar
-          tool={tool}
-          choices={choices}
-          onSelect={onSelectTool}
-          onTool={onArm}
-          multi={structureOpen ? { on: multi, toggle: onMulti } : undefined}
-        />
-      )}
+      {designing && <ViewSwitch view="2d" onView={onView} />}
+      {designing && <ModuleToolbar tool={tool} choices={choices} onSelect={onSelectTool} onTool={onArm} />}
     </div>
   );
 }

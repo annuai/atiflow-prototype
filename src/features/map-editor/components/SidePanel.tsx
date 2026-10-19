@@ -14,6 +14,7 @@ import type { Module } from './ModuleToolbar';
 import { RoadForm, RoutesPanel } from './RoutesPanel';
 import { RouteForm } from './RouteForm';
 import { ElementForm } from '../structure-ui/ElementForm';
+import { MultiToggle } from './MultiToggle';
 import { MultiPanel } from '../structure-ui/MultiPanel';
 import { StructurePanel } from '../structure-ui/StructurePanel';
 import { elementOf } from '../model/structure/ops';
@@ -25,6 +26,9 @@ import { ZoneForm, ZonesPanel } from './ZonesPanel';
 
 type Thing = NonNullable<Selection>;
 export interface SidePanelProps {
+  /** Select multiple (Structure module): on or off, and the switch */
+  multi: boolean;
+  onMulti(): void;
   /** shown under the title (the 3D view's hint and its way back to 2D) */
   notice?: ReactNode;
   mode: 'design' | 'simulation';
@@ -236,6 +240,7 @@ export function SidePanel(p: SidePanelProps) {
     >
       <h2 className="border-b border-secondary px-4 py-4 text-md font-semibold text-primary">{title(p)}</h2>
       {mode === 'design' && p.notice}
+      {mode === 'design' && module === 'structure' && <MultiToggle on={p.multi} toggle={p.onMulti} />}
       {mode === 'simulation' && (
         <SimulationPanel
           data={data}

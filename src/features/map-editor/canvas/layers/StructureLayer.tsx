@@ -23,6 +23,8 @@ export interface StructureLayerProps {
   vp: Vp;
   /** the Structure module is open: elements can be picked, the estimate shows as a faint underlay */
   active: boolean;
+  /** the faint scan under the elements (shown while the Structure module is open) */
+  underlay?: boolean;
   /** the select tool is on (not a drawing tool): elements can be dragged */
   selecting: boolean;
   editable: boolean;
@@ -102,6 +104,7 @@ export function StructureLayer({
   data,
   vp,
   active,
+  underlay,
   selecting,
   editable,
   selectedId,
@@ -317,7 +320,7 @@ export function StructureLayer({
   };
   return (
     <g data-testid="structure-layer">
-      {active && (
+      {underlay && (
         <g pointerEvents="none" opacity={0.55}>
           {(data.structure?.walls ?? []).map(
             (w, i) =>

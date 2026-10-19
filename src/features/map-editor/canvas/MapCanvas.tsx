@@ -36,6 +36,8 @@ interface Props {
   onRouteNodeAdd(roadId: string, at: P): void;
   /** The Structure module is open: elements can be picked, and the lidar estimate shows under them. */
   structureOpen: boolean;
+  /** structures can be picked (always, in the design view: not only while the Structure module is open) */
+  elementsPickable: boolean;
   /** An element is dragged (`dx`, `dy` since the last call), a corner of a wall or outline is dragged, a block is moved / resized / turned, or a point is added by a double-click. */
   onElementMove(id: string, dx: number, dy: number): void;
   onElementPoint(id: string, index: number, to: P): void;
@@ -86,6 +88,7 @@ export function MapCanvas({
   onRouteNodeMove,
   onRouteNodeAdd,
   structureOpen,
+  elementsPickable,
   multi,
   onMarquee,
   onElementMove,
@@ -160,7 +163,7 @@ export function MapCanvas({
         onPointerLeave={pointer.leave}
         onDoubleClick={(e) => {
           if (mode === 'many' && editable && !(data.p2p && tool.kind === 'road')) onFinish();
-          if (structureOpen && editable && mode === 'none') {
+          if (elementsPickable && editable && mode === 'none') {
             const hit = document
               .elementsFromPoint(e.clientX, e.clientY)
               .map((el) => el.getAttribute('data-hit'))
@@ -198,7 +201,8 @@ export function MapCanvas({
         <StructureLayer
           data={data}
           vp={vp}
-          active={structureOpen}
+          active={elementsPickable}
+          underlay={structureOpen}
           selecting={mode === 'none'}
           editable={editable}
           selectedIds={selection?.kind === 'element' ? (selection.ids ?? [selection.id]) : []}

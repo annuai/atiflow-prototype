@@ -56,7 +56,6 @@ export const mapEditor = {
       area: 'Area',
       work: 'Work area',
       door: 'Door',
-      trace: 'Trace estimate',
       erase: 'Erase region',
     },
     hints: {
@@ -68,7 +67,6 @@ export const mapEditor = {
       area: 'Click the corners of the area. Double-click or Enter to finish, Esc when done.',
       work: 'Click the corners of the work area. Double-click or Enter to finish, Esc when done.',
       door: 'Click a wall or partition to put a door in it. Esc when done.',
-      trace: 'Click a wall or machine of the lidar estimate to turn it into one you can edit. Esc when done.',
       erase: 'Click two corners of the region to erase: the estimate and the elements inside it go. Esc when done.',
     },
     list: {

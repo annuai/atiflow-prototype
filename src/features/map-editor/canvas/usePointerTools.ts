@@ -49,7 +49,7 @@ export function usePointerTools({
   const mode = drawMode(tool);
   const [cursor, setCursor] = useState<P | null>(null);
   const touch = useTouchGestures(vp.el, { zoomAt: vp.zoomAt, panBy: vp.panBy });
-  const press = useRef<{ x: number; y: number; moved: boolean; box?: P; shift?: boolean } | null>(null);
+  const press = useRef<{ x: number; y: number; moved: boolean; box?: P; shift?: boolean; button: number } | null>(null);
   const [box, setBox] = useState<{ a: P; b: P } | null>(null);
   const dragging = useRef<{ kind: 'station' | 'staging'; id: string; dx: number; dy: number } | null>(null);
 
@@ -78,7 +78,9 @@ export function usePointerTools({
       y: e.clientY,
       moved: false,
       shift: e.shiftKey,
-      ...(boxSelect && (multi || e.shiftKey) ? { box: [from.x, from.y] as P } : {}),
+      button: e.button,
+      // (the middle button always pans, whatever Select multiple says)
+      ...(boxSelect && e.button === 0 && (multi || e.shiftKey) ? { box: [from.x, from.y] as P } : {}),
     };
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
   };
@@ -124,7 +126,7 @@ export function usePointerTools({
       onMarquee?.(p.box, [end.x, end.y], !!(p.shift || multi));
       return;
     }
-    if (was || !p || p.moved) return;
+    if (was || !p || p.moved || p.button !== 0) return; // only the main button clicks
     if (mode !== 'none') {
       if (editable) {
         const at = vp.toSite(e.clientX, e.clientY);

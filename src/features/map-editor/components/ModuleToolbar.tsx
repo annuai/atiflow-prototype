@@ -1,14 +1,5 @@
 import type { FC } from 'react';
-import {
-  Building07,
-  ChevronDown,
-  Cursor01,
-  LayoutGrid01,
-  MarkerPin02,
-  Route,
-  Hand,
-  Dotpoints01,
-} from '@untitledui/icons';
+import { Building07, ChevronDown, Cursor01, LayoutGrid01, MarkerPin02, Route, Hand } from '@untitledui/icons';
 import { Button as AriaButton } from 'react-aria-components';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
 import { Tooltip } from '@/components/base/tooltip/tooltip';
@@ -61,14 +52,11 @@ export function ModuleToolbar({
   choices,
   onSelect,
   onTool,
-  multi,
 }: {
   tool: Tool;
   choices: Record<Module, string>;
   onSelect(): void;
   onTool(m: Module, choice: string): void;
-  /** the Select multiple switch (shown while the Structure module is open) */
-  multi?: { on: boolean; toggle(): void };
 }) {
   const active = moduleOfTool(tool);
   return (
@@ -88,21 +76,6 @@ export function ModuleToolbar({
           <span className="hidden text-[11px] leading-3 pointer-coarse:block">{copy.tools.select}</span>
         </AriaButton>
       </Tooltip>
-      {multi && (
-        <Tooltip title={copy.tools.multi} description={helpText('tool.multi')} placement="top" delay={500}>
-          <AriaButton
-            aria-label={copy.tools.multi}
-            aria-pressed={multi.on}
-            onPress={multi.toggle}
-            className={tile(multi.on)}
-          >
-            <Dotpoints01 className="size-5" />
-            <span className="hidden text-[11px] leading-3 whitespace-nowrap pointer-coarse:block">
-              {copy.tools.multi}
-            </span>
-          </AriaButton>
-        </Tooltip>
-      )}
       <span className="mx-1 h-6 w-px bg-border-secondary" aria-hidden />
       {MODULES.map((m) => {
         const Icon = ICON[m];

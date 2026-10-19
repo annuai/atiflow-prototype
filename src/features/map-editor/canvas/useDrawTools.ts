@@ -4,13 +4,7 @@ import { copy } from '../copy';
 import { addRoad } from '../model/roads';
 import { addRoute } from '../model/routes';
 import { addArea, addBox, addDoor, addLine, addRoom, addWorkArea } from '../model/structure/ops';
-import {
-  eraseRect,
-  nearestEstimateMachine,
-  nearestEstimateWall,
-  traceMachines,
-  traceWalls,
-} from '../model/structure/trace';
+import { eraseRect } from '../model/structure/trace';
 import { addStagingArea } from '../model/staging';
 import { addStation, moveStation } from '../model/stations';
 import type { MapData, Selection } from '../model/types';
@@ -49,17 +43,6 @@ export function useDrawTools(i: DrawToolsInput) {
       else {
         edit(() => r.data);
         setSelection({ kind: 'element', id: r.id });
-      }
-      return true;
-    }
-    if (what === 'trace') {
-      const w = nearestEstimateWall(data, p),
-        q = nearestEstimateMachine(data, p);
-      const r = w >= 0 ? traceWalls(data, [w]) : q >= 0 ? traceMachines(data, [q]) : null;
-      if (!r?.ids.length) notify.warning(copy.structure.hints.trace, undefined, 'structure-trace');
-      else {
-        edit(() => r.data);
-        setSelection({ kind: 'element', id: r.ids[0] });
       }
       return true;
     }

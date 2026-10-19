@@ -269,8 +269,6 @@ export function MapEditorPage() {
           onHistory={() => setHistoryOpen(true)}
           onPublish={() => setPublishOpen(true)}
           onEdit={startDraft}
-          view={v.view}
-          onView={v.setView}
           onExport={data.source ? exportZip : undefined}
         />
         <VersionBanner
@@ -289,7 +287,7 @@ export function MapEditorPage() {
               selection={selection}
               onSelection={setSelection}
               multi={multi}
-              onMulti={v.toggleMulti}
+              onView={v.setView}
             />
           ) : (
             <EditorStage
@@ -308,7 +306,7 @@ export function MapEditorPage() {
               choices={choices}
               structureOpen={module === 'structure'}
               multi={multi}
-              onMulti={v.toggleMulti}
+              onView={v.setView}
               onMarquee={(a, b, additive) => setSelection(boxElements(data, selection, a, b, additive))}
               onSelectTool={selectTool}
               onArm={arm}
@@ -316,6 +314,8 @@ export function MapEditorPage() {
           )}
           <SidePanel
             notice={view3dNotice(v.view, v.setView)}
+            multi={multi}
+            onMulti={v.toggleMulti}
             mode={mode}
             module={module}
             data={data}
