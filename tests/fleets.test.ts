@@ -200,6 +200,9 @@ describe('maps page logic', () => {
     expect(by).toEqual({ 'main-assembly': ['A', 'B'] });
     expect(filterSortMaps(MAPS, by, '', 'name').map((m) => m.id)).toEqual(['assembly-east', 'main-assembly']);
     expect(filterSortMaps(MAPS, by, '', 'version')[0].version).toBe(5);
+    // most recently worked on first: an edit newer than the map's own time counts
+    const recent = new Map([['assembly-east', Date.now() + 1000]]);
+    expect(filterSortMaps(MAPS, by, '', 'updated', (m) => recent.get(m.id) ?? m.updatedAt)[0].id).toBe('assembly-east');
     expect(filterSortMaps(MAPS, by, 'engine', 'name').map((m) => m.id)).toEqual(['main-assembly']);
     expect(filterSortMaps(MAPS, by, 'zzz', 'name')).toEqual([]);
   });

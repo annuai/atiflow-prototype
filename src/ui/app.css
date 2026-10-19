@@ -13,6 +13,7 @@ body {
   line-height: var(--lh-sm);
   color: var(--text-secondary);
   background: var(--bg-page);
+  background: linear-gradient(135deg, #f4f2ec 0%, #e8e8e4 50%, #dadfdf 100%) fixed;
   overflow: hidden;
 }
 /* font/color inheritance for form controls comes from Tailwind preflight (layered); an unlayered rule here would override Untitled UI text colours */

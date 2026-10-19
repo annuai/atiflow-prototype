@@ -8,7 +8,7 @@ export const messages: Messages<typeof maps> = {
   create: 'പുതിയ മാപ്പ് സൃഷ്ടിക്കുക',
   search: 'പേരോ ഫ്ലീറ്റോ ഉപയോഗിച്ച് മാപ്പുകൾ തിരയുക…',
   sortBy: (label) => `ക്രമീകരിക്കുക: ${label}`,
-  sorts: { name: 'പേര്', version: 'പതിപ്പ്' },
+  sorts: { name: 'പേര്', version: 'പതിപ്പ്', updated: 'അവസാന അപ്‌ഡേറ്റ്' },
   card: {
     fleet: 'ഫ്ലീറ്റ്',
     updated: 'അവസാനം അപ്ഡേറ്റ് ചെയ്തത്',
