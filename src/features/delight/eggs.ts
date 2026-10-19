@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { authStore } from '@/features/auth';
 import { handle } from '@/ui/engineHandle';
 import { store as floorStore } from '@/core/store';
 import { copy } from './copy';
@@ -11,7 +12,7 @@ export interface Lane {
   width: number;
 }
 export type EggItem =
-  | { kind: 'robot'; id: number; lane: Lane; text?: string; hue: number; delay: number; stop: boolean }
+  | { kind: 'robot'; id: number; unit: number; lane: Lane; text?: string; hue: number; delay: number; stop: boolean }
   | { kind: 'dance'; id: number; lane: Lane; text: string }
   | { kind: 'confetti'; id: number; pieces: Piece[] };
 export interface Piece {
@@ -40,9 +41,35 @@ export function cardLane(): Lane {
 }
 const screenLane = (): Lane => ({ left: 0, top: window.innerHeight * 0.55, width: window.innerWidth });
 
-let niceNext = 0;
-/** The next kind message: one after the other, then round again. */
-export const nextMessage = () => copy.robot[niceNext++ % copy.robot.length];
+/** Good morning / afternoon / evening and the person's first name, by the hour on this device. */
+export function greeting(hour = new Date().getHours()): string | null {
+  const name = authStore.getState().user?.firstName;
+  if (!name) return null;
+  return hour < 12 ? copy.morning(name) : hour < 17 ? copy.afternoon(name) : copy.evening(name);
+}
+let bag: number[] = [];
+let lastPick = -1;
+/** Starts the shuffle again (tests). */
+export const resetMessages = () => {
+  bag = [];
+  lastPick = -1;
+};
+/** A shuffled bag of every message: each is used once, in no fixed order, and only when the bag is empty is it shuffled again (never starting with the one just shown). */
+function refill(size: number) {
+  bag = Array.from({ length: size }, (_, i) => i);
+  for (let i = size - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [bag[i], bag[j]] = [bag[j], bag[i]];
+  }
+  if (size > 1 && bag[0] === lastPick) [bag[0], bag[size - 1]] = [bag[size - 1], bag[0]];
+}
+/** The next kind message: the greeting is one of them, and none repeats until all have been shown. */
+export function nextMessage(): string {
+  const size = copy.robot.length + 1;
+  if (!bag.length) refill(size);
+  lastPick = bag.shift()!;
+  return lastPick < copy.robot.length ? copy.robot[lastPick] : (greeting() ?? copy.robot[0]);
+}
 
 export interface RobotOptions {
   text?: string;
@@ -51,15 +78,75 @@ export interface RobotOptions {
   stop?: boolean;
   lane?: Lane;
 }
-export const sendRobot = (o: RobotOptions = {}) =>
+// Robots appear one after the other, each right behind the one before: the next starts as soon as the one on the stage has fully driven in (its ribbon included), so it never covers a
+// ribbon. A convoy or a parade is one unit (it counts as in once its last robot is). Things that stay in one place (a dancer, a robot that stops to charge) keep the stage until they leave.
+const queue: (() => number | void)[] = [];
+/** Pixels between the end of one ribbon and the next robot, and how fast robots drive (must match RobotEgg). */
+export const EGG_GAP = 40;
+export const EGG_SPEED = 110;
+let busy = false;
+let unitSeq = 0;
+let unit: { id: number; robots: number; startedAt: number; wait: number; keep: boolean; seen: Set<number> } | null =
+  null;
+let timed = false;
+let launching = false;
+const clear = () => !useEgg.getState().items.some((i) => i.kind !== 'confetti');
+const release = (unitId?: number) => {
+  if (unitId !== undefined && unit?.id !== unitId) return; // a timer of a unit that has already been released
+  busy = false;
+  timed = false;
+  unit = null;
+  pump();
+};
+function pump() {
+  while (!busy && queue.length) {
+    busy = true;
+    unit = { id: ++unitSeq, robots: 0, startedAt: Date.now(), wait: 0, keep: false, seen: new Set() };
+    launching = true;
+    const hold = queue.shift()!();
+    launching = false;
+    if (typeof hold === 'number') {
+      timed = true;
+      window.setTimeout(release, hold, unit.id);
+    } else if ((unit.robots === 0 || unit.keep) && clear()) busy = false;
+  }
+}
+useEgg.subscribe(() => {
+  // nothing is left on the stage and nothing is counting down (it was taken away, or it stays in place and has now gone): the next unit may start
+  if (busy && !timed && !launching && clear()) release();
+});
+/** A robot of the unit on the stage measured itself: once the last one is fully in, the next unit may start. */
+export function reportDriven(unitId: number, robotId: number, delaySeconds: number, widthPx: number) {
+  if (!unit || unit.id !== unitId || unit.keep || unit.seen.has(robotId)) return; // (React may run an effect twice in development)
+  unit.seen.add(robotId);
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  unit.wait = Math.max(unit.wait, reduced ? 3500 : (delaySeconds + (widthPx + EGG_GAP) / EGG_SPEED) * 1000);
+  unit.robots -= 1;
+  if (unit.robots > 0) return;
+  timed = true;
+  window.setTimeout(release, Math.max(0, unit.wait - (Date.now() - unit.startedAt)), unit.id);
+}
+export const sendRobot = (o: RobotOptions = {}) => {
+  if (unit) {
+    unit.robots += 1;
+    if (o.stop) unit.keep = true;
+  }
   add({
     kind: 'robot',
+    unit: unit?.id ?? 0,
     lane: o.lane ?? cardLane(),
     text: o.text,
     hue: o.hue ?? 0,
     delay: o.delay ?? 0,
     stop: o.stop ?? false,
   });
+};
+
+/** Runs `launch` now, or when the unit before it is fully in. It may return how long (ms) it keeps the stage when it draws outside the store. */
+const later = (launch: () => number | void) => {
+  queue.push(launch);
+  pump();
+};
 
 const COLORS = ['#33bab1', '#fcd900', '#f97316', '#6366f1', '#ec4899', '#22c55e'];
 export function confetti() {
@@ -85,22 +172,29 @@ const in3d = () => !!handle.engine && floorStore.getState().cameraMode !== 'top'
 const WORDS: Record<string, () => void> = {
   robottt: () => {
     const text = nextMessage();
-    if (in3d()) handle.engine!.egg(text);
-    else sendRobot({ text });
+    later(() => {
+      if (in3d()) {
+        handle.engine!.egg(text);
+        return 9500;
+      }
+      sendRobot({ text });
+    });
   },
-  party: () => {
-    confetti();
-    sendRobot({ text: copy.party });
-  },
-  fleet: () => convoy([0, 70, 160, 270], copy.fleet),
-  charge: () => sendRobot({ text: `⚡ ${copy.charge}`, stop: true }),
-  dance: () => add({ kind: 'dance', lane: cardLane(), text: copy.dance }),
-  coffee: () => sendRobot({ text: `☕ ${copy.coffee}` }),
-  hello: () => sendRobot({ text: copy.hello }),
-  beep: () => {
-    beep([660, 880, 660]);
-    sendRobot({ text: copy.beep });
-  },
+  party: () =>
+    later(() => {
+      confetti();
+      sendRobot({ text: copy.party });
+    }),
+  fleet: () => later(() => convoy([0, 70, 160, 270], copy.fleet)),
+  charge: () => later(() => sendRobot({ text: `⚡ ${copy.charge}`, stop: true })),
+  dance: () => later(() => add({ kind: 'dance', lane: cardLane(), text: copy.dance })),
+  coffee: () => later(() => sendRobot({ text: `☕ ${copy.coffee}` })),
+  hello: () => later(() => sendRobot({ text: copy.hello })),
+  beep: () =>
+    later(() => {
+      beep([660, 880, 660]);
+      sendRobot({ text: copy.beep });
+    }),
 };
 WORDS.confetti = WORDS.party;
 WORDS.zap = WORDS.charge;
@@ -115,10 +209,11 @@ export function runEgg(text: string): boolean {
 }
 
 /** The big one: a parade of robots across the whole window, with confetti. */
-export function parade() {
-  confetti();
-  convoy([0, 50, 100, 150, 200, 250, 300], copy.konami, 0.7, screenLane());
-}
+export const parade = () =>
+  later(() => {
+    confetti();
+    convoy([0, 50, 100, 150, 200, 250, 300], copy.konami, 0.7, screenLane());
+  });
 
 /** A line, shown by a small celebration, for something the person did (first workflow, first map, an empty queue). */
-export const celebrate = (text: string) => sendRobot({ text });
+export const celebrate = (text: string) => later(() => sendRobot({ text }));

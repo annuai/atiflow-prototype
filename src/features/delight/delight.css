@@ -207,15 +207,6 @@
   border-radius: 1px;
   animation: egg-fall linear both;
 }
-/* the logo, after five clicks */
-@keyframes egg-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.egg-spin {
-  animation: egg-spin 0.8s ease-in-out;
-}
 @media (prefers-reduced-motion: reduce) {
   .egg-drive,
   .egg-dancer {
@@ -233,8 +224,5 @@
   .egg-lane {
     mask-image: none;
     -webkit-mask-image: none;
-  }
-  .egg-spin {
-    animation: none;
   }
 }

@@ -5,7 +5,7 @@ import { mapsStore } from '@/features/maps';
 import { wfStore } from '@/features/workflow-builder';
 import { services } from '@/services';
 import { copy } from './copy';
-import { celebrate, parade, sendRobot } from './eggs';
+import { celebrate, parade, runEgg } from './eggs';
 
 const KONAMI = [
   'arrowup',
@@ -39,16 +39,13 @@ function useSecrets() {
     let clicks = 0,
       last = 0;
     const onClick = (e: MouseEvent) => {
-      const logo = (e.target as Element | null)?.closest?.('.sb-logo');
-      if (!logo) return;
+      if (!(e.target as Element | null)?.closest?.('.sb-logo')) return;
       const now = Date.now();
       clicks = now - last < 1500 ? clicks + 1 : 1;
       last = now;
       if (clicks < 5) return;
       clicks = 0;
-      logo.classList.add('egg-spin');
-      window.setTimeout(() => logo.classList.remove('egg-spin'), 900);
-      sendRobot({ text: copy.logo });
+      runEgg('robottt');
     };
     window.addEventListener('keydown', onKey);
     document.addEventListener('click', onClick, true);

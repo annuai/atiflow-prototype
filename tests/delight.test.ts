@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it } from 'vitest';
-import { runEgg, useEgg } from '@/features/delight/eggs';
+import { authStore } from '@/features/auth';
+import { greeting, resetMessages, runEgg, useEgg } from '@/features/delight/eggs';
 import { copy } from '@/features/delight/copy';
 
 beforeAll(() => {
@@ -33,16 +34,41 @@ describe('easter eggs', () => {
       expect(useEgg.getState().items.length).toBeGreaterThan(0);
     }
   });
-  it('sends the kind messages one after the other and starts over', () => {
+  it('sends every kind message once, in a shuffled order, before any repeats', () => {
+    authStore.setState({ user: { firstName: 'Arjun' } } as never);
     reset();
-    const n = copy.robot.length;
-    for (let i = 0; i < n + 1; i++) runEgg('robottt');
-    const texts = useEgg.getState().items.flatMap((x) => (x.kind === 'robot' && x.text ? [x.text] : []));
-    const last = texts.slice(-(n + 1));
-    last
-      .slice(1)
-      .forEach((t, k) => expect(copy.robot.indexOf(t as never)).toBe((copy.robot.indexOf(last[k] as never) + 1) % n));
-    expect(last[n]).toBe(last[0]);
+    resetMessages();
+    const n = copy.robot.length + 1;
+    for (let i = 0; i < 2 * n; i++) runEgg('robottt');
+    expect(useEgg.getState().items).toHaveLength(1); // the rest wait their turn
+    const texts: string[] = [];
+    for (let i = 0; i < 2 * n; i++) {
+      const [r] = useEgg.getState().items;
+      texts.push(r.kind === 'robot' ? (r.text ?? '') : '');
+      reset(); // that robot has left: the next one starts
+    }
+    // every message once before any is repeated, and again in the second round (a fresh shuffle)
+    expect(new Set(texts.slice(0, n)).size).toBe(n);
+    expect(new Set(texts.slice(n)).size).toBe(n);
+    expect(texts[n]).not.toBe(texts[n - 1]);
+    expect(texts.filter((t) => t.includes('Arjun'))).toHaveLength(2);
+  });
+  it('greets by the time of day and the first name', () => {
+    authStore.setState({ user: { firstName: 'Arjun' } } as never);
+    expect(greeting(8)).toBe('Good morning, Arjun!');
+    expect(greeting(13)).toBe('Good afternoon, Arjun!');
+    expect(greeting(20)).toBe('Good evening, Arjun!');
+    authStore.setState({ user: null } as never);
+    expect(greeting(8)).toBeNull();
+  });
+  it('robots never share the stage', () => {
+    reset();
+    runEgg('hello');
+    runEgg('coffee');
+    expect(useEgg.getState().items).toHaveLength(1);
+    reset();
+    expect(useEgg.getState().items).toHaveLength(1);
+    reset();
   });
   it('a fleet is several robots with the ribbon on the last one', () => {
     reset();

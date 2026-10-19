@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { RobotBeacon } from '@/components/data/RobotBeacon';
 import { StatusDot } from '@/components/data/StatusDot';
 import { AlertCircle, Lock03, Mail01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
@@ -75,6 +76,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
                   alt=""
                   className="pointer-events-none absolute left-[-54%] top-[-24%] h-[143%] w-[197%] max-w-none"
                 />
+                <RobotBeacon />
               </div>
               <div className="flex shrink-0 items-center py-2">
                 <div className="bg-[#33bab1] px-3 text-xs whitespace-nowrap text-white">{copy.ribbon}</div>

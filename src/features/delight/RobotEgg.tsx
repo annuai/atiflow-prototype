@@ -1,13 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { RobotBeacon } from '@/components/data/RobotBeacon';
 import robot from '@/assets/robots/sherpa-xt-lite.svg';
 import ribbonTip from './assets/ribbon-tip.svg';
 import { copy } from './copy';
-import { dropEgg, useEgg, type EggItem, type Lane } from './eggs';
+import { dropEgg, EGG_SPEED, reportDriven, useEgg, type EggItem, type Lane } from './eggs';
 import { beep } from './sound';
 import './delight.css';
 
-/** Pixels per second the robot drives at. */
-const SPEED = 110;
 type Of<K extends EggItem['kind']> = Extract<EggItem, { kind: K }>;
 
 const laneStyle = (l: Lane) => ({ left: l.left, top: l.top, width: l.width });
@@ -39,8 +38,12 @@ function Driver({ r }: { r: Of<'robot'> }) {
   // the group drives from just outside the left edge to the right edge, so its way is the lane plus its OWN width: a robot with a ribbon is wider and would be faster at one fixed time
   const drive = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(90);
-  useLayoutEffect(() => setWidth(drive.current?.offsetWidth ?? 90), []);
-  const seconds = (r.lane.width + width) / SPEED + (r.stop ? 2.6 : 0);
+  useLayoutEffect(() => {
+    const w = drive.current?.offsetWidth ?? 90;
+    setWidth(w);
+    reportDriven(r.unit, r.id, r.delay, w);
+  }, [r.unit, r.id, r.delay]);
+  const seconds = (r.lane.width + width) / EGG_SPEED + (r.stop ? 2.6 : 0);
   const line = poked ? copy.clicks[(poked - 1) % copy.clicks.length] : r.text;
   const poke = () => {
     beep([520, 520]);
@@ -61,6 +64,7 @@ function Driver({ r }: { r: Of<'robot'> }) {
         {line ? <Ribbon text={line} /> : null}
         <button type="button" tabIndex={-1} className={`egg-bot ${paused ? 'egg-honk' : ''}`} onClick={poke}>
           <img src={robot} alt="" style={r.hue ? { filter: `hue-rotate(${r.hue}deg)` } : undefined} />
+          <RobotBeacon />
         </button>
       </div>
       {r.stop ? (
@@ -84,6 +88,7 @@ function Dancer({ r }: { r: Of<'dance'> }) {
       <Ribbon text={r.text} />
       <div className="egg-bot">
         <img src={robot} alt="" />
+        <RobotBeacon />
       </div>
     </div>
   );

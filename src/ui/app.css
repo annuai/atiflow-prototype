@@ -1078,3 +1078,35 @@ body {
   line-height: 1;
   transform: translateY(0.5px); /* the font's digits sit a little high in their line box */
 }
+
+/* The orange light on a robot's roof blinks: a small patch over the beacon of the robot picture (`RobotBeacon`; it sits at 29 px, 2.3 px of the 62 x 54 crop used on the login card and by the easter-egg robots). */
+@keyframes robot-blink {
+  0%,
+  49% {
+    background: #f58220;
+    box-shadow: none;
+  }
+  50%,
+  100% {
+    background: #fff0c4;
+    box-shadow:
+      0 0 3px 2px rgba(255, 170, 60, 0.95),
+      0 0 7px 3px rgba(245, 130, 32, 0.5);
+  }
+}
+.robot-beacon {
+  position: absolute;
+  left: 29px;
+  top: 2.3px;
+  width: 3.6px;
+  height: 2.6px;
+  border-radius: 1px 1px 0 0;
+  background: #f58220;
+  animation: robot-blink 0.7s steps(1, end) infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .robot-beacon {
+    animation: none;
+  }
+}
