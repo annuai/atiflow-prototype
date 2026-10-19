@@ -10,8 +10,8 @@ import type { Stage } from './stage';
 /** The camera: modes (orbit, plan, walk, follow), flights, the lens change between 3D and plan, and the "focus on" moves. */
 /** Wheel, pinch and touch zoom speed up close (see stage.ts), and how much faster it gets far out: from `ZOOM_NEAR` metres away it grows with the distance, up to this many times. */
 const ZOOM_SPEED = 1.8;
-const ZOOM_NEAR = 80;
-const ZOOM_FAR_BOOST = 4;
+const ZOOM_NEAR = 40;
+const ZOOM_FAR_BOOST = 5;
 
 export class CameraRig {
   /** a camera flight in progress */
@@ -36,7 +36,14 @@ export class CameraRig {
     private readonly s: Stage,
     private readonly robots: RobotLayer,
     private readonly layers: Layers,
-  ) {}
+  ) {
+    // the wheel is read by the controls before the next frame, so the speed is set when the wheel turns
+    s.renderer.domElement.addEventListener('wheel', () => this.updateZoomSpeed(), { capture: true, passive: true });
+    // a wheel notch updates the controls on the spot (not in the frame loop), so the target is put back on the floor here too
+    s.controls.addEventListener('change', () => {
+      if ((s.mode === 'orbit' || s.mode === 'top') && !this.fly) this.seatTargetOnFloor();
+    });
+  }
   /** A stand-in zone covering what is on screen (walk mode needs a place to start when a map has no active zone). */
   frameZone(): Zone {
     const f = this.s.active[0]?.scene.frame ?? { cx: 0, cy: 0, W: 10, D: 10 };
@@ -289,9 +296,26 @@ export class CameraRig {
       fog.far = fog.near * 3;
     }
     // one wheel notch changes the distance by a fixed share, so from far out on a big map it took dozens of notches to come down to a robot: the further out, the bigger the share (the same as before up close)
-    const away = this.s.camera.position.distanceTo(c.target) / k;
-    c.zoomSpeed = ZOOM_SPEED * THREE.MathUtils.clamp(away / ZOOM_NEAR, 1, ZOOM_FAR_BOOST);
+    this.updateZoomSpeed();
     this.s.camera.updateProjectionMatrix();
+  }
+  /**
+   * Zooming towards the cursor (OrbitControls `zoomToCursor`) moves the orbit target onto a plane facing the camera, not onto the floor, so after a few zooms towards a far corner of a big map the target
+   * hung in the air: the camera kept gliding towards a point above the floor, the zoom slowed to a crawl and orbiting turned about a point nobody could see. Every frame the target is slid back along
+   * the line of sight to where it meets the floor (the view itself does not change), so the pivot is always the floor point in the middle of the picture.
+   */
+  updateZoomSpeed() {
+    const away = this.s.camera.position.distanceTo(this.s.controls.target) / this.s.k;
+    this.s.controls.zoomSpeed = ZOOM_SPEED * THREE.MathUtils.clamp(away / ZOOM_NEAR, 1, ZOOM_FAR_BOOST);
+  }
+  private seatTargetOnFloor() {
+    const cam = this.s.camera,
+      c = this.s.controls;
+    const dir = cam.getWorldDirection(new THREE.Vector3());
+    if (dir.y > -0.05) return; // looking at or above the horizon: no floor point to seat on
+    const t = cam.position.y / -dir.y;
+    if (t < c.minDistance || t > c.maxDistance) return;
+    c.target.copy(cam.position).addScaledVector(dir, t);
   }
   stepWalk(dt: number) {
     const mag = Math.hypot(this.touchMove.f, this.touchMove.s);
@@ -359,6 +383,7 @@ export class CameraRig {
         this.s.camera.position.y += lift;
         this.s.controls.target.y += lift;
       }
+      if (!this.fly) this.seatTargetOnFloor();
     }
     // sun follows target so shadows stay sharp near the viewer
     const T = this.s.mode === 'walk' ? this.s.camera.position : this.s.controls.target;
