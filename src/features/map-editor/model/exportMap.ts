@@ -8,14 +8,4 @@ export async function buildMapZip(map: { name: string; version: number }, data: 
   return exportMapZip({ original, data, name: map.name, version: `v${map.version}` });
 }
 
-/** Saves the zip through the browser's download. */
-export function download(bytes: Uint8Array, fileName: string) {
-  const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/zip' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
-}
+export { download } from '@/utils/download';

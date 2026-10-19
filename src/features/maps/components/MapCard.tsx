@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash01 } from '@untitledui/icons';
+import { Download01, Trash01 } from '@untitledui/icons';
 import { Link } from 'react-router-dom';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
@@ -11,6 +11,7 @@ import { lastUpdated } from '@/utils/timeAgo';
 import { copy } from '../copy';
 import { MapThumbnail } from './MapThumbnail';
 import { deleteMap, deleteRefusal } from '../model/deleteMap';
+import { downloadMap } from '../model/downloadMap';
 import { routingName } from '../model/routing';
 import type { FleetMap } from '../model/types';
 import { t } from '../text';
@@ -24,6 +25,15 @@ export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
   const [asking, setAsking] = useState(false);
   const why = deleteRefusal(map, fleets);
   // a map a fleet runs on (or a built-in one) is not deleted: a toast says why, the menu does not change
+  const onDownload = async () => {
+    try {
+      if (await downloadMap(map))
+        notify.success(copy.cardMenu.downloaded(map.name), undefined, `map-download-${map.id}`);
+      else notify.warning(copy.cardMenu.noVersion, undefined, `map-download-${map.id}`);
+    } catch {
+      notify.error(copy.cardMenu.downloadFailed, undefined, `map-download-${map.id}`);
+    }
+  };
   const onDelete = () => {
     if (!why) return setAsking(true);
     notify.warning(
@@ -63,7 +73,8 @@ export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
               className="grid size-8 place-items-center bg-primary/90 opacity-0 shadow-xs ring-1 ring-secondary group-focus-within:opacity-100 group-hover:opacity-100 aria-expanded:opacity-100 [@media(pointer:coarse)]:opacity-100"
             />
             <Dropdown.Popover className="w-48">
-              <Dropdown.Menu onAction={onDelete}>
+              <Dropdown.Menu onAction={(key) => (key === 'download' ? void onDownload() : onDelete())}>
+                <Dropdown.Item id="download" icon={Download01} label={copy.cardMenu.download} />
                 <Dropdown.Item id="delete" icon={Trash01} label={copy.cardMenu.delete} />
               </Dropdown.Menu>
             </Dropdown.Popover>

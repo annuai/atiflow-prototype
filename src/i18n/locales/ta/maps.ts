@@ -17,6 +17,10 @@ export const messages: Messages<typeof maps> = {
   },
   cardMenu: {
     menu: 'வரைபட செயல்கள்',
+    download: 'வரைபடத்தைப் பதிவிறக்கு',
+    downloaded: (name: string) => `${name} பதிவிறக்கப்பட்டது.`,
+    downloadFailed: 'வரைபடத்தைப் பதிவிறக்க முடியவில்லை.',
+    noVersion: 'இந்த வரைபடத்துக்கு சேமித்த பதிப்பு இன்னும் இல்லை. ஒருமுறை திறந்து மீண்டும் முயலவும்.',
     delete: 'வரைபடத்தை நீக்கு',
     assigned: (fleets: string) => `${fleets} க்கு ஒதுக்கப்பட்டுள்ளது. முதலில் ஃப்ளீட்டிலிருந்து நீக்கவும்.`,
     blocked: (name: string) => `${name} ஐ நீக்க முடியாது`,

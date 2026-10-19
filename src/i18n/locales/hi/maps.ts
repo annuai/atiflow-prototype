@@ -12,6 +12,10 @@ export const messages: Messages<typeof maps> = {
   card: { fleet: 'फ़्लीट', updated: 'पिछला अपडेट', unassigned: 'असाइन नहीं', version: (v) => `v${v}` },
   cardMenu: {
     menu: 'मैप के विकल्प',
+    download: 'मैप डाउनलोड करें',
+    downloaded: (name: string) => `${name} डाउनलोड हो गया।`,
+    downloadFailed: 'मैप डाउनलोड नहीं हो सका।',
+    noVersion: 'इस मैप का कोई सहेजा संस्करण अभी नहीं है। इसे एक बार खोलें, फिर दोबारा कोशिश करें।',
     delete: 'मैप हटाएँ',
     assigned: (fleets: string) => `${fleets} को सौंपा गया है। पहले इसे फ़्लीट से हटाएँ।`,
     blocked: (name: string) => `${name} हटाया नहीं जा सकता`,

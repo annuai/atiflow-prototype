@@ -12,6 +12,10 @@ export const messages: Messages<typeof maps> = {
   card: { fleet: 'ಫ್ಲೀಟ್', updated: 'ಕೊನೆಯ ಅಪ್‌ಡೇಟ್', unassigned: 'ನಿಯೋಜಿಸಿಲ್ಲ', version: (v) => `v${v}` },
   cardMenu: {
     menu: 'ನಕ್ಷೆಯ ಕ್ರಿಯೆಗಳು',
+    download: 'ನಕ್ಷೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ',
+    downloaded: (name: string) => `${name} ಡೌನ್‌ಲೋಡ್ ಆಗಿದೆ.`,
+    downloadFailed: 'ನಕ್ಷೆಯನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲು ಆಗಲಿಲ್ಲ.',
+    noVersion: 'ಈ ನಕ್ಷೆಗೆ ಇನ್ನೂ ಉಳಿಸಿದ ಆವೃತ್ತಿ ಇಲ್ಲ. ಒಮ್ಮೆ ತೆರೆದು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
     delete: 'ನಕ್ಷೆ ಅಳಿಸಿ',
     assigned: (fleets: string) => `${fleets} ಗೆ ನಿಯೋಜಿಸಲಾಗಿದೆ. ಮೊದಲು ಫ್ಲೀಟ್‌ನಿಂದ ತೆಗೆಯಿರಿ.`,
     blocked: (name: string) => `${name} ಅಳಿಸಲಾಗುವುದಿಲ್ಲ`,

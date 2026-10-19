@@ -10,6 +10,10 @@ export const maps = {
   card: { fleet: 'Fleet', updated: 'Last updated', unassigned: 'Unassigned', version: (v: number) => `v${v}` },
   cardMenu: {
     menu: 'Map actions',
+    download: 'Download map',
+    downloaded: (name: string) => `${name} was downloaded.`,
+    downloadFailed: 'Could not download the map.',
+    noVersion: 'This map has no saved version yet. Open it once, then try again.',
     delete: 'Delete map',
     assigned: (fleets: string) => `Assigned to ${fleets}. Unassign it from the fleet first.`,
     blocked: (name: string) => `${name} cannot be deleted`,

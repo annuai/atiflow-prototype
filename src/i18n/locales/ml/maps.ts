@@ -17,6 +17,10 @@ export const messages: Messages<typeof maps> = {
   },
   cardMenu: {
     menu: 'മാപ്പ് പ്രവർത്തനങ്ങൾ',
+    download: 'മാപ്പ് ഡൗൺലോഡ് ചെയ്യുക',
+    downloaded: (name: string) => `${name} ഡൗൺലോഡ് ചെയ്തു.`,
+    downloadFailed: 'മാപ്പ് ഡൗൺലോഡ് ചെയ്യാനായില്ല.',
+    noVersion: 'ഈ മാപ്പിന് ഇതുവരെ സൂക്ഷിച്ച പതിപ്പില്ല. ഒരിക്കൽ തുറന്ന് വീണ്ടും ശ്രമിക്കുക.',
     delete: 'മാപ്പ് ഇല്ലാതാക്കുക',
     assigned: (fleets: string) => `${fleets} ന് നൽകിയിരിക്കുന്നു. ആദ്യം ഫ്ലീറ്റിൽ നിന്ന് ഒഴിവാക്കുക.`,
     blocked: (name: string) => `${name} ഇല്ലാതാക്കാനാവില്ല`,
