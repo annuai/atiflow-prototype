@@ -73,18 +73,16 @@ export const mapEditor = {
     },
     list: {
       traceWarn: {
-        title: 'Trace everything?',
+        title: 'Trace all walls?',
         body: (undo: string) =>
           `Every wall and machine of the scan becomes an element you can edit. This can make a lot of small pieces, and cleaning them up may be hard. You can take it back at once with ${undo}.`,
-        confirm: 'Trace everything',
+        confirm: 'Trace walls',
       },
       elements: 'Elements',
       search: 'Search elements...',
       emptyTitle: 'No elements yet',
       emptyBody: 'Pick a tool below the map to draw, or trace walls from the lidar estimate.',
-      traceAll: 'Trace the whole estimate',
-      restore: 'Bring back the estimate',
-      estimate: (w: number, m: number) => `Lidar estimate: ${w} / ${m}`,
+      traceAll: 'Trace walls',
     },
     form: {
       back: 'All elements',

@@ -84,9 +84,7 @@ export const messages: Messages<typeof mapEditor> = {
       search: 'तत्व खोजें...',
       emptyTitle: 'अभी कोई तत्व नहीं',
       emptyBody: 'बनाने के लिए मैप के नीचे से टूल चुनें, या लिडार अनुमान से दीवारें ट्रेस करें।',
-      traceAll: 'पूरा अनुमान ट्रेस करें',
-      restore: 'अनुमान वापस लाएँ',
-      estimate: (w, m) => `लिडार अनुमान: ${w} / ${m}`,
+      traceAll: 'दीवारें ट्रेस करें',
     },
     form: {
       back: 'सभी तत्व',
