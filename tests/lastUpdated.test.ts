@@ -18,3 +18,23 @@ describe('last updated', () => {
     expect(ago(-5000)).toBe('Just now'); // a clock a little ahead is still "just now"
   });
 });
+
+describe('lastEdit of a map', () => {
+  const v = (o: object) => ({
+    id: 'x',
+    mapId: 'm',
+    status: 'draft',
+    number: null,
+    basedOn: null,
+    createdAt: 1,
+    createdBy: 'u',
+    data: {},
+    ...o,
+  });
+  it('is the newest of creation, publishing and draft edits', async () => {
+    const { lastEdit } = await import('@/features/map-editor');
+    expect(lastEdit(undefined)).toBeNull();
+    expect(lastEdit({ versions: [v({ publishedAt: 50 }), v({ updatedAt: 90 })] } as never)).toBe(90);
+    expect(lastEdit({ versions: [v({ publishedAt: 50 })] } as never)).toBe(50);
+  });
+});

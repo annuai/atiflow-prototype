@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { notify } from '@/ui/toast';
+import { lastEdit, useMapVersions } from '@/features/map-editor';
 import { useNow } from '@/hooks/use-now';
 import { Badge } from '@/components/base/badges/badges';
 import { lastUpdated } from '@/utils/timeAgo';
@@ -18,6 +19,8 @@ import { formatDate } from '@/i18n';
 /** One map: preview, version + routing chip, name, the fleets that run on it and its station count. */
 export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
   const now = useNow();
+  const history = useMapVersions((s) => s.byMap[map.id]);
+  const edited = Math.max(map.updatedAt, lastEdit(history) ?? 0); // the newest of when the map was made and when it was last worked on
   const [asking, setAsking] = useState(false);
   const why = deleteRefusal(map, fleets);
   // a map a fleet runs on (or a built-in one) is not deleted: a toast says why, the menu does not change
@@ -72,9 +75,9 @@ export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
           {map.name}
         </h2>
         {fleets.length ? row(copy.card.fleet, fleets.join(', ')) : row(copy.card.fleet, copy.card.unassigned, true)}
-        <div className="flex items-baseline justify-between gap-4 text-sm" title={formatDate(map.updatedAt, 'full')}>
+        <div className="flex items-baseline justify-between gap-4 text-sm" title={formatDate(edited, 'full')}>
           <span className="text-xs tracking-wide text-tertiary uppercase">{copy.card.updated}</span>
-          <span className="text-right font-medium text-primary">{lastUpdated(map.updatedAt, now)}</span>
+          <span className="text-right font-medium text-primary">{lastUpdated(edited, now)}</span>
         </div>
       </div>
       <ConfirmDialog

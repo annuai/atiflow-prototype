@@ -147,7 +147,7 @@ export const mapVersionsStore = createPersistedStore<MapVersionsState, Saved>(
         byMap: put(
           get().byMap,
           mapId,
-          h.versions.map((v) => (v.id === d.id ? { ...v, data: edit(v.data) } : v)),
+          h.versions.map((v) => (v.id === d.id ? { ...v, data: edit(v.data), updatedAt: Date.now() } : v)),
         ),
       });
     },
@@ -157,7 +157,7 @@ export const mapVersionsStore = createPersistedStore<MapVersionsState, Saved>(
       if (!h || !from) return null;
       const d = draftOf(h);
       if (!d) return get().startDraft(mapId, by, fromNumber, now);
-      const next = { ...d, basedOn: from.number, data: structuredClone(from.data) };
+      const next = { ...d, basedOn: from.number, data: structuredClone(from.data), updatedAt: now };
       set({
         byMap: put(
           get().byMap,
@@ -205,4 +205,7 @@ export const mapVersionsStore = createPersistedStore<MapVersionsState, Saved>(
     },
   }),
 );
+/** When a map was last worked on: the newest of its versions' creation, draft edits and publishing (null with no history). */
+export const lastEdit = (h: MapHistory | undefined): number | null =>
+  h?.versions.length ? Math.max(...h.versions.map((v) => v.updatedAt ?? v.publishedAt ?? v.createdAt)) : null;
 export const useMapVersions = <T>(sel: (s: MapVersionsState) => T) => useStore(mapVersionsStore, sel);

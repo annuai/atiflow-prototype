@@ -158,6 +158,8 @@ export interface MapVersion {
   createdBy: string;
   publishedAt?: number;
   publishedBy?: string;
+  /** when the draft was last changed */
+  updatedAt?: number;
   data: MapData;
 }
 export interface MapHistory {
