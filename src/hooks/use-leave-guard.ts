@@ -16,13 +16,15 @@ const pathOf = (to: unknown): string | null =>
 /**
  * Stops the app from leaving the page while `dirty`: a link, the sidebar, the top bar's Back / Forward, the browser's own Back and closing the tab. `pending` turns true when a way out was attempted;
  * `leave()` lets that very navigation through, `stay()` drops it. (The app uses a plain BrowserRouter, which has no blocker of its own, so this wraps the router's navigator while it is needed.)
- * A change of the query string or hash on the same page is not "leaving".
+ * A change of the query string or hash on the same page is not "leaving", and neither is a path `opts.allow` accepts (another view of the same work, such as the 3D view of the map being edited).
  */
-export function useLeaveGuard(dirty: boolean) {
+export function useLeaveGuard(dirty: boolean, opts: { allow?: (path: string) => boolean } = {}) {
   const { navigator } = useContext(NavigationContext) as unknown as { navigator: Nav };
   const [pending, setPending] = useState(false);
   const proceed = useRef<(() => void) | null>(null);
   const allow = useRef(false);
+  const sameWork = useRef(opts.allow);
+  sameWork.current = opts.allow;
 
   useEffect(() => {
     if (!dirty) return;
@@ -38,7 +40,7 @@ export function useLeaveGuard(dirty: boolean) {
     const guarded = (kind: 'push' | 'replace') =>
       function (this: unknown, ...a: unknown[]) {
         const target = pathOf(a[0]);
-        if (allow.current || target === null || target === window.location.pathname)
+        if (allow.current || target === null || target === window.location.pathname || sameWork.current?.(target))
           return orig[kind].apply(navigator, a as never);
         hold(() => orig[kind].apply(navigator, a as never));
       };

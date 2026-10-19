@@ -5,6 +5,8 @@ import { nodeOf } from './stations';
 import { pointInPolygon } from './zones';
 import { zoneType } from './zoneTypes';
 import type { MapData } from './types';
+import { structureHits, type Hit } from './structure/collide';
+import { elementOf } from './structure/ops';
 
 /** A problem found before publishing. `block` problems stop Publish (the map may be at work); the others are only shown. */
 export interface MapProblem {
@@ -29,6 +31,18 @@ export function onRoad(data: MapData, stationId: string): boolean {
   if (!s || !n) return false;
   if (data.lanes.some((l) => l.from === n.id || l.to === n.id)) return true;
   return data.lanes.some((l) => l.geom.some((g, i) => i > 0 && dist(n.x, n.y, l.geom[i - 1], g) <= 1));
+}
+/** A station of a point-to-point (v2) map needs a route arriving at it and a route leaving it. */
+function p2pProblems(data: MapData, stationId: string): MapProblem[] {
+  const s = data.stations.find((q) => q.id === stationId);
+  if (!s) return [];
+  const into = data.lanes.some((l) => l.to === s.nodeId),
+    out = data.lanes.some((l) => l.from === s.nodeId);
+  const block = (title: string): MapProblem => ({ level: 'block', title, detail: text.problems.p2pDetail, stationId });
+  return [
+    ...(into ? [] : [block(text.problems.p2pNoIn(s.id, s.name))]),
+    ...(out ? [] : [block(text.problems.p2pNoOut(s.id, s.name))]),
+  ];
 }
 /** An imported station that was never given a position blocks Publish. */
 const unplacedProblem = (s: MapData['stations'][number]): MapProblem[] =>
@@ -101,6 +115,20 @@ function lostCellProblems(next: MapData, previous: MapData | null, cellStatesOf:
   return out;
 }
 
+/** Routes and stations that run into a wall, a partition or a machine: a block, or only a warning when the element was traced from the rough lidar estimate. */
+function structureProblems(data: MapData): MapProblem[] {
+  const name = (h: Hit) =>
+    h.by.kind === 'road'
+      ? (data.roads.find((r) => r.id === h.by.id)?.name ?? h.by.id)
+      : (data.stations.find((s) => s.id === h.by.id)?.name ?? h.by.id);
+  return structureHits(data).map((h) => {
+    const el = elementOf(data, h.elementId)?.name ?? h.elementId;
+    return h.traced
+      ? { level: 'warn' as const, title: text.problems.structureHitTraced(name(h), el) }
+      : { level: 'block' as const, title: text.problems.structureHit(name(h), el) };
+  });
+}
+
 /**
  * Publish gate (pure). `usedBy(stationId)` = the names of the published workflows that use a station; `cellStatesOf(areaId)` = what Master Data holds for a staging area.
  * BLOCKS: a station used by a published workflow was deleted; a station has no name or shares one or is not on a road; a road passes through a no-go zone; a staging area has bad values;
@@ -124,7 +152,8 @@ export function publishProblems(
     else if (seen.has(key))
       out.push({ level: 'block', title: text.problems.shareName(s.id, seen.get(key) ?? '', s.name), stationId: s.id });
     else seen.set(key, s.id);
-    if (s.onLane !== false && !onRoad(network, s.id))
+    if (next.p2p) out.push(...p2pProblems(next, s.id));
+    else if (s.onLane !== false && !onRoad(network, s.id))
       out.push({
         level: 'block',
         title: text.problems.notReached(s.id, s.name),
@@ -148,6 +177,7 @@ export function publishProblems(
     for (const [field, problem] of Object.entries(stagingProblems(next, a)))
       out.push({ level: 'block', title: `${a.name}: ${problem}`, detail: text.problems.field(field) });
   out.push(...lostCellProblems(next, previous, cellStatesOf));
+  out.push(...structureProblems(next));
   for (const z of next.zones)
     if (!z.name.trim()) out.push({ level: 'warn', title: text.problems.zoneNoName(zoneType(z.type).label) });
   return out;

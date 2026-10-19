@@ -65,6 +65,8 @@ export interface RoadOptions {
   offset?: number;
   /** Round the corners with turns of this radius (point-to-point routes). */
   radius?: number;
+  /** Radius of each bend node (the points between the ends), overriding `radius`. */
+  nodeRadii?: number[];
 }
 /** Draw a road along `points` (at least two). Returns the new data and the road's id; unchanged data when the line is too short to be a road. */
 export function addRoad(data: MapData, points: P[], opt: RoadOptions): { data: MapData; id: string | null } {
@@ -97,7 +99,12 @@ export function addRoad(data: MapData, points: P[], opt: RoadOptions): { data: M
     id: `L${n++}`,
     from: from.id,
     to: to.id,
-    geom: offsetPolyline(opt.radius ? routeLine(line, opt.radius) : line, opt.offset ?? LANE_OFFSET),
+    geom: offsetPolyline(
+      opt.radius
+        ? routeLine(line, opt.radius, line === pts ? opt.nodeRadii : [...(opt.nodeRadii ?? [])].reverse())
+        : line,
+      opt.offset ?? LANE_OFFSET,
+    ),
     fleets: [opt.fleetLive],
     speed: LANE_SPEED,
     len: round(pathLength(line)),
@@ -113,6 +120,7 @@ export function addRoad(data: MapData, points: P[], opt: RoadOptions): { data: M
     ...(opt.heading ? { heading: opt.heading } : {}),
     ...(opt.extra ? { extra: opt.extra } : {}),
     ...(opt.radius ? { radius: opt.radius } : {}),
+    ...(opt.radius && opt.nodeRadii ? { nodeRadii: opt.nodeRadii } : {}),
   };
   return { id: road.id, data: { ...data, nodes, lanes: [...data.lanes, ...lanes], roads: [...data.roads, road] } };
 }
@@ -122,6 +130,7 @@ export interface RoadPatch {
   heading?: RoadHeading;
   /** Reverse the direction of travel. */ swap?: boolean;
   /** Point-to-point (v2) routes: the radius of the turns. */ radius?: number;
+  /** Point-to-point (v2) routes: the radius at each bend node. */ nodeRadii?: number[];
 }
 /**
  * Change a road: its end points, one lane or two, the direction, the heading setting. A change to the shape or lanes rebuilds the road's lanes (same id, same name); an end that was not moved keeps its
@@ -130,7 +139,13 @@ export interface RoadPatch {
 export function updateRoad(data: MapData, id: string, patch: RoadPatch): MapData {
   const road = data.roads.find((r) => r.id === id);
   if (!road) return data;
-  if (patch.points === undefined && patch.oneWay === undefined && !patch.swap && patch.radius === undefined)
+  if (
+    patch.points === undefined &&
+    patch.oneWay === undefined &&
+    !patch.swap &&
+    patch.radius === undefined &&
+    patch.nodeRadii === undefined
+  )
     return { ...data, roads: data.roads.map((r) => (r.id === id ? { ...r, heading: patch.heading ?? r.heading } : r)) };
   const lane0 = data.lanes.find((l) => l.id === road.laneIds[0]);
   if (!lane0) return data;
@@ -158,7 +173,13 @@ export function updateRoad(data: MapData, id: string, patch: RoadPatch): MapData
     nodeB,
     heading: patch.heading ?? road.heading,
     extra: road.extra,
-    ...(data.p2p ? { offset: 0, radius: patch.radius ?? road.radius ?? 1 } : {}),
+    ...(data.p2p
+      ? {
+          offset: 0,
+          radius: patch.radius ?? road.radius ?? 1,
+          nodeRadii: patch.nodeRadii ?? (patch.swap ? [...(road.nodeRadii ?? [])].reverse() : road.nodeRadii),
+        }
+      : {}),
   });
   if (!r.id) return data;
   const used = new Set([...r.data.lanes.flatMap((l) => [l.from, l.to]), ...r.data.stations.map((s) => s.nodeId)]);

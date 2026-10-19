@@ -1,4 +1,5 @@
 import type { Equipment, Lane, NavNode, Station, Wall } from '@/core/types';
+import type { MapModel3d } from './structure/types';
 
 /** The kinds of zone a map can hold. Add a type in `zoneTypes.ts`; nothing else needs to know. */
 export type ZoneTypeId = string;
@@ -48,8 +49,10 @@ export interface MapRoad {
   heading?: RoadHeading;
   /** The source fields of an imported road (its id, regime, weight...) kept as they came so nothing is lost. */
   extra?: Record<string, unknown>;
-  /** Point-to-point (v2) routes: the radius of the turns at its corners (m). */
+  /** Point-to-point (v2) routes: the default radius of the turns at its corners (m). */
   radius?: number;
+  /** Point-to-point (v2) routes: the radius at each bend node (the points between the two stations), in order; a node without one uses `radius`. 0 = a sharp corner. */
+  nodeRadii?: number[];
 }
 
 /**
@@ -120,6 +123,8 @@ export interface MapData {
   source?: { assetId: string; fileName: string; format: string };
   /** Walls and machines estimated from the lidar grid (imported maps). */
   structure?: MapStructure;
+  /** The 3D structure a person edits: walls, partitions, machines, doors and floor areas in coloured sections, on top of (and replacing parts of) the lidar estimate. */
+  model3d?: MapModel3d;
   /** The client's DWG laid over the map: when present, the 3D view uses its (accurate) walls. */
   dwg?: MapDwg;
   /** The path the robot drove while it mapped, metres: a hint for drawing roads (imported maps). */
@@ -151,4 +156,11 @@ export interface MapHistory {
 }
 
 /** What the editor has selected. */
-export type Selection = { kind: 'station' | 'road' | 'zone' | 'staging'; id: string } | null;
+/** `node` = a bend node of the selected point-to-point route (its index among the nodes between the two stations). */
+export type Selection = {
+  kind: 'station' | 'road' | 'zone' | 'staging' | 'element';
+  id: string;
+  node?: number;
+  /** several elements of the structure are selected at once (`id` is the last one picked) */
+  ids?: string[];
+} | null;

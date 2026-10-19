@@ -1,5 +1,5 @@
 import { lazy, useEffect } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { authStore, useAuth } from '@/features/auth/authStore';
 import { metrics, setRuntimeContext } from '@/platform';
 import { pageKey } from '@/shell/pageKey';
@@ -60,7 +60,6 @@ const OperatorHistoryPage = lazy(() =>
   import('@/features/operator-history/OperatorHistoryPage').then((m) => ({ default: m.OperatorHistoryPage })),
 );
 const ApprovePage = lazy(() => import('@/features/requests/ApprovePage').then((m) => ({ default: m.ApprovePage })));
-const Map3dPage = lazy(() => import('@/features/map-3d').then((m) => ({ default: m.Map3dPage })));
 const MapEditorPage = lazy(() =>
   import('@/features/map-editor/MapEditorPage').then((m) => ({ default: m.MapEditorPage })),
 );
@@ -113,6 +112,11 @@ function MovedTo({ to }: { to: string }) {
   return <Navigate to={to + search} replace />;
 }
 /** The old Request page: material requests are a tab of Book trip now, and the old "request history" link goes to the consolidated History. */
+/** The 3D view is a tab of the Map Editor now; the old address opens it there. */
+function Moved3d() {
+  const { id = '' } = useParams();
+  return <Navigate to={`/configurator/maps/${id}?view=3d`} replace />;
+}
 function MovedRequest() {
   const { search } = useLocation();
   return (
@@ -202,7 +206,7 @@ export function AppRoot() {
               <Route path="/configurator/settings/:tab?" element={<SettingsPage />} />
               <Route path="/configurator/maps" element={<MapsPage />} />
               <Route path="/configurator/maps/:id" element={<MapEditorPage />} />
-              <Route path="/configurator/maps/:id/3d" element={<Map3dPage />} />
+              <Route path="/configurator/maps/:id/3d" element={<Moved3d />} />
             </Route>
             <Route path="/no-access" element={<NoAccessPage />} />
             <Route path="*" element={<RootRedirect />} />

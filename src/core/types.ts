@@ -7,6 +7,12 @@ export interface Wall {
   t: number;
   h: number;
   layer: string;
+  /** Colour (`#rrggbb`), height above the floor it starts at (an opening's lintel, an overhead pipe) and opacity (glass); the building's own walls leave them out. */
+  color?: string;
+  base?: number;
+  opacity?: number;
+  /** The structure element this belongs to (picking in the 3D editor). */
+  id?: string;
 }
 export interface Zone {
   id: string;
@@ -15,6 +21,8 @@ export interface Zone {
   active: boolean;
   color: string;
   polygon: [number, number][];
+  /** Draw in `color` as it is (a Work area of the Map Editor) instead of the colour of the fleet that owns it */
+  own?: boolean;
 }
 export interface Equipment {
   kind: string;
@@ -24,6 +32,23 @@ export interface Equipment {
   d: number;
   h: number;
   layer: string;
+  /** Colour, turn (radians, counter-clockwise), the height it starts at, opacity, and the text shown on top of it. */
+  color?: string;
+  rot?: number;
+  base?: number;
+  opacity?: number;
+  label?: string;
+  /** The structure element this belongs to (picking in the 3D editor). */
+  id?: string;
+}
+/** A floor patch (height 0) or the extrusion of any outline (a block of any shape). */
+export interface Shape3d {
+  id?: string;
+  points: [number, number][];
+  height: number;
+  base?: number;
+  color: string;
+  opacity?: number;
 }
 export interface SiteLayout {
   schema: 1;
@@ -37,7 +62,9 @@ export interface SiteLayout {
   zones: Zone[];
   equipment: Equipment[];
   doors: unknown[];
-  labels: { text: string; x: number; y: number }[];
+  labels: { text: string; x: number; y: number; z?: number; bg?: string; color?: string }[];
+  /** Edited structure: floor patches and extrusions of any outline. */
+  shapes?: Shape3d[];
 }
 
 export type StationType = 'pick' | 'drop' | 'buffer' | 'asrs' | 'charge' | 'park';

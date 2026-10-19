@@ -1,5 +1,5 @@
 import { useSyncedState } from '@/hooks/use-synced-state';
-import { ArrowLeft, Trash01 } from '@untitledui/icons';
+import { ArrowLeft, Route, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
@@ -26,6 +26,7 @@ export function StationForm({
   onPatch,
   onMove,
   onPlace,
+  onRouteFrom,
   onDelete,
 }: {
   onLocate(): void;
@@ -39,6 +40,8 @@ export function StationForm({
   onMove(to: { x: number; y: number }): void;
   /** arm the place tool: the next click on the map gives this station its position */
   onPlace(): void;
+  /** point-to-point (v2) maps: start a route here */
+  onRouteFrom(): void;
   onDelete(): void;
 }) {
   const f = copy.stations.form;
@@ -102,19 +105,21 @@ export function StationForm({
           {(item) => <Select.Item {...item} />}
         </Select>
       </div>
-      <div className="flex flex-col gap-2">
-        <Label {...help('station.placement')}>{f.orientation}</Label>
-        <RadioGroup
-          aria-label={f.orientation}
-          isDisabled={!editable}
-          value={station.onLane === false ? 'off' : 'on'}
-          onChange={(v) => onPatch({ onLane: v === 'on' })}
-          className="flex-row gap-6"
-        >
-          <RadioButton value="off" label={f.offLane} />
-          <RadioButton value="on" label={f.onLane} />
-        </RadioGroup>
-      </div>
+      {!data.p2p && (
+        <div className="flex flex-col gap-2">
+          <Label {...help('station.placement')}>{f.orientation}</Label>
+          <RadioGroup
+            aria-label={f.orientation}
+            isDisabled={!editable}
+            value={station.onLane === false ? 'off' : 'on'}
+            onChange={(v) => onPatch({ onLane: v === 'on' })}
+            className="flex-row gap-6"
+          >
+            <RadioButton value="off" label={f.offLane} />
+            <RadioButton value="on" label={f.onLane} />
+          </RadioGroup>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <NumberInput
           {...help('station.x')}
@@ -144,6 +149,11 @@ export function StationForm({
         </p>
       )}
       <div className="mt-auto flex flex-col gap-2">
+        {data.p2p && editable && (
+          <Button size="md" color="secondary" iconLeading={Route} onPress={onRouteFrom}>
+            {f.addRoute}
+          </Button>
+        )}
         <LocateButton onPress={onLocate} />
         {!editable ? (
           <p className="text-xs text-tertiary">{copy.stations.readOnly}</p>

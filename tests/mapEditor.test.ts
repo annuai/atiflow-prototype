@@ -27,6 +27,7 @@ import {
 import { addZone, deleteZone } from '../src/features/map-editor/model/zones';
 import { newGate, polygonOf, rectFromCorners } from '../src/features/map-editor/model/shape';
 import { normaliseData } from '../src/features/map-editor/model/seed';
+import { restoreWorkAreas, workAreaZones } from '../src/features/map-editor/model/workAreas';
 import { emptyHistory, record, redo, undo } from '../src/features/map-editor/model/history';
 import { locateTarget } from '../src/features/map-editor/model/locate';
 import { pinchStep } from '../src/components/map/useTouchGestures';
@@ -53,7 +54,41 @@ describe('a map owns its full network, seeded from the real site', () => {
     expect(a.stations.every((s) => nodeIds.has(s.nodeId))).toBe(true);
     expect(a.zones.some((z) => z.type === 'exclusive' && typeof z.props.capacity === 'number')).toBe(true);
     expect(a.zones.some((z) => z.type === 'no-go')).toBe(true);
-    expect(a.zones.some((z) => z.type === 'area')).toBe(true);
+    expect(a.zones.some((z) => z.type === 'area')).toBe(false); // the areas are Work areas of the structure now
+    const works = (a.model3d?.elements ?? []).filter((e) => e.kind === 'area' && e.work);
+    expect(works.length).toBeGreaterThan(0);
+  });
+  it("Work areas keep the drawing's own outline, name and tint; shared ones say so; a saved zone becomes one and is restored", () => {
+    const a = lineSide();
+    const shared = site.zones.find((z) => z.id === 'east-strip')!;
+    const el = a.model3d!.elements.find((e) => e.kind === 'area' && e.fromZone === 'east-strip');
+    expect(el && el.kind === 'area' && el.points).toEqual(shared.polygon);
+    expect(el?.label).toContain('shared');
+    // an older saved map: the zone is only the rectangle fitted round the outline
+    const old = normaliseData({
+      ...a,
+      model3d: undefined,
+      zones: [
+        {
+          id: shared.id,
+          type: 'area',
+          name: shared.name,
+          polygon: [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1],
+          ],
+          shape: undefined,
+          props: {},
+        } as never,
+      ],
+    } as never);
+    expect(old.zones.some((z) => z.type === 'area')).toBe(false);
+    const back = restoreWorkAreas(old, site, nav.fleets);
+    const e2 = back.model3d!.elements.find((e) => e.kind === 'area' && e.fromZone === 'east-strip');
+    expect(e2 && e2.kind === 'area' && e2.points).toEqual(shared.polygon);
+    expect(workAreaZones(back)[0].own).toBe(true);
   });
   it('the data is a copy: editing a map never changes the site files', () => {
     const a = lineSide();

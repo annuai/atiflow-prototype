@@ -79,5 +79,18 @@ export function drawingPreview(
       color: zoneType(tool.kind === 'gate' ? 'exclusive' : tool.type).color,
     };
   }
+  if (tool.kind === 'structure') {
+    const w = tool.what;
+    if (w === 'wall' || w === 'partition') return { kind: 'line', pts: live, color: '#0d9488' };
+    if (w === 'area' || w === 'work') return { kind: 'polygon', pts: live, color: '#0d9488' };
+    if (cursor && (w === 'machine' || w === 'pillar' || w === 'room' || w === 'erase')) {
+      const [a, b] = [drawing[0], cursor];
+      return {
+        kind: 'polygon',
+        pts: [a, [b[0], a[1]], b, [a[0], b[1]]],
+        color: w === 'erase' ? '#dc2626' : '#0d9488',
+      };
+    }
+  }
   return null;
 }

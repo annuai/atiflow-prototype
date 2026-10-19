@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { useAuth } from '@/features/auth';
@@ -24,58 +24,26 @@ import { VersionHistory } from './components/VersionHistory';
 import { copy } from './copy';
 import { cellStatesFromMasterData } from './model/cellStates';
 import { locateTarget } from './model/locate';
-import { deleteRoad } from './model/roads';
-import { deleteStagingArea } from './model/staging';
-import { deleteStation } from './model/stations';
-import { draftOf, latestOf, mapVersionsStore, useMapVersions } from './model/store';
+import { mapVersionsStore, useMapVersions } from './model/store';
 import type { MapData, Selection } from './model/types';
 import { useDraftEditor } from './model/useDraftEditor';
 import { workflowsUsing } from './model/usage';
+import { useResetOnChange } from './hooks/useResetOnChange';
+import { useEditorView } from './hooks/useEditorView';
+import { Stage3d } from './components/Stage3d';
+import { dwgFooter } from './components/DwgFooter';
 import { publishProblems } from './model/validate';
 import { moveShape } from './model/shape';
-import { deleteZone, setZoneShape } from './model/zones';
-import { zoneType } from './model/zoneTypes';
-import { buildMapZip, download } from './model/exportMap';
+import { setZoneShape } from './model/zones';
+import { moveElements } from './model/structure/ops';
+import { deleteSelected, moduleOfSelection, versionBadge, versionShown, type Viewing } from './model/pageParts';
+import { boxElements, pickElement } from './model/structure/select';
+import { versionActions } from './model/versionActions';
 import { importedSite } from './model/importedSite';
 import { seedMapData } from './model/seed';
 import { useSimulationPanel } from './sim/useSimulationPanel';
 import { PageTitleName } from '@/shell/PageTitle';
 import { Page, PageCard } from '@/components/page';
-
-/** Which module's panel belongs to a selected thing. */
-function moduleOfSelection(data: MapData, sel: NonNullable<Selection>): Module {
-  if (sel.kind === 'station' || sel.kind === 'staging') return 'stations';
-  if (sel.kind === 'road') return 'routes';
-  return zoneType(data.zones.find((z) => z.id === sel.id)?.type ?? '').module === 'exclusive' ? 'exclusive' : 'zones';
-}
-
-/** Removes the selected thing from the map. */
-function deleteSelected(m: MapData, d: NonNullable<Selection>): MapData {
-  if (d.kind === 'station') return deleteStation(m, d.id);
-  if (d.kind === 'staging') return deleteStagingArea(m, d.id);
-  if (d.kind === 'road') return deleteRoad(m, d.id);
-  return deleteZone(m, d.id);
-}
-
-type Viewing = 'draft' | number | null;
-type VersionOf = NonNullable<ReturnType<typeof draftOf>>;
-
-/** The version on screen: the one asked for, else the draft, else the latest published. */
-function versionShown(history: Parameters<typeof draftOf>[0], viewing: Viewing) {
-  const draft = draftOf(history),
-    latest = latestOf(history);
-  if (viewing === 'draft') return { draft, latest, current: draft };
-  if (typeof viewing === 'number')
-    return { draft, latest, current: history?.versions.find((v) => v.number === viewing && v.status === 'published') };
-  return { draft, latest, current: draft ?? latest };
-}
-
-/** The badge in the header: draft, the latest published version, or an older one being looked at. */
-function versionBadge(current: VersionOf, latest: VersionOf | undefined, isDraft: boolean) {
-  if (isDraft) return { label: copy.draft, color: 'warning' as const };
-  if (current.number === latest?.number) return { label: copy.published(current.number!), color: 'success' as const };
-  return { label: copy.viewing(current.number!), color: 'gray' as const };
-}
 
 type Zone = MapData['zones'][number];
 
@@ -86,6 +54,7 @@ function useZoneShortcuts({
   editor,
   draw,
   zone,
+  element,
   askDelete,
 }: {
   tool: Tool;
@@ -93,6 +62,8 @@ function useZoneShortcuts({
   editor: ReturnType<typeof useDraftEditor>;
   draw: ReturnType<typeof useDrawTools>;
   zone: Zone | undefined;
+  /** the selected elements of the structure: arrows move them, Delete asks to remove them */
+  element?: string[];
   askDelete: (d: NonNullable<Selection>) => void;
 }) {
   useEditorShortcuts({
@@ -107,7 +78,12 @@ function useZoneShortcuts({
             editor.edit((m) => setZoneShape(m, zone.id, moveShape(zone.shape, dx, dy)), `nudge:${zone.id}`),
           remove: () => askDelete({ kind: 'zone', id: zone.id }),
         }
-      : undefined,
+      : element
+        ? {
+            nudge: (dx, dy) => editor.edit((m) => moveElements(m, element, dx, dy), `nudge:${element.join()}`),
+            remove: () => askDelete({ kind: 'element', id: element[element.length - 1], ids: element }),
+          }
+        : undefined,
   });
 }
 
@@ -123,6 +99,7 @@ function useShownMap(id: string, viewing: Viewing) {
   useEffect(() => {
     if (map && base && !imported)
       mapVersionsStore.getState().ensure(map.id, map.version, seedMapData(map, base.site, base.nav));
+    if (base) mapVersionsStore.getState().restoreAreas(base.site, base.nav.fleets);
   }, [map, base, imported]);
   const { draft, latest, current } = versionShown(history, viewing);
   const data: MapData | undefined = current?.data;
@@ -150,7 +127,6 @@ export function MapEditorPage() {
     document.documentElement.classList.add('map-editor-open'); // lets the touch sizes reach the editor's dialogs, which are drawn outside the page
     return () => document.documentElement.classList.remove('map-editor-open');
   }, []);
-  const navigate = useNavigate();
   const user = useAuth((s) => s.user)!;
   const [viewing, setViewing] = useState<Viewing>(null);
   const [module, setModule] = useState<Module | null>(null);
@@ -175,6 +151,14 @@ export function MapEditorPage() {
   const tool: Tool = editable ? wantTool : SELECT; // a published version only allows looking
 
   const sim = useSimulationPanel(data, map?.fleetLive);
+  const v = useEditorView(!!data?.dwg, () => {
+    setModule('structure');
+    setTool(SELECT);
+    setDrawing([]);
+    setMode('design');
+    sim.stop();
+  });
+  const { multi } = v;
   const editor = useDraftEditor(id, current?.id, () => setDrawing([]));
   const guard = useLeaveGuard(editor.dirty);
   const draw = useDrawTools({
@@ -195,17 +179,16 @@ export function MapEditorPage() {
     editor,
     draw,
     zone: selection?.kind === 'zone' ? data?.zones.find((z) => z.id === selection.id) : undefined,
+    element: selection?.kind === 'element' ? (selection.ids ?? [selection.id]) : undefined,
     askDelete: setDeleting,
   });
 
   // a different version is shown: nothing is selected, drawn or simulated any more
-  const [shownId, setShownId] = useState(current?.id);
-  if (shownId !== current?.id) {
-    setShownId(current?.id);
+  useResetOnChange(current?.id, () => {
     setSelection(null);
     setDrawing([]);
     sim.stop();
-  }
+  });
 
   /** Arm a drawing tool: the module's panel opens and the next click on the map draws (with this choice, which is remembered for the module). Tools stay armed until Esc or Select. */
   const arm = (m: Module, choice: string = choices[m]) => {
@@ -225,10 +208,13 @@ export function MapEditorPage() {
     setDrawing([]);
   };
   /** Look at / edit one thing (from the list or the map): the select tool, and the panel of that kind of thing. */
-  const pick = (sel: Selection) => {
-    setTool(SELECT);
-    setDrawing([]);
-    setSelection(sel);
+  const pick = (sel: Selection, opts?: { keepTool?: boolean; additive?: boolean }) => {
+    if (!opts?.keepTool) {
+      setTool(SELECT);
+      setDrawing([]);
+    }
+    const next = sel?.kind === 'element' ? pickElement(selection, sel.id, !!(opts?.additive || multi)) : sel;
+    setSelection(next);
     if (!sel || !data) return;
     setModule(moduleOfSelection(data, sel));
     if (sel.kind === 'station') setSub('stations');
@@ -238,34 +224,17 @@ export function MapEditorPage() {
   if (!map) return <Navigate to="/configurator/maps" replace />;
   if (!site || !data || !current) return <MapEditorSkeleton />;
   const state = versionBadge(current, latest, !!isDraft);
-  const exportZip = async () => {
-    try {
-      download(await buildMapZip(map, data), `${map.name}.zip`);
-      notify.success(copy.exportMap.done(map.name), copy.exportMap.doneBody, 'map-export');
-    } catch {
-      notify.error(copy.exportMap.failed, undefined, 'map-export');
-    }
-  };
-  const startDraft = () => {
-    mapVersionsStore.getState().startDraft(id, user.name);
-    setViewing('draft');
-    notify.info(copy.started, undefined, 'map-draft');
-  };
-  const restore = (n: number) => {
-    mapVersionsStore.getState().restoreToDraft(id, n, user.name);
-    setViewing('draft');
-    notify.success(copy.historyPanel.restored(n), undefined, 'map-restore');
-  };
+  const { exportZip, startDraft, restore, publish } = versionActions({
+    id,
+    map,
+    data,
+    userName: user.name,
+    setViewing,
+  });
   const problems = isDraft ? publishProblems(data, latest?.data ?? null, usedBy, cellStatesFromMasterData) : [];
-  const publish = () => {
-    const n = mapVersionsStore.getState().publish(id, user.name);
-    if (n) {
-      setViewing(n);
-      notify.success(copy.publishDialog.published(n), map.name, 'map-publish');
-    }
-  };
   const changeMode = (m: 'design' | 'simulation') => {
     setMode(m);
+    if (m === 'simulation') v.setView('2d');
     setTool(SELECT);
     setDrawing([]);
     setSelection(null);
@@ -300,7 +269,8 @@ export function MapEditorPage() {
           onHistory={() => setHistoryOpen(true)}
           onPublish={() => setPublishOpen(true)}
           onEdit={startDraft}
-          on3d={data.structure || data.dwg ? () => navigate(`/configurator/maps/${id}/3d`) : undefined}
+          view={v.view}
+          onView={v.setView}
           onExport={data.source ? exportZip : undefined}
         />
         <VersionBanner
@@ -312,24 +282,42 @@ export function MapEditorPage() {
           onUpdate={() => setUpdating(true)}
         />
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-          <EditorStage
-            site={site}
-            data={data}
-            tool={tool}
-            editable={editable}
-            locateAt={locateAt}
-            selection={selection}
-            mode={mode}
-            sim={sim}
-            pick={pick}
-            drawing={drawing}
-            draw={draw}
-            editor={editor}
-            choices={choices}
-            onSelectTool={selectTool}
-            onArm={arm}
-          />
+          {v.view === '3d' ? (
+            <Stage3d
+              name={map.name}
+              data={data}
+              selection={selection}
+              onSelection={setSelection}
+              multi={multi}
+              onMulti={v.toggleMulti}
+              source={v.source}
+              onSource={v.setSource}
+            />
+          ) : (
+            <EditorStage
+              site={site}
+              data={data}
+              tool={tool}
+              editable={editable}
+              locateAt={locateAt}
+              selection={selection}
+              mode={mode}
+              sim={sim}
+              pick={pick}
+              drawing={drawing}
+              draw={draw}
+              editor={editor}
+              choices={choices}
+              structureOpen={module === 'structure'}
+              multi={multi}
+              onMulti={v.toggleMulti}
+              onMarquee={(a, b, additive) => setSelection(boxElements(data, selection, a, b, additive))}
+              onSelectTool={selectTool}
+              onArm={arm}
+            />
+          )}
           <SidePanel
+            footer={dwgFooter(v.view, data, current.id, !!isDraft, startDraft, editor.edit, v.setSource)}
             mode={mode}
             module={module}
             data={data}
@@ -347,6 +335,12 @@ export function MapEditorPage() {
             }}
             onPick={pick}
             onArm={arm}
+            onRouteFrom={(sid) => {
+              const n = data.nodes.find((q) => q.id === data.stations.find((s) => s.id === sid)?.nodeId);
+              if (!n || !isDraft) return;
+              arm('routes'); // the Routes tool, with this station as the start
+              setDrawing([[n.x, n.y]]);
+            }}
             onPlace={(sid) => {
               setDrawing([]);
               setTool({ kind: 'place', id: sid });

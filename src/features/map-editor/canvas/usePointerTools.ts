@@ -12,8 +12,17 @@ export interface PointerToolsInput {
   tool: Tool;
   editable: boolean;
   nodes: MapData['nodes'];
+  /** what is selected now: when several things lie under a click (routes that share a corridor), the selected one stays selected, so its nodes can be added and dragged */
+  selection?: Selection;
   canSelect(sel: NonNullable<Selection>): boolean;
-  onSelect(sel: Selection): void;
+  onSelect(sel: Selection, opts?: { keepTool?: boolean; additive?: boolean }): void;
+  /** Dragging on the empty floor draws a selection box instead of panning (Select multiple is on, or Shift is held) */
+  boxSelect?: boolean;
+  multi?: boolean;
+  /** the box is released: its corners in site coordinates */
+  onMarquee?(a: P, b: P, additive: boolean): void;
+  /** a point-to-point (v2) map: with the Routes tool armed a station is the end of a route, not a thing to select or move (Shift / Alt-click still selects it) */
+  p2p?: boolean;
   onPoint(p: P): void;
   onMove(kind: 'station' | 'staging', id: string, to: { x: number; y: number }): void;
 }
@@ -27,6 +36,11 @@ export function usePointerTools({
   tool,
   editable,
   nodes,
+  selection,
+  p2p,
+  boxSelect,
+  multi,
+  onMarquee,
   canSelect,
   onSelect,
   onPoint,
@@ -35,7 +49,8 @@ export function usePointerTools({
   const mode = drawMode(tool);
   const [cursor, setCursor] = useState<P | null>(null);
   const touch = useTouchGestures(vp.el, { zoomAt: vp.zoomAt, panBy: vp.panBy });
-  const press = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const press = useRef<{ x: number; y: number; moved: boolean; box?: P; shift?: boolean } | null>(null);
+  const [box, setBox] = useState<{ a: P; b: P } | null>(null);
   const dragging = useRef<{ kind: 'station' | 'staging'; id: string; dx: number; dy: number } | null>(null);
 
   const snap = (p: P): P => {
@@ -44,19 +59,27 @@ export function usePointerTools({
     return n ? [n.x, n.y] : p;
   };
   const hit = (x: number, y: number): Selection => {
+    const found: NonNullable<Selection>[] = [];
     for (const el of document.elementsFromPoint(x, y)) {
       const h = (el as Element).getAttribute?.('data-hit');
-      if (h) {
-        const [kind, ...id] = h.split(':');
-        const sel = { kind, id: id.join(':') } as NonNullable<Selection>;
-        if (canSelect(sel)) return sel;
-      }
+      if (!h) continue;
+      const [kind, ...id] = h.split(':');
+      const sel = { kind, id: id.join(':') } as NonNullable<Selection>;
+      if (canSelect(sel)) found.push(sel);
     }
-    return null;
+    const keep = found.find((f) => f.kind === selection?.kind && f.id === selection.id);
+    return keep ? { kind: keep.kind, id: keep.id } : (found[0] ?? null);
   };
 
   const down = (e: ReactPointerEvent) => {
-    press.current = { x: e.clientX, y: e.clientY, moved: false };
+    const from = vp.toSite(e.clientX, e.clientY);
+    press.current = {
+      x: e.clientX,
+      y: e.clientY,
+      moved: false,
+      shift: e.shiftKey,
+      ...(boxSelect && (multi || e.shiftKey) ? { box: [from.x, from.y] as P } : {}),
+    };
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
   };
   const move = (e: ReactPointerEvent) => {
@@ -77,6 +100,10 @@ export function usePointerTools({
       dy = e.clientY - p.y;
     if (!p.moved && Math.hypot(dx, dy) < 4) return;
     p.moved = true;
+    if (p.box) {
+      setBox({ a: p.box, b: [at.x, at.y] });
+      return;
+    }
     p.x = e.clientX;
     p.y = e.clientY;
     vp.panBy(dx, dy);
@@ -91,6 +118,12 @@ export function usePointerTools({
     press.current = null;
     const was = dragging.current;
     dragging.current = null;
+    if (p?.box && p.moved) {
+      const end = vp.toSite(e.clientX, e.clientY);
+      setBox(null);
+      onMarquee?.(p.box, [end.x, end.y], !!(p.shift || multi));
+      return;
+    }
     if (was || !p || p.moved) return;
     if (mode !== 'none') {
       if (editable) {
@@ -99,11 +132,16 @@ export function usePointerTools({
       }
       return;
     }
-    onSelect(hit(e.clientX, e.clientY));
+    onSelect(hit(e.clientX, e.clientY), { additive: !!(p.shift || multi) });
   };
   /** A press on a station or staging area: select it, and (on a draft, with no drawing tool) start dragging it. */
   const startDrag = (e: ReactPointerEvent, kind: 'station' | 'staging', id: string, x: number, y: number) => {
     e.stopPropagation();
+    if (kind === 'station' && p2p && tool.kind === 'road') {
+      if (e.shiftKey || e.altKey) onSelect({ kind, id }, { keepTool: true });
+      else onPoint([x, y]); // the station is where a route starts or ends
+      return;
+    }
     onSelect({ kind, id });
     if (!editable || mode !== 'none') return;
     const at = vp.toSite(e.clientX, e.clientY);
@@ -118,6 +156,7 @@ export function usePointerTools({
   return {
     mode,
     cursor,
+    box,
     leave: () => setCursor(null),
     down,
     move,

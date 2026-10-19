@@ -47,10 +47,11 @@ export function siteOf(name: string, data: MapData, source: WallSource): SiteLay
     floorPolygons: floor,
     walls: l.walls,
     pillars: [],
-    zones: [],
+    zones: l.zones ?? [], // Work areas: floor tints under everything (not picked in 3D)
     equipment: l.equipment,
     doors: [],
-    labels: [],
+    labels: l.labels ?? [],
+    shapes: l.shapes ?? [],
   };
 }
 

@@ -1,7 +1,7 @@
 import type { FleetDef, NavGraph, SiteLayout } from '@/core/types';
 import type { FleetRecord } from '@/data/fleets';
 import { networkKey, sliceNetwork, type SceneModel } from '@/core/scene';
-import { applyPublishedMaps, seedMapData, type MapData } from '@/features/map-editor';
+import { applyPublishedMaps, seedMapData, workAreaZones, type MapData } from '@/features/map-editor';
 import type { FleetMap } from '@/data/maps';
 
 /**
@@ -30,6 +30,9 @@ export interface Structure {
   walls: SiteLayout['walls'];
   equipment: SiteLayout['equipment'];
   floorPolygons: SiteLayout['floorPolygons'];
+  shapes?: SiteLayout['shapes'];
+  labels?: SiteLayout['labels'];
+  zones?: SiteLayout['zones'];
 }
 type NotRunning = 'no-map' | 'not-published' | 'no-network';
 export interface World {
@@ -121,6 +124,9 @@ function mergeSite(
     const t = (p: [number, number]) => shift(p, dx, dy);
     for (const w of s?.walls ?? []) site.walls.push({ ...w, a: t(w.a), b: t(w.b) });
     for (const e of s?.equipment ?? []) site.equipment.push({ ...e, x: e.x + dx, y: e.y + dy });
+    site.shapes = [...(site.shapes ?? []), ...(s?.shapes ?? []).map((q) => ({ ...q, points: q.points.map(t) }))];
+    site.labels = [...site.labels, ...(s?.labels ?? []).map((l) => ({ ...l, x: l.x + dx, y: l.y + dy }))];
+    site.zones = [...site.zones, ...(s?.zones ?? []).map((z) => ({ ...z, polygon: z.polygon.map(t) }))];
     const floors = s?.floorPolygons.length
       ? s.floorPolygons.map((p) => p.map(t))
       : [[t([box.minX, box.minY]), t([box.maxX, box.minY]), t([box.maxX, box.maxY]), t([box.minX, box.maxY])]];
@@ -173,6 +179,7 @@ export function buildWorld(i: WorldInput): World {
 
   const idle: World['idle'] = [];
   const nets: { fleetLive: string; data: MapData }[] = [];
+  const baseData = new Map<string, MapData>(); // the maps of the base floor: their Work areas are what it shows
   const parts: { map: FleetMap; data: MapData; dx: number; dy: number; s: Structure | null }[] = [];
   const runs: Record<string, string> = {};
   let nextX = i.baseSite.bounds.maxX + GAP;
@@ -191,6 +198,7 @@ export function buildWorld(i: WorldInput): World {
       // a base map nobody edited is the base lane map's slice for its fleet (the editor seeds its first version from the same)
       data = pub ?? seedMapData(m, i.baseSite, i.baseNav);
       data = forFleets(data, m.fleetLive, uniq([m.fleetLive, ...ids]));
+      baseData.set(m.id, data);
       for (const id of uniq([m.fleetLive, ...ids])) nets.push({ fleetLive: id, data });
     } else {
       const why: NotRunning | null = !data ? 'not-published' : !hasNetwork(data) ? 'no-network' : null;
@@ -230,6 +238,18 @@ export function buildWorld(i: WorldInput): World {
   const world: NavGraph = { ...nav, fleets };
 
   const site = mergeSite(i.baseSite, parts);
+  const zonesOf = (id: string) => (baseData.has(id) ? workAreaZones(baseData.get(id)!) : null);
+  const baseZones = [...baseData.keys()].flatMap((id) => zonesOf(id) ?? []);
+  if (baseData.size)
+    site.zones = [
+      ...[...new Map(baseZones.map((z) => [z.id, z])).values()],
+      ...site.zones.filter((z) => !i.baseSite.zones.includes(z)),
+    ];
+  /** the base floor with the Work areas of ONE map */
+  const baseFor = (mapId: string): SiteLayout => {
+    const zones = zonesOf(mapId);
+    return zones ? { ...i.baseSite, zones } : i.baseSite;
+  };
   const partOf = new Map(parts.map((p) => [p.map.id, p]));
   const sceneOf = (
     fleetId: string,
@@ -251,7 +271,7 @@ export function buildWorld(i: WorldInput): World {
     const mapId = runs[fleetId];
     const part = partOf.get(mapId);
     const network = sliceNetwork(world, [fleetId], { mapId, imported: !!part });
-    return sceneOf(fleetId, mapId, [fleetId], network, part ? partSite(i.baseSite, part) : i.baseSite, {
+    return sceneOf(fleetId, mapId, [fleetId], network, part ? partSite(i.baseSite, part) : baseFor(mapId), {
       x: part?.dx ?? 0,
       y: part?.dy ?? 0,
     });

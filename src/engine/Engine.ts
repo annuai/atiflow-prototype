@@ -147,6 +147,18 @@ export class Engine {
   load(site: SiteLayout, nav: NavGraph) {
     this.setScenes([{ key: 'single', site, nav, fleets: [] }], ['single']);
   }
+  private refreshes = 0;
+  /** The scene on screen is replaced by a changed one (the 3D editor, after every edit) and the camera stays where it was. */
+  refreshScene(site: SiteLayout, nav: NavGraph) {
+    const was = this.s.active.length ? this.s.pose() : null;
+    const key = `single-${++this.refreshes}`;
+    this.setScenes([{ key, site, nav, fleets: [] }], [key]);
+    if (was) {
+      this.s.camera.position.copy(was.pos);
+      this.s.controls.target.copy(was.target);
+      this.s.controls.update();
+    }
+  }
   /**
    * Shows these scenes (each one loaded the first time it is shown and then kept, up to the budget) and hides every other: the scene is the unit, so a fleet on another map is a different
    * scene, not a filter on this one. Robots follow their fleet's scene; the camera goes back to where it was in this combination of scenes, or frames them.

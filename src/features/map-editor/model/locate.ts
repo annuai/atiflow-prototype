@@ -1,4 +1,5 @@
 import { outline } from './staging';
+import { modelOf } from './structure/ops';
 import { nodeOf } from './stations';
 import type { MapData, Selection } from './types';
 
@@ -25,6 +26,16 @@ export function locateTarget(
   if (sel.kind === 'road') {
     const r = data.roads.find((q) => q.id === sel.id);
     return r && r.points.length ? box(r.points) : null;
+  }
+  if (sel.kind === 'element') {
+    const e = modelOf(data).elements.find((q) => q.id === sel.id);
+    if (!e) return null;
+    return 'points' in e
+      ? box(e.points)
+      : box([
+          [e.x - ('w' in e ? e.w : 0) / 2, e.y - ('d' in e ? e.d : 0) / 2],
+          [e.x + ('w' in e ? e.w : 0) / 2, e.y + ('d' in e ? e.d : 0) / 2],
+        ]);
   }
   const z = data.zones.find((q) => q.id === sel.id);
   return z && z.polygon.length ? box(z.polygon) : null;

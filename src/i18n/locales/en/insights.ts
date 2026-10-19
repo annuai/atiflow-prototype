@@ -426,6 +426,12 @@ export const insights = {
       shareName: (a: string, b: string, name: string) => `${a} and ${b} share the name “${name}”`,
       notReached: (id: string, name: string) => `${id} · ${name} is set On route but no route reaches it`,
       notReachedDetail: 'Connect it with a route (the Routes tab), or set its placement to Off route.',
+      p2pNoIn: (id: string, name: string) => `${id} · ${name} has no route arriving at it`,
+      p2pNoOut: (id: string, name: string) => `${id} · ${name} has no route leaving it`,
+      p2pDetail: 'Every station of a point-to-point map needs a route to it and a route from it.',
+      structureHit: (what: string, element: string) => `${what} runs through ${element}`,
+      structureHitTraced: (what: string, element: string) =>
+        `${what} runs through (traced from the estimate, which is rough) ${element}`,
       unplaced: (id: string, name: string) => `${id} · ${name} has no position yet`,
       unplacedDetail: 'Place it on the map (Stations tab), or delete it.',
       throughNoGo: (road: string, zone: string) => `${road} passes through the no-go zone “${zone}”`,
@@ -447,6 +453,7 @@ export const insights = {
     },
   },
   mapHelp: {
+    'module.structure': 'Walls, partitions, machines, doors and areas of the 3D model.',
     'module.stations':
       'Click the map to place a station: a place where robots stop to pick up, drop off, charge or park. The arrow lets you place a staging area instead.',
     'module.routes':
@@ -455,6 +462,8 @@ export const insights = {
       'Draw a gate or box where only a limited number of robots may be at a time, such as a narrow passage. Others wait outside.',
     'module.zones':
       'Draw an area of the floor with its own rules, such as low speed or no-go. Choose the kind from the arrow.',
+    'tool.multi':
+      'Turn on to select several things: click to add or remove one, drag the floor to draw a box round them. Holding Shift does the same without the switch.',
     'tool.select': 'Click things on the map or in the list to look at them or change them. Drag a station to move it.',
     'station.id': 'The station’s unique id. Workflows and trips refer to it, so it never changes once created.',
     'station.type':

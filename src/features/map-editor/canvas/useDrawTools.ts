@@ -2,6 +2,15 @@ import { useEffect } from 'react';
 import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { addRoad } from '../model/roads';
+import { addRoute } from '../model/routes';
+import { addArea, addBox, addDoor, addLine, addRoom, addWorkArea } from '../model/structure/ops';
+import {
+  eraseRect,
+  nearestEstimateMachine,
+  nearestEstimateWall,
+  traceMachines,
+  traceWalls,
+} from '../model/structure/trace';
 import { addStagingArea } from '../model/staging';
 import { addStation, moveStation } from '../model/stations';
 import type { MapData, Selection } from '../model/types';
@@ -29,6 +38,47 @@ export interface DrawToolsInput {
 /** What a click on the map does for the armed tool: place a station or staging area, add a point to a road or zone, close a gate; and how a road or zone is finished or cancelled. */
 export function useDrawTools(i: DrawToolsInput) {
   const { data, fleetLive, tool, drawing, setDrawing, setSelection, setTool, edit } = i;
+
+  /** The Structure tools that act on one click or on two corners; true when this click was theirs (walls, partitions and areas go on collecting points). */
+  const structurePoint = (what: string, p: P): boolean => {
+    if (!data) return true;
+    if (what === 'wall' || what === 'partition' || what === 'area' || what === 'work') return false;
+    if (what === 'door') {
+      const r = addDoor(data, p);
+      if (!r.id) notify.warning(copy.structure.hints.door, undefined, 'structure-door');
+      else {
+        edit(() => r.data);
+        setSelection({ kind: 'element', id: r.id });
+      }
+      return true;
+    }
+    if (what === 'trace') {
+      const w = nearestEstimateWall(data, p),
+        q = nearestEstimateMachine(data, p);
+      const r = w >= 0 ? traceWalls(data, [w]) : q >= 0 ? traceMachines(data, [q]) : null;
+      if (!r?.ids.length) notify.warning(copy.structure.hints.trace, undefined, 'structure-trace');
+      else {
+        edit(() => r.data);
+        setSelection({ kind: 'element', id: r.ids[0] });
+      }
+      return true;
+    }
+    if (!drawing.length) {
+      setDrawing([p]); // the first corner
+      return true;
+    }
+    const a = drawing[0];
+    setDrawing([]);
+    if (what === 'erase') {
+      edit((m) => eraseRect(m, a, p));
+      return true;
+    }
+    const r = what === 'room' ? addRoom(data, a, p) : addBox(data, what === 'pillar' ? 'pillar' : 'machine', a, p);
+    if (!r.id) return true;
+    edit(() => r.data);
+    setSelection({ kind: 'element', id: r.id });
+    return true;
+  };
 
   const onPoint = (p: P) => {
     if (!data || fleetLive === undefined) return;
@@ -73,6 +123,31 @@ export function useDrawTools(i: DrawToolsInput) {
       setSelection({ kind: 'zone', id: r.id });
       return;
     }
+    if (tool.kind === 'structure' && structurePoint(tool.what, p)) return;
+    if (tool.kind === 'road' && data.p2p) {
+      // a route of a point-to-point (v2) map: click the station it starts at, then the station it ends at
+      const stationAt = (q: P) =>
+        data.stations.find((s) => {
+          const n = data.nodes.find((x) => x.id === s.nodeId);
+          return !!n && Math.hypot(n.x - q[0], n.y - q[1]) <= 0.5;
+        });
+      const here = stationAt(p);
+      if (!here) {
+        notify.warning(copy.routes.p2pEnds, undefined, 'road-p2p');
+        return;
+      }
+      if (!drawing.length) {
+        setDrawing([p]);
+        return;
+      }
+      const start = stationAt(drawing[0]);
+      const r = start ? addRoute(data, start.id, here.id, fleetLive) : { data, id: null };
+      if (!r.id) return;
+      edit(() => r.data);
+      setDrawing([]);
+      setSelection({ kind: 'road', id: r.id });
+      return;
+    }
     setDrawing((d) =>
       d.length && Math.hypot(p[0] - d[d.length - 1][0], p[1] - d[d.length - 1][1]) < 0.05 ? d : [...d, p],
     );
@@ -80,26 +155,27 @@ export function useDrawTools(i: DrawToolsInput) {
 
   const finish = () => {
     if (!data || fleetLive === undefined) return;
-    if (tool.kind === 'road') {
-      // a route of a point-to-point (v2) map joins two stations: its first and last point must be on one
-      const at = (p: P) =>
-        data.stations
-          .map((s) => ({ s, n: data.nodes.find((n) => n.id === s.nodeId) }))
-          .filter((e) => e.n && Math.hypot(e.n.x - p[0], e.n.y - p[1]) <= 3)
-          .sort((a, b) => Math.hypot(a.n!.x - p[0], a.n!.y - p[1]) - Math.hypot(b.n!.x - p[0], b.n!.y - p[1]))[0]?.s;
-      const from = data.p2p ? at(drawing[0]) : undefined,
-        to = data.p2p ? at(drawing[drawing.length - 1]) : undefined;
-      if (data.p2p && (!from || !to || from === to)) {
-        notify.warning(copy.routes.p2pEnds, undefined, 'road-p2p');
+    if (
+      tool.kind === 'structure' &&
+      (tool.what === 'wall' || tool.what === 'partition' || tool.what === 'area' || tool.what === 'work')
+    ) {
+      const r =
+        tool.what === 'work'
+          ? addWorkArea(data, drawing)
+          : tool.what === 'area'
+            ? addArea(data, drawing)
+            : addLine(data, tool.what, drawing);
+      if (!r.id) {
+        notify.warning(copy.routes.tooShort, undefined, 'structure-short');
         return;
       }
-      const r = addRoad(
-        data,
-        drawing,
-        data.p2p
-          ? { oneWay: true, fleetLive, nodeA: from!.nodeId, nodeB: to!.nodeId, offset: 0, radius: 1, snap: 0 }
-          : { oneWay: tool.oneWay, fleetLive },
-      );
+      edit(() => r.data);
+      setDrawing([]);
+      setSelection({ kind: 'element', id: r.id });
+      return;
+    }
+    if (tool.kind === 'road' && !data.p2p) {
+      const r = addRoad(data, drawing, { oneWay: tool.oneWay, fleetLive });
       if (!r.id) {
         notify.warning(copy.routes.tooShort, undefined, 'road-short');
         return;

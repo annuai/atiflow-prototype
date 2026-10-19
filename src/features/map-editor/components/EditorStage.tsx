@@ -6,6 +6,8 @@ import type { P } from '../canvas/layers';
 import type { useDrawTools } from '../canvas/useDrawTools';
 import { copy } from '../copy';
 import { hintFor } from '../model/hints';
+import { addRouteNode, moveRouteNode } from '../model/routes';
+import { insertPoint, moveElements, setBox, setPoint } from '../model/structure/ops';
 import { moveStation, updateStation } from '../model/stations';
 import { updateStagingArea } from '../model/staging';
 import { setZoneShape } from '../model/zones';
@@ -30,6 +32,12 @@ interface Props {
   draw: ReturnType<typeof useDrawTools>;
   editor: ReturnType<typeof useDraftEditor>;
   choices: Record<Module, string>;
+  /** the Structure module is open */
+  structureOpen: boolean;
+  /** Select multiple (a button of the tool bar): clicks toggle elements, dragging the floor draws a selection box */
+  multi: boolean;
+  onMulti(): void;
+  onMarquee(a: P, b: P, additive: boolean): void;
   onSelectTool: () => void;
   onArm: (m: Module, choice?: string) => void;
 }
@@ -55,6 +63,10 @@ export function EditorStage({
   draw,
   editor,
   choices,
+  structureOpen,
+  multi,
+  onMulti,
+  onMarquee,
   onSelectTool,
   onArm,
 }: Props): ReactNode {
@@ -73,6 +85,30 @@ export function EditorStage({
         overlay={mode === 'simulation' ? (vp) => <SimLayer vp={vp} marks={sim.marks} /> : undefined}
         drawing={drawing}
         onPoint={draw.onPoint}
+        structureOpen={structureOpen && designing}
+        multi={multi && structureOpen}
+        onMarquee={onMarquee}
+        onElementMove={(id, dx, dy) => {
+          const set = selection?.kind === 'element' && selection.ids?.includes(id) ? selection.ids : [id];
+          editor.edit((m) => moveElements(m, set, dx, dy), `elem:${set.join()}`);
+        }}
+        onElementPoint={(id, i, to) => editor.edit((m) => setPoint(m, id, i, to), `point:${id}:${i}`)}
+        onElementBox={(id, b) => editor.edit((m) => setBox(m, id, b), `box:${id}`)}
+        onElementAddPoint={(id, at) => {
+          const r = insertPoint(data, id, at);
+          if (r.index < 0) return;
+          editor.edit(() => r.data);
+        }}
+        onRouteNodeSelect={(rid, index) => pick({ kind: 'road', id: rid, node: index })}
+        onRouteNodeMove={(rid, index, to) =>
+          editor.edit((m) => moveRouteNode(m, rid, index, to), `node:${rid}:${index}`)
+        }
+        onRouteNodeAdd={(rid, at) => {
+          const r = addRouteNode(data, rid, at);
+          if (r.index < 0) return;
+          editor.edit(() => r.data);
+          pick({ kind: 'road', id: rid, node: r.index });
+        }}
         onFinish={draw.finish}
         onZoneShape={(zid, shape) => editor.edit((m) => setZoneShape(m, zid, shape), `shape:${zid}`)}
         onStationAngle={(sid, angle) => editor.edit((m) => updateStation(m, sid, { angle }), `angle:${sid}`)}
@@ -80,15 +116,23 @@ export function EditorStage({
       />
       {designing && tool.kind !== 'select' && (
         <DrawHint
-          text={hintFor(tool, drawing.length)}
-          showFinish={drawMode(tool) === 'many'}
+          text={hintFor(tool, drawing.length, data.p2p)}
+          showFinish={drawMode(tool) === 'many' && !(data.p2p && tool.kind === 'road')}
           canFinish={drawing.length >= 2}
           onFinish={draw.finish}
           onCancel={draw.cancel}
           cancelLabel={drawing.length ? copy.hint.cancel : copy.hint.done}
         />
       )}
-      {designing && <ModuleToolbar tool={tool} choices={choices} onSelect={onSelectTool} onTool={onArm} />}
+      {designing && (
+        <ModuleToolbar
+          tool={tool}
+          choices={choices}
+          onSelect={onSelectTool}
+          onTool={onArm}
+          multi={structureOpen ? { on: multi, toggle: onMulti } : undefined}
+        />
+      )}
     </div>
   );
 }

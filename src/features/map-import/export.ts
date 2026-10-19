@@ -1,5 +1,5 @@
 import { unzipSync, zipSync, type Zippable } from 'fflate';
-import type { MapData } from '@/features/map-editor';
+import { structureDxf, type MapData } from '@/features/map-editor';
 import { ATI_FOLDER } from './formats/deploymentManager';
 import { patchV2 } from './dm/v2Patch';
 import { patchV5 } from './dm/v5Patch';
@@ -43,6 +43,7 @@ export function exportMapZip(o: {
       ...mine,
     }),
   );
+  if (data.model3d?.elements.length) files[`${dir}${ATI_FOLDER}/structure.dxf`] = enc(structureDxf(data)); // a drawing to look at or edit in CAD
 
   const z: Zippable = {};
   for (const [k, v] of Object.entries(files)) z[k] = /\.(npz|png|zip)$/i.test(k) ? [v, { level: 0 }] : v; // already compressed

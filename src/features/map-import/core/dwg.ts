@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Equipment, Wall } from '@/core/types';
+import type { Equipment, Shape3d, SiteLayout, Wall } from '@/core/types';
 
 /** A move of the drawing onto the map: scale, then rotate (radians, counter-clockwise) about the origin, then shift (metres). */
 export interface Similarity {
@@ -49,6 +49,11 @@ export interface Layout {
   walls: Wall[];
   equipment: Equipment[];
   floorPolygons: P[][];
+  /** floor patches and extrusions of the edited structure, and the labels over it */
+  shapes?: Shape3d[];
+  labels?: SiteLayout['labels'];
+  /** the Work areas */
+  zones?: SiteLayout['zones'];
 }
 const pt = z.tuple([z.number().finite(), z.number().finite()]);
 const layoutSchema = z.object({

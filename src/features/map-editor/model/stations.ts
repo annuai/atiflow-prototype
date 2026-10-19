@@ -1,5 +1,6 @@
 import type { StationType } from '@/core/types';
 import { text } from '../text';
+import { updateRoad } from './roads';
 import type { MapData, MapStation } from './types';
 
 /** Pure edits of the stations of a map (the draft). Each returns a NEW MapData and never touches the published versions. */
@@ -60,12 +61,17 @@ export const updateStation = (
 export function moveStation(data: MapData, id: string, to: { x: number; y: number }): MapData {
   const s = data.stations.find((q) => q.id === id);
   if (!s) return data;
-  return {
+  const moved: MapData = {
     ...data,
     nodes: data.nodes.map((n) => (n.id === s.nodeId ? { ...n, x: round(to.x), y: round(to.y) } : n)),
     // a station that was waiting for a position has one now
     stations: s.unplaced ? data.stations.map((q) => (q.id === id ? { ...q, unplaced: undefined } : q)) : data.stations,
   };
+  if (!data.p2p) return moved;
+  // a route of a point-to-point map is tied to its stations: the routes that start or end here follow (their bend nodes stay where they are)
+  return moved.roads
+    .filter((r) => moved.lanes.some((l) => l.id === r.laneIds[0] && (l.from === s.nodeId || l.to === s.nodeId)))
+    .reduce((d, r) => updateRoad(d, r.id, { points: r.points }), moved);
 }
 /** Delete a station. Its node goes too unless a lane still uses it (then it stays as a plain waypoint). */
 export function deleteStation(data: MapData, id: string): MapData {

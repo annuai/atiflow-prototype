@@ -25,8 +25,8 @@ const unit = (a: P): P => {
 };
 const round3 = (v: number) => Math.round(v * 1000) / 1000;
 
-/** The straight and turn pieces of a route through `pts` (corners rounded with `radius`). */
-export function routeSegments(pts: P[], radius: number): RouteSegment[] {
+/** The straight and turn pieces of a route through `pts`. Corners are rounded with `radius`, or with `radii[k]` for the k-th corner (a point between the two ends) when given; a radius of 0 keeps the corner sharp. */
+export function routeSegments(pts: P[], radius: number, radii?: number[]): RouteSegment[] {
   const clean = pts.filter((p, i) => !i || len(sub(p, pts[i - 1])) > 1e-6);
   if (clean.length < 2) return [];
   const out: RouteSegment[] = [];
@@ -38,14 +38,27 @@ export function routeSegments(pts: P[], radius: number): RouteSegment[] {
       if (len(sub(here, at)) > 1e-6) out.push({ kind: 'straight', from: at, to: here });
       break;
     }
+    const wanted = radii?.[i - 1] ?? radius;
+    const keep = () => {
+      // the corner stays sharp: the straight pieces meet at the point
+      if (len(sub(here, at)) > 1e-6) out.push({ kind: 'straight', from: at, to: here });
+      at = here;
+    };
+    if (wanted <= 1e-6) {
+      keep();
+      continue;
+    }
     const a = unit(sub(here, clean[i - 1])), // direction into the corner
       b = unit(sub(clean[i + 1], here)); // and out of it
     const cross = a[0] * b[1] - a[1] * b[0];
     const dot = Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1]));
     const turn = Math.acos(dot); // how far the robot turns
-    if (turn < 1e-3 || turn > Math.PI - 1e-3) continue; // straight on (or a U-turn, which no radius can make): the corner stays
+    if (turn < 1e-3 || turn > Math.PI - 1e-3) {
+      keep(); // straight on (or a U-turn, which no radius can make): the corner stays
+      continue;
+    }
     const reach = Math.min(
-      radius * Math.tan(turn / 2),
+      wanted * Math.tan(turn / 2),
       len(sub(here, clean[i - 1])) / 2,
       len(sub(clean[i + 1], here)) / 2,
     );
@@ -62,8 +75,8 @@ export function routeSegments(pts: P[], radius: number): RouteSegment[] {
 }
 
 /** The route as one line of points (arcs sampled every ~10 degrees), for drawing and driving. */
-export function routeLine(pts: P[], radius: number): P[] {
-  const segs = routeSegments(pts, radius);
+export function routeLine(pts: P[], radius: number, radii?: number[]): P[] {
+  const segs = routeSegments(pts, radius, radii);
   if (!segs.length) return pts.map((p) => [...p] as P);
   const out: P[] = [segs[0].from];
   for (const s of segs) {

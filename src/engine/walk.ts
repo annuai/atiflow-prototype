@@ -6,7 +6,8 @@ export class CollisionWorld {
   private grid = new Map<string, number[]>();
   private items: { seg?: [number, number, number, number, number]; box?: [number, number, number, number] }[] = [];
   constructor(site: SiteLayout) {
-    for (const w of site.walls)
+    for (const w of site.walls.filter((x) => (x.base ?? 0) < 1.8))
+      // (an opening's lintel or a pipe overhead does not stop anyone)
       this.add(
         { seg: [w.a[0], w.a[1], w.b[0], w.b[1], Math.max(w.t, 0.2) / 2] },
         Math.min(w.a[0], w.b[0]),
@@ -15,7 +16,7 @@ export class CollisionWorld {
         Math.max(w.a[1], w.b[1]),
       );
     for (const q of site.equipment)
-      if (q.h > 0.6)
+      if (q.h > 0.6 && (q.base ?? 0) < 1.8)
         this.add(
           { box: [q.x - q.w / 2, q.y - q.d / 2, q.x + q.w / 2, q.y + q.d / 2] },
           q.x - q.w / 2,

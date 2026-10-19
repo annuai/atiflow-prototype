@@ -1,10 +1,19 @@
 import type { FC } from 'react';
-import { ChevronDown, Cursor01, LayoutGrid01, MarkerPin02, Route, Hand } from '@untitledui/icons';
+import {
+  Building07,
+  ChevronDown,
+  Cursor01,
+  LayoutGrid01,
+  MarkerPin02,
+  Route,
+  Hand,
+  Dotpoints01,
+} from '@untitledui/icons';
 import { Button as AriaButton } from 'react-aria-components';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
 import { Tooltip } from '@/components/base/tooltip/tooltip';
 import { cx } from '@/utils/cx';
-import { choicesOf, moduleOfTool, type Module, type Tool } from '../canvas/tools';
+import { choicesOf, moduleOfTool, type Module, type StructureTool, type Tool } from '../canvas/tools';
 import { copy } from '../copy';
 import { text } from '../text';
 import { helpText } from '../help';
@@ -16,8 +25,9 @@ const ICON: Record<Module, FC<{ className?: string }>> = {
   routes: Route,
   exclusive: Hand,
   zones: LayoutGrid01,
+  structure: Building07,
 };
-const MODULES: Module[] = ['stations', 'routes', 'exclusive', 'zones'];
+const MODULES: Module[] = ['stations', 'routes', 'exclusive', 'zones', 'structure'];
 /** What a choice is called in the arrow menu. */
 const choiceLabel = (m: Module, id: string): string =>
   m === 'stations'
@@ -32,7 +42,9 @@ const choiceLabel = (m: Module, id: string): string =>
         ? id === 'box'
           ? copy.zones.gateBox
           : copy.zones.gateLine
-        : zoneType(id).label;
+        : m === 'structure'
+          ? copy.structure.tools[id as StructureTool]
+          : zoneType(id).label;
 
 const tile = (on: boolean) =>
   cx(
@@ -49,11 +61,14 @@ export function ModuleToolbar({
   choices,
   onSelect,
   onTool,
+  multi,
 }: {
   tool: Tool;
   choices: Record<Module, string>;
   onSelect(): void;
   onTool(m: Module, choice: string): void;
+  /** the Select multiple switch (shown while the Structure module is open) */
+  multi?: { on: boolean; toggle(): void };
 }) {
   const active = moduleOfTool(tool);
   return (
@@ -73,6 +88,21 @@ export function ModuleToolbar({
           <span className="hidden text-[11px] leading-3 pointer-coarse:block">{copy.tools.select}</span>
         </AriaButton>
       </Tooltip>
+      {multi && (
+        <Tooltip title={copy.tools.multi} description={helpText('tool.multi')} placement="top" delay={500}>
+          <AriaButton
+            aria-label={copy.tools.multi}
+            aria-pressed={multi.on}
+            onPress={multi.toggle}
+            className={tile(multi.on)}
+          >
+            <Dotpoints01 className="size-5" />
+            <span className="hidden text-[11px] leading-3 whitespace-nowrap pointer-coarse:block">
+              {copy.tools.multi}
+            </span>
+          </AriaButton>
+        </Tooltip>
+      )}
       <span className="mx-1 h-6 w-px bg-border-secondary" aria-hidden />
       {MODULES.map((m) => {
         const Icon = ICON[m];

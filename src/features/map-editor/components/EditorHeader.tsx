@@ -1,4 +1,4 @@
-import { ClockRewind, Cube01, Download01, Map01, ReverseLeft, ReverseRight, Rocket01 } from '@untitledui/icons';
+import { ClockRewind, Download01, Map01, ReverseLeft, ReverseRight, Rocket01 } from '@untitledui/icons';
 import { PageCardHeader } from '@/components/page';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
@@ -26,7 +26,8 @@ export function EditorHeader({
   onHistory,
   onPublish,
   onEdit,
-  on3d,
+  view,
+  onView,
   onExport,
 }: {
   canUndo: boolean;
@@ -44,8 +45,9 @@ export function EditorHeader({
   onHistory(): void;
   onPublish(): void;
   onEdit(): void;
-  /** open the 3D view (when the map has walls to show) */
-  on3d?(): void;
+  /** 2D | 3D: the map as a plan or its structure in 3D, live (3D only when there is something to show) */
+  view: '2d' | '3d';
+  onView?(v: '2d' | '3d'): void;
   /** download the map for the Deployment Manager (imported maps) */
   onExport?(): void;
 }) {
@@ -107,15 +109,19 @@ export function EditorHeader({
           <ButtonGroupItem id="design">{copy.design}</ButtonGroupItem>
           <ButtonGroupItem id="simulation">{copy.simulation}</ButtonGroupItem>
         </ButtonGroup>
-        {on3d && (
-          <ButtonUtility
+        {onView && (
+          <ButtonGroup
             size="sm"
-            color="secondary"
-            icon={Cube01}
-            tooltip={copy.view3d.button}
-            aria-label={copy.view3d.button}
-            onPress={on3d}
-          />
+            aria-label={copy.viewSwitch.label}
+            selectedKeys={[view]}
+            onSelectionChange={(k) => {
+              const v = [...k][0];
+              if (v) onView(v as '2d' | '3d');
+            }}
+          >
+            <ButtonGroupItem id="2d">{copy.viewSwitch.d2}</ButtonGroupItem>
+            <ButtonGroupItem id="3d">{copy.viewSwitch.d3}</ButtonGroupItem>
+          </ButtonGroup>
         )}
         {onExport && (
           <ButtonUtility

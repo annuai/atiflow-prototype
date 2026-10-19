@@ -2,6 +2,8 @@ import { createPersistedStore } from '@/data/persistedStore';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { normaliseData } from './seed';
+import { restoreWorkAreas } from './workAreas';
+import type { SiteLayout } from '@/core/types';
 import type { MapData, MapHistory, MapVersion } from './types';
 
 /**
@@ -31,6 +33,8 @@ export interface MapVersionsState {
   discardDraft(mapId: string): void;
   /** Turn the draft into the next published version; returns its number. */
   publish(mapId: string, by: string, now?: number): number | null;
+  /** Gives the Work areas that were made from an older saved zone their real outline and tint again (once; nothing else changes, published versions included). */
+  restoreAreas(site: SiteLayout, fleets: { color: string; areas: string[] }[]): void;
   reset(): void;
 }
 const put = (s: Saved, mapId: string, versions: MapVersion[]): Saved => ({
@@ -58,6 +62,21 @@ export const mapVersionsStore = createPersistedStore<MapVersionsState, Saved>(
     devHandle: '__mapVersions',
   },
   (set, get) => ({
+    restoreAreas(site, fleets) {
+      const by = get().byMap;
+      let changed = false;
+      const next: Saved = {};
+      for (const [id, h] of Object.entries(by)) {
+        const versions = h.versions.map((v) => {
+          const data = restoreWorkAreas(v.data, site, fleets);
+          if (data === v.data) return v;
+          changed = true;
+          return { ...v, data };
+        });
+        next[id] = { ...h, versions };
+      }
+      if (changed) set({ byMap: next });
+    },
     ensure(mapId, number, data, now = Date.now()) {
       const had = get().byMap[mapId]?.versions;
       if (had?.length) {

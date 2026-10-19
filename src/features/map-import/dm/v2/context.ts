@@ -29,6 +29,8 @@ export interface Spec {
   to: string;
   direction: 'forward' | 'reverse';
   radius: number;
+  /** the radius at each waypoint */
+  radii: number[];
   /** station, waypoints, station */
   points: P[];
   inplace?: number;
@@ -59,6 +61,7 @@ export function specsOf(data: MapData): Spec[] {
       b = l && byNode.get(l.to);
     if (!a?.externalId || !b?.externalId) continue; // a route of a point-to-point map joins two stations
     const dm = (r.extra?.dm ?? {}) as { externalId?: unknown; reverseId?: unknown; inplace?: unknown };
+    const nodeRadii = r.points.slice(1, -1).map((_, i) => r.nodeRadii?.[i] ?? r.radius ?? 1);
     const common = {
       radius: r.radius ?? 1,
       direction: r.heading === 'backward' ? ('reverse' as const) : ('forward' as const),
@@ -68,6 +71,7 @@ export function specsOf(data: MapData): Spec[] {
       from: a.externalId,
       to: b.externalId,
       points: ends(r, a, b),
+      radii: nodeRadii,
       inplace: typeof dm.inplace === 'number' ? dm.inplace : undefined,
       road: r,
       back: false,
@@ -79,6 +83,7 @@ export function specsOf(data: MapData): Spec[] {
         from: b.externalId,
         to: a.externalId,
         points: ends(r, a, b).reverse(),
+        radii: [...nodeRadii].reverse(),
         road: r,
         back: true,
         ...common,

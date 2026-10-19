@@ -86,6 +86,7 @@ function load() {
     // every map has its first version from the start (staging areas, entry stations and retrieval orders are read from the maps' versions wherever they are needed: requests, workflows, Master Data)
     for (const m of mapsStore.getState().maps)
       mapVersionsStore.getState().ensure(m.id, m.version, seedMapData(m, b.site, b.nav));
+    mapVersionsStore.getState().restoreAreas(b.site, b.nav.fleets);
     const w = refreshWorld(b);
     // `site` / `nav` are the BASE (what the Map Editor seeds a first map version from); `live` and `world` are what the floor runs on
     return { site: b.site, nav: b.nav, live: w.nav, world: w };

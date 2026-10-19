@@ -6,7 +6,7 @@ import { near, specsOf, type P, type Spec, type V2 } from './context';
 const dir3 = (p: P | undefined): PyValue => (p ? [pyFloat(r3(p[0])), pyFloat(r3(p[1]))] : []);
 /** The planned path of a route in the file's form: ["straight", from, to, 0] and ["turn", from, direction, to, direction, 3]. */
 function plannedPath(spec: Spec): PyValue {
-  const segs = routeSegments(spec.points, spec.radius).map((s): PyValue =>
+  const segs = routeSegments(spec.points, spec.radius, spec.radii).map((s): PyValue =>
     s.kind === 'straight'
       ? ['straight', pt(...s.from), pt(...s.to), 0]
       : ['turn', pt(...s.from), dir3(s.dirFrom), pt(...s.to), dir3(s.dirTo), 3],
@@ -80,7 +80,7 @@ export function patchRoutes(c: V2, stood: Map<string, P>) {
           ['y', co(p[1])],
           ['route_id', Number(id)],
           ['post_process', false],
-          ['radius', pyFloat(s.radius)],
+          ['radius', pyFloat(s.radii[i] ?? s.radius)],
         ]),
       ),
     );
@@ -112,7 +112,10 @@ export function patchRoutes(c: V2, stood: Map<string, P>) {
     str(r.get('direction')) === s.direction &&
     Math.abs(num(r.get('radius')) - s.radius) < 1e-6 &&
     old.length === s.points.length &&
-    old.every((p, i) => near(p, s.points[i]));
+    old.every((p, i) => near(p, s.points[i])) &&
+    list(r.get('node')).every(
+      (id, i) => Math.abs(num(obj(nodes.get(String(num(id)))).get('radius')) - (s.radii[i] ?? s.radius)) < 1e-6,
+    );
 
   const gone: number[] = [];
   let ordinal = -1;

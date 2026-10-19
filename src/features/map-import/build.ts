@@ -72,6 +72,9 @@ export function buildMapData(
             nodeB: stationNode.get(r.toStation),
             offset: 0, // a route is driven on its own line
             radius: Number(r.extra.radius) || 1,
+            nodeRadii: ((r.extra.waypoints as { radius?: unknown }[] | undefined) ?? []).map((w) =>
+              Number.isFinite(Number(w.radius)) ? Number(w.radius) : Number(r.extra.radius) || 1,
+            ),
           }
         : {}),
     }).data;

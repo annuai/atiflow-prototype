@@ -1,6 +1,7 @@
 import type { NavGraph, SiteLayout } from '@/core/types';
 import { type FleetMap } from '@/features/maps';
 import { roadsFromLanes } from './roads';
+import { areasToWorkAreas, workAreaOf } from './workAreas';
 import { fitRect, gateFromThin, polygonOf } from './shape';
 import type { MapData, MapZone, StagingAreaDef } from './types';
 
@@ -90,15 +91,6 @@ export function seedMapData(map: Pick<FleetMap, 'fleetLive'>, site: SiteLayout, 
       ...rectZone(z.polygon),
       props: { reason: z.reason },
     })),
-    ...site.zones
-      .filter((z) => z.active && (fleet?.areas ?? []).includes(z.id))
-      .map((z): MapZone => ({
-        id: z.id,
-        type: 'area',
-        name: z.name,
-        ...rectZone(z.polygon),
-        props: {},
-      })),
   ];
   return {
     nodes,
@@ -107,6 +99,14 @@ export function seedMapData(map: Pick<FleetMap, 'fleetLive'>, site: SiteLayout, 
     stations,
     stagingAreas: structuredClone(DEMO_AREAS[f] ?? []),
     zones,
+    model3d: {
+      elements: site.zones
+        .filter((z) => z.active && (fleet?.areas ?? []).includes(z.id))
+        .map((z) => workAreaOf(z, nav.fleets)),
+      sections: [],
+      hiddenWalls: [],
+      hiddenEquipment: [],
+    },
   };
 }
 
@@ -119,7 +119,7 @@ export function normaliseData(
     ...d,
     roads: d.roads ?? roadsFromLanes(d.lanes),
     stagingAreas: (d.stagingAreas ?? []).map((a) => ({ ...a, retrieval: a.retrieval ?? 'fifo' })),
-    zones: d.zones.map(normaliseZone),
+    ...areasToWorkAreas({ zones: d.zones.map(normaliseZone), model3d: d.model3d }),
   } as MapData;
 }
 

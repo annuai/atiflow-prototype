@@ -163,4 +163,5 @@ export const zoneType = (id: ZoneTypeId): ZoneType =>
     fields: VALUE,
   };
 /** The types offered by the "Add new zone" menu of a module. */
-export const zoneTypesOf = (module: ZoneType['module']) => ZONE_TYPES.filter((t) => t.module === module);
+export const zoneTypesOf = (module: ZoneType['module']) =>
+  ZONE_TYPES.filter((t) => t.module === module && t.id !== 'area');

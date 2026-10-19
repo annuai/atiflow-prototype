@@ -6,6 +6,8 @@ import type { MapData, Selection, ZoneShape } from '../model/types';
 import { drawingPreview, floorPaths, pt, stagingGeometry, type P } from './layers';
 import { DrawingLayer, LocatePulse, RoadHits, StagingLayer, StationLayer, ZoneLayer } from './layers/MapLayers';
 import { StationLink } from './layers/StationLink';
+import { RouteNodes } from './layers/RouteNodes';
+import { StructureLayer } from './layers/StructureLayer';
 import { ZoomControls } from './layers/ZoomControls';
 import type { Tool } from './tools';
 import { usePointerTools } from './usePointerTools';
@@ -20,10 +22,25 @@ interface Props {
   /** Which things the module can select (a click on anything else selects nothing). */ canSelect(
     sel: NonNullable<Selection>,
   ): boolean;
-  onSelect(sel: Selection): void;
+  onSelect(sel: Selection, opts?: { keepTool?: boolean; additive?: boolean }): void;
+  /** Select multiple is on: clicks toggle elements and dragging the floor draws a selection box */
+  multi?: boolean;
+  /** a selection box was released (corners in site coordinates) */
+  onMarquee?(a: P, b: P, additive: boolean): void;
   /** The points of the shape being drawn so far, and a click while a drawing tool is active. */ drawing: P[];
   onPoint(p: P): void;
   onFinish(): void;
+  /** Point-to-point (v2) routes: a bend node of the selected route is clicked, dragged (called while dragging), or added by a double-click on the route. */
+  onRouteNodeSelect(roadId: string, index: number): void;
+  onRouteNodeMove(roadId: string, index: number, to: P): void;
+  onRouteNodeAdd(roadId: string, at: P): void;
+  /** The Structure module is open: elements can be picked, and the lidar estimate shows under them. */
+  structureOpen: boolean;
+  /** An element is dragged (`dx`, `dy` since the last call), a corner of a wall or outline is dragged, a block is moved / resized / turned, or a point is added by a double-click. */
+  onElementMove(id: string, dx: number, dy: number): void;
+  onElementPoint(id: string, index: number, to: P): void;
+  onElementBox(id: string, b: { x: number; y: number; w: number; d: number; rot: number }): void;
+  onElementAddPoint(id: string, at: P): void;
   /** Centre the view on a place and pulse it (a new `n` each time, so the same place can be shown again). */ locate?: {
     x: number;
     y: number;
@@ -64,6 +81,16 @@ export function MapCanvas({
   drawing,
   onPoint,
   onFinish,
+  onRouteNodeSelect,
+  onRouteNodeMove,
+  onRouteNodeAdd,
+  structureOpen,
+  multi,
+  onMarquee,
+  onElementMove,
+  onElementPoint,
+  onElementBox,
+  onElementAddPoint,
   onMove,
   onZoneShape,
   onStationAngle,
@@ -75,7 +102,21 @@ export function MapCanvas({
   const attach = useCallback((n: HTMLDivElement | null) => attachBox(n), [attachBox]);
   const [hover, setHover] = useState<string | null>(null);
   const nodes = useMemo(() => new Map(data.nodes.map((n) => [n.id, n])), [data.nodes]);
-  const pointer = usePointerTools({ vp, tool, editable, nodes: data.nodes, canSelect, onSelect, onPoint, onMove });
+  const pointer = usePointerTools({
+    vp,
+    tool,
+    editable,
+    nodes: data.nodes,
+    selection,
+    p2p: data.p2p,
+    boxSelect: structureOpen && editable,
+    multi,
+    onMarquee,
+    canSelect,
+    onSelect,
+    onPoint,
+    onMove,
+  });
   const { mode, cursor } = pointer;
 
   // (the floor's paths depend on the bounds only, not on zoom: P keeps its identity while the view moves)
@@ -97,6 +138,7 @@ export function MapCanvas({
 
   const placedStations = data.stations.filter((s) => !s.unplaced); // those waiting for a position are listed in the panel, not piled on the origin
   const isSelected = (kind: string, id: string) => selection?.kind === kind && selection.id === id;
+  const selectedRoad = selection?.kind === 'road' ? data.roads.find((r) => r.id === selection.id) : undefined;
   const selectedZone = selection?.kind === 'zone' ? data.zones.find((z) => z.id === selection.id) : undefined;
   const preview = drawingPreview(tool, drawing, cursor);
   const movable = editable && mode === 'none';
@@ -114,8 +156,31 @@ export function MapCanvas({
         onPointerUp={pointer.up}
         onPointerCancel={pointer.up}
         onPointerLeave={pointer.leave}
-        onDoubleClick={() => {
-          if (mode === 'many' && editable) onFinish();
+        onDoubleClick={(e) => {
+          if (mode === 'many' && editable && !(data.p2p && tool.kind === 'road')) onFinish();
+          if (structureOpen && editable && mode === 'none') {
+            const hit = document
+              .elementsFromPoint(e.clientX, e.clientY)
+              .map((el) => el.getAttribute('data-hit'))
+              .find((h) => h?.startsWith('element:'));
+            if (hit) {
+              const at = vp.toSite(e.clientX, e.clientY);
+              onElementAddPoint(hit.slice(8), [at.x, at.y]);
+            }
+          }
+          if (data.p2p && editable && mode === 'none') {
+            // double-click a route: a bend node there (of the selected route when several lie under the pointer)
+            const hits = document
+              .elementsFromPoint(e.clientX, e.clientY)
+              .map((el) => el.getAttribute('data-hit'))
+              .filter((h): h is string => !!h?.startsWith('road:'))
+              .map((h) => h.slice(5));
+            const target = hits.find((h) => h === selection?.id) ?? hits[0];
+            if (target) {
+              const at = vp.toSite(e.clientX, e.clientY);
+              onRouteNodeAdd(target, [at.x, at.y]);
+            }
+          }
         }}
       >
         <path d={layers.grid} fill="none" stroke="#e5e7eb" strokeWidth={1} vectorEffect="non-scaling-stroke" />
@@ -128,6 +193,22 @@ export function MapCanvas({
           handles={selectedZone && { zone: selectedZone, editable, bodyDrag: mode === 'none', onShape: onZoneShape }}
         />
         <path d={layers.machines} fill="#d8dcd8" fillOpacity={0.75} pointerEvents="none" />
+        <StructureLayer
+          data={data}
+          vp={vp}
+          active={structureOpen}
+          selecting={mode === 'none'}
+          editable={editable}
+          selectedIds={selection?.kind === 'element' ? (selection.ids ?? [selection.id]) : []}
+          selectedId={
+            selection?.kind === 'element' && !(selection.ids && selection.ids.length > 1) ? selection.id : null
+          }
+          multi={multi}
+          onSelect={(id, additive) => onSelect({ kind: 'element', id }, { additive })}
+          onMove={onElementMove}
+          onPoint={onElementPoint}
+          onBox={onElementBox}
+        />
         <StagingLayer
           staging={staging}
           isSelected={isSelected}
@@ -162,6 +243,16 @@ export function MapCanvas({
           active={mode !== 'none' && editable}
           vp={vp}
         />
+        {selectedRoad && data.p2p && (
+          <RouteNodes
+            road={selectedRoad}
+            selected={selection?.node}
+            vp={vp}
+            editable={editable}
+            onSelect={(i) => onRouteNodeSelect(selectedRoad.id, i)}
+            onMove={(i, to) => onRouteNodeMove(selectedRoad.id, i, to)}
+          />
+        )}
         <StationLayer
           stations={placedStations}
           nodes={nodes}
@@ -176,12 +267,26 @@ export function MapCanvas({
         />
         <StationLink
           data={data}
-          stationId={selection?.kind === 'station' ? selection.id : null}
+          stationId={selection?.kind === 'station' && !data.p2p ? selection.id : null}
           vp={vp}
           editable={editable}
           onAngle={onStationAngle}
         />
         <LocatePulse locate={locate} vp={vp} />
+        {pointer.box && (
+          <rect
+            x={Math.min(X(pointer.box.a[0]), X(pointer.box.b[0]))}
+            y={Math.min(Y(pointer.box.a[1]), Y(pointer.box.b[1]))}
+            width={Math.abs(X(pointer.box.a[0]) - X(pointer.box.b[0]))}
+            height={Math.abs(Y(pointer.box.a[1]) - Y(pointer.box.b[1]))}
+            fill="#0d9488"
+            fillOpacity={0.08}
+            stroke="#0d9488"
+            strokeDasharray="5 4"
+            vectorEffect="non-scaling-stroke"
+            pointerEvents="none"
+          />
+        )}
         {overlay?.(vp)}
       </svg>
       {cursor && (

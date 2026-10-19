@@ -27,6 +27,8 @@ export interface LoadedScene {
   planLines: THREE.LineSegments;
   /** what the Equipment / Zones / Labels layer switches show and hide */
   layers: { equipment: THREE.Object3D[]; zones: THREE.Object3D[]; labels: THREE.Object3D[] };
+  /** things a click can pick in the 3D editor: instanced meshes carry `userData.ids` (the element of each instance), the others `userData.id` */
+  pickables: THREE.Object3D[];
   /** the building's middle and size in metres (for framing the camera) */
   frame: { cx: number; cy: number; W: number; D: number };
   /** Frees every geometry, material and texture this scene created, and takes the group out of its parent. Safe to call twice. */
@@ -95,51 +97,137 @@ export function renderScene(site: SiteLayout, nav: NavGraph, opts: { plan: boole
   (grid.material as THREE.Material).transparent = true;
   group.add(grid);
 
-  // walls (instanced)
-  const wallMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({ roughness: 0.8 }),
-    site.walls.length,
-  );
+  // walls (instanced; walls with some see-through glass are meshes of their own, one instance cannot be translucent)
+  const pickables: THREE.Object3D[] = [];
   const m4 = new THREE.Matrix4(),
     q = new THREE.Quaternion(),
     col = new THREE.Color();
-  site.walls.forEach((w, i) => {
+  const up = new THREE.Vector3(0, 1, 0);
+  const solid = <T extends { opacity?: number }>(list: T[]) => list.filter((x) => (x.opacity ?? 1) >= 1);
+  const glass = <T extends { opacity?: number }>(list: T[]) => list.filter((x) => (x.opacity ?? 1) < 1);
+  const wallMatrix = (w: SiteLayout['walls'][number]) => {
     const dx = w.b[0] - w.a[0],
       dy = w.b[1] - w.a[1],
       L = Math.hypot(dx, dy),
       th = Math.max(w.t, 0.14);
-    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(dy, dx));
-    m4.compose(
-      new THREE.Vector3(...toScene((w.a[0] + w.b[0]) / 2, (w.a[1] + w.b[1]) / 2, w.h / 2)),
+    q.setFromAxisAngle(up, Math.atan2(dy, dx));
+    return m4.compose(
+      new THREE.Vector3(...toScene((w.a[0] + w.b[0]) / 2, (w.a[1] + w.b[1]) / 2, (w.base ?? 0) + w.h / 2)),
       q,
       new THREE.Vector3(L + th, w.h, th),
     );
-    wallMesh.setMatrixAt(i, m4);
+  };
+  const wallColor = (w: SiteLayout['walls'][number]) => {
+    if (w.color) return col.set(w.color);
     const act = inActive((w.a[0] + w.b[0]) / 2, (w.a[1] + w.b[1]) / 2);
-    wallMesh.setColorAt(i, col.set(w.layer === 'shell' ? 0x9aa6a2 : act ? 0x44534e : MUTED));
+    return col.set(w.layer === 'shell' ? 0x9aa6a2 : act ? 0x44534e : MUTED);
+  };
+  const opaqueWalls = solid(site.walls);
+  const wallMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({ roughness: 0.8 }),
+    opaqueWalls.length,
+  );
+  opaqueWalls.forEach((w, i) => {
+    wallMesh.setMatrixAt(i, wallMatrix(w));
+    wallMesh.setColorAt(i, wallColor(w));
   });
+  wallMesh.userData.ids = opaqueWalls.map((w) => w.id);
   wallMesh.castShadow = wallMesh.receiveShadow = true;
   group.add(wallMesh);
+  pickables.push(wallMesh);
+  for (const w of glass(site.walls)) {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshStandardMaterial({
+        color: wallColor(w).clone(),
+        roughness: 0.4,
+        transparent: true,
+        opacity: w.opacity,
+        depthWrite: false,
+      }),
+    );
+    mesh.applyMatrix4(wallMatrix(w));
+    mesh.userData.id = w.id;
+    group.add(mesh);
+    pickables.push(mesh);
+  }
 
-  // equipment (instanced)
+  // equipment (instanced), turned and lifted; the text of a machine is shown on top of it
+  const equipMatrix = (e: SiteLayout['equipment'][number]) => {
+    q.setFromAxisAngle(up, e.rot ?? 0);
+    return m4.compose(
+      new THREE.Vector3(...toScene(e.x, e.y, (e.base ?? 0) + e.h / 2)),
+      q,
+      new THREE.Vector3(e.w, e.h, e.d),
+    );
+  };
+  const opaqueEq = solid(site.equipment);
   const eq = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
     new THREE.MeshStandardMaterial({ roughness: 0.7 }),
-    site.equipment.length,
+    opaqueEq.length,
   );
-  site.equipment.forEach((e, i) => {
-    m4.compose(
-      new THREE.Vector3(...toScene(e.x, e.y, e.h / 2)),
-      new THREE.Quaternion(),
-      new THREE.Vector3(e.w, e.h, e.d),
-    );
-    eq.setMatrixAt(i, m4);
-    eq.setColorAt(i, col.set(KIND_COLOR[e.kind] ?? 0x9aa9a5));
+  opaqueEq.forEach((e, i) => {
+    eq.setMatrixAt(i, equipMatrix(e));
+    eq.setColorAt(i, col.set(e.color ?? KIND_COLOR[e.kind] ?? 0x9aa9a5));
   });
+  eq.userData.ids = opaqueEq.map((e) => e.id);
   eq.castShadow = eq.receiveShadow = true;
   group.add(eq);
   layers.equipment.push(eq);
+  pickables.push(eq);
+  for (const e of glass(site.equipment)) {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshStandardMaterial({
+        color: e.color ?? 0x9aa9a5,
+        roughness: 0.4,
+        transparent: true,
+        opacity: e.opacity,
+        depthWrite: false,
+      }),
+    );
+    mesh.applyMatrix4(equipMatrix(e));
+    mesh.userData.id = e.id;
+    group.add(mesh);
+    layers.equipment.push(mesh);
+    pickables.push(mesh);
+  }
+  const textOn = (text: string, x: number, y: number, z: number, height: number) => {
+    const lb = labelSprite(text, { size: 52 });
+    lb.position.set(...toScene(x, y, z));
+    lb.scale.set(height * lb.userData.aspect, height, 1);
+    group.add(lb);
+    layers.labels.push(lb);
+    return lb;
+  };
+  for (const e of site.equipment) if (e.label) textOn(e.label, e.x, e.y, (e.base ?? 0) + e.h + 0.45, 0.8);
+  for (const l of site.labels) textOn(l.text, l.x, l.y, l.z ?? 4, 2.4);
+
+  // floor patches and extruded outlines
+  for (const sh of site.shapes ?? []) {
+    const shape = new THREE.Shape(sh.points.map(([x, y]) => new THREE.Vector2(x, y)));
+    const flat = sh.height <= 0.01;
+    const mat = new THREE.MeshStandardMaterial({
+      color: sh.color,
+      roughness: 0.85,
+      transparent: (sh.opacity ?? 1) < 1,
+      opacity: sh.opacity ?? 1,
+    });
+    const mesh = new THREE.Mesh(
+      flat
+        ? new THREE.ShapeGeometry(shape)
+        : new THREE.ExtrudeGeometry(shape, { depth: sh.height, bevelEnabled: false }),
+      mat,
+    );
+    mesh.rotation.x = -Math.PI / 2; // (shape y -> -z, like toScene)
+    mesh.position.y = (sh.base ?? 0) + (flat ? 0.03 : 0);
+    mesh.castShadow = mesh.receiveShadow = !flat;
+    mesh.userData.id = sh.id;
+    group.add(mesh);
+    pickables.push(mesh);
+  }
   // outlines of walls and machines, drawn only in the plan view (flat drawings need crisp edges, shading does not exist there)
   const lines: number[] = [];
   const edge = (a: [number, number], b: [number, number], z: number) => {
@@ -158,7 +246,7 @@ export function renderScene(site: SiteLayout, nav: NavGraph, opts: { plan: boole
     ).map(([x, y]): [number, number] => [bx + (x * c - y * sn) / 2, by + (x * sn + y * c) / 2]);
     for (let i = 0; i < 4; i++) edge(P[i], P[(i + 1) % 4], z);
   };
-  site.equipment.forEach((e) => box(e.x, e.y, e.w, e.d, 0, e.h + 0.04));
+  site.equipment.forEach((e) => box(e.x, e.y, e.w, e.d, e.rot ?? 0, (e.base ?? 0) + e.h + 0.04));
   site.walls.forEach((w) => {
     const th = Math.max(w.t, 0.14);
     box(
@@ -167,7 +255,7 @@ export function renderScene(site: SiteLayout, nav: NavGraph, opts: { plan: boole
       Math.hypot(w.b[0] - w.a[0], w.b[1] - w.a[1]) + th,
       th,
       Math.atan2(w.b[1] - w.a[1], w.b[0] - w.a[0]),
-      w.h + 0.04,
+      (w.base ?? 0) + w.h + 0.04,
     );
   });
   const planLines = new THREE.LineSegments(
@@ -182,8 +270,8 @@ export function renderScene(site: SiteLayout, nav: NavGraph, opts: { plan: boole
   const zoneMeshes: LoadedScene['zoneMeshes'] = [];
   const zoneLabels: THREE.Sprite[] = [];
   for (const z of site.zones) {
-    const owners = nav.fleets.filter((f) => f.areas.includes(z.id));
-    z.color = owners.length > 1 ? SHARED_COLOR : (owners[0]?.color ?? z.color); // map area tint = owning fleet; shared area = indigo
+    const owners = z.own ? [] : nav.fleets.filter((f) => f.areas.includes(z.id));
+    if (!z.own) z.color = owners.length > 1 ? SHARED_COLOR : (owners[0]?.color ?? z.color); // map area tint = owning fleet; shared area = indigo
     const sh = new THREE.Shape(z.polygon.map(([x, y]) => new THREE.Vector2(x, y)));
     const mesh = new THREE.Mesh(
       new THREE.ShapeGeometry(sh),
@@ -218,6 +306,7 @@ export function renderScene(site: SiteLayout, nav: NavGraph, opts: { plan: boole
     zoneLabels,
     planLines,
     layers,
+    pickables,
     frame: { cx, cy, W, D },
     dispose: () => disposeTree(group),
   };

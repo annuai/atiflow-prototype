@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Cursor01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/data/EmptyState';
 import type { Tool } from '../canvas/tools';
@@ -11,6 +12,11 @@ import { zoneType } from '../model/zoneTypes';
 import type { useSimulationPanel } from '../sim/useSimulationPanel';
 import type { Module } from './ModuleToolbar';
 import { RoadForm, RoutesPanel } from './RoutesPanel';
+import { RouteForm } from './RouteForm';
+import { ElementForm } from '../structure-ui/ElementForm';
+import { MultiPanel } from '../structure-ui/MultiPanel';
+import { StructurePanel } from '../structure-ui/StructurePanel';
+import { elementOf } from '../model/structure/ops';
 import { SimulationPanel } from './SimulationPanel';
 import { StagingForm } from './StagingForm';
 import { StationForm } from './StationForm';
@@ -19,6 +25,8 @@ import { ZoneForm, ZonesPanel } from './ZonesPanel';
 
 type Thing = NonNullable<Selection>;
 export interface SidePanelProps {
+  /** shown under the list or form of the open module (the DWG panel in the 3D view) */
+  footer?: ReactNode;
   mode: 'design' | 'simulation';
   module: Module | null;
   data: MapData;
@@ -40,6 +48,8 @@ export interface SidePanelProps {
   onArm(module: Module, choice?: string): void;
   /** arm the tool that places an imported station that has no position yet */
   onPlace(stationId: string): void;
+  /** point-to-point (v2) maps: start a route at this station (the next click on a station ends it) */
+  onRouteFrom(stationId: string): void;
   /** stop drawing: the select tool, nothing half drawn */
   onStopDrawing(): void;
   onDelete(what: Thing): void;
@@ -69,6 +79,7 @@ function StationsSection(p: SidePanelProps) {
         onPatch={(patch) => p.edit((m) => updateStation(m, station.id, patch))}
         onMove={(to) => p.edit((m) => moveStation(m, station.id, to))}
         onPlace={() => p.onPlace(station.id)}
+        onRouteFrom={() => p.onRouteFrom(station.id)}
         onDelete={() => p.onDelete({ kind: 'station', id: station.id })}
       />
     );
@@ -106,6 +117,20 @@ function StationsSection(p: SidePanelProps) {
 function RoutesSection(p: SidePanelProps) {
   const { data, editable, tool, selection } = p;
   const road = selection?.kind === 'road' ? data.roads.find((r) => r.id === selection.id) : undefined;
+  if (road && data.p2p)
+    return (
+      <RouteForm
+        road={road}
+        data={data}
+        node={selection?.node}
+        editable={editable}
+        onBack={p.onBack}
+        onLocate={() => p.onLocate('road', road.id)}
+        onDelete={() => p.onDelete({ kind: 'road', id: road.id })}
+        edit={p.edit}
+        onPick={p.onPick}
+      />
+    );
   if (road)
     return (
       <RoadForm
@@ -162,6 +187,45 @@ function ZonesSection(p: SidePanelProps & { module: 'exclusive' | 'zones' }) {
   );
 }
 
+/** The list or the form of the Structure module (elements, sections). */
+function StructureSection(p: SidePanelProps) {
+  const { data, editable, selection } = p;
+  const element = selection?.kind === 'element' ? elementOf(data, selection.id) : undefined;
+  if (selection?.kind === 'element' && selection.ids && selection.ids.length > 1)
+    return (
+      <MultiPanel
+        data={data}
+        ids={selection.ids}
+        editable={editable}
+        edit={p.edit}
+        onClear={p.onBack}
+        onDelete={() => p.onDelete({ kind: 'element', id: selection.id, ids: selection.ids })}
+      />
+    );
+  if (element)
+    return (
+      <ElementForm
+        element={element}
+        data={data}
+        editable={editable}
+        edit={p.edit}
+        onBack={p.onBack}
+        onLocate={() => p.onLocate('element', element.id)}
+        onPick={(id) => p.onPick({ kind: 'element', id })}
+        onDelete={() => p.onDelete({ kind: 'element', id: element.id })}
+      />
+    );
+  return (
+    <StructurePanel
+      data={data}
+      editable={editable}
+      selectedId={null}
+      onSelect={(id) => p.onPick({ kind: 'element', id })}
+      edit={p.edit}
+    />
+  );
+}
+
 /** The right-hand panel of the Map Editor: the Simulation panel, or the list / form of the open module (stations and staging areas, routes, traffic gates, zones). */
 export function SidePanel(p: SidePanelProps) {
   const { mode, module, data, simulation: sim } = p;
@@ -194,6 +258,15 @@ export function SidePanel(p: SidePanelProps) {
       {mode === 'design' && module === 'stations' && <StationsSection {...p} />}
       {mode === 'design' && module === 'routes' && <RoutesSection {...p} />}
       {mode === 'design' && (module === 'exclusive' || module === 'zones') && <ZonesSection {...p} module={module} />}
+      {mode === 'design' && module === 'structure' && <StructureSection {...p} />}
+      {p.footer && (
+        <details className="max-h-[55%] shrink-0 overflow-y-auto border-t border-secondary">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-primary">
+            {copy.view3d.dwgSection.title}
+          </summary>
+          {p.footer}
+        </details>
+      )}
     </aside>
   );
 }
