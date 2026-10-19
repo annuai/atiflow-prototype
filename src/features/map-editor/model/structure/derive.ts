@@ -1,6 +1,7 @@
 import type { Equipment, Shape3d, SiteLayout, Wall, Zone } from '@/core/types';
 import type { MapData } from '../types';
 import { DEFAULTS } from './palette';
+import { cellBoxes } from '../staging';
 import { modelOf } from './ops';
 import type { LineElement, P, StructureElement } from './types';
 
@@ -53,6 +54,10 @@ function cutSegment(w: Wall, doors: Extract<StructureElement, { kind: 'door' }>[
   return out;
 }
 
+/** The text shown on top of a machine or pillar: its own text, else its name (a machine traced from the scan only has an automatic name, which is not shown). */
+export const shownText = (e: StructureElement): string | undefined =>
+  e.label?.trim() || (e.traced ? undefined : e.name?.trim()) || undefined;
+
 export function structureSite(data: MapData): StructureSite {
   const m = modelOf(data);
   const hiddenW = new Set(m.hiddenWalls),
@@ -68,6 +73,8 @@ export function structureSite(data: MapData): StructureSite {
     ...(e.opacity !== undefined ? { opacity: e.opacity } : {}),
     id: e.id,
   });
+  for (const a of data.stagingAreas)
+    for (const c of cellBoxes(a)) equipment.push({ kind: 'staging', layer: 'staging', color: '#7dd3fc', ...c }); // cells stand apart like a table without a frame
   for (const e of m.elements) {
     const top = (e.base ?? 0) + e.height;
     if (e.kind === 'wall' || e.kind === 'partition') {
@@ -94,7 +101,7 @@ export function structureSite(data: MapData): StructureSite {
         layer: e.kind,
         rot: e.rot,
         ...(e.base ? { base: e.base } : {}),
-        ...(e.label ? { label: e.label } : {}),
+        ...(shownText(e) ? { label: shownText(e) } : {}),
         ...lit(e),
       });
     } else if (e.kind === 'area' && e.work) {

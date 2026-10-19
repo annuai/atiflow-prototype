@@ -114,6 +114,7 @@ export function EditorStage({
         }}
         onFinish={draw.finish}
         onZoneShape={(zid, shape) => editor.edit((m) => setZoneShape(m, zid, shape), `shape:${zid}`)}
+        onStagingChange={(id, patch) => editor.edit((m) => updateStagingArea(m, id, patch), `stg:${id}`)}
         onStationAngle={(sid, angle) => editor.edit((m) => updateStation(m, sid, { angle }), `angle:${sid}`)}
         onMove={(kind, sid, to) => editor.edit((m) => moveThing(m, kind, sid, to), `move:${kind}:${sid}`)}
       />

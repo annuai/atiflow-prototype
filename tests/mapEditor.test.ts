@@ -25,7 +25,15 @@ import {
   updateStagingArea,
 } from '../src/features/map-editor/model/staging';
 import { addZone, deleteZone } from '../src/features/map-editor/model/zones';
-import { newGate, polygonOf, rectFromCorners } from '../src/features/map-editor/model/shape';
+import {
+  newGate,
+  polygonOf,
+  rectFromCorners,
+  resizeRect,
+  rotateRectTo,
+  toWorld,
+} from '../src/features/map-editor/model/shape';
+import { areaFromRect, cellBoxes, stagingRect } from '../src/features/map-editor/model/staging';
 import { normaliseData } from '../src/features/map-editor/model/seed';
 import { restoreWorkAreas, workAreaZones } from '../src/features/map-editor/model/workAreas';
 import { emptyHistory, record, redo, undo } from '../src/features/map-editor/model/history';
@@ -478,5 +486,40 @@ describe('two-finger gestures on a map', () => {
         ],
       ).scale,
     ).toBe(1);
+  });
+});
+
+describe('staging area handles', () => {
+  const area = {
+    id: 'SA-1',
+    name: 'A',
+    sherpaType: 'x',
+    rotation: 30,
+    x: 5,
+    y: 7,
+    rows: 2,
+    cols: 3,
+    cellLength: 1.2,
+    cellWidth: 1,
+  };
+  it('the rectangle of an area gives the same area back', () => {
+    expect(areaFromRect(area, stagingRect(area))).toMatchObject({ rows: 2, cols: 3, rotation: 30, x: 5, y: 7 });
+  });
+  it('dragging an edge adds whole columns and the opposite edge stays where it was', () => {
+    const r = stagingRect(area);
+    const grown = resizeRect(r, [1, 0], toWorld(r, r.w / 2 + 1.25, 0)); // east edge out by about one cell
+    const patch = areaFromRect(area, grown);
+    expect(patch).toMatchObject({ cols: 4, rows: 2 });
+    const after = stagingRect({ ...area, ...patch } as typeof area);
+    expect(toWorld(after, -after.w / 2, 0)[0]).toBeCloseTo(toWorld(r, -r.w / 2, 0)[0], 1); // west edge fixed
+    expect(toWorld(after, -after.w / 2, 0)[1]).toBeCloseTo(toWorld(r, -r.w / 2, 0)[1], 1);
+    const pulled = areaFromRect(area, resizeRect(r, [-1, 0], toWorld(r, -r.w / 2 + 1.25, 0))); // west edge in
+    expect(pulled).toMatchObject({ cols: 2 });
+  });
+  it('turning keeps the rows and columns; the cells are boxes for 3D', () => {
+    const r = stagingRect(area);
+    const t = areaFromRect(area, rotateRectTo(r, [r.cx + 5, r.cy]));
+    expect(t).toMatchObject({ rows: 2, cols: 3 });
+    expect(cellBoxes(area as never)).toHaveLength(6);
   });
 });

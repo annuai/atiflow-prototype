@@ -1,6 +1,6 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { isCoarse } from '@/components/map/useTouchGestures';
-import { elementColor } from '../../model/structure/derive';
+import { elementColor, shownText } from '../../model/structure/derive';
 import { modelOf } from '../../model/structure/ops';
 import type {
   AreaElement,
@@ -302,7 +302,7 @@ export function StructureLayer({
           vectorEffect="non-scaling-stroke"
           pointerEvents="none"
         />
-        {e.label && <Label text={e.label} at={[b.x, b.y]} vp={vp} />}
+        {shownText(e) && <Label text={shownText(e)!} at={[b.x, b.y]} vp={vp} />}
         {!(sel && editable && selecting) && (
           <polygon
             {...pick(e)}

@@ -441,3 +441,14 @@ describe('areas and work areas are one thing', () => {
     expect(out[1]).not.toHaveProperty('work');
   });
 });
+
+describe('names on machines', () => {
+  it('a machine shows its own text, else its name; a traced machine only has an automatic name, so none is shown', () => {
+    let d = blank();
+    d = addBox(d, 'machine', [0, 0], [2, 2], { label: 'Press 1' }).data;
+    d = addBox(d, 'machine', [3, 0], [5, 2]).data; // named "Machine 2"
+    d = addBox(d, 'machine', [6, 0], [8, 2], { traced: true }).data;
+    const eq = structureSite({ ...d, structure: undefined }).equipment;
+    expect(eq.map((q) => q.label)).toEqual(['Press 1', 'Machine 2', undefined]);
+  });
+});

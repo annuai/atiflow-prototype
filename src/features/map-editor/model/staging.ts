@@ -1,6 +1,7 @@
 import { text } from '../text';
 import { ROBOT_TYPES } from '@/data/robotTypes';
-import type { MapData, StagingAreaDef } from './types';
+import { degrees } from './shape';
+import type { MapData, StagingAreaDef, ZoneShape } from './types';
 
 /** Pure edits and geometry of staging areas: rows x columns of cells laid out from the centre of the A1 cell. */
 const round = (v: number) => Math.round(v * 100) / 100;
@@ -96,4 +97,75 @@ export function stagingProblems(data: MapData, a: StagingAreaDef): Record<string
   if (!(a.cellLength > 0)) e.cellLength = text.stagingProblems.cellLength;
   if (!(a.cellWidth > 0)) e.cellWidth = text.stagingProblems.cellWidth;
   return e;
+}
+
+type Rect = Extract<ZoneShape, { kind: 'rect' }>;
+const spanOf = (n: number, size: number, gap: number) => n * size + (n - 1) * gap;
+/** The area as one rectangle (its whole outline), turned by the area's rotation: what the eight resize handles and the rotate handle work on. Its x axis runs along the columns. */
+export function stagingRect(a: StagingAreaDef): Rect {
+  const t = rad(a.rotation),
+    L = spanOf(a.cols, a.cellLength, a.colGap ?? 0),
+    W = spanOf(a.rows, a.cellWidth, a.rowGap ?? 0);
+  // the centre of A1 sits at local (-L/2 + l/2, +W/2 - w/2): walk from it back to the middle
+  const u = (L - a.cellLength) / 2,
+    v = (W - a.cellWidth) / 2;
+  return {
+    kind: 'rect',
+    cx: round(a.x + u * Math.cos(t) + v * Math.sin(t)),
+    cy: round(a.y + u * Math.sin(t) - v * Math.cos(t)),
+    w: L,
+    h: W,
+    rot: t,
+  };
+}
+
+/**
+ * What changes in an area when its rectangle is moved, resized or turned by the handles (`from` is the area when the drag began, `r` the rectangle the handles give). A resize only ever adds or
+ * removes whole rows and columns (the size of a cell stays): the edge being dragged follows the pointer in steps of one cell, the opposite edge stays where it is.
+ */
+export function areaFromRect(from: StagingAreaDef, r: Rect): Partial<StagingAreaDef> {
+  const f = stagingRect(from);
+  const gc = from.colGap ?? 0,
+    gr = from.rowGap ?? 0;
+  const snap = (len: number, size: number, gap: number) =>
+    Math.min(200, Math.max(1, Math.round((len + gap) / (size + gap))));
+  const turned = Math.abs(r.rot - f.rot) > 1e-6;
+  const cols = turned ? from.cols : snap(r.w, from.cellLength, gc);
+  const rows = turned ? from.rows : snap(r.h, from.cellWidth, gr);
+  const w2 = spanOf(cols, from.cellLength, gc),
+    h2 = spanOf(rows, from.cellWidth, gr);
+  // the new centre, in the old frame: a moved or turned rectangle keeps the handles' centre; a resized edge keeps its opposite edge still
+  const t0 = f.rot,
+    dx = r.cx - f.cx,
+    dy = r.cy - f.cy;
+  let lx = dx * Math.cos(t0) + dy * Math.sin(t0),
+    ly = -dx * Math.sin(t0) + dy * Math.cos(t0);
+  if (!turned) {
+    if (Math.abs(r.w - f.w) > 0.005) lx = Math.abs(lx - (r.w - f.w) / 2) < 0.05 ? (w2 - f.w) / 2 : -(w2 - f.w) / 2;
+    if (Math.abs(r.h - f.h) > 0.005) ly = Math.abs(ly - (r.h - f.h) / 2) < 0.05 ? (h2 - f.h) / 2 : -(h2 - f.h) / 2;
+  }
+  const cx = f.cx + lx * Math.cos(t0) - ly * Math.sin(t0),
+    cy = f.cy + lx * Math.sin(t0) + ly * Math.cos(t0);
+  const rot = turned ? r.rot : t0,
+    u = (w2 - from.cellLength) / 2,
+    v = (h2 - from.cellWidth) / 2;
+  return {
+    rows,
+    cols,
+    rotation: degrees(rot),
+    x: round(cx - u * Math.cos(rot) - v * Math.sin(rot)),
+    y: round(cy - u * Math.sin(rot) + v * Math.cos(rot)),
+  };
+}
+
+/** Every cell of an area as a box for the 3D view: a low block (cells stand apart like a table without a frame), turned with the area. */
+export const CELL_HEIGHT = 0.25;
+export function cellBoxes(a: StagingAreaDef) {
+  const out: { x: number; y: number; w: number; d: number; rot: number; h: number }[] = [];
+  for (let row = 1; row <= a.rows; row++)
+    for (let col = 1; col <= a.cols; col++) {
+      const c = cellCenter(a, row, col);
+      out.push({ x: c.x, y: c.y, w: a.cellLength, d: a.cellWidth, rot: rad(a.rotation), h: CELL_HEIGHT });
+    }
+  return out;
 }

@@ -8,6 +8,7 @@ import { DrawingLayer, LocatePulse, RoadHits, StagingLayer, StationLayer, ZoneLa
 import { StationLink } from './layers/StationLink';
 import { RouteNodes } from './layers/RouteNodes';
 import { StructureLayer } from './layers/StructureLayer';
+import { StagingHandles } from './layers/StagingHandles';
 import { ZoneHandles } from './layers/ZoneHandles';
 import { ZoomControls } from './layers/ZoomControls';
 import type { Tool } from './tools';
@@ -15,6 +16,8 @@ import { usePointerTools } from './usePointerTools';
 import { useViewport } from './useViewport';
 
 interface Props {
+  /** a staging area is moved, resized (whole rows and columns) or turned with its handles */
+  onStagingChange(id: string, patch: Partial<MapData['stagingAreas'][number]>): void;
   site: SiteLayout;
   data: MapData;
   tool: Tool;
@@ -100,6 +103,7 @@ export function MapCanvas({
   onMove,
   onZoneShape,
   onStationAngle,
+  onStagingChange,
   overlay,
   locate,
 }: Props) {
@@ -226,6 +230,13 @@ export function MapCanvas({
           movable={movable}
           startDrag={pointer.startDrag}
           endDrag={pointer.endDrag}
+        />
+        <StagingHandles
+          data={data}
+          selection={selection}
+          enabled={editable && mode === 'none'}
+          vp={vp}
+          onChange={onStagingChange}
         />
         <path
           d={lanes}
