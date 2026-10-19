@@ -10,7 +10,7 @@ import { ModuleList, type ListItem } from '../components/ModuleList';
 import { elementColor } from '../model/structure/derive';
 import { modelOf } from '../model/structure/ops';
 import { structureDxf } from '../model/structure/dxf';
-import { traceAll } from '../model/structure/trace';
+import { retraceAll } from '../model/structure/trace';
 import type { MapData } from '../model/types';
 
 /** The undo shortcut as this computer writes it (the editor takes Ctrl or Cmd + Z on either). */
@@ -68,9 +68,7 @@ export function StructurePanel({
     subtitle: `${t.tools[e.kind === 'area' && e.work ? 'work' : e.kind]} · ${e.height} m`,
     dot: elementColor(data, e),
   }));
-  const canTrace =
-    (data.structure?.walls.length ?? 0) - m.hiddenWalls.length > 0 ||
-    (data.structure?.equipment.length ?? 0) - m.hiddenEquipment.length > 0;
+  const canTrace = (data.structure?.walls.length ?? 0) + (data.structure?.equipment.length ?? 0) > 0; // there is a scan to trace, even if it was traced and deleted
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <ConfirmDialog
@@ -79,7 +77,7 @@ export function StructurePanel({
         title={t.list.traceWarn.title}
         description={t.list.traceWarn.body(undoKeys())}
         confirmLabel={t.list.traceWarn.confirm}
-        onConfirm={() => edit((d) => traceAll(d))}
+        onConfirm={() => edit((d) => retraceAll(d))}
       />
       <ModuleList
         controls={

@@ -126,6 +126,16 @@ export function traceAll(data: MapData): MapData {
   return traceMachines(traceWalls(data, walls).data, machines).data;
 }
 
+/** Traces the whole scan again from scratch: what an earlier trace made is dropped (elements drawn by hand stay), everything the scan holds comes back and is traced. */
+export function retraceAll(data: MapData): MapData {
+  const m = modelOf(data);
+  const fresh: MapData = {
+    ...data,
+    model3d: { ...m, elements: m.elements.filter((e) => !e.traced), hiddenWalls: [], hiddenEquipment: [] },
+  };
+  return traceAll(fresh);
+}
+
 /** Remove what is inside a rectangle: estimate walls and machines are hidden, elements that lie wholly inside it are deleted. */
 export function eraseRect(data: MapData, a: P, b: P): MapData {
   const x0 = Math.min(a[0], b[0]),

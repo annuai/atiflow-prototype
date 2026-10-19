@@ -73,9 +73,9 @@ export const mapEditor = {
     },
     list: {
       traceWarn: {
-        title: 'Trace all walls?',
+        title: 'Trace all walls again?',
         body: (undo: string) =>
-          `Every wall and machine of the scan becomes an element you can edit. This can make a lot of small pieces, and cleaning them up may be hard. You can take it back at once with ${undo}.`,
+          `Every wall and machine of the scan is traced again from scratch and replaces what an earlier trace made; things you drew yourself stay. This can make a lot of small pieces, and cleaning them up may be hard. You can take it back at once with ${undo}.`,
         confirm: 'Trace walls',
       },
       elements: 'Elements',

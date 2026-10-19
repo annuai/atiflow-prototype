@@ -26,6 +26,7 @@ import {
   eraseRect,
   nearestEstimateWall,
   restoreEstimate,
+  retraceAll,
   traceAll,
   traceWalls,
 } from '@/features/map-editor/model/structure/trace';
@@ -380,5 +381,28 @@ describe('resizing and turning a wall as a whole', () => {
     expect(a[0]).toBeCloseTo(5);
     expect(a[1]).toBeCloseTo(-5);
     expect(b[1]).toBeCloseTo(5);
+  });
+});
+
+describe('tracing again', () => {
+  it('replaces an earlier trace (even one that was deleted) and keeps what was drawn by hand', () => {
+    let d = traceAll(blank());
+    const traced = modelOf(d).elements.length;
+    expect(traced).toBeGreaterThan(0);
+    d = addLine(d, 'wall', [
+      [20, 0],
+      [30, 0],
+    ]).data; // by hand
+    d = deleteElements(
+      d,
+      modelOf(d)
+        .elements.filter((e) => e.traced)
+        .map((e) => e.id),
+    ); // the whole trace deleted
+    expect(modelOf(d).elements).toHaveLength(1);
+    const again = retraceAll(d);
+    expect(modelOf(again).elements.filter((e) => e.traced)).toHaveLength(traced);
+    expect(modelOf(again).elements.filter((e) => !e.traced)).toHaveLength(1);
+    expect(modelOf(retraceAll(again)).elements).toHaveLength(traced + 1); // twice gives the same, not double
   });
 });
