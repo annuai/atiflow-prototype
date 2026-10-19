@@ -12,6 +12,7 @@ export const maps = {
     menu: 'Map actions',
     delete: 'Delete map',
     assigned: (fleets: string) => `Assigned to ${fleets}. Unassign it from the fleet first.`,
+    blocked: (name: string) => `${name} cannot be deleted`,
     builtIn: 'Built-in maps cannot be deleted.',
     title: (name: string) => `Delete ${name}?`,
     body: 'The map, all its versions and drafts, and its stored files are removed for good. This cannot be undone.',

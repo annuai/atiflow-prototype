@@ -20,7 +20,15 @@ export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
   const now = useNow();
   const [asking, setAsking] = useState(false);
   const why = deleteRefusal(map, fleets);
-  const reason = why === 'assigned' ? copy.cardMenu.assigned(fleets.join(', ')) : why ? copy.cardMenu.builtIn : '';
+  // a map a fleet runs on (or a built-in one) is not deleted: a toast says why, the menu does not change
+  const onDelete = () => {
+    if (!why) return setAsking(true);
+    notify.warning(
+      copy.cardMenu.blocked(map.name),
+      why === 'assigned' ? copy.cardMenu.assigned(fleets.join(', ')) : copy.cardMenu.builtIn,
+      `map-delete-${map.id}`,
+    );
+  };
   const row = (label: string, value: string, muted?: boolean) => (
     <div className="flex items-baseline justify-between gap-4 text-sm">
       <span className="text-xs tracking-wide text-tertiary uppercase">{label}</span>
@@ -51,10 +59,9 @@ export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
               aria-label={copy.cardMenu.menu}
               className="grid size-8 place-items-center bg-primary/90 opacity-0 shadow-xs ring-1 ring-secondary group-focus-within:opacity-100 group-hover:opacity-100 aria-expanded:opacity-100 [@media(pointer:coarse)]:opacity-100"
             />
-            <Dropdown.Popover className="w-80">
-              <Dropdown.Menu onAction={() => setAsking(true)} disabledKeys={why ? ['delete'] : []}>
-                <Dropdown.Item id="delete" icon={Trash01} label={copy.cardMenu.delete} isDisabled={!!why} />
-                {reason && <Dropdown.Item id="why" label={reason} isDisabled />}
+            <Dropdown.Popover className="w-48">
+              <Dropdown.Menu onAction={onDelete}>
+                <Dropdown.Item id="delete" icon={Trash01} label={copy.cardMenu.delete} />
               </Dropdown.Menu>
             </Dropdown.Popover>
           </Dropdown.Root>

@@ -14,6 +14,7 @@ export const messages: Messages<typeof maps> = {
     menu: 'मैप के विकल्प',
     delete: 'मैप हटाएँ',
     assigned: (fleets: string) => `${fleets} को सौंपा गया है। पहले इसे फ़्लीट से हटाएँ।`,
+    blocked: (name: string) => `${name} हटाया नहीं जा सकता`,
     builtIn: 'बिल्ट-इन मैप हटाए नहीं जा सकते।',
     title: (name: string) => `${name} हटाएँ?`,
     body: 'मैप, उसके सभी संस्करण और ड्राफ़्ट, और उसकी सहेजी फ़ाइलें हमेशा के लिए हट जाएँगी। इसे वापस नहीं किया जा सकता।',
