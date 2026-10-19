@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Building07, ChevronDown } from '@untitledui/icons';
 import { Button as AriaButton } from 'react-aria-components';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
-import { Button } from '@/components/base/buttons/button';
 import { EmptyState } from '@/components/data/EmptyState';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { copy } from '../copy';
@@ -37,6 +36,24 @@ function DrawingMenu({ data }: { data: MapData }) {
         <Dropdown.Menu onAction={(k) => k === 'download' && downloadDxf(data)}>
           <Dropdown.Item id="download" label={copy.structure.view3d.downloadDxf} />
           <Dropdown.Item id="upload" label={`${d.upload} (${d.soon})`} isDisabled />
+        </Dropdown.Menu>
+      </Dropdown.Popover>
+    </Dropdown.Root>
+  );
+}
+
+/** The Trace menu: tracing the scanned walls is a menu item, not a button, so it cannot be pressed by accident. */
+function TraceMenu({ onTrace }: { onTrace(): void }) {
+  const t = copy.structure.list;
+  return (
+    <Dropdown.Root>
+      <AriaButton className="flex w-fit cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-secondary outline-focus-ring hover:bg-primary_hover focus-visible:outline-2">
+        {t.traceMenu}
+        <ChevronDown className="size-4" />
+      </AriaButton>
+      <Dropdown.Popover className="w-56">
+        <Dropdown.Menu onAction={onTrace}>
+          <Dropdown.Item id="trace" label={t.traceAll} />
         </Dropdown.Menu>
       </Dropdown.Popover>
     </Dropdown.Root>
@@ -82,12 +99,10 @@ export function StructurePanel({
       <ModuleList
         controls={
           <>
-            <DrawingMenu data={data} />
-            {editable && canTrace && (
-              <Button size="sm" color="secondary" onPress={() => setAskTrace(true)}>
-                {t.list.traceAll}
-              </Button>
-            )}
+            <div className="flex items-center gap-1">
+              <DrawingMenu data={data} />
+              {editable && canTrace && <TraceMenu onTrace={() => setAskTrace(true)} />}
+            </div>
           </>
         }
         items={elements}

@@ -9,6 +9,7 @@ import { addRoad, deleteRoad, updateRoad } from '@/features/map-editor/model/roa
 import { addStation, deleteStation, moveStation, updateStation } from '@/features/map-editor/model/stations';
 import { updateStagingArea } from '@/features/map-editor/model/staging';
 import { planTrip } from '@/features/map-editor/model/simulate';
+import { addBox, addLine, addWorkArea, modelOf, updateElement } from '@/features/map-editor/model/structure/ops';
 import { num } from '@/features/map-import/dm/tree';
 import { v2Mini, v5Mini } from './helpers/dmZips';
 
@@ -270,3 +271,31 @@ describe.skipIf(!existsSync(REAL.v5) || !existsSync(REAL.v2))(
     );
   },
 );
+
+describe('the structure drawn in the editor travels with the export', () => {
+  it('walls, machines, work areas and what was hidden come back when the exported zip is imported again', () => {
+    const zip = v5Mini();
+    let d = build(zip);
+    const wall = addLine(d, 'wall', [
+      [1, 1],
+      [6, 1],
+    ]);
+    d = addBox(wall.data, 'machine', [2, 2], [3, 3], { label: 'Press' }).data;
+    d = addWorkArea(d, [
+      [0, 0],
+      [8, 0],
+      [8, 5],
+      [0, 5],
+    ]).data;
+    d = updateElement(d, wall.id!, { color: '#93c5fd', height: 3 });
+    const again = build(exportOf(zip, d, 'v5'));
+    const els = modelOf(again).elements;
+    expect(els.map((e) => e.kind)).toEqual(['wall', 'machine', 'area']);
+    expect(els[0]).toMatchObject({ color: '#93c5fd', height: 3 });
+    expect(els[1]).toMatchObject({ label: 'Press' });
+    expect(els[2]).toMatchObject({ work: true });
+    // and exporting that gives the same structure again
+    const third = build(exportOf(zip, again, 'v5'));
+    expect(modelOf(third).elements).toEqual(els);
+  });
+});

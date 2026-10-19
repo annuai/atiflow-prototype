@@ -91,6 +91,7 @@ export const messages: Messages<typeof mapEditor> = {
       emptyTitle: 'ಇನ್ನೂ ಅಂಶಗಳಿಲ್ಲ',
       emptyBody: 'ಬರೆಯಲು ನಕ್ಷೆಯ ಕೆಳಗಿನ ಸಾಧನವನ್ನು ಆರಿಸಿ, ಅಥವಾ ಲೈಡಾರ್ ಅಂದಾಜಿನಿಂದ ಗೋಡೆಗಳನ್ನು ಟ್ರೇಸ್ ಮಾಡಿ.',
       traceAll: 'ಗೋಡೆಗಳನ್ನು ಟ್ರೇಸ್ ಮಾಡಿ',
+      traceMenu: 'ಟ್ರೇಸ್',
     },
     form: {
       back: 'ಎಲ್ಲಾ ಅಂಶಗಳು',

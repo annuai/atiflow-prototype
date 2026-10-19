@@ -19,3 +19,4 @@ export { deleteElements, elementOf } from './model/structure/ops';
 export { structureDxf } from './model/structure/dxf';
 export { restoreWorkAreas, workAreaZones } from './model/workAreas';
 export { addWorkArea } from './model/structure/ops';
+export { withoutSections } from './model/structure/legacy';

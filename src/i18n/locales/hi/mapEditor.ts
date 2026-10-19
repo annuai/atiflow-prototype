@@ -85,6 +85,7 @@ export const messages: Messages<typeof mapEditor> = {
       emptyTitle: 'अभी कोई तत्व नहीं',
       emptyBody: 'बनाने के लिए मैप के नीचे से टूल चुनें, या लिडार अनुमान से दीवारें ट्रेस करें।',
       traceAll: 'दीवारें ट्रेस करें',
+      traceMenu: 'ट्रेस',
     },
     form: {
       back: 'सभी तत्व',

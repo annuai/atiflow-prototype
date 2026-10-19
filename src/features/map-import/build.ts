@@ -1,5 +1,5 @@
 import { fitRect } from '@/core/rect';
-import { addRoad, addZone, ensureNode } from '@/features/map-editor';
+import { addRoad, addZone, ensureNode, withoutSections } from '@/features/map-editor';
 import type { MapBase, MapData, MapStation, StagingAreaDef } from '@/features/map-editor';
 import type { PreparedImport } from './core/prepare';
 
@@ -160,6 +160,9 @@ function withEarlierExport(fresh: MapData, ati: Record<string, unknown>, lastId:
     zones: arr(ati.zones),
     stagingAreas: arr(ati.stagingAreas),
     ...(ati.dwg ? { dwg: ati.dwg as MapData['dwg'] } : {}),
+    // the structure drawn in the editor (elements, doors, what was traced or erased) comes back with the scan it was traced from, so the hidden pieces still point at the same walls
+    ...(ati.model3d ? { model3d: withoutSections(ati.model3d as MapData['model3d']) } : {}),
+    ...(ati.model3d && ati.structure ? { structure: ati.structure as MapData['structure'] } : {}),
   };
 }
 

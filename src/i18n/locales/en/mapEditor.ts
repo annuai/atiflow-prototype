@@ -83,6 +83,7 @@ export const mapEditor = {
       emptyTitle: 'No elements yet',
       emptyBody: 'Pick a tool below the map to draw, or trace walls from the lidar estimate.',
       traceAll: 'Trace walls',
+      traceMenu: 'Trace',
     },
     form: {
       back: 'All elements',
