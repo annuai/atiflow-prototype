@@ -120,7 +120,7 @@ export function StagingLayer({
 }) {
   return (
     <>
-      {staging.map(({ a, cells, outline: o }) => (
+      {staging.map(({ a, u, cells, stations, letters, numbers, arrow, outline: o }) => (
         <g
           key={a.id}
           data-hit={`staging:${a.id}`}
@@ -145,6 +145,36 @@ export function StagingLayer({
             vectorEffect="non-scaling-stroke"
             pointerEvents="none"
           />
+          <path
+            d={stations}
+            fill="none"
+            stroke="#0284c7"
+            strokeWidth={2}
+            vectorEffect="non-scaling-stroke"
+            pointerEvents="none"
+          />
+          {isSelected('staging', a.id) && (
+            <g
+              pointerEvents="none"
+              fontSize={20 * u}
+              fontWeight={600}
+              fill="#0369a1"
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {letters.map((l) => (
+                <text key={'c' + l.text} x={l.x} y={l.y}>
+                  {l.text}
+                </text>
+              ))}
+              {numbers.map((l) => (
+                <text key={'r' + l.text} x={l.x} y={l.y}>
+                  {l.text}
+                </text>
+              ))}
+              <DirectionArrow tail={arrow.tail} tip={arrow.tip} u={u} />
+            </g>
+          )}
           <title>{`${a.name} · ${a.rows} x ${a.cols}`}</title>
         </g>
       ))}
@@ -356,5 +386,22 @@ export function LocatePulse({
       />
       <animate attributeName="opacity" from="1" to="0" dur="0.9s" repeatCount="3" />
     </circle>
+  );
+}
+
+/** One arrow on the area: the way every cell faces (the cell angle). */
+export function DirectionArrow({ tail, tip, u }: { tail: P; tip: P; u: number }) {
+  const a = Math.atan2(tip[1] - tail[1], tip[0] - tail[0]),
+    h = 18 * u;
+  const wing = (d: number): string => `${tip[0] - h * Math.cos(a + d)},${tip[1] - h * Math.sin(a + d)}`;
+  return (
+    <path
+      d={`M${tail[0]},${tail[1]}L${tip[0]},${tip[1]}M${wing(0.5)}L${tip[0]},${tip[1]}L${wing(-0.5)}`}
+      stroke="#f97316"
+      strokeWidth={2.5 * u}
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   );
 }

@@ -17,6 +17,8 @@ interface Props {
   selectedIds: string[];
   /** Select multiple is on: a click adds or removes, a drag draws a box (Shift does the same without it) */
   multi: boolean;
+  /** the place the plan was showing: the view opens on it */
+  start?: { x: number; y: number; width: number } | null;
   onPick(id: string | null, additive: boolean): void;
   onBox(ids: string[], additive: boolean): void;
 }
@@ -25,7 +27,7 @@ interface Props {
  * The structure of the map in 3D, live: the same engine as the Live Floor with the map's lanes and stations, redrawn whenever the draft changes (the camera stays where it is). Click picks an
  * element and outlines it; Shift (or Select multiple) adds to the selection and a drag draws a box round elements. The engine lives while this is on screen and is freed when it is not.
  */
-export function Viewport3d({ site, nav, selectedIds, multi, onPick: pick, onBox }: Props) {
+export function Viewport3d({ site, nav, selectedIds, multi, start, onPick: pick, onBox }: Props) {
   const holder = useRef<HTMLDivElement>(null);
   const engine = useRef<Engine | null>(null);
   const [ready, setReady] = useState(false);
@@ -96,8 +98,9 @@ export function Viewport3d({ site, nav, selectedIds, multi, onPick: pick, onBox 
       gizmo.current = true;
       const span = Math.max(site.bounds.maxX - site.bounds.minX, site.bounds.maxY - site.bounds.minY);
       eng.scene.add(originGizmo(Math.max(3, 0.1 * span))); // a tenth of the map, so it reads at any size
+      if (start) eng.lookAtSite(start.x, start.y, start.width, 0.01);
     }
-  }, [site, nav, ready]);
+  }, [site, nav, ready, start]);
   const key = selectedIds.join('|');
   useEffect(() => {
     const eng = engine.current;

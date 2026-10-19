@@ -419,6 +419,7 @@ export const messages: Messages<typeof insights> = {
       cols: 'കോളങ്ങൾ: 1 മുതൽ 200 വരെയുള്ള പൂർണ്ണസംഖ്യ',
       cellLength: 'നീളം 0-ൽ കൂടുതലായിരിക്കണം',
       cellWidth: 'വീതി 0-ൽ കൂടുതലായിരിക്കണം',
+      stationOffset: 'സ്റ്റേഷൻ അകലം 0 മുതൽ 20 m വരെ ആയിരിക്കണം',
     },
     cellStates: { available: 'ലഭ്യം', reserved: 'റിസർവ് ചെയ്തത്', blocked: 'തടഞ്ഞത്', filled: 'നിറഞ്ഞത്' },
     problems: {

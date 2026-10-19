@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import type { Messages } from '../../types';
 import type { mapEditor } from '../en/mapEditor';
 
@@ -212,10 +213,9 @@ export const messages: Messages<typeof mapEditor> = {
       back: 'ಎಲ್ಲಾ ಸ್ಟೇಜಿಂಗ್ ಏರಿಯಾಗಳು',
       name: 'ಸ್ಟೇಜಿಂಗ್ ಏರಿಯಾ ಹೆಸರು',
       id: 'ID',
-      sherpa: 'ಶೆರ್ಪಾ ಪ್ರಕಾರ',
       entry: 'ಪ್ರವೇಶ ಸ್ಟೇಷನ್',
       entryNone: 'ಯಾವುದೂ ಇಲ್ಲ (ವರ್ಕ್‌ಫ್ಲೋಗಳು ಈ ಪ್ರದೇಶವನ್ನು ಬಳಸಲಾಗದು)',
-      retrieval: 'ಹೊರತೆಗೆಯುವ ಕ್ರಮ',
+      retrieval: 'ಮೊದಲು ಯಾವುದು',
       retrievalOptions: {
         fifo: 'FIFO (ಮೊದಲು ಬಂದದ್ದು ಮೊದಲು ಹೋಗುತ್ತದೆ)',
         lifo: 'LIFO (ಕೊನೆಯಲ್ಲಿ ಬಂದದ್ದು ಮೊದಲು ಹೋಗುತ್ತದೆ)',
@@ -228,8 +228,8 @@ export const messages: Messages<typeof mapEditor> = {
       rows: 'ಸಾಲುಗಳು',
       cols: 'ಕಾಲಮ್‌ಗಳು',
       cellProps: 'ಸೆಲ್ ಗುಣಲಕ್ಷಣಗಳು',
-      cellLength: 'ಉದ್ದ (m)',
-      cellWidth: 'ಅಗಲ (m)',
+      cellLength: 'ಅಗಲ ↔ (m)',
+      cellWidth: 'ಉದ್ದ ↕ (m)',
       cells: (n) => `${n} ಸೆಲ್‌ಗಳು`,
       delete: 'ಸ್ಟೇಜಿಂಗ್ ಏರಿಯಾ ಅಳಿಸಿ',
       deleteTitle: (n) => `${n} ಅಳಿಸಬೇಕೇ?`,
@@ -237,6 +237,30 @@ export const messages: Messages<typeof mapEditor> = {
         'ಏರಿಯಾವನ್ನು ಕರಡಿನಿಂದ ತೆಗೆಯಲಾಗುತ್ತದೆ. ಅದರ ಯಾವುದೇ ಸೆಲ್ ಮಾಸ್ಟರ್ ಡೇಟಾದಲ್ಲಿ ತುಂಬಿದ ಅಥವಾ ಕಾಯ್ದಿರಿಸಿದ ಸ್ಥಿತಿಯಲ್ಲಿದ್ದರೆ ಪ್ರಕಟಣೆ ತಡೆಯಲ್ಪಡುತ್ತದೆ.',
       master:
         'ಸೆಲ್‌ಗಳನ್ನು ತುಂಬುವುದು ಮತ್ತು ನಿರ್ಬಂಧಿಸುವುದು ಮಾಸ್ಟರ್ ಡೇಟಾದಲ್ಲಿ; ಏರಿಯಾ ಎಲ್ಲಿದೆ ಮತ್ತು ಎಷ್ಟು ದೊಡ್ಡದು ಎಂದು ನಕ್ಷೆ ಮಾತ್ರ ನಿರ್ಧರಿಸುತ್ತದೆ.',
+      cellAngle: 'ಸೆಲ್ ಕೋನ (°)',
+      stationOffset: 'ಸ್ಟೇಷನ್ ಅಂತರ (m)',
+      gaps: 'ಸೆಲ್‌ಗಳ ನಡುವಿನ ಅಂತರ',
+      gapCols: 'ಕಾಲಮ್‌ಗಳ ನಡುವೆ ↔ (m)',
+      gapRows: 'ಸಾಲುಗಳ ನಡುವೆ ↕ (m)',
+      fillTitle: 'ತುಂಬುವ ಕ್ರಮ',
+      takeTitle: 'ತೆಗೆಯುವ ಕ್ರಮ',
+      fillBy: 'ತುಂಬಿ',
+      rowByRow: 'ಸಾಲು ಸಾಲಾಗಿ',
+      colByCol: 'ಕಾಲಮ್ ಕಾಲಮ್‌ವಾರು',
+      startFrom: 'ಇಲ್ಲಿಂದ ಆರಂಭಿಸಿ',
+      firstRow: 'ಮೊದಲ ಸಾಲು',
+      lastRow: 'ಕೊನೆಯ ಸಾಲು',
+      firstCol: 'ಮೊದಲ ಕಾಲಮ್',
+      lastCol: 'ಕೊನೆಯ ಕಾಲಮ್',
+      eachRow: 'ಪ್ರತಿ ಸಾಲನ್ನು ಇಲ್ಲಿಂದ ಆರಂಭಿಸಿ',
+      eachCol: 'ಪ್ರತಿ ಕಾಲಮ್ ಅನ್ನು ಇಲ್ಲಿಂದ ಆರಂಭಿಸಿ',
+      firstCell: 'ಮೊದಲ ಸೆಲ್',
+      lastCell: 'ಕೊನೆಯ ಸೆಲ್',
+      takeBy: 'ಹೀಗೆ ತೆಗೆಯಿರಿ',
+      byArrival: 'ಬಂದ ಸಮಯ',
+      byPosition: 'ಸ್ಥಾನ',
+      oldestFirst: 'ಹಳೆಯದು ಮೊದಲು (FIFO)',
+      newestFirst: 'ಹೊಸದು ಮೊದಲು (LIFO)',
     },
   },
   routes: {

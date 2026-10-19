@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { fromScene } from '../core/coords';
+import { fromScene, toScene } from '../core/coords';
 import { store } from '../core/store';
 import type { NavGraph, RobotTelemetry, SiteLayout } from '../core/types';
 import { SceneManager, type SceneSource } from './SceneManager';
@@ -119,6 +119,14 @@ export class Engine {
   }
   flyTo(pos: THREE.Vector3, target: THREE.Vector3, dur = 1) {
     this.rig.flyTo(pos, target, dur);
+  }
+  /** Fly to look at a patch of the floor: centred on (x, y) in site metres, `width` metres wide on screen, from the south and above. */
+  lookAtSite(x: number, y: number, width: number, dur = 0.6) {
+    const t = new THREE.Vector3(...toScene(x, y, 0));
+    const d =
+      width / 2 / (Math.tan(THREE.MathUtils.degToRad(this.s.camera.fov / 2)) * Math.max(0.5, this.s.camera.aspect));
+    const tilt = THREE.MathUtils.degToRad(55);
+    this.rig.flyTo(new THREE.Vector3(t.x, d * Math.sin(tilt), t.z + d * Math.cos(tilt)), t, dur);
   }
   home() {
     this.rig.home();

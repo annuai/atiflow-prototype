@@ -30,6 +30,7 @@ import { useDraftEditor } from './model/useDraftEditor';
 import { workflowsUsing } from './model/usage';
 import { useResetOnChange } from './hooks/useResetOnChange';
 import { useEditorView } from './hooks/useEditorView';
+import { boundsKey } from './canvas/lastView';
 import { Stage3d } from './components/Stage3d';
 import { view3dNotice } from './components/View3dNotice';
 import { publishProblems } from './model/validate';
@@ -283,6 +284,7 @@ export function MapEditorPage() {
           {v.view === '3d' ? (
             <Stage3d
               name={map.name}
+              planKey={boundsKey(site.bounds)}
               data={data}
               selection={selection}
               onSelection={setSelection}

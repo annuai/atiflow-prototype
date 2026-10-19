@@ -413,6 +413,7 @@ export const messages: Messages<typeof insights> = {
       cols: 'कॉलम: 1 से 200 तक पूर्ण संख्या',
       cellLength: 'लंबाई 0 से अधिक होनी चाहिए',
       cellWidth: 'चौड़ाई 0 से अधिक होनी चाहिए',
+      stationOffset: 'स्टेशन दूरी 0 से 20 m के बीच होनी चाहिए',
     },
     cellStates: { available: 'उपलब्ध', reserved: 'आरक्षित', blocked: 'अवरुद्ध', filled: 'भरा हुआ' },
     problems: {

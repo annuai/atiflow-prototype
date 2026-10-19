@@ -33,7 +33,14 @@ import {
   rotateRectTo,
   toWorld,
 } from '../src/features/map-editor/model/shape';
-import { areaFromRect, cellBoxes, stagingRect } from '../src/features/map-editor/model/staging';
+import {
+  areaFromRect,
+  cellBoxes,
+  cellCorners,
+  clampCellAngle,
+  stagingRect,
+  stationPoint,
+} from '../src/features/map-editor/model/staging';
 import { normaliseData } from '../src/features/map-editor/model/seed';
 import { restoreWorkAreas, workAreaZones } from '../src/features/map-editor/model/workAreas';
 import { emptyHistory, record, redo, undo } from '../src/features/map-editor/model/history';
@@ -493,7 +500,6 @@ describe('staging area handles', () => {
   const area = {
     id: 'SA-1',
     name: 'A',
-    sherpaType: 'x',
     rotation: 30,
     x: 5,
     y: 7,
@@ -522,4 +528,30 @@ describe('staging area handles', () => {
     expect(t).toMatchObject({ rows: 2, cols: 3 });
     expect(cellBoxes(area as never)).toHaveLength(6);
   });
+});
+
+describe('staging stations and cell angle', () => {
+  const a = { ...area0(), rotation: 0, cellAngle: 90, stationOffset: 1, cellLength: 2, cellWidth: 1 };
+  it('the station is in front of the cell along the area direction and faces the cell angle', () => {
+    const s = stationPoint(a, 1, 1),
+      c = cellCenter(a, 1, 1);
+    expect(s.x - c.x).toBeCloseTo(2); // half the length (1) + the offset (1)
+    expect(s.y - c.y).toBeCloseTo(0);
+    expect(s.heading).toBeCloseTo(Math.PI / 2);
+  });
+  it('the cell angle turns the cell on its own centre', () => {
+    const xs = cellCorners(a, 1, 1).map(([x]) => x),
+      c = cellCenter(a, 1, 1);
+    expect(Math.max(...xs) - c.x).toBeCloseTo(0.5); // turned a quarter: it is now the width that lies along x
+  });
+});
+
+function area0() {
+  return lineSide().stagingAreas[0];
+}
+
+it('the cell angle is limited to 60 degrees either way', () => {
+  expect(clampCellAngle(90)).toBe(60);
+  expect(clampCellAngle(-170)).toBe(-60);
+  expect(clampCellAngle(25)).toBe(25);
 });

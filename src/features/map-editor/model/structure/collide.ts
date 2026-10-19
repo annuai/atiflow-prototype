@@ -5,7 +5,7 @@ import type { P } from './types';
 
 /**
  * Routes and stations against the solid elements of the structure: a robot cannot drive through a wall, a partition, a machine or a block. Only things a robot would hit count (they start
- * below `ROBOT_HEIGHT`: an overhead pipe is fine), openings of doors are already cut out of the walls. Elements traced from the lidar estimate are rough, so those are warnings.
+ * below `ROBOT_HEIGHT`: an overhead pipe is fine), openings of doors are already cut out of the walls, and a road through a door or any other gap is not an error: a wall only counts when the road really crosses it (not when it merely passes close, as it does at the edge of an opening). Elements traced from the lidar estimate are rough, so those are warnings.
  */
 export const ROBOT_HEIGHT = 1.8;
 export const ROBOT_HALF_WIDTH = 0.45;
@@ -71,8 +71,7 @@ export function structureHits(data: MapData): Hit[] {
     for (let i = 1; i < lane.geom.length; i++) {
       const a = lane.geom[i - 1],
         b = lane.geom[i];
-      for (const w of walls)
-        if (segSegDist(a, b, w.a, w.b) < ROBOT_HALF_WIDTH + w.t / 2) add(w.id!, { kind: 'road', id: road });
+      for (const w of walls) if (segSegDist(a, b, w.a, w.b) < w.t / 2) add(w.id!, { kind: 'road', id: road });
       for (const q of boxes) {
         const box = { x: q.x, y: q.y, w: q.w, d: q.d, rot: q.rot ?? 0 };
         if (
@@ -88,8 +87,7 @@ export function structureHits(data: MapData): Hit[] {
     const n = data.nodes.find((x) => x.id === s.nodeId);
     if (!n || s.unplaced) continue;
     const p: P = [n.x, n.y];
-    for (const w of walls)
-      if (segSegDist(p, p, w.a, w.b) < ROBOT_HALF_WIDTH + w.t / 2) add(w.id!, { kind: 'station', id: s.id });
+    for (const w of walls) if (segSegDist(p, p, w.a, w.b) < w.t / 2) add(w.id!, { kind: 'station', id: s.id });
     for (const q of boxes)
       if (inBox(p, { x: q.x, y: q.y, w: q.w, d: q.d, rot: q.rot ?? 0 }, ROBOT_HALF_WIDTH))
         add(q.id!, { kind: 'station', id: s.id });

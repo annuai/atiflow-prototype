@@ -1,3 +1,4 @@
+import { sequenceKeys } from '@/core/cellOrder';
 import type { CellLogEntry, CellPlan, CellSnapshot, CellState, Retrieval, StagingArea, StagingCell } from './types';
 
 /** Pure rules of the cells of a staging area: what a cell may hold, the allowed changes, the FIFO / LIFO order, and the upgrade of data saved before cells held materials. No React, no storage. */
@@ -127,19 +128,27 @@ export const unknownCodes = (a: Pick<StagingArea, 'cells'>, known: ReadonlySet<s
 
 // ---- FIFO / LIFO
 
+export type PickArea = Pick<StagingArea, 'cells' | 'retrieval' | 'emptyBy' | 'emptyPosition'> &
+  Partial<Pick<StagingArea, 'rows' | 'cols'>>;
 const retrievalOf = (a: Pick<StagingArea, 'retrieval'>): Retrieval => a.retrieval ?? 'fifo';
 /**
  * The cells holding a material in the order the area gives them out: FIFO = stored longest ago first, LIFO = stored most recently first; cells stored at the same moment (or with no time
  * at all: older data) go in row, then column order. The area's setting always decides: nobody picks a cell by hand.
  */
-export function pickOrder(a: Pick<StagingArea, 'cells' | 'retrieval'>, code: string): string[] {
+export function pickOrder(a: PickArea, code: string): string[] {
+  const held = cellsHolding(a, code);
+  if (a.emptyBy === 'position') {
+    const keys = Object.keys(a.cells).map((k) => k.split('-').map(Number));
+    const rows = a.rows ?? Math.max(0, ...keys.map(([r]) => r)),
+      cols = a.cols ?? Math.max(0, ...keys.map(([, c]) => c));
+    const rank = new Map(sequenceKeys(rows, cols, a.emptyPosition).map((k, i) => [k, i]));
+    return held.sort((x, y) => (rank.get(x) ?? 0) - (rank.get(y) ?? 0));
+  }
   const dir = retrievalOf(a) === 'fifo' ? 1 : -1;
-  return cellsHolding(a, code).sort(
-    (x, y) => dir * ((a.cells[x].storedAt ?? 0) - (a.cells[y].storedAt ?? 0)) || byPosition(x, y),
-  );
+  return held.sort((x, y) => dir * ((a.cells[x].storedAt ?? 0) - (a.cells[y].storedAt ?? 0)) || byPosition(x, y));
 }
 /** The cells (in pick order) that together cover `qty` pieces, or null when the area does not have that many. A cell is taken whole. */
-export function chooseCells(a: Pick<StagingArea, 'cells' | 'retrieval'>, code: string, qty: number): string[] | null {
+export function chooseCells(a: PickArea, code: string, qty: number): string[] | null {
   const picked: string[] = [];
   let have = 0;
   for (const k of pickOrder(a, code)) {
@@ -149,12 +158,9 @@ export function chooseCells(a: Pick<StagingArea, 'cells' | 'retrieval'>, code: s
   }
   return have >= qty ? picked : null;
 }
-/** Free cells in the order they are used when material is put away: row by row. */
-export function freeCells(a: Pick<StagingArea, 'cells' | 'rows' | 'cols'>): string[] {
-  const out: string[] = [];
-  for (let r = 1; r <= a.rows; r++)
-    for (let c = 1; c <= a.cols; c++) if (!a.cells[cellKey(r, c)]) out.push(cellKey(r, c));
-  return out;
+/** Free cells in the order they are used when material is put away (the area's fill order; row by row unless set). */
+export function freeCells(a: Pick<StagingArea, 'cells' | 'rows' | 'cols' | 'fill'>): string[] {
+  return sequenceKeys(a.rows, a.cols, a.fill).filter((k) => !a.cells[k]);
 }
 
 // ---- upgrade of saved data
@@ -192,11 +198,7 @@ const refLog = (
 });
 
 /** How the pieces of a pick-up are taken: cells in the area's order, the last one only partly. null when the area does not hold that many pieces. */
-export function planPick(
-  a: Pick<StagingArea, 'cells' | 'retrieval'>,
-  code: string,
-  qty: number,
-): NonNullable<CellPlan['pick']>['items'] | null {
+export function planPick(a: PickArea, code: string, qty: number): NonNullable<CellPlan['pick']>['items'] | null {
   const items: { key: string; take: number; storedAt?: number }[] = [];
   let need = qty;
   for (const key of pickOrder(a, code)) {
@@ -264,7 +266,7 @@ export function giveBack(
 }
 /** Hold the first free cell (row by row) for material that is on its way in. null when the area is full. */
 export function reserveDrop(
-  a: Pick<StagingArea, 'cells' | 'rows' | 'cols'>,
+  a: Pick<StagingArea, 'cells' | 'rows' | 'cols' | 'fill'>,
   code: string,
   qty: number,
   tripId: string,

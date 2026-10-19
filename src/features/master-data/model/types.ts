@@ -1,3 +1,4 @@
+import type { CellSequence } from '@/core/cellOrder';
 import type { FleetId } from '@/data/fleets';
 export interface Material {
   code: string;
@@ -69,6 +70,10 @@ export interface StagingArea {
   stationId?: string;
   /** how the area gives material out: NOT stored here, it is set in the Map Editor with the area (default FIFO) */
   retrieval?: Retrieval;
+  /** the order free cells are used when material is put away, and how material is taken out (by arrival or by position): from the map too */
+  fill?: CellSequence;
+  emptyBy?: 'arrival' | 'position';
+  emptyPosition?: CellSequence;
   log?: CellLogEntry[];
 }
 

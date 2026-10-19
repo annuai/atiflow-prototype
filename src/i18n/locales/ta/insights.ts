@@ -427,6 +427,7 @@ export const messages: Messages<typeof insights> = {
       cols: 'நெடுவரிசைகள்: 1 முதல் 200 வரை ஒரு முழு எண்',
       cellLength: 'நீளம் 0-ஐ விட அதிகமாக இருக்க வேண்டும்',
       cellWidth: 'அகலம் 0-ஐ விட அதிகமாக இருக்க வேண்டும்',
+      stationOffset: 'நிலைய இடைவெளி 0 முதல் 20 m வரை இருக்க வேண்டும்',
     },
     cellStates: {
       available: 'கிடைக்கிறது',

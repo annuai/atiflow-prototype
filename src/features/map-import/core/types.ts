@@ -45,7 +45,6 @@ export interface ImportedGate {
 export interface ImportedStagingArea {
   externalId: string;
   name: string;
-  sherpaType: string;
   rotation: number;
   x: number;
   y: number;
@@ -56,6 +55,11 @@ export interface ImportedStagingArea {
   rowGap: number;
   colGap: number;
   retrieval: 'fifo' | 'lifo';
+  cellAngle: number;
+  stationOffset: number;
+  fill: { by: 'row' | 'column'; lines: 'asc' | 'desc'; cells: 'asc' | 'desc' };
+  emptyBy: 'arrival' | 'position';
+  emptyPosition: { by: 'row' | 'column'; lines: 'asc' | 'desc'; cells: 'asc' | 'desc' };
   extra: Record<string, unknown>;
 }
 

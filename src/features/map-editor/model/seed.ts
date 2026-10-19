@@ -15,7 +15,6 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
     {
       id: 'SA-001',
       name: 'SA 001',
-      sherpaType: 'Sherpa XT Lite',
       rotation: 0,
       x: 10,
       y: 138,
@@ -29,7 +28,6 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
     {
       id: 'SA-002',
       name: 'SA 002',
-      sherpaType: 'Pallet Mover',
       rotation: 0,
       x: 30,
       y: 138,
@@ -45,7 +43,6 @@ const DEMO_AREAS: Record<string, StagingAreaDef[]> = {
     {
       id: 'SA-003',
       name: 'SA 003',
-      sherpaType: 'Pallet Mover',
       rotation: 0,
       x: 52,
       y: 138,
@@ -118,7 +115,12 @@ export function normaliseData(
   return {
     ...d,
     roads: d.roads ?? roadsFromLanes(d.lanes),
-    stagingAreas: (d.stagingAreas ?? []).map((a) => ({ ...a, retrieval: a.retrieval ?? 'fifo' })),
+    stagingAreas: (d.stagingAreas ?? []).map(
+      ({ sherpaType: _gone, ...a }: StagingAreaDef & { sherpaType?: string }) => ({
+        ...a,
+        retrieval: a.retrieval ?? 'fifo',
+      }),
+    ),
     ...areasToWorkAreas({
       zones: d.zones.map(normaliseZone),
       model3d: floorAreasAreWorkAreas(withoutSections(d.model3d)),

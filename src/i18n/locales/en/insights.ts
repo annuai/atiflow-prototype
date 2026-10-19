@@ -417,6 +417,7 @@ export const insights = {
       cols: 'Columns: a whole number from 1 to 200',
       cellLength: 'Length must be above 0',
       cellWidth: 'Width must be above 0',
+      stationOffset: 'Station offset must be between 0 and 20 m',
     },
     cellStates: { available: 'Available', reserved: 'Reserved', blocked: 'Blocked', filled: 'Filled' },
     problems: {

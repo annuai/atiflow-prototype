@@ -31,6 +31,9 @@ export function areasOfHistory(
       cols: d.cols,
       cells: visibleCells(storedOf(d.id)?.cells ?? {}, d.rows, d.cols),
       retrieval: d.retrieval ?? 'fifo', // set in the Map Editor, not kept here
+      fill: d.fill,
+      emptyBy: d.emptyBy,
+      emptyPosition: d.emptyPosition,
       stationId: d.stationId,
       log: storedOf(d.id)?.log,
     })),

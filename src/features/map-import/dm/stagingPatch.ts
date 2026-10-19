@@ -1,5 +1,4 @@
 import type { MapData, StagingAreaDef } from '@/features/map-editor';
-import { robotTypeByLabel } from '@/data/robotTypes';
 import { pyFloat, type PyObj, type PyValue } from './pyjson';
 import { co, list, num, obj, put, r3, str, type Doc } from './tree';
 
@@ -35,10 +34,64 @@ function cellPose(a: StagingAreaDef, row: number, col: number): [number, number,
   if (th > Math.PI) th -= 2 * Math.PI;
   return [cx, cy, th];
 }
-const sherpaId = (label: string) =>
-  robotTypeByLabel(label)
-    .id.replace(/^sherpa-/, '')
-    .replace(/-/g, '_');
+const SEQ = ({ by, lines, cells }: NonNullable<MapData['stagingAreas'][number]['fill']>) => ({
+  by: by === 'column' ? 'by_column' : 'by_row',
+  lines,
+  cells,
+});
+
+const DEFAULT_SEQ = { by: 'row', lines: 'asc', cells: 'asc' } as const;
+const OPTIONAL_DEFAULT: Record<string, string | undefined> = {
+  arrival_order: 'fifo',
+  direction: '0',
+  station_offset: '0',
+  fill_by: 'by_row',
+  fill_line_order: 'asc',
+  fill_cell_order: 'asc',
+  empty_by: 'arrival',
+  empty_position_by: 'by_row',
+  empty_line_order: 'asc',
+  empty_cell_order: 'asc',
+};
+
+/** The settings of an area as the Deployment Manager's file writes them. */
+function metaFields(a: StagingAreaDef, cx: number, cy: number): [string, PyValue][] {
+  return [
+    ['name', a.name],
+    ['x', num3(cx)],
+    ['y', num3(cy)],
+    ['rotation', pyFloat(Math.round(a.rotation * 1000) / 1000)],
+    ['rows', a.rows],
+    ['cols', a.cols],
+    ['cell_width', pyFloat(a.cellLength)],
+    ['cell_height', pyFloat(a.cellWidth)],
+    ['row_spacing', pyFloat(a.rowGap ?? 0)],
+    ['col_spacing', pyFloat(a.colGap ?? 0)],
+    ['total_width', num3(a.cols * a.cellLength + (a.cols - 1) * (a.colGap ?? 0))],
+    ['total_height', num3(a.rows * a.cellWidth + (a.rows - 1) * (a.rowGap ?? 0))],
+    ['pickup_drop_logic', (a.retrieval ?? 'fifo').toUpperCase()],
+    ['arrival_order', (a.retrieval ?? 'fifo').toLowerCase()],
+    ['direction', pyFloat(a.cellAngle ?? 0)],
+    ['station_offset', pyFloat(a.stationOffset ?? 0)],
+    ['fill_by', SEQ(a.fill ?? DEFAULT_SEQ).by],
+    ['fill_line_order', (a.fill ?? DEFAULT_SEQ).lines],
+    ['fill_cell_order', (a.fill ?? DEFAULT_SEQ).cells],
+    ['empty_by', a.emptyBy ?? 'arrival'],
+    ['empty_position_by', SEQ(a.emptyPosition ?? DEFAULT_SEQ).by],
+    ['empty_line_order', (a.emptyPosition ?? DEFAULT_SEQ).lines],
+    ['empty_cell_order', (a.emptyPosition ?? DEFAULT_SEQ).cells],
+  ];
+}
+
+/** True when writing this setting would change nothing that matters: the file lacks it and ours is the default, it already says the same, or it is a total that only follows a size change. */
+function keepAsIs(meta: PyObj, k: string, v: PyValue, a: StagingAreaDef, gridChanged: boolean): boolean {
+  const text = typeof v === 'object' ? String((v as { value?: unknown }).value ?? v) : String(v);
+  if (!meta.has(k) && OPTIONAL_DEFAULT[k] !== undefined && OPTIONAL_DEFAULT[k] === text) return true;
+  if (k === 'arrival_order' && !meta.has(k) && str(meta.get('pickup_drop_logic')).toLowerCase() === v) return true;
+  if (k === 'pickup_drop_logic' && str(meta.get(k)).toLowerCase() === (a.retrieval ?? 'fifo')) return true;
+  // the totals also count aisles between rows, so they are only worked out again when the size of the grid itself changed
+  return ['total_width', 'total_height'].includes(k) && !gridChanged;
+}
 
 export function patchStaging(
   staging: Doc | null,
@@ -83,22 +136,7 @@ export function patchStaging(
       rows: num(meta.get('rows')),
       cols: num(meta.get('cols')),
     };
-    const next: [string, PyValue][] = [
-      ['name', a.name],
-      ['x', num3(cx)],
-      ['y', num3(cy)],
-      ['rotation', pyFloat(Math.round(a.rotation * 1000) / 1000)],
-      ['rows', a.rows],
-      ['cols', a.cols],
-      ['cell_width', pyFloat(a.cellLength)],
-      ['cell_height', pyFloat(a.cellWidth)],
-      ['row_spacing', pyFloat(a.rowGap ?? 0)],
-      ['col_spacing', pyFloat(a.colGap ?? 0)],
-      ['total_width', num3(a.cols * a.cellLength + (a.cols - 1) * (a.colGap ?? 0))],
-      ['total_height', num3(a.rows * a.cellWidth + (a.rows - 1) * (a.rowGap ?? 0))],
-      ['pickup_drop_logic', (a.retrieval ?? 'fifo').toUpperCase()],
-      ['sherpa_type', sherpaId(a.sherpaType)],
-    ];
+    const next = metaFields(a, cx, cy);
     const moved =
       Math.abs(old.x - r3(cx)) > 0.0006 || Math.abs(old.y - r3(cy)) > 0.0006 || Math.abs(old.r - a.rotation) > 0.0006;
     const resized = old.rows !== a.rows || old.cols !== a.cols;
@@ -107,18 +145,7 @@ export function patchStaging(
       ['cell_width', 'cell_height', 'row_spacing', 'col_spacing'].some(
         (k, i) => Math.abs(num(meta.get(k)) - [a.cellLength, a.cellWidth, a.rowGap ?? 0, a.colGap ?? 0][i]) > 0.0006,
       );
-    for (const [k, v] of next) {
-      // the sherpa type is only rewritten when the person changed it (the file's own spelling stays otherwise)
-      if (
-        k === 'sherpa_type' &&
-        robotTypeByLabel(a.sherpaType).id === robotTypeByLabel(str(meta.get('sherpa_type'))).id
-      )
-        continue;
-      if (k === 'pickup_drop_logic' && str(meta.get(k)).toLowerCase() === (a.retrieval ?? 'fifo')) continue;
-      // the totals also count aisles between rows, so they are only worked out again when the size of the grid itself changed
-      if (['total_width', 'total_height'].includes(k) && !gridChanged) continue;
-      put(staging, meta, k, v);
-    }
+    for (const [k, v] of next) if (!keepAsIs(meta, k, v, a, gridChanged)) put(staging, meta, k, v);
     // the stations of the cells follow the area when it is moved or turned (rigidly: the same poses relative to it)
     if (moved && !resized) {
       const dt = rad(a.rotation - old.r);

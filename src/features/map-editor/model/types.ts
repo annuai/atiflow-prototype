@@ -59,10 +59,12 @@ export interface MapRoad {
  * A staging area: a big area of rows x columns cells (a table on the floor). `x, y` is the centre of the A1 cell; columns run along the area's direction, rows go "down" from it
  * (rotated by `rotation` degrees). The geometry belongs to the map; the state of the cells belongs to Master Data (see master-data/model/stagingFromMaps.ts).
  */
+/** An order cells are used in: line by line (a line is a row, or a column), the lines first-to-last or last-to-first, and the cells of each line the same. */
+import type { CellSequence } from '@/core/cellOrder';
+export type { CellSequence };
 export interface StagingAreaDef {
   id: string;
   name: string;
-  sherpaType: string;
   rotation: number;
   x: number;
   y: number;
@@ -79,6 +81,15 @@ export interface StagingAreaDef {
   retrieval?: 'fifo' | 'lifo';
   /** The station a robot drives to for this area (its entry). A workflow can only use the area when it has one. */
   stationId?: string;
+  /** Turns every cell on its own centre (degrees, on top of the area's rotation): the direction the cells (and their stations) face. Missing = 0. */
+  cellAngle?: number;
+  /** How far in front of a cell its station is (metres). Missing = 0 (against the cell). */
+  stationOffset?: number;
+  /** The order cells are used when material is put away. Missing = row by row, first row and first cell first. */
+  fill?: CellSequence;
+  /** How material is taken out: by arrival time (the order is `retrieval`: oldest or newest first) or by position (`emptyPosition`). Missing = by arrival. */
+  emptyBy?: 'arrival' | 'position';
+  emptyPosition?: CellSequence;
 }
 
 /**

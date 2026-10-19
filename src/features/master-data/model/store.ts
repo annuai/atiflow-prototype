@@ -145,7 +145,7 @@ export const masterDataStore = createPersistedStore<
         // check both before changing anything
         let pickItems: ReturnType<typeof planPick> = null;
         if (pick) {
-          pickItems = planPick({ cells: stored(pick.area.id), retrieval: pick.area.retrieval }, pick.code, pick.qty);
+          pickItems = planPick({ ...pick.area, cells: stored(pick.area.id) }, pick.code, pick.qty);
           if (!pickItems) {
             const have = Object.values(stored(pick.area.id)).reduce(
               (n, c) => n + (c.state === 'filled' && c.materialCode === pick.code ? (c.quantity ?? 1) : 0),
@@ -172,7 +172,7 @@ export const masterDataStore = createPersistedStore<
             ? working!
             : (get().areas.find((a) => a.id === drop.area.id) ?? { ...drop.area, cells: {} });
           const r = reserveDrop(
-            { rows: drop.area.rows, cols: drop.area.cols, cells: base.cells },
+            { rows: drop.area.rows, cols: drop.area.cols, fill: drop.area.fill, cells: base.cells },
             drop.code,
             drop.qty,
             tripId,

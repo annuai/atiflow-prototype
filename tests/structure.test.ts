@@ -237,6 +237,31 @@ describe('routes against solids', () => {
     d = addDoor(d, [5, 0]).data; // a door where the route crosses
     expect(structureHits(d).map((h) => h.elementId)).toEqual(['E2']);
   });
+  it('a road through a door, or through any gap in a wall, is not a hit; one through the solid part is', () => {
+    let d: MapData = { ...blank(), structure: undefined };
+    d = addLine(d, 'wall', [
+      [5, -10],
+      [5, 10],
+    ]).data;
+    d = addDoor(d, [5, 0]).data;
+    const through = (y: number, slope = 0): MapData => ({
+      ...d,
+      roads: [],
+      lanes: [
+        lane('L1', [
+          [0, y - slope],
+          [10, y + slope],
+        ]),
+        lane('L2', [
+          [10, y + 0.2 + slope],
+          [0, y + 0.2 - slope],
+        ]),
+      ],
+    });
+    expect(structureHits(through(0))).toEqual([]);
+    expect(structureHits(through(0, 0.8))).toEqual([]); // at an angle
+    expect(structureHits(through(7)).length).toBeGreaterThan(0);
+  });
   it('traced elements say so (a rough estimate is only a warning)', () => {
     let d = traceWalls(blank(), [0]).data;
     d = {

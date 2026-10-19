@@ -142,6 +142,29 @@ describe('FIFO and LIFO', () => {
     expect(pickOrder({ cells, retrieval: 'lifo' }, 'M1')).toEqual(['1-1', '2-1', '1-2']);
     expect(pickOrder({ cells }, 'M1')).toEqual(['1-2', '2-1', '1-1']); // no setting = FIFO
   });
+  it("take-out by position follows the area's own sequence, whatever the arrival times", () => {
+    const area = { cells, rows: 3, cols: 3, emptyBy: 'position' as const };
+    expect(pickOrder({ ...area, emptyPosition: { by: 'row', lines: 'asc', cells: 'asc' } }, 'M1')).toEqual([
+      '1-1',
+      '1-2',
+      '2-1',
+    ]);
+    expect(pickOrder({ ...area, emptyPosition: { by: 'column', lines: 'desc', cells: 'desc' } }, 'M1')).toEqual([
+      '1-2',
+      '2-1',
+      '1-1',
+    ]);
+  });
+  it("free cells are used in the area's fill order", () => {
+    const a = { rows: 2, cols: 2, cells: {} as Record<string, never> };
+    expect(freeCells(a)).toEqual(['1-1', '1-2', '2-1', '2-2']);
+    expect(freeCells({ ...a, fill: { by: 'column', lines: 'desc', cells: 'asc' } })).toEqual([
+      '1-2',
+      '2-2',
+      '1-1',
+      '2-1',
+    ]);
+  });
   it('cells stored at the same moment (or older data without a time) go in row, then column order', () => {
     const same = { '2-1': filled('M1', 1), '1-2': filled('M1', 1), '1-1': filled('M1', 1) };
     expect(pickOrder({ cells: same, retrieval: 'fifo' }, 'M1')).toEqual(['1-1', '1-2', '2-1']);

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Viewport3d, navOf, siteOf } from '@/features/map-3d';
+import { planViewOf } from '../canvas/lastView';
 import { ViewSwitch } from './ViewSwitch';
 import { pickElement, selectIds } from '../model/structure/select';
 import type { MapData, Selection } from '../model/types';
@@ -10,6 +11,7 @@ import type { MapData, Selection } from '../model/types';
  */
 export function Stage3d({
   name,
+  planKey,
   data,
   selection,
   onSelection,
@@ -17,6 +19,8 @@ export function Stage3d({
   onView,
 }: {
   name: string;
+  /** which map's plan view to open on (`boundsKey` of its plan site) */
+  planKey: string;
   data: MapData;
   selection: Selection;
   onSelection(sel: Selection): void;
@@ -25,6 +29,7 @@ export function Stage3d({
 }) {
   const site = useMemo(() => siteOf(name, data), [name, data]);
   const nav = useMemo(() => navOf(data), [data]);
+  const start = useMemo(() => planViewOf(planKey), [planKey]);
   const ids = selection?.kind === 'element' ? (selection.ids ?? [selection.id]) : [];
   return (
     <div className="relative min-h-[360px] min-w-0 flex-1">
@@ -33,6 +38,7 @@ export function Stage3d({
         nav={nav}
         selectedIds={ids}
         multi={multi}
+        start={start}
         onPick={(id, additive) =>
           onSelection(id ? pickElement(selection, id, additive || multi) : additive || multi ? selection : null)
         }

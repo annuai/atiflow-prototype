@@ -1,11 +1,10 @@
 import { text } from '../text';
-import { ROBOT_TYPES } from '@/data/robotTypes';
 import { degrees } from './shape';
 import type { MapData, StagingAreaDef, ZoneShape } from './types';
 
 /** Pure edits and geometry of staging areas: rows x columns of cells laid out from the centre of the A1 cell. */
 const round = (v: number) => Math.round(v * 100) / 100;
-const colLetter = (c: number): string => {
+export const colLetter = (c: number): string => {
   let s = '',
     n = c;
   while (n > 0) {
@@ -65,7 +64,6 @@ export function addStagingArea(
   const a: StagingAreaDef = {
     id,
     name: text.defaultNames.staging(n),
-    sherpaType: ROBOT_TYPES[0].label,
     rotation: 0,
     x: round(at.x),
     y: round(at.y),
@@ -96,6 +94,8 @@ export function stagingProblems(data: MapData, a: StagingAreaDef): Record<string
   if (!Number.isInteger(a.cols) || a.cols < 1 || a.cols > 200) e.cols = text.stagingProblems.cols;
   if (!(a.cellLength > 0)) e.cellLength = text.stagingProblems.cellLength;
   if (!(a.cellWidth > 0)) e.cellWidth = text.stagingProblems.cellWidth;
+  if (!(a.stationOffset === undefined || (a.stationOffset >= 0 && a.stationOffset <= 20)))
+    e.stationOffset = text.stagingProblems.stationOffset;
   return e;
 }
 
@@ -165,7 +165,39 @@ export function cellBoxes(a: StagingAreaDef) {
   for (let row = 1; row <= a.rows; row++)
     for (let col = 1; col <= a.cols; col++) {
       const c = cellCenter(a, row, col);
-      out.push({ x: c.x, y: c.y, w: a.cellLength, d: a.cellWidth, rot: rad(a.rotation), h: CELL_HEIGHT });
+      out.push({ x: c.x, y: c.y, w: a.cellLength, d: a.cellWidth, rot: cellHeading(a), h: CELL_HEIGHT });
     }
   return out;
+}
+
+export { DEFAULT_SEQ, sequenceKeys } from '@/core/cellOrder';
+
+/** The direction the cells face, in radians: the area's rotation plus the cell angle. */
+export const cellHeading = (a: Pick<StagingAreaDef, 'rotation' | 'cellAngle'>) => rad(a.rotation + (a.cellAngle ?? 0));
+/** Cells may tilt at most this far either way; more makes the area unusable. */
+export const MAX_CELL_ANGLE = 60;
+export const clampCellAngle = (deg: number) => Math.max(-MAX_CELL_ANGLE, Math.min(MAX_CELL_ANGLE, deg));
+/** The station of a cell: in front of it (the way the area's direction points), `stationOffset` metres from the cell's edge. It faces the way the cells face. */
+export function stationPoint(a: StagingAreaDef, row: number, col: number): { x: number; y: number; heading: number } {
+  const c = cellCenter(a, row, col),
+    t = rad(a.rotation),
+    d = a.cellLength / 2 + (a.stationOffset ?? 0);
+  return { x: c.x + d * Math.cos(t), y: c.y + d * Math.sin(t), heading: cellHeading(a) };
+}
+/** Corners of one cell, turned by the cell angle round the cell's own centre. */
+export function cellCorners(a: StagingAreaDef, row: number, col: number): [number, number][] {
+  const c = cellCenter(a, row, col),
+    t = cellHeading(a),
+    ex = [Math.cos(t), Math.sin(t)],
+    ey = [Math.sin(t), -Math.cos(t)],
+    hl = a.cellLength / 2,
+    hw = a.cellWidth / 2;
+  return (
+    [
+      [-1, -1],
+      [1, -1],
+      [1, 1],
+      [-1, 1],
+    ] as const
+  ).map(([sx, sy]) => [c.x + sx * hl * ex[0] + sy * hw * ey[0], c.y + sx * hl * ex[1] + sy * hw * ey[1]]);
 }

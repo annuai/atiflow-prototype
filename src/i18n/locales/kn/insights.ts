@@ -417,6 +417,7 @@ export const messages: Messages<typeof insights> = {
       cols: 'ಕಾಲಂಗಳು: 1 ರಿಂದ 200 ರವರೆಗಿನ ಪೂರ್ಣ ಸಂಖ್ಯೆ',
       cellLength: 'ಉದ್ದ 0 ಕ್ಕಿಂತ ಹೆಚ್ಚಿರಬೇಕು',
       cellWidth: 'ಅಗಲ 0 ಕ್ಕಿಂತ ಹೆಚ್ಚಿರಬೇಕು',
+      stationOffset: 'ಸ್ಟೇಷನ್ ಅಂತರ 0 ರಿಂದ 20 m ನಡುವೆ ಇರಬೇಕು',
     },
     cellStates: { available: 'ಲಭ್ಯ', reserved: 'ಕಾಯ್ದಿರಿಸಿದ', blocked: 'ನಿರ್ಬಂಧಿತ', filled: 'ತುಂಬಿದ' },
     problems: {

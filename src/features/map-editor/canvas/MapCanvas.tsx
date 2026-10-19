@@ -13,6 +13,7 @@ import { ZoneHandles } from './layers/ZoneHandles';
 import { ZoomControls } from './layers/ZoomControls';
 import type { Tool } from './tools';
 import { usePointerTools } from './usePointerTools';
+import { boundsKey, rememberPlanView } from './lastView';
 import { useViewport } from './useViewport';
 
 interface Props {
@@ -109,6 +110,15 @@ export function MapCanvas({
 }: Props) {
   const vp = useViewport(site.bounds);
   const { P, X, Y, u, attach: attachBox } = vp;
+  useEffect(() => {
+    const [vx, vy, vw, vh] = vp.viewBox.split(' ').map(Number);
+    rememberPlanView({
+      key: boundsKey(site.bounds),
+      x: site.bounds.minX + vx + vw / 2,
+      y: site.bounds.maxY - (vy + vh / 2),
+      width: vw,
+    });
+  }, [vp.viewBox, site.bounds]);
   const attach = useCallback((n: HTMLDivElement | null) => attachBox(n), [attachBox]);
   const [hover, setHover] = useState<string | null>(null);
   const nodes = useMemo(() => new Map(data.nodes.map((n) => [n.id, n])), [data.nodes]);
@@ -144,7 +154,7 @@ export function MapCanvas({
     () => data.roads.map((r) => ({ id: r.id, pts: r.points.map(([x, y]) => pt(xy, x, y)).join(' ') })),
     [data.roads, xy],
   );
-  const staging = useMemo(() => stagingGeometry(data.stagingAreas, xy), [data.stagingAreas, xy]);
+  const staging = useMemo(() => stagingGeometry(data.stagingAreas, xy, vp.u), [data.stagingAreas, xy, vp.u]);
 
   const placedStations = data.stations.filter((s) => !s.unplaced); // those waiting for a position are listed in the panel, not piled on the origin
   const isSelected = (kind: string, id: string) => selection?.kind === kind && selection.id === id;

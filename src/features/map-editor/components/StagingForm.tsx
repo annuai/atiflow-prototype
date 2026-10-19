@@ -5,17 +5,17 @@ import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { Label } from '@/components/base/input/label';
 import { Select } from '@/components/base/select/select';
-import { ROBOT_TYPES } from '@/data/robotTypes';
 import { copy } from '../copy';
 import { help } from '../help';
-import { stagingProblems, totalCells } from '../model/staging';
+import { clampCellAngle, DEFAULT_SEQ, stagingProblems, totalCells } from '../model/staging';
 import type { MapData, StagingAreaDef } from '../model/types';
+import { SequencePicker } from './SequencePicker';
 import { LocateButton } from './LocateButton';
 import { Hint } from './Hint';
 import { NumberInput } from './NumberInput';
 
 const NONE = '__none';
-/** One staging area (the old tool's "Add staging area"): name, robot type, rotation, where the A1 cell is, how many rows and columns, the size of a cell. */
+/** One staging area (the old tool's "Add staging area"): name, rotation, where the A1 cell is, how many rows and columns, the size of a cell. */
 export function StagingForm({
   onLocate,
   area,
@@ -70,35 +70,6 @@ export function StagingForm({
           if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
         }}
       />
-      <div className="flex flex-col gap-1.5">
-        <Label {...help('staging.sherpa')}>{f.sherpa}</Label>
-        <Select
-          size="sm"
-          aria-label={f.sherpa}
-          isDisabled={!editable}
-          selectedKey={area.sherpaType}
-          onSelectionChange={(k) => onPatch({ sherpaType: String(k) })}
-          items={ROBOT_TYPES.map((t) => ({ id: t.label, label: t.label }))}
-        >
-          {(item) => <Select.Item {...item} />}
-        </Select>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label {...help('staging.retrieval')}>{f.retrieval}</Label>
-        <Select
-          size="sm"
-          aria-label={f.retrieval}
-          isDisabled={!editable}
-          selectedKey={area.retrieval ?? 'fifo'}
-          onSelectionChange={(k) => onPatch({ retrieval: k === 'lifo' ? 'lifo' : 'fifo' })}
-          items={[
-            { id: 'fifo', label: f.retrievalOptions.fifo },
-            { id: 'lifo', label: f.retrievalOptions.lifo },
-          ]}
-        >
-          {(item) => <Select.Item {...item} />}
-        </Select>
-      </div>
       <div className="flex flex-col gap-1.5">
         <Label {...help('staging.entry')}>{f.entry}</Label>
         <Select
@@ -189,6 +160,83 @@ export function StagingForm({
             onCommit={(cellWidth) => onPatch({ cellWidth })}
           />
         </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <NumberInput
+            label={f.cellAngle}
+            value={area.cellAngle ?? 0}
+            disabled={!editable}
+            onCommit={(cellAngle) => onPatch({ cellAngle: clampCellAngle(cellAngle) })}
+          />
+          <NumberInput
+            label={f.stationOffset}
+            value={area.stationOffset ?? 0}
+            disabled={!editable}
+            error={problems.stationOffset}
+            onCommit={(stationOffset) => onPatch({ stationOffset })}
+          />
+        </div>
+      </fieldset>
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-1 text-sm font-semibold text-primary">{f.gaps}</legend>
+        <div className="grid grid-cols-2 gap-3">
+          <NumberInput
+            label={f.gapCols}
+            value={area.colGap ?? 0}
+            disabled={!editable}
+            onCommit={(colGap) => onPatch({ colGap: Math.max(0, colGap) })}
+          />
+          <NumberInput
+            label={f.gapRows}
+            value={area.rowGap ?? 0}
+            disabled={!editable}
+            onCommit={(rowGap) => onPatch({ rowGap: Math.max(0, rowGap) })}
+          />
+        </div>
+      </fieldset>
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-1 text-sm font-semibold text-primary">{f.fillTitle}</legend>
+        <SequencePicker value={area.fill ?? DEFAULT_SEQ} disabled={!editable} onChange={(fill) => onPatch({ fill })} />
+      </fieldset>
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-1 text-sm font-semibold text-primary">{f.takeTitle}</legend>
+        <Select
+          size="sm"
+          label={f.takeBy}
+          isDisabled={!editable}
+          selectedKey={area.emptyBy ?? 'arrival'}
+          onSelectionChange={(k) => onPatch({ emptyBy: k === 'position' ? 'position' : 'arrival' })}
+          items={[
+            { id: 'arrival', label: f.byArrival },
+            { id: 'position', label: f.byPosition },
+          ]}
+        >
+          {(item) => <Select.Item {...item} />}
+        </Select>
+        {(area.emptyBy ?? 'arrival') === 'arrival' ? (
+          <div className="flex flex-col gap-1.5">
+            <Label {...help('staging.retrieval')}>{f.retrieval}</Label>
+            <Select
+              size="sm"
+              aria-label={f.retrieval}
+              isDisabled={!editable}
+              selectedKey={area.retrieval ?? 'fifo'}
+              onSelectionChange={(k) => onPatch({ retrieval: k === 'lifo' ? 'lifo' : 'fifo' })}
+              items={[
+                { id: 'fifo', label: f.retrievalOptions.fifo },
+                { id: 'lifo', label: f.retrievalOptions.lifo },
+              ]}
+            >
+              {(item) => <Select.Item {...item} />}
+            </Select>
+          </div>
+        ) : (
+          <SequencePicker
+            value={area.emptyPosition ?? DEFAULT_SEQ}
+            disabled={!editable}
+            onChange={(emptyPosition) => onPatch({ emptyPosition })}
+          />
+        )}
       </fieldset>
       <p className="text-xs text-tertiary">{f.master}</p>
       <div className="mt-auto flex flex-col gap-2">

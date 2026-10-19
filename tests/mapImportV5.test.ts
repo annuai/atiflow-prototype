@@ -204,7 +204,6 @@ describe('Deployment Manager v5 export', () => {
     const [a] = prepared().map.stagingAreas;
     expect(a).toMatchObject({
       name: 'ROTR1',
-      sherpaType: 'Pallet Mover',
       rows: 2,
       cols: 3,
       rowGap: 1,

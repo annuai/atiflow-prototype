@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { robotTypeByLabel, ROBOT_TYPES } from '@/data/robotTypes';
 import type { ImportedRoad, ImportedStagingArea, ImportedStation } from '../../core/types';
 
 /**
@@ -117,20 +116,22 @@ const areaMeta = z
     cell_height: num.positive(),
     row_spacing: num.default(0),
     col_spacing: num.default(0),
-    sherpa_type: z.string().optional(),
     pickup_drop_logic: z.string().optional(),
+    direction: num.default(0),
+    station_offset: num.default(0),
+    fill_by: z.string().optional(),
+    fill_line_order: z.string().optional(),
+    fill_cell_order: z.string().optional(),
+    empty_by: z.string().optional(),
+    arrival_order: z.string().optional(),
+    empty_position_by: z.string().optional(),
+    empty_line_order: z.string().optional(),
+    empty_cell_order: z.string().optional(),
   })
   .passthrough();
 
-/** The sherpa type of the file ("pallet_mover") as one of ours; an unknown one falls back to the default and stays in `extra`. */
-function sherpaLabel(raw: string | undefined): string {
-  const id = (raw ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_]+/g, '-');
-  const hit = ROBOT_TYPES.find((t) => t.id === id || t.id === `sherpa-${id}`);
-  return (hit ?? robotTypeByLabel(raw)).label;
-}
+const order = (v: string | undefined): 'asc' | 'desc' => (v?.toLowerCase() === 'desc' ? 'desc' : 'asc');
+const by = (v: string | undefined): 'row' | 'column' => (v?.toLowerCase().includes('col') ? 'column' : 'row');
 
 /**
  * The staging areas. In the file `x, y` is the CORNER the grid starts from; columns run along the area's direction (`cell_width` long, `col_spacing` apart), rows go to its right-hand side
@@ -160,7 +161,6 @@ export function readStagingAreas(bytes: Uint8Array | undefined): ImportedStaging
     out.push({
       externalId: key,
       name: (d.name ?? key).trim() || key,
-      sherpaType: sherpaLabel(d.sherpa_type),
       rotation: d.rotation,
       x: r3(d.x + (dx * d.cell_width) / 2 + (rx * d.cell_height) / 2),
       y: r3(d.y + (dy * d.cell_width) / 2 + (ry * d.cell_height) / 2),
@@ -170,7 +170,16 @@ export function readStagingAreas(bytes: Uint8Array | undefined): ImportedStaging
       cellWidth: d.cell_height,
       rowGap: d.row_spacing,
       colGap: d.col_spacing,
-      retrieval: d.pickup_drop_logic?.toLowerCase() === 'lifo' ? 'lifo' : 'fifo',
+      retrieval: (d.arrival_order ?? d.pickup_drop_logic)?.toLowerCase() === 'lifo' ? 'lifo' : 'fifo',
+      cellAngle: d.direction,
+      stationOffset: d.station_offset,
+      fill: { by: by(d.fill_by), lines: order(d.fill_line_order), cells: order(d.fill_cell_order) },
+      emptyBy: d.empty_by?.toLowerCase() === 'position' ? 'position' : 'arrival',
+      emptyPosition: {
+        by: by(d.empty_position_by),
+        lines: order(d.empty_line_order),
+        cells: order(d.empty_cell_order),
+      },
       extra: {
         dm: {
           metadata: d,

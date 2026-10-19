@@ -112,7 +112,7 @@ test.describe('staging area cells hold materials', () => {
       .getByRole('button', { name: /SA 001/ })
       .first()
       .click();
-    const order = page.getByRole('button', { name: /Retrieval order/ });
+    const order = page.getByRole('button', { name: /Which first/ });
     await expect(order).toContainText('FIFO');
     await order.click();
     await page.getByRole('option', { name: /LIFO/ }).click();
