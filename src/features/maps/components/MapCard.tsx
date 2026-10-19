@@ -12,6 +12,7 @@ import { copy } from '../copy';
 import { MapThumbnail } from './MapThumbnail';
 import { deleteMap, deleteRefusal } from '../model/deleteMap';
 import { downloadMap } from '../model/downloadMap';
+import { mapEditedAt } from '../model/logic';
 import { routingName } from '../model/routing';
 import type { FleetMap } from '../model/types';
 import { t } from '../text';
@@ -21,7 +22,7 @@ import { formatDate } from '@/i18n';
 export function MapCard({ map, fleets }: { map: FleetMap; fleets: string[] }) {
   const now = useNow();
   const history = useMapVersions((s) => s.byMap[map.id]);
-  const edited = Math.max(map.updatedAt, lastEdit(history) ?? 0); // the newest of when the map was made and when it was last worked on
+  const edited = mapEditedAt(map, lastEdit(history));
   const [asking, setAsking] = useState(false);
   const why = deleteRefusal(map, fleets);
   // a map a fleet runs on (or a built-in one) is not deleted: a toast says why, the menu does not change

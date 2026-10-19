@@ -8,7 +8,7 @@ export const messages: Messages<typeof maps> = {
   create: 'ಹೊಸ ನಕ್ಷೆ ರಚಿಸಿ',
   search: 'ಹೆಸರು ಅಥವಾ ಫ್ಲೀಟ್ ಮೂಲಕ ನಕ್ಷೆ ಹುಡುಕಿ…',
   sortBy: (label) => `ವಿಂಗಡಿಸಿ: ${label}`,
-  sorts: { name: 'ಹೆಸರು', version: 'ಆವೃತ್ತಿ' },
+  sorts: { name: 'ಹೆಸರು', version: 'ಆವೃತ್ತಿ', updated: 'ಕೊನೆಯ ಅಪ್‌ಡೇಟ್' },
   card: { fleet: 'ಫ್ಲೀಟ್', updated: 'ಕೊನೆಯ ಅಪ್‌ಡೇಟ್', unassigned: 'ನಿಯೋಜಿಸಿಲ್ಲ', version: (v) => `v${v}` },
   cardMenu: {
     menu: 'ನಕ್ಷೆಯ ಕ್ರಿಯೆಗಳು',

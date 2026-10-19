@@ -8,7 +8,7 @@ export const messages: Messages<typeof maps> = {
   create: 'नया मैप बनाएँ',
   search: 'नाम या फ़्लीट से मैप खोजें…',
   sortBy: (label) => `क्रमबद्ध करें: ${label}`,
-  sorts: { name: 'नाम', version: 'संस्करण' },
+  sorts: { name: 'नाम', version: 'संस्करण', updated: 'अंतिम अपडेट' },
   card: { fleet: 'फ़्लीट', updated: 'पिछला अपडेट', unassigned: 'असाइन नहीं', version: (v) => `v${v}` },
   cardMenu: {
     menu: 'मैप के विकल्प',

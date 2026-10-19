@@ -7,12 +7,13 @@ import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { Select } from '@/components/base/select/select';
 import { useFleets } from '@/features/fleets';
+import { lastEdit, useMapVersions } from '@/features/map-editor';
 import { copy } from './copy';
 import { t } from './text';
 import { GenerateMapModal } from './components/GenerateMapModal';
 import { ImportMapModal } from './components/ImportMapModal';
 import { MapCard } from './components/MapCard';
-import { fleetsByMap, filterSortMaps, type MapSort } from './model/logic';
+import { fleetsByMap, filterSortMaps, mapEditedAt, type MapSort } from './model/logic';
 import { useMaps } from './model/maps';
 import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
 
@@ -25,7 +26,11 @@ export function MapsPage() {
   const [generating, setGenerating] = useState(false);
   const [importing, setImporting] = useState(false);
   const byMap = useMemo(() => fleetsByMap(profiles, fleetDirectory.nameOf), [profiles]);
-  const rows = useMemo(() => filterSortMaps(maps, byMap, text, sort), [maps, byMap, text, sort]);
+  const history = useMapVersions((s) => s.byMap);
+  const rows = useMemo(
+    () => filterSortMaps(maps, byMap, text, sort, (m) => mapEditedAt(m, lastEdit(history[m.id]))),
+    [maps, byMap, text, sort, history],
+  );
   const actions = (primaryOnly?: boolean) => (
     <>
       {!primaryOnly && (

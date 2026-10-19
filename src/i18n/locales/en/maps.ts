@@ -6,7 +6,7 @@ export const maps = {
   create: 'Create New Map',
   search: 'Search maps by name or fleet…',
   sortBy: (label: string) => `Sort By: ${label}`,
-  sorts: { name: 'Name', version: 'Version' },
+  sorts: { name: 'Name', version: 'Version', updated: 'Last updated' },
   card: { fleet: 'Fleet', updated: 'Last updated', unassigned: 'Unassigned', version: (v: number) => `v${v}` },
   cardMenu: {
     menu: 'Map actions',
