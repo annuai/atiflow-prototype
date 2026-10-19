@@ -8,6 +8,11 @@ import type { RobotLayer } from './robotLayer';
 import type { Stage } from './stage';
 
 /** The camera: modes (orbit, plan, walk, follow), flights, the lens change between 3D and plan, and the "focus on" moves. */
+/** Wheel, pinch and touch zoom speed up close (see stage.ts), and how much faster it gets far out: from `ZOOM_NEAR` metres away it grows with the distance, up to this many times. */
+const ZOOM_SPEED = 1.8;
+const ZOOM_NEAR = 80;
+const ZOOM_FAR_BOOST = 4;
+
 export class CameraRig {
   /** a camera flight in progress */
   fly: {
@@ -22,6 +27,8 @@ export class CameraRig {
   walk = { x: 0, y: 0, yaw: 0, pitch: 0 };
   homePos = new THREE.Vector3();
   homeTarget = new THREE.Vector3();
+  /** how far the camera sits from the middle of what is on screen in the home view (metres): the size of the map, which decides how far out the camera may go */
+  reach = 0;
   /** virtual-stick input for walk mode, each -1..1 */
   touchMove = { f: 0, s: 0 };
   lookPrev = new Map<number, { x: number; y: number }>();
@@ -61,6 +68,7 @@ export class CameraRig {
       D = y1 - y0;
     const asp = Math.max(0.3, this.s.holder.clientWidth / Math.max(1, this.s.holder.clientHeight));
     const dist = Math.max(W, D) * 1.15 * (asp < 1 ? Math.pow(1 / asp, 0.7) : 1);
+    this.reach = dist;
     this.homeTarget.set(...toScene(cx, cy, 0));
     this.homePos.set(cx - dist * 0.35, dist * 0.8, -(cy - dist * 0.75));
     const seen = this.s.manager.recall(this.s.activeKey);
@@ -270,10 +278,19 @@ export class CameraRig {
     }
     const k = this.s.k;
     const c = this.s.controls;
+    // a big map needs a long way out: the limits follow its size (700 m is the floor, as before)
     c.minDistance = 6 * k;
-    c.maxDistance = 700 * k;
+    c.maxDistance = Math.max(700, this.reach * 1.5) * k;
     this.s.camera.near = 0.3 * k;
-    this.s.camera.far = 3000 * k;
+    this.s.camera.far = Math.max(3000, this.reach * 5) * k;
+    const fog = this.s.scene.fog as THREE.Fog | null;
+    if (fog) {
+      fog.near = Math.max(500, this.reach * 1.5);
+      fog.far = fog.near * 3;
+    }
+    // one wheel notch changes the distance by a fixed share, so from far out on a big map it took dozens of notches to come down to a robot: the further out, the bigger the share (the same as before up close)
+    const away = this.s.camera.position.distanceTo(c.target) / k;
+    c.zoomSpeed = ZOOM_SPEED * THREE.MathUtils.clamp(away / ZOOM_NEAR, 1, ZOOM_FAR_BOOST);
     this.s.camera.updateProjectionMatrix();
   }
   stepWalk(dt: number) {
