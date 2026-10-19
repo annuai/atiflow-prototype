@@ -1,4 +1,5 @@
 import type { NavGraph } from '@/core/types';
+import { routable } from './connect';
 import type { MapData } from './types';
 
 /**
@@ -18,7 +19,8 @@ export function applyPublishedMaps(nav: NavGraph, maps: { fleetLive: string; dat
     s: new Set(stations.map((s) => s.id)),
     z: new Set(trafficZones.map((z) => z.id)),
   };
-  for (const { data } of maps) {
+  for (const { data: saved } of maps) {
+    const data = routable(saved); // off-route stations are joined to the route for the robots
     for (const n of data.nodes) nodes.set(n.id, n);
     // a lane or station that two maps both hold (a shared area) is one: it serves the fleets of both
     const union = <T extends { id: string; fleets: string[] }>(list: T[], item: T) => {

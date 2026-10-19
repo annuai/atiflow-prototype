@@ -9,9 +9,53 @@ export interface ImportedStation {
   y: number;
   rotation: number;
   type: StationType;
+  /** Stands on a road (true) or off it, reached by a manoeuvre (false); a file that does not say leaves it off the road. */
+  onLane?: boolean;
+  /** Ids of the graph nodes the source joins this station to. */
+  nodeIds?: string[];
   /** False when the file gives no real position (several stations on the origin): the editor lists it under "Needs placement". */
   placed: boolean;
   /** Every source field we have no column for, kept as it came so exporting loses nothing. */
+  extra: Record<string, unknown>;
+}
+
+/** A road of the source map: a line with a direction. `extra` keeps every source field we have no column for. */
+export interface ImportedRoad {
+  externalId: string;
+  /** Point-to-point (v2) routes: the file's ids of the stations at its two ends. */
+  fromStation?: string;
+  toStation?: string;
+  name: string;
+  /** From the start to the end of the source line, metres from the map origin. */
+  points: [number, number][];
+  oneWay: boolean;
+  heading: 'both' | 'forward' | 'backward';
+  extra: Record<string, unknown>;
+}
+
+/** A traffic gate (exclusive zone) of the source map: its outline in metres, with every source field kept in `extra`. */
+export interface ImportedGate {
+  externalId: string;
+  name: string;
+  polygon: [number, number][];
+  extra: Record<string, unknown>;
+}
+
+/** A staging area of the source map in our terms: `x, y` is the CENTRE of the A1 cell, `rotation` in degrees, gaps are between cells. */
+export interface ImportedStagingArea {
+  externalId: string;
+  name: string;
+  sherpaType: string;
+  rotation: number;
+  x: number;
+  y: number;
+  rows: number;
+  cols: number;
+  cellLength: number;
+  cellWidth: number;
+  rowGap: number;
+  colGap: number;
+  retrieval: 'fifo' | 'lifo';
   extra: Record<string, unknown>;
 }
 
@@ -42,6 +86,14 @@ export interface ImportedMap {
   name: string;
   version: string | null;
   stations: ImportedStation[];
+  /** The dots a route of the source is made of (its graph nodes), and the nodes each station is joined to (`ImportedStation.nodeIds`). */
+  graphNodes: { id: string; x: number; y: number }[];
+  /** Which generation of the Deployment Manager wrote the map: `v5` (free roads and a graph), `v2` (point-to-point routes between stations) or `basic` (stations only). */
+  layout: 'v5' | 'v2' | 'basic';
+  gates: ImportedGate[];
+  /** Roads (lanes with a direction) the file describes; empty for a fresh map that has none. */
+  roads: ImportedRoad[];
+  stagingAreas: ImportedStagingArea[];
   /** The path the robot drove while it mapped, in metres from the origin (a hint for drawing roads). */
   path: [number, number][];
   grid: GridImage | null;
@@ -50,7 +102,7 @@ export interface ImportedMap {
   /** Files of the zip nobody read (a better export may carry routes or zones we do not know yet). */
   unread: string[];
   /** Counts for the review step. */
-  stats: { gridCells: number; keptCells: number; removedSpecks: number; pathPoints: number };
+  stats: { gridCells: number; keptCells: number; removedSpecks: number; pathPoints: number; gridFactor: number };
   warnings: ImportWarning[];
 }
 

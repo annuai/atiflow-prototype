@@ -1,5 +1,6 @@
 import { text } from '../text';
 import { stagingProblems, cellRef } from './staging';
+import { routable } from './connect';
 import { nodeOf } from './stations';
 import { pointInPolygon } from './zones';
 import { zoneType } from './zoneTypes';
@@ -115,6 +116,7 @@ export function publishProblems(
   const out: MapProblem[] = [];
   out.push(...deletedStationProblems(next, previous, usedBy));
   const seen = new Map<string, string>();
+  const network = routable(next); // an off-route station is joined to the route on the fly
   for (const s of next.stations) {
     out.push(...unplacedProblem(s));
     const key = s.name.trim().toLowerCase();
@@ -122,7 +124,7 @@ export function publishProblems(
     else if (seen.has(key))
       out.push({ level: 'block', title: text.problems.shareName(s.id, seen.get(key) ?? '', s.name), stationId: s.id });
     else seen.set(key, s.id);
-    if (s.onLane !== false && !onRoad(next, s.id))
+    if (s.onLane !== false && !onRoad(network, s.id))
       out.push({
         level: 'block',
         title: text.problems.notReached(s.id, s.name),

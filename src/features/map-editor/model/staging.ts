@@ -29,8 +29,8 @@ export function cellCenter(a: StagingAreaDef, row: number, col: number): { x: nu
     rx = Math.sin(t),
     ry = -Math.cos(t);
   return {
-    x: a.x + (col - 1) * a.cellLength * dx + (row - 1) * a.cellWidth * rx,
-    y: a.y + (col - 1) * a.cellLength * dy + (row - 1) * a.cellWidth * ry,
+    x: a.x + (col - 1) * (a.cellLength + (a.colGap ?? 0)) * dx + (row - 1) * (a.cellWidth + (a.rowGap ?? 0)) * rx,
+    y: a.y + (col - 1) * (a.cellLength + (a.colGap ?? 0)) * dy + (row - 1) * (a.cellWidth + (a.rowGap ?? 0)) * ry,
   };
 }
 /** The outline of the whole area (four corners). */
@@ -43,8 +43,8 @@ export function outline(a: StagingAreaDef): [number, number][] {
   const l = a.cellLength,
     w = a.cellWidth;
   const o = { x: a.x - (l / 2) * dx - (w / 2) * rx, y: a.y - (l / 2) * dy - (w / 2) * ry };
-  const L = a.cols * l,
-    W = a.rows * w;
+  const L = a.cols * l + (a.cols - 1) * (a.colGap ?? 0),
+    W = a.rows * w + (a.rows - 1) * (a.rowGap ?? 0);
   return [
     [o.x, o.y],
     [o.x + L * dx, o.y + L * dy],

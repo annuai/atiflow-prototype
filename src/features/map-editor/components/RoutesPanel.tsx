@@ -182,6 +182,14 @@ export function RoadForm({
           onPress={() => onPatch({ swap: true })}
         />
       </div>
+      {data.p2p && (
+        <NumberInput
+          label={f.radius}
+          value={road.radius ?? 1}
+          disabled={!editable}
+          onCommit={(v) => v > 0 && onPatch({ radius: v })}
+        />
+      )}
       <Checkbox
         size="sm"
         label={f.twoWayLane}

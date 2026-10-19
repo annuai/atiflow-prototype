@@ -18,6 +18,8 @@ export interface MapZone {
   shape: ZoneShape;
   polygon: [number, number][];
   props: Record<string, ZoneProp>;
+  /** The source fields of an imported gate, kept as they came so nothing is lost. */
+  extra?: Record<string, unknown>;
 }
 
 /** A station of a map: the fleet's station plus how a robot stands at it. */
@@ -28,6 +30,7 @@ export interface MapStation extends Station {
     unknown
   >;
   /** The file gave no real position: the station waits in the "Needs placement" list and Publish is blocked until it is placed. */ unplaced?: boolean;
+  /** Ids of the route nodes the source joins this station to; its way onto the route is made to them (else to the nearest route node). */ routeNodes?: string[];
   /** heading of the robot at the station (degrees) */ angle?: number;
   /** stands on the lane (true, default) or off it */ onLane?: boolean;
 }
@@ -43,6 +46,10 @@ export interface MapRoad {
   points: [number, number][];
   laneIds: string[];
   heading?: RoadHeading;
+  /** The source fields of an imported road (its id, regime, weight...) kept as they came so nothing is lost. */
+  extra?: Record<string, unknown>;
+  /** Point-to-point (v2) routes: the radius of the turns at its corners (m). */
+  radius?: number;
 }
 
 /**
@@ -60,6 +67,11 @@ export interface StagingAreaDef {
   cols: number;
   cellLength: number;
   cellWidth: number;
+  /** Empty space between neighbouring cells (m): between rows and between columns. Missing = none (the cells touch). */
+  rowGap?: number;
+  colGap?: number;
+  /** The source fields of an imported area (its cells, per-column settings...) kept as they came. */
+  extra?: Record<string, unknown>;
   /** The order the area gives its material out in, set here with the rest of the area and followed by every request: FIFO (the material that has been in longest) or LIFO (put in last). Missing in older saved maps = FIFO. */
   retrieval?: 'fifo' | 'lifo';
   /** The station a robot drives to for this area (its entry). A workflow can only use the area when it has one. */
@@ -112,6 +124,10 @@ export interface MapData {
   dwg?: MapDwg;
   /** The path the robot drove while it mapped, metres: a hint for drawing roads (imported maps). */
   path?: [number, number][];
+  /** A point-to-point (v2) map: every station is on a route, a route joins two stations, and a route has a direction (no free roads, no two-way roads). */
+  p2p?: boolean;
+  /** Which node of the source file each of our nodes is (our node id -> the file's node id, e.g. "N12"), so an export updates that node instead of adding another. */
+  fileNodes?: Record<string, string>;
 }
 
 type VersionStatus = 'published' | 'draft';

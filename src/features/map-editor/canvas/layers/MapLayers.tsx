@@ -291,6 +291,18 @@ export function StationLayer({
             <circle r={isCoarse ? 22 : 14} fill="transparent" data-hit={`station:${s.id}`} />
             {sl && <circle r={13} fill="#5eead4" fillOpacity={0.35} />}
             {sl && <circle r={10} fill="none" stroke="#0d9488" strokeWidth={1.8} />}
+            {s.angle !== undefined && (
+              // the way the robot faces at the station (degrees counter-clockwise from east; the screen's y points down)
+              <path
+                transform={`rotate(${-s.angle})`}
+                d="M5 0H19M14.5 -4L19 0L14.5 4"
+                fill="none"
+                stroke="#2563eb"
+                strokeWidth={2.2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
             <circle r={6} fill={col} stroke="#fff" strokeWidth={1.8} />
             {(sl || hover === s.id || showLabels) && (
               <text

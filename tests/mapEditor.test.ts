@@ -107,7 +107,8 @@ describe('the publish gate', () => {
   it('blocks an On route station no route reaches (an Off route one is fine), an unnamed or duplicate name, and a deleted station that a published workflow uses', () => {
     const base = lineSide();
     expect(publishProblems(base, base, used)).toEqual([]);
-    const off = addStation(base, 'line-side', { x: 1, y: 1 });
+    expect(publishProblems(addStation(base, 'line-side', { x: 1, y: 1 }).data, base, used)).toEqual([]); // joined to the nearest route on the fly
+    const off = addStation(base, 'line-side', { x: 5000, y: 5000 }); // nothing within reach
     expect(publishProblems(off.data, base, used).map((p) => p.title)).toEqual([
       expect.stringMatching(/no route reaches it/),
     ]);
@@ -332,8 +333,14 @@ describe("simulation: a robot drives from one station to another on the map's ow
     }
     expect(planTrip(d, 'line-side', a, a)).toEqual({ ok: false, reason: 'same' });
     expect(planTrip(d, 'line-side', a, 'NOPE')).toEqual({ ok: false, reason: 'missing' });
-    const lonely = addStation(d, 'line-side', { x: 1, y: 1 });
-    expect(planTrip(lonely.data, 'line-side', a, lonely.id)).toEqual({ ok: false, reason: 'no-route' }); // placed on no road
+    const near = addStation(d, 'line-side', { x: 1, y: 1 });
+    expect(planTrip(near.data, 'line-side', a, near.id).ok).toBe(true); // an off-route station is joined to the nearest route on the fly
+    const lonely = addStation(d, 'line-side', { x: 5000, y: 5000 });
+    expect(planTrip(lonely.data, 'line-side', a, lonely.id)).toEqual({
+      ok: false,
+      reason: 'unlinked',
+      station: lonely.id,
+    }); // nothing within reach
     expect(planTrip(d, 'asrs', a, b).ok).toBe(false); // another fleet's lanes are not used
   });
 });

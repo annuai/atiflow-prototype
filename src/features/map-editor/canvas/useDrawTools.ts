@@ -81,7 +81,25 @@ export function useDrawTools(i: DrawToolsInput) {
   const finish = () => {
     if (!data || fleetLive === undefined) return;
     if (tool.kind === 'road') {
-      const r = addRoad(data, drawing, { oneWay: tool.oneWay, fleetLive });
+      // a route of a point-to-point (v2) map joins two stations: its first and last point must be on one
+      const at = (p: P) =>
+        data.stations
+          .map((s) => ({ s, n: data.nodes.find((n) => n.id === s.nodeId) }))
+          .filter((e) => e.n && Math.hypot(e.n.x - p[0], e.n.y - p[1]) <= 3)
+          .sort((a, b) => Math.hypot(a.n!.x - p[0], a.n!.y - p[1]) - Math.hypot(b.n!.x - p[0], b.n!.y - p[1]))[0]?.s;
+      const from = data.p2p ? at(drawing[0]) : undefined,
+        to = data.p2p ? at(drawing[drawing.length - 1]) : undefined;
+      if (data.p2p && (!from || !to || from === to)) {
+        notify.warning(copy.routes.p2pEnds, undefined, 'road-p2p');
+        return;
+      }
+      const r = addRoad(
+        data,
+        drawing,
+        data.p2p
+          ? { oneWay: true, fleetLive, nodeA: from!.nodeId, nodeB: to!.nodeId, offset: 0, radius: 1, snap: 0 }
+          : { oneWay: tool.oneWay, fleetLive },
+      );
       if (!r.id) {
         notify.warning(copy.routes.tooShort, undefined, 'road-short');
         return;

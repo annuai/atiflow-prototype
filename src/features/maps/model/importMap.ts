@@ -15,11 +15,16 @@ export async function createImportedMap(
   const assets = services().mapAssets;
   const assetIds = await Promise.all(prepared.levels.map((l) => assets.put(l.bytes, 'image/png')));
   const zipId = await assets.put(zip, 'application/zip');
-  const data = buildMapData(prepared, assetIds, o.taken, {
-    assetId: zipId,
-    fileName: o.fileName,
-    format: prepared.map.format,
-  });
+  const takenAreas = Object.values(mapVersionsStore.getState().byMap).flatMap((h) =>
+    h.versions.flatMap((v) => v.data.stagingAreas.map((a) => a.id)),
+  );
+  const data = buildMapData(
+    prepared,
+    assetIds,
+    o.taken,
+    { assetId: zipId, fileName: o.fileName, format: prepared.map.format },
+    takenAreas,
+  );
   const id = newMapId(o.name);
   addImportedMap({
     id,

@@ -74,6 +74,9 @@ export const maps = {
       floor: (w: number, h: number) => `Floor picture ${w} × ${h} m`,
       noFloor: 'No floor picture',
       path: (n: number) => `Mapping path: ${n} points`,
+      roads: (n: number) => `${n} roads`,
+      areas: (n: number) => `${n} staging areas`,
+      gates: (n: number) => `${n} traffic gates`,
       cleaned: (n: number) => `${n} specks of noise removed`,
     },
     warnings: {
@@ -84,6 +87,8 @@ export const maps = {
       'origin.outside': () => 'The map origin lies outside the grid.',
       'grid.empty': () => 'The map grid is empty.',
       'grid.missing': () => 'This file has no floor grid, so the map has no floor picture.',
+      'grid.coarse': (a: Record<string, string | number>) =>
+        `The map is very large, so the floor picture is drawn at ${a.cm} cm detail instead of ${a.from} cm.`,
       'poses.invalid': () => 'The path the robot drove could not be read.',
       'content.noRoutes': () => 'This file has no roads, zones or traffic gates. You can draw them in the Map Editor.',
     },

@@ -6,7 +6,7 @@ import type { P } from '../canvas/layers';
 import type { useDrawTools } from '../canvas/useDrawTools';
 import { copy } from '../copy';
 import { hintFor } from '../model/hints';
-import { moveStation } from '../model/stations';
+import { moveStation, updateStation } from '../model/stations';
 import { updateStagingArea } from '../model/staging';
 import { setZoneShape } from '../model/zones';
 import type { MapData, Selection } from '../model/types';
@@ -75,6 +75,7 @@ export function EditorStage({
         onPoint={draw.onPoint}
         onFinish={draw.finish}
         onZoneShape={(zid, shape) => editor.edit((m) => setZoneShape(m, zid, shape), `shape:${zid}`)}
+        onStationAngle={(sid, angle) => editor.edit((m) => updateStation(m, sid, { angle }), `angle:${sid}`)}
         onMove={(kind, sid, to) => editor.edit((m) => moveThing(m, kind, sid, to), `move:${kind}:${sid}`)}
       />
       {designing && tool.kind !== 'select' && (

@@ -35,6 +35,8 @@ export const messages: Messages<typeof mapEditor> = {
     sameStation: 'दो अलग स्टेशन चुनें।',
     noRoute: (a, b) =>
       `इस मैप पर ${a} से ${b} तक कोई रूट नहीं है। जाँचें कि सड़कें उन्हें जोड़ती हैं और एकतरफ़ा सड़कें सही दिशा में हैं।`,
+    unlinked: (name) =>
+      `${name} किसी सड़क से जुड़ा नहीं है, इसलिए वहाँ कोई रूट नहीं पहुँच सकता। डिज़ाइन में उसके लिए सड़क बनाएँ या उसे सड़क पर ले जाएँ।`,
     missing: 'इनमें से एक स्टेशन अब मैप पर नहीं है।',
   },
   noTool: {
@@ -161,6 +163,7 @@ export const messages: Messages<typeof mapEditor> = {
       angle: (a) => `सड़क का कोण: ${a}°`,
       swap: 'दिशा बदलें',
       twoWayLane: 'दोतरफ़ा सड़क',
+      radius: 'मोड़ की त्रिज्या (मी)',
       properties: 'सड़क के गुण',
       heading: 'चलने की दिशा',
       headings: { both: 'दोनों', forward: 'आगे', backward: 'पीछे' },
@@ -177,6 +180,8 @@ export const messages: Messages<typeof mapEditor> = {
     },
     added: (n) => `${n} जोड़ी गई`,
     tooShort: 'सड़क के लिए कम से कम दो बिंदु और एक मीटर चाहिए।',
+    p2pEnds:
+      'इस मैप का रूट स्टेशन से शुरू होकर स्टेशन पर खत्म होता है। शुरू करने के लिए एक स्टेशन और खत्म करने के लिए एक स्टेशन पर क्लिक करें।',
   },
   zones: {
     added: (n) => `${n} जोड़ा गया`,

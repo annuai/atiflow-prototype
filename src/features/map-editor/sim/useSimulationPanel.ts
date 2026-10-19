@@ -55,9 +55,11 @@ export function useSimulationPanel(data: MapData | undefined, fleetLive: string 
         setError(
           !p.ok && p.reason === 'same'
             ? copy.sim.sameStation
-            : !p.ok && p.reason === 'no-route' && a && b
-              ? copy.sim.noRoute(a.name, b.name)
-              : copy.sim.missing,
+            : !p.ok && p.reason === 'unlinked'
+              ? copy.sim.unlinked(data.stations.find((x) => x.id === p.station)?.name ?? p.station)
+              : !p.ok && p.reason === 'no-route' && a && b
+                ? copy.sim.noRoute(a.name, b.name)
+                : copy.sim.missing,
         );
         return;
       }

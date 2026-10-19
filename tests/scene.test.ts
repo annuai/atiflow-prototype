@@ -244,7 +244,9 @@ describe('the workflow builder draws a fleet from its own scene, the latest publ
     const after = fleetScene(FLEET_ID.lineSide, mapData(w))!;
     expect(before.nav.lanes.length).toBeGreaterThan(after.nav.lanes.length);
     // the fleet's own roads are the published ones (lanes only it drives): the 10 that were kept, nothing of the old map
-    const own = (n: typeof after.nav) => n.lanes.filter((l) => l.fleets.length === 1).map((l) => l.id);
+    // (stations left without a road get an access lane made on the fly: those are not part of what was published)
+    const own = (n: typeof after.nav) =>
+      n.lanes.filter((l) => l.fleets.length === 1 && !l.id.startsWith('A-')).map((l) => l.id);
     expect(own(after.nav).sort()).toEqual(
       edited.lanes
         .map((l) => l.id)

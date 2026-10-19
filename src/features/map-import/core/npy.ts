@@ -13,10 +13,24 @@ const MAX_NPY_CELLS = 256 * 1024 * 1024;
 
 const MAGIC = [0x93, 0x4e, 0x55, 0x4d, 0x50, 0x59]; // \x93NUMPY
 
-/**
- * Reads a NumPy `.npy` array (format 1.0 to 3.0, little endian, C order, numbers only). Hand written on purpose: the format is a tiny header plus raw bytes, so no library is shipped.
- */
-export function readNpy(buf: Uint8Array): NpyArray {
+export interface NpyHeader {
+  descr: string;
+  fortran: boolean;
+  shape: number[];
+  /** Offset of the first data byte. */
+  start: number;
+}
+
+/** True when `buf` holds the whole header (magic, length and text), so `parseNpyHeader` can be called. */
+export function hasNpyHeader(buf: Uint8Array): boolean {
+  if (buf.length < 12) return false;
+  const hlen =
+    buf[6] === 1 ? buf[8] | (buf[9] << 8) : new DataView(buf.buffer, buf.byteOffset, buf.byteLength).getUint32(8, true);
+  return buf.length >= (buf[6] === 1 ? 10 : 12) + hlen;
+}
+
+/** The header of a NumPy `.npy` (format 1.0 to 3.0): type, shape, order and where the data starts. Needs `hasNpyHeader(buf)`. */
+export function parseNpyHeader(buf: Uint8Array): NpyHeader {
   if (buf.length < 12 || MAGIC.some((b, i) => buf[i] !== b)) throw new ImportError('npy.invalid', 'Not a NumPy array');
   const major = buf[6];
   const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
@@ -35,6 +49,14 @@ export function readNpy(buf: Uint8Array): NpyArray {
     .filter(Boolean)
     .map(Number);
   if (shape.some((n) => !Number.isInteger(n) || n < 0)) throw new ImportError('npy.invalid', 'Unreadable NumPy shape');
+  return { descr, fortran: false, shape, start };
+}
+
+/**
+ * Reads a NumPy `.npy` array (format 1.0 to 3.0, little endian, C order, numbers only). Hand written on purpose: the format is a tiny header plus raw bytes, so no library is shipped.
+ */
+export function readNpy(buf: Uint8Array): NpyArray {
+  const { descr, shape, start } = parseNpyHeader(buf);
   const cells = shape.reduce((a, b) => a * b, 1);
   if (cells > MAX_NPY_CELLS) throw new ImportError('npy.tooBig', 'The array is too large');
   const size: Record<string, number> = {

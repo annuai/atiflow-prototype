@@ -5,6 +5,7 @@ import { text } from '../text';
 import type { MapData, Selection, ZoneShape } from '../model/types';
 import { drawingPreview, floorPaths, pt, stagingGeometry, type P } from './layers';
 import { DrawingLayer, LocatePulse, RoadHits, StagingLayer, StationLayer, ZoneLayer } from './layers/MapLayers';
+import { StationLink } from './layers/StationLink';
 import { ZoomControls } from './layers/ZoomControls';
 import type { Tool } from './tools';
 import { usePointerTools } from './usePointerTools';
@@ -32,6 +33,10 @@ interface Props {
   /** Drawn on top of the map inside its SVG (the simulation). */ overlay?: (
     vp: ReturnType<typeof useViewport>,
   ) => ReactNode;
+  /** A station's heading is changed with its rotate handle (degrees, called while dragging). */ onStationAngle(
+    id: string,
+    degrees: number,
+  ): void;
   /** A zone's shape is changed with its handles (called while dragging, with the new shape). */ onZoneShape(
     id: string,
     shape: ZoneShape,
@@ -61,6 +66,7 @@ export function MapCanvas({
   onFinish,
   onMove,
   onZoneShape,
+  onStationAngle,
   overlay,
   locate,
 }: Props) {
@@ -167,6 +173,13 @@ export function MapCanvas({
           movable={movable}
           startDrag={pointer.startDrag}
           endDrag={pointer.endDrag}
+        />
+        <StationLink
+          data={data}
+          stationId={selection?.kind === 'station' ? selection.id : null}
+          vp={vp}
+          editable={editable}
+          onAngle={onStationAngle}
         />
         <LocatePulse locate={locate} vp={vp} />
         {overlay?.(vp)}

@@ -164,6 +164,9 @@ function Body({ onOpenChange }: { onOpenChange(o: boolean): void }) {
                     ? t.found.floor(Math.round(lvl.width * lvl.res), Math.round(lvl.height * lvl.res))
                     : t.found.noFloor}
                 </dd>
+                {m.roads.length > 0 && <dd>{t.found.roads(m.roads.length)}</dd>}
+                {m.gates.length > 0 && <dd>{t.found.gates(m.gates.length)}</dd>}
+                {m.stagingAreas.length > 0 && <dd>{t.found.areas(m.stagingAreas.length)}</dd>}
                 {m.path.length > 0 && <dd>{t.found.path(m.path.length)}</dd>}
                 {m.stats.removedSpecks > 0 && <dd>{t.found.cleaned(m.stats.removedSpecks)}</dd>}
               </dl>

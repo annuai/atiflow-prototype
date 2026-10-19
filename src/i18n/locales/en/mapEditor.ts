@@ -33,6 +33,8 @@ export const mapEditor = {
     sameStation: 'Choose two different stations.',
     noRoute: (a: string, b: string) =>
       `No route from ${a} to ${b} on this map. Check that roads connect them and that one-way roads point the right way.`,
+    unlinked: (name: string) =>
+      `${name} is not connected to a road, so no route can reach it. Draw a road to it or move it onto a road in Design.`,
     missing: 'One of these stations is no longer on the map.',
   },
   noTool: {
@@ -158,6 +160,7 @@ export const mapEditor = {
       angle: (a: number) => `Road angle: ${a}°`,
       swap: 'Swap direction',
       twoWayLane: 'Two-way road',
+      radius: 'Turn radius (m)',
       properties: 'Road properties',
       heading: 'Heading direction',
       headings: { both: 'Both', forward: 'Forward', backward: 'Backward' },
@@ -175,6 +178,7 @@ export const mapEditor = {
     },
     added: (n: string) => `${n} added`,
     tooShort: 'A road needs at least two points and one metre.',
+    p2pEnds: 'A route of this map starts and ends at a station. Click a station to start and a station to finish.',
   },
   zones: {
     added: (n: string) => `${n} added`,
