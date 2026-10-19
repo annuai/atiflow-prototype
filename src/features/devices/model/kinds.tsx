@@ -1,7 +1,7 @@
 import { Camera01, StopSquare, Truck01, VolumeMax } from '@untitledui/icons';
 import type { Device, DeviceKind, FieldDef } from './types';
 import DATASET from '@/fixtures/dataset.json';
-import { ROBOT_TYPE_LABELS, robotTypeByLabel } from '@/data/robotTypes';
+import { hasAutoHitch, ROBOT_TYPE_LABELS, robotTypeByLabel } from '@/data/robotTypes';
 import { t } from '../text';
 
 /** Hardware type -> icon. The Figma file only has a placeholder square for these (annotation: "need appropriate icons"), so these are Untitled icons. */
@@ -101,6 +101,7 @@ const ROBOT_FIELDS: FieldDef[] = [
     },
     control: 'checks',
     options: ADDONS,
+    showIf: (v) => hasAutoHitch(v.sherpaType),
     modal: 'full',
     detailOrder: 6,
     detail: { display: 'badges', editable: true },

@@ -17,6 +17,8 @@ export interface FieldDef {
   detail?: boolean | { label?: string; display?: 'text' | 'badge' | 'badges'; editable?: boolean };
   /** Position in the detail grid (lower first); fields without one keep declaration order after the ordered ones. */
   detailOrder?: number;
+  /** The field is only asked for / shown while this is true for the record's current values (a value it hides is cleared when the record is saved). */
+  showIf?: (values: Record<string, FieldValue>) => boolean;
   /** Value used when the modal does not ask for it (new records). */
   initial?: FieldValue;
 }

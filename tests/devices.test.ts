@@ -1,7 +1,14 @@
 import { FLEET_ID } from '../src/data/fleets';
 import { describe, expect, it } from 'vitest';
 import { KINDS } from '../src/features/devices/model/kinds';
-import { blankValues, findDevice, nameOf, validateNew } from '../src/features/devices/model/validate';
+import {
+  blankValues,
+  findDevice,
+  nameOf,
+  shownFields,
+  validateNew,
+  withoutHidden,
+} from '../src/features/devices/model/validate';
 
 const { robot, hardware } = KINDS;
 const filled = (kind: typeof robot, over: Record<string, string> = {}) => ({
@@ -95,5 +102,19 @@ describe('the next robot name', () => {
     expect(suggestName(KINDS.robot, [robot('Sherpa-09'), robot('AMR-004')])).toBe('AMR-005'); // other names are ignored
     expect(suggestName(KINDS.robot, [robot('AMR-0099')])).toBe('AMR-0100'); // keeps a wider number width
     expect(suggestName(KINDS.hardware, [])).toBeNull(); // hardware has no scheme
+  });
+});
+
+describe('auto-hitch add-ons belong to three robot types', () => {
+  const names = (type: string) => shownFields(robot, { sherpaType: type }).map((f) => f.key);
+  it('are asked for only on Sherpa XT Lite, Tug 5T and Tug 1.5T', () => {
+    for (const t of ['Sherpa XT Lite', 'Sherpa Tug 5T', 'Sherpa Tug 1.5T']) expect(names(t)).toContain('addons');
+    for (const t of ['Pallet Mover', 'Sherpa Lifter 1T', 'Sherpa Flex Fork']) expect(names(t)).not.toContain('addons');
+  });
+  it('are cleared from a record whose type has none', () => {
+    expect(withoutHidden(robot, { sherpaType: 'Pallet Mover', addons: ['Auto-Hitch'] }).addons).toEqual([]);
+    expect(withoutHidden(robot, { sherpaType: 'Sherpa XT Lite', addons: ['Auto-Hitch'] }).addons).toEqual([
+      'Auto-Hitch',
+    ]);
   });
 });

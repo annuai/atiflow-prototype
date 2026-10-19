@@ -8,7 +8,7 @@ import { useFleetChoices, useFleetName } from '@/data/fleetDirectory';
 import { asFleetId } from '@/data/fleets';
 import { notify } from '@/ui/toast';
 import { deviceStore } from '../model/store';
-import { nameOf } from '../model/validate';
+import { nameOf, shownFields, withoutHidden } from '../model/validate';
 import type { Device, DeviceKind, FieldValue } from '../model/types';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { FormField } from '@/components/form/FormField';
@@ -55,13 +55,21 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
       ]
     : [{ label: kind.plural, onPress: () => navigate(back) }, { label: name }];
   const value = (key: string) => (key in draft ? draft[key] : (device.values[key] ?? ''));
-  const fields = kind.fields
+  const current = { ...device.values, ...draft }; // what the record would be if saved now
+  const fields = shownFields(kind, current)
     .map((f, i) => ({ f, o: f.detailOrder ?? 100 + i }))
     .filter((x) => x.f.detail)
     .sort((a, b) => a.o - b.o)
     .map((x) => x.f);
   const save = () => {
-    deviceStore.getState().update(kind.id, name, draft);
+    const hidden = withoutHidden(kind, current);
+    deviceStore
+      .getState()
+      .update(
+        kind.id,
+        name,
+        Object.fromEntries(Object.entries(hidden).filter(([k, v]) => k in draft || v !== current[k])),
+      );
     setEditing(false);
     setDraft({});
     notify.success(t.detail.saved, undefined, 'device-saved');

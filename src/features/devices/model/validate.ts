@@ -45,3 +45,15 @@ export function suggestName(kind: DeviceKind, existing: Device[]): string | null
 }
 
 export const findDevice = (list: Device[], name: string) => list.find((d) => same(nameOf(d), name));
+
+/** The fields that apply to a record with these values (a field with `showIf` only while it is true). */
+export const shownFields = (kind: DeviceKind, values: Record<string, FieldValue>) =>
+  kind.fields.filter((f) => !f.showIf || f.showIf(values));
+
+/** The values with those of hidden fields cleared (add-ons of a robot that has none), so nothing meaningless is saved. */
+export function withoutHidden(kind: DeviceKind, values: Record<string, FieldValue>): Record<string, FieldValue> {
+  const out = { ...values };
+  for (const f of kind.fields)
+    if (f.showIf && !f.showIf(values) && f.key in out) out[f.key] = f.control === 'checks' ? [] : '';
+  return out;
+}

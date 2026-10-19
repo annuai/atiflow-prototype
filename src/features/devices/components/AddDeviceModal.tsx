@@ -4,7 +4,7 @@ import { ModalShell } from '@/components/modal/ModalShell';
 import { useFleetChoices } from '@/data/fleetDirectory';
 import { notify } from '@/ui/toast';
 import { deviceStore, useDevices } from '../model/store';
-import { blankValues, suggestName, validateNew } from '../model/validate';
+import { blankValues, shownFields, suggestName, validateNew, withoutHidden } from '../model/validate';
 import type { DeviceKind, FieldValue } from '../model/types';
 import { t } from '../text';
 
@@ -27,7 +27,7 @@ function Body({
   set(key: string): (v: FieldValue) => void;
 }) {
   const fleets = useFleetChoices();
-  const fields = kind.fields.filter((f) => f.modal);
+  const fields = shownFields(kind, values).filter((f) => f.modal);
   const preview = kind.preview(values);
   // consecutive 'half' fields share a row
   const rows: (typeof fields)[] = [];
@@ -82,7 +82,11 @@ function Form({ kind, preset, isOpen, onOpenChange }: Props) {
     setErrors((e) => ({ ...e, [key]: '' }));
   };
   const submit = () => {
-    const clean = { ...values, name: String(values.name).trim(), hardwareId: String(values.hardwareId).trim() };
+    const clean = withoutHidden(kind, {
+      ...values,
+      name: String(values.name).trim(),
+      hardwareId: String(values.hardwareId).trim(),
+    });
     const problems = validateNew(kind, clean, existing);
     setErrors(problems);
     if (Object.keys(problems).length) return;

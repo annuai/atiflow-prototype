@@ -65,3 +65,8 @@ export const robotTypeById = (id: string | undefined): RobotType =>
   ROBOT_TYPES.find((t) => t.id === id) ?? DEFAULT_ROBOT_TYPE;
 export const robotTypeByLabel = (label: unknown): RobotType =>
   ROBOT_TYPES.find((t) => t.label === label) ?? DEFAULT_ROBOT_TYPE;
+
+/** Auto-hitch and auto un-hitch exist only on these robots (by catalog id). */
+const AUTO_HITCH: readonly string[] = ['sherpa-xt-lite', 'sherpa-tug-5t', 'sherpa-tug-1-5t'];
+/** Does the robot type (its stored label) have the auto-hitch add-ons? */
+export const hasAutoHitch = (sherpaType: unknown) => AUTO_HITCH.includes(robotTypeByLabel(sherpaType).id);
