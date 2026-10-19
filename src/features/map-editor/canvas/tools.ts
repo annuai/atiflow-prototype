@@ -3,7 +3,7 @@ import type { ZoneTypeId } from '../model/types';
 
 export type Module = 'stations' | 'routes' | 'exclusive' | 'zones' | 'structure';
 /** What the Structure module draws: walls and partitions (a line of points), machines and pillars (a block between two corners), a room (four walls round a rectangle), an area (any outline), a door (a click on a wall), tracing a wall of the lidar estimate (a click) and erasing a rectangle. */
-export type StructureTool = 'wall' | 'partition' | 'machine' | 'pillar' | 'room' | 'area' | 'work' | 'door' | 'erase';
+export type StructureTool = 'wall' | 'partition' | 'machine' | 'pillar' | 'room' | 'work' | 'door' | 'erase';
 
 /** What a click on the map does. The module (Stations, Routes, Traffic Gates, Zones) decides which tools it offers. */
 export type Tool =
@@ -29,7 +29,7 @@ export function drawMode(t: Tool): 'none' | 'one' | 'two' | 'many' {
     case 'road':
       return 'many';
     case 'structure':
-      return t.what === 'wall' || t.what === 'partition' || t.what === 'area' || t.what === 'work'
+      return t.what === 'wall' || t.what === 'partition' || t.what === 'work'
         ? 'many'
         : t.what === 'door'
           ? 'one'
@@ -44,7 +44,7 @@ const CHOICES: Record<Exclude<Module, 'zones'>, string[]> = {
   stations: ['station', 'staging'],
   routes: ['road', 'one-way'],
   exclusive: ['line', 'box'],
-  structure: ['wall', 'partition', 'machine', 'pillar', 'room', 'work', 'area', 'door', 'erase'],
+  structure: ['wall', 'partition', 'machine', 'pillar', 'room', 'work', 'door', 'erase'],
 };
 export const choicesOf = (m: Module): string[] => (m === 'zones' ? zoneTypesOf('zones').map((z) => z.id) : CHOICES[m]);
 export const DEFAULT_CHOICE: Record<Module, string> = {

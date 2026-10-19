@@ -3,7 +3,7 @@ import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { addRoad } from '../model/roads';
 import { addRoute } from '../model/routes';
-import { addArea, addBox, addDoor, addLine, addRoom, addWorkArea } from '../model/structure/ops';
+import { addBox, addDoor, addLine, addRoom, addWorkArea } from '../model/structure/ops';
 import { eraseRect } from '../model/structure/trace';
 import { addStagingArea } from '../model/staging';
 import { addStation, moveStation } from '../model/stations';
@@ -36,7 +36,7 @@ export function useDrawTools(i: DrawToolsInput) {
   /** The Structure tools that act on one click or on two corners; true when this click was theirs (walls, partitions and areas go on collecting points). */
   const structurePoint = (what: string, p: P): boolean => {
     if (!data) return true;
-    if (what === 'wall' || what === 'partition' || what === 'area' || what === 'work') return false;
+    if (what === 'wall' || what === 'partition' || what === 'work') return false;
     if (what === 'door') {
       const r = addDoor(data, p);
       if (!r.id) notify.warning(copy.structure.hints.door, undefined, 'structure-door');
@@ -138,16 +138,8 @@ export function useDrawTools(i: DrawToolsInput) {
 
   const finish = () => {
     if (!data || fleetLive === undefined) return;
-    if (
-      tool.kind === 'structure' &&
-      (tool.what === 'wall' || tool.what === 'partition' || tool.what === 'area' || tool.what === 'work')
-    ) {
-      const r =
-        tool.what === 'work'
-          ? addWorkArea(data, drawing)
-          : tool.what === 'area'
-            ? addArea(data, drawing)
-            : addLine(data, tool.what, drawing);
+    if (tool.kind === 'structure' && (tool.what === 'wall' || tool.what === 'partition' || tool.what === 'work')) {
+      const r = tool.what === 'work' ? addWorkArea(data, drawing) : addLine(data, tool.what, drawing);
       if (!r.id) {
         notify.warning(copy.routes.tooShort, undefined, 'structure-short');
         return;

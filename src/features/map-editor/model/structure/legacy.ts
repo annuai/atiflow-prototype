@@ -21,3 +21,16 @@ export function withoutSections(m: MapModel3d | undefined): MapModel3d | undefin
     }),
   };
 }
+
+/**
+ * A plain floor Area (height 0) and a Work area were the same thing drawn twice. Floor patches become Work areas (a name over a tinted patch); a raised area (height above 0) stays as it was.
+ */
+export function floorAreasAreWorkAreas(m: MapModel3d | undefined): MapModel3d | undefined {
+  if (!m?.elements.some((e) => e.kind === 'area' && !e.work && e.height === 0)) return m;
+  return {
+    ...m,
+    elements: m.elements.map((e) =>
+      e.kind === 'area' && !e.work && e.height === 0 ? { ...e, work: true, label: e.label ?? e.name } : e,
+    ),
+  };
+}

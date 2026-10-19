@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { MapData } from '@/features/map-editor';
 import { structureSite } from '@/features/map-editor/model/structure/derive';
 import { structureHits } from '@/features/map-editor/model/structure/collide';
-import { withoutSections } from '@/features/map-editor/model/structure/legacy';
+import { floorAreasAreWorkAreas, withoutSections } from '@/features/map-editor/model/structure/legacy';
 import { structureDxf } from '@/features/map-editor/model/structure/dxf';
 import { publishProblems } from '@/features/map-editor/model/validate';
 import {
@@ -404,5 +404,40 @@ describe('tracing again', () => {
     expect(modelOf(again).elements.filter((e) => e.traced)).toHaveLength(traced);
     expect(modelOf(again).elements.filter((e) => !e.traced)).toHaveLength(1);
     expect(modelOf(retraceAll(again)).elements).toHaveLength(traced + 1); // twice gives the same, not double
+  });
+});
+
+describe('areas and work areas are one thing', () => {
+  it('a saved floor patch becomes a Work area, a raised area stays', () => {
+    const m = {
+      elements: [
+        {
+          id: 'E1',
+          kind: 'area',
+          points: [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+          ],
+          height: 0,
+          name: 'Bay',
+        },
+        {
+          id: 'E2',
+          kind: 'area',
+          points: [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+          ],
+          height: 2,
+        },
+      ],
+      hiddenWalls: [],
+      hiddenEquipment: [],
+    } as never;
+    const out = floorAreasAreWorkAreas(m)!.elements;
+    expect(out[0]).toMatchObject({ work: true, label: 'Bay' });
+    expect(out[1]).not.toHaveProperty('work');
   });
 });

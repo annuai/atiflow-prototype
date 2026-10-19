@@ -57,7 +57,7 @@ export function ElementForm({
       </button>
       <div className="flex flex-wrap items-center gap-2">
         <Badge size="md" color="gray">
-          {copy.structure.tools[e.kind === 'area' && e.work ? 'work' : e.kind]}
+          {copy.structure.tools[e.kind === 'area' ? 'work' : e.kind]}
         </Badge>
         <span className="size-3 rounded-full ring-1 ring-secondary" style={{ background: elementColor(data, e) }} />
         <span className="text-xs text-tertiary">{e.id}</span>

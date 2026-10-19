@@ -8,6 +8,7 @@ import { DrawingLayer, LocatePulse, RoadHits, StagingLayer, StationLayer, ZoneLa
 import { StationLink } from './layers/StationLink';
 import { RouteNodes } from './layers/RouteNodes';
 import { StructureLayer } from './layers/StructureLayer';
+import { ZoneHandles } from './layers/ZoneHandles';
 import { ZoomControls } from './layers/ZoomControls';
 import type { Tool } from './tools';
 import { usePointerTools } from './usePointerTools';
@@ -190,13 +191,7 @@ export function MapCanvas({
       >
         <path d={layers.grid} fill="none" stroke="#e5e7eb" strokeWidth={1} vectorEffect="non-scaling-stroke" />
         <path d={layers.floor} fill="#ffffff" stroke="#d4d4d8" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-        <ZoneLayer
-          under={data}
-          zones={data.zones}
-          vp={vp}
-          isSelected={isSelected}
-          handles={selectedZone && { zone: selectedZone, editable, bodyDrag: mode === 'none', onShape: onZoneShape }}
-        />
+        <ZoneLayer under={data} zones={data.zones} vp={vp} isSelected={isSelected} />
         <path d={layers.machines} fill="#d8dcd8" fillOpacity={0.75} pointerEvents="none" />
         <StructureLayer
           data={data}
@@ -216,6 +211,15 @@ export function MapCanvas({
           onBox={onElementBox}
           onPoints={onElementPoints}
         />
+        {selectedZone && (
+          <ZoneHandles // (above the structure, so the walls and Work areas drawn under a zone never take its handles)
+            zone={selectedZone}
+            vp={vp}
+            editable={editable}
+            bodyDrag={mode === 'none'}
+            onShape={onZoneShape}
+          />
+        )}
         <StagingLayer
           staging={staging}
           isSelected={isSelected}
