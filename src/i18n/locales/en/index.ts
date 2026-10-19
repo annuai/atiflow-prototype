@@ -22,12 +22,14 @@ import { common } from './common';
 import { ai } from './ai';
 import { support } from './support';
 import { search } from './search';
+import { delight } from './delight';
 import { preferences } from './preferences';
 import { settings } from './settings';
 import { shell } from './shell';
 
 /** Every area of the interface in English (the master). Add an area here, then in each language's `index.ts`. */
 export const catalog = {
+  delight,
   common,
   auth,
   shell,

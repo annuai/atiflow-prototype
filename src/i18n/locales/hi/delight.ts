@@ -1,0 +1,27 @@
+import type { Messages } from '../../types';
+import type { delight } from '../en/delight';
+
+export const messages: Messages<typeof delight> = {
+  robot: [
+    'मज़े करो!',
+    'अगर कोई कर सकता है, तो वो तुम हो',
+    'लो, थोड़ी ⚡ ले लो',
+    'तुम बहुत बढ़िया काम कर रहे हो!',
+    'आज तुम अच्छे लग रहे हो',
+  ],
+  fleet: 'बेड़ा चल पड़ा!',
+  charge: 'चार्ज हो रहा है… 100%',
+  dance: 'मुझे देखो!',
+  coffee: 'ब्रेक का समय?',
+  hello: 'नमस्ते!',
+  beep: 'बीप बूप!',
+  party: 'पार्टी का समय!',
+  konami: 'तुमने ढूँढ लिया!',
+  logo: 'Ati Flow की ओर से नमस्ते!',
+  clicks: ['बीप बीप!', 'ध्यान से, मैं काम कर रहा हूँ!', 'नमस्ते!', 'पौं!'],
+  morning: (name) => `सुप्रभात, ${name}!`,
+  late: 'शिफ्ट खत्म, घर जाओ!',
+  firstWorkflow: 'आपका पहला प्रकाशित वर्कफ़्लो!',
+  firstMap: 'आपका पहला मैप आ गया!',
+  allClear: 'सभी कॉल निपट गए। सब ठीक है!',
+};

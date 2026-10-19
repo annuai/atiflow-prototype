@@ -1,0 +1,25 @@
+/** Easter eggs and small celebrations (the robot that drives across the page). A little fun, never needed to use the app. */
+export const delight = {
+  robot: [
+    'Have fun!',
+    'If anyone can, it’s you',
+    'Here, take some ⚡',
+    'You’re doing great work!',
+    'You look nice today',
+  ],
+  fleet: 'Fleet on the move!',
+  charge: 'Charging… 100%',
+  dance: 'Look at me go!',
+  coffee: 'Break time?',
+  hello: 'Hello!',
+  beep: 'Beep boop!',
+  party: 'Party time!',
+  konami: 'You found it!',
+  logo: 'Ati Flow says hi!',
+  clicks: ['Beep beep!', 'Careful, I’m working!', 'Hi there!', 'Honk!'],
+  morning: (name: string) => `Good morning, ${name}!`,
+  late: 'Shift’s over, go home!',
+  firstWorkflow: 'Your first published workflow!',
+  firstMap: 'Your first map is in!',
+  allClear: 'All calls handled. All clear!',
+} as const;

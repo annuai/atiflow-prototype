@@ -6,6 +6,7 @@ import { SceneManager, type SceneSource } from './SceneManager';
 import { renderScene } from './SceneRenderer';
 import { CameraRig } from './runtime/cameraRig';
 import { Layers } from './runtime/layers';
+import { EggRobots } from './runtime/eggRobot';
 import { Pointer } from './runtime/pointer';
 import { RobotLayer } from './runtime/robotLayer';
 import { Stage } from './runtime/stage';
@@ -14,6 +15,7 @@ import { Stage } from './runtime/stage';
 export class Engine {
   private readonly s: Stage;
   private readonly robots: RobotLayer;
+  private readonly eggs: EggRobots;
   private readonly layers: Layers;
   private readonly rig: CameraRig;
   private readonly pointer: Pointer;
@@ -28,6 +30,7 @@ export class Engine {
   constructor(private holder: HTMLElement) {
     this.s = new Stage(holder);
     this.robots = new RobotLayer(this.s);
+    this.eggs = new EggRobots(this.s.scene);
     this.layers = new Layers(this.s, this.robots);
     this.rig = new CameraRig(this.s, this.robots, this.layers);
     this.robots.rig = this.rig;
@@ -110,6 +113,10 @@ export class Engine {
   }
   updateRobots(batch: RobotTelemetry[]) {
     this.robots.updateRobots(batch);
+  }
+  /** Easter egg: a robot with a ribbon drives across the floor in front of the camera. */
+  egg(text: string) {
+    this.eggs.launch(text, this.s.camera, this.s.controls.target);
   }
   clearRobots() {
     this.robots.clearRobots();
@@ -230,6 +237,7 @@ export class Engine {
       this.s.renderer.render(this.s.scene, this.s.camera);
       return;
     }
+    this.eggs.update(dt);
     this.robots.animate(time);
     this.robots.updateSelectedPath();
     // labels: zone labels fade when close, station labels when far
@@ -264,6 +272,7 @@ export class Engine {
   }
   dispose() {
     cancelAnimationFrame(this.raf);
+    this.eggs.dispose();
     this.s.manager.dispose();
     this.s.active = [];
     this.unsub.forEach((u) => u());

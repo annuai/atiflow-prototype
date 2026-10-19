@@ -9,6 +9,7 @@ import { forgetSearches, recentSearches, rememberSearch } from '../recent';
 import { searchRegistry } from '../registry';
 import type { SearchResult } from '../types';
 import { Marked } from './ResultCard';
+import { runEgg } from '@/features/delight';
 import { useSearch } from './useSearch';
 import './search.css';
 
@@ -112,7 +113,8 @@ export function SearchPalette({ placeholder }: { placeholder: string }) {
       }
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (active >= 0 && items[active]) choose(items[active], active);
+      if (runEgg(q)) close();
+      else if (active >= 0 && items[active]) choose(items[active], active);
       else if (page?.exact) openResult(page.exact, 0);
       else if (text) seeAll(text);
     }

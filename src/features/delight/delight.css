@@ -1,0 +1,240 @@
+/* Easter eggs: the login robot and ribbon, driving left to right along the top edge of the page card. */
+@keyframes egg-drive {
+  from {
+    translate: -100% 0;
+  }
+  to {
+    translate: var(--lane) 0;
+  }
+}
+/* the robot's nose (the right end of the group) reaches the middle, waits there while the battery fills, then drives on */
+@keyframes egg-drive-stop {
+  0% {
+    translate: -100% 0;
+  }
+  38% {
+    translate: calc(var(--lane) / 2 - 100%) 0;
+  }
+  62% {
+    translate: calc(var(--lane) / 2 - 100%) 0;
+  }
+  100% {
+    translate: var(--lane) 0;
+  }
+}
+.egg-lane {
+  position: fixed;
+  z-index: 60;
+  height: 54px;
+  margin-top: -54px; /* wheels rest just above the card's top edge */
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%);
+}
+.egg-drive {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  align-items: flex-end;
+  animation: egg-drive var(--time) var(--delay, 0s) linear both;
+}
+.egg-drive.egg-stops {
+  animation-name: egg-drive-stop;
+}
+.egg-paused {
+  animation-play-state: paused;
+}
+.egg-tail {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  margin-right: -1px;
+}
+.egg-tip {
+  width: 12px;
+  height: 18px;
+  flex-shrink: 0;
+  transform: scaleX(-1);
+}
+.egg-ribbon {
+  background: #33bab1;
+  color: #fff;
+  font-size: 12px;
+  line-height: 18px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+.egg-bot {
+  position: relative;
+  width: 62px;
+  height: 54px;
+  flex-shrink: 0;
+  overflow: hidden;
+  transform: scaleX(-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.egg-bot img {
+  position: absolute;
+  left: -54%;
+  top: -24%;
+  width: 197%;
+  height: 143%;
+  max-width: none;
+  pointer-events: none;
+}
+@keyframes egg-honk {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  25% {
+    translate: 0 -4px;
+  }
+  60% {
+    translate: 0 -2px;
+  }
+}
+.egg-honk {
+  animation: egg-honk 0.4s ease 2;
+}
+/* battery that fills while the robot charges */
+@keyframes egg-battery {
+  0%,
+  34% {
+    opacity: 0;
+  }
+  40%,
+  64% {
+    opacity: 1;
+  }
+  70%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes egg-fill {
+  0%,
+  40% {
+    width: 0;
+  }
+  60%,
+  100% {
+    width: 100%;
+  }
+}
+.egg-battery {
+  position: absolute;
+  left: calc(50% + 14px);
+  bottom: 14px;
+  width: 30px;
+  height: 16px;
+  border: 2px solid #33bab1;
+  border-radius: 3px;
+  opacity: 0;
+  animation: egg-battery var(--time) linear both;
+}
+.egg-battery i {
+  display: block;
+  height: 100%;
+  background: #22c55e;
+  animation: egg-fill var(--time) linear both;
+}
+/* dancer: stays where it is, spins and jumps */
+@keyframes egg-dance {
+  0% {
+    transform: translate(-50%, 0) rotate(0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  20% {
+    transform: translate(-50%, -14px) rotate(-12deg);
+  }
+  35% {
+    transform: translate(-50%, 0) rotate(12deg);
+  }
+  50% {
+    transform: translate(-50%, -14px) rotate(-12deg);
+  }
+  65% {
+    transform: translate(-50%, 0) rotate(12deg);
+  }
+  80% {
+    transform: translate(-50%, -18px) rotate(360deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 0) rotate(360deg);
+    opacity: 0;
+  }
+}
+.egg-dancer {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  margin-top: -54px;
+  pointer-events: none;
+  animation: egg-dance 4.5s ease-in-out both;
+}
+/* confetti */
+@keyframes egg-fall {
+  from {
+    transform: translate(0, -20px) rotate(0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--dx), 105vh) rotate(var(--spin));
+    opacity: 1;
+  }
+}
+.egg-confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  overflow: hidden;
+  pointer-events: none;
+}
+.egg-confetti span {
+  position: absolute;
+  top: 0;
+  border-radius: 1px;
+  animation: egg-fall linear both;
+}
+/* the logo, after five clicks */
+@keyframes egg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.egg-spin {
+  animation: egg-spin 0.8s ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .egg-drive,
+  .egg-dancer {
+    animation: none;
+    translate: 40% 0;
+  }
+  .egg-dancer {
+    translate: none;
+    transform: translate(-50%, 0);
+  }
+  .egg-battery {
+    animation: none;
+    opacity: 1;
+  }
+  .egg-lane {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  .egg-spin {
+    animation: none;
+  }
+}

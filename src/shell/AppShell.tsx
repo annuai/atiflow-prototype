@@ -6,6 +6,7 @@ import { Scrim } from '@/components/motion/Scrim';
 import { workspaceById, workspaceHome, workspaceOfPath, workspacesOf, type WorkspaceId } from '@/features/access';
 import { authStore, useAuth } from '@/features/auth/authStore';
 import { AtiAiDock, atiAiStore } from '@/features/ati-ai';
+import { Delight } from '@/features/delight';
 import { SupportWidget, toggleSupport, useSupportUnread } from '@/features/support';
 import { Sidebar } from './sidebar';
 import { Topbar } from './Topbar';
@@ -79,6 +80,7 @@ export function AppShell({ useNavModel, searchPlaceholder, children }: Props) {
       </div>
       <AtiAiDock />
       <SupportWidget />
+      <Delight />
     </div>
   );
 }
