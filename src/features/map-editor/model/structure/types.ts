@@ -1,5 +1,5 @@
 /**
- * The 3D structure of a map as a person edits it: elements (walls, partitions, machines, pillars, floor areas, doors) in sections that carry a colour and a label. One floor; every
+ * The 3D structure of a map as a person edits it: elements (walls, partitions, machines, pillars, floor areas, doors) One floor; every
  * element has its own height. The lidar estimate (`MapData.structure`) stays as it was found: elements are what a person drew or traced from it, and `hidden*` lists what of the
  * estimate has been removed or replaced, so nothing is ever lost and the estimate can be brought back.
  */
@@ -8,9 +8,7 @@ export type ElementKind = 'wall' | 'partition' | 'machine' | 'pillar' | 'area' |
 
 interface Common {
   id: string;
-  /** the section it belongs to (its colour and label) */
-  section?: string;
-  /** own colour (`#rrggbb`): wins over the section's */
+  /** own colour (`#rrggbb`); without one the kind's own colour is used */
   color?: string;
   /** text shown on top of it (machines, areas) */
   label?: string;
@@ -61,20 +59,10 @@ export interface DoorElement extends Common {
 }
 export type StructureElement = LineElement | BoxElement | AreaElement | DoorElement;
 
-/** A group of elements that share a colour and a label (for example "ASRS & Preparation"). */
-export interface Section {
-  id: string;
-  name: string;
-  color: string;
-  /** show the name as a label over the section in 3D */
-  label: boolean;
-}
-
 export interface MapModel3d {
   elements: StructureElement[];
-  sections: Section[];
   /** indexes into `MapData.structure.walls` / `.equipment` that are removed or replaced by an element: they are not shown and can be brought back */
   hiddenWalls: number[];
   hiddenEquipment: number[];
 }
-export const emptyModel = (): MapModel3d => ({ elements: [], sections: [], hiddenWalls: [], hiddenEquipment: [] });
+export const emptyModel = (): MapModel3d => ({ elements: [], hiddenWalls: [], hiddenEquipment: [] });

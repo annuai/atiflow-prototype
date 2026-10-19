@@ -7,7 +7,7 @@ import type { useDrawTools } from '../canvas/useDrawTools';
 import { copy } from '../copy';
 import { hintFor } from '../model/hints';
 import { addRouteNode, moveRouteNode } from '../model/routes';
-import { insertPoint, moveElements, setBox, setPoint } from '../model/structure/ops';
+import { insertPoint, moveElements, setBox, setPoint, setPoints } from '../model/structure/ops';
 import { moveStation, updateStation } from '../model/stations';
 import { updateStagingArea } from '../model/staging';
 import { setZoneShape } from '../model/zones';
@@ -93,6 +93,7 @@ export function EditorStage({
           editor.edit((m) => moveElements(m, set, dx, dy), `elem:${set.join()}`);
         }}
         onElementPoint={(id, i, to) => editor.edit((m) => setPoint(m, id, i, to), `point:${id}:${i}`)}
+        onElementPoints={(id, pts) => editor.edit((m) => setPoints(m, id, pts), `pts:${id}`)}
         onElementBox={(id, b) => editor.edit((m) => setBox(m, id, b), `box:${id}`)}
         onElementAddPoint={(id, at) => {
           const r = insertPoint(data, id, at);

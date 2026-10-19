@@ -13,6 +13,7 @@ import type {
 import type { MapData, MapZone, ZoneShape } from '../../model/types';
 import type { useViewport } from '../useViewport';
 import { polyPoints } from '../layers';
+import { boxAround, carry } from '../../model/structure/transform';
 import { ZoneHandles } from './ZoneHandles';
 
 type Vp = ReturnType<typeof useViewport>;
@@ -35,6 +36,8 @@ export interface StructureLayerProps {
   onMove(id: string, dx: number, dy: number): void;
   onPoint(id: string, index: number, to: P): void;
   onBox(id: string, b: { x: number; y: number; w: number; d: number; rot: number }): void;
+  /** a wall, partition or outline is resized or turned as a whole with its eight handles and the rotate handle */
+  onPoints(id: string, points: P[]): void;
 }
 
 /** A black box with white text, the way zones are labelled (kept at a constant pixel size). */
@@ -50,6 +53,37 @@ function Label({ text, at, vp, dy = 0 }: { text: string; at: P; vp: Vp; dy?: num
   );
 }
 
+/** Eight handles and a rotate handle round a wall, partition or outline (the same ones machines and zones have). */
+function PointsBox({
+  element,
+  vp,
+  onPoints,
+}: {
+  element: LineElement | AreaElement;
+  vp: Vp;
+  onPoints(id: string, points: P[]): void;
+}) {
+  const from = boxAround(element.points); // (what this render's drag starts from)
+  const zone: MapZone = {
+    id: element.id,
+    type: 'area',
+    name: element.name ?? element.id,
+    shape: { kind: 'rect', cx: from.cx, cy: from.cy, w: from.w, h: from.h, rot: 0 },
+    polygon: [],
+    props: {},
+  };
+  return (
+    <ZoneHandles
+      zone={zone}
+      vp={vp}
+      editable
+      bodyDrag={false}
+      onShape={(_, shape: ZoneShape) => {
+        if (shape.kind === 'rect') onPoints(element.id, carry(element.points, from, shape));
+      }}
+    />
+  );
+}
 const isWork = (e: StructureElement) => e.kind === 'area' && !!e.work;
 const asZone = (e: BoxElement): MapZone => ({
   id: e.id,
@@ -77,6 +111,7 @@ export function StructureLayer({
   onMove,
   onPoint,
   onBox,
+  onPoints,
 }: StructureLayerProps) {
   const m = modelOf(data);
   const k = Math.abs(vp.X(1) - vp.X(0)); // svg units per metre
@@ -329,16 +364,6 @@ export function StructureLayer({
           if (e.kind === 'door') return doorEl(e, sel);
           return boxEl(e as BoxElement, color, sel);
         })}
-      {m.sections.map((s) => {
-        const mine = m.elements.filter((e) => e.section === s.id);
-        if (!s.label || !mine.length) return null;
-        const pts = mine.flatMap((e): P[] => ('points' in e ? e.points : [[e.x, e.y]]));
-        const x0 = Math.min(...pts.map((p) => p[0])),
-          x1 = Math.max(...pts.map((p) => p[0])),
-          y0 = Math.min(...pts.map((p) => p[1])),
-          y1 = Math.max(...pts.map((p) => p[1]));
-        return <Label key={s.id} text={s.name} at={[(x0 + x1) / 2, (y0 + y1) / 2]} vp={vp} dy={-16} />;
-      })}
       {selected && editable && selecting && (selected.kind === 'machine' || selected.kind === 'pillar') && (
         <ZoneHandles
           zone={asZone(selected)}
@@ -350,6 +375,9 @@ export function StructureLayer({
               onBox(selected.id, { x: shape.cx, y: shape.cy, w: shape.w, d: shape.h, rot: shape.rot });
           }}
         />
+      )}
+      {selected && editable && selecting && 'points' in selected && (
+        <PointsBox element={selected} vp={vp} onPoints={onPoints} />
       )}
       {selected &&
         editable &&

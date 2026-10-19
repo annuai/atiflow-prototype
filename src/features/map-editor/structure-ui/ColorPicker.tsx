@@ -3,7 +3,7 @@ import { cx } from '@/utils/cx';
 import { PALETTE } from '../model/structure/palette';
 
 /**
- * A colour for an element or a section: the preset palette (soft colours that read well behind a label), a crossed swatch for "use the section's colour" (when `inherit` is given), and a custom
+ * A colour for an element: the preset palette (soft colours that read well behind a label), a crossed swatch for "use the kind's colour" (when `inherit` is given), and a custom
  * colour box. Returns `#rrggbb`, or undefined for the crossed swatch.
  */
 export function ColorPicker({
@@ -17,7 +17,7 @@ export function ColorPicker({
   label: string;
   value: string | undefined;
   onChange(v: string | undefined): void;
-  /** text of the "use the section / kind colour" swatch; omit when a colour is always needed */
+  /** text of the "use the kind colour" swatch; omit when a colour is always needed */
   inherit?: string;
   custom: string;
   disabled?: boolean;

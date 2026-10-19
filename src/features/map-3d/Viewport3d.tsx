@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Cube01 } from '@untitledui/icons';
-import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 import { EmptyState } from '@/components/data/EmptyState';
 import { Skeleton } from '@/components/skeleton/Skeleton';
 import type { NavGraph, SiteLayout } from '@/core/types';
@@ -11,7 +10,6 @@ import { localized } from '@/i18n';
 import { reportError } from '@/platform';
 import { copy } from './copy';
 import { elementsInScreenRect, onPick, outline, pickAt } from './picking';
-import type { WallSource } from './siteOf';
 
 interface Props {
   site: SiteLayout | null;
@@ -21,16 +19,13 @@ interface Props {
   multi: boolean;
   onPick(id: string | null, additive: boolean): void;
   onBox(ids: string[], additive: boolean): void;
-  source: WallSource;
-  onSource(s: WallSource): void;
-  hasDwg: boolean;
 }
 
 /**
  * The structure of the map in 3D, live: the same engine as the Live Floor with the map's lanes and stations, redrawn whenever the draft changes (the camera stays where it is). Click picks an
  * element and outlines it; Shift (or Select multiple) adds to the selection and a drag draws a box round elements. The engine lives while this is on screen and is freed when it is not.
  */
-export function Viewport3d({ site, nav, selectedIds, multi, onPick: pick, onBox, source, onSource, hasDwg }: Props) {
+export function Viewport3d({ site, nav, selectedIds, multi, onPick: pick, onBox }: Props) {
   const holder = useRef<HTMLDivElement>(null);
   const engine = useRef<Engine | null>(null);
   const [ready, setReady] = useState(false);
@@ -131,23 +126,6 @@ export function Viewport3d({ site, nav, selectedIds, multi, onPick: pick, onBox,
           }}
         />
       )}
-      <div className="absolute top-3 left-3 flex items-center gap-2 rounded-lg bg-primary/90 p-1.5 text-xs text-secondary shadow-xs ring-1 ring-secondary">
-        {copy.view3d.wallsFrom}
-        <ButtonGroup
-          size="sm"
-          aria-label={copy.view3d.wallsFrom}
-          selectedKeys={[source]}
-          onSelectionChange={(k) => {
-            const v = [...k][0];
-            if (v) onSource(v as WallSource);
-          }}
-        >
-          <ButtonGroupItem id="lidar">{copy.view3d.lidar}</ButtonGroupItem>
-          <ButtonGroupItem id="dwg" isDisabled={!hasDwg}>
-            {copy.view3d.dwg}
-          </ButtonGroupItem>
-        </ButtonGroup>
-      </div>
       <p className="pointer-events-none absolute bottom-3 left-3 rounded-md bg-primary/90 px-2 py-1 text-xs text-secondary shadow-xs ring-1 ring-secondary">
         {copy.view3d.summary(site.walls.length, site.equipment.length)}
       </p>

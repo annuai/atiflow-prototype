@@ -1,11 +1,10 @@
 import type { NavGraph, SiteLayout } from '@/core/types';
 import type { MapData } from '@/features/map-editor';
-import { layoutOf, type WallSource } from '@/features/map-import';
+import { layoutOf } from '@/features/map-import';
 
 /** The scene's site: the layout plus a floor (the DWG's floor polygons, or the rectangle around everything). */
-export { layoutOf, type WallSource };
-export function siteOf(name: string, data: MapData, source: WallSource): SiteLayout | null {
-  const l = layoutOf(data, source);
+export function siteOf(name: string, data: MapData): SiteLayout | null {
+  const l = layoutOf(data, data.dwg ? 'dwg' : 'lidar'); // a map that already holds a DWG layer keeps drawing its walls
   if (!l) return null;
   const xs: number[] = [0],
     ys: number[] = [0];

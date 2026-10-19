@@ -37,7 +37,7 @@ export function areasToWorkAreas(d: {
   model3d?: MapData['model3d'];
 }): Pick<MapData, 'zones' | 'model3d'> {
   const old = d.zones.filter((z) => z.type === 'area');
-  const model = d.model3d ?? { elements: [], sections: [], hiddenWalls: [], hiddenEquipment: [] };
+  const model = d.model3d ?? { elements: [], hiddenWalls: [], hiddenEquipment: [] };
   if (!old.length) return { zones: d.zones, ...(d.model3d ? { model3d: d.model3d } : {}) };
   const have = new Set(model.elements.map((e) => (e.kind === 'area' ? e.fromZone : undefined)));
   const added: StructureElement[] = old

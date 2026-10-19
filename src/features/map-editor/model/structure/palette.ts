@@ -1,6 +1,6 @@
 import type { ElementKind } from './types';
 
-/** User-interface friendly colours for sections and elements: soft, distinct from each other, readable behind a black label box. */
+/** User-interface friendly colours for elements: soft, distinct from each other, readable behind a black label box. */
 export const PALETTE: { id: string; color: string }[] = [
   { id: 'slate', color: '#94a3b8' },
   { id: 'stone', color: '#a8a29e' },

@@ -3,13 +3,12 @@ import { ArrowLeft, Copy01, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
-import { Select } from '@/components/base/select/select';
 import { copy } from '../copy';
 import { LocateButton } from '../components/LocateButton';
 import { NumberInput } from '../components/NumberInput';
 import { degrees, radians } from '../model/shape';
 import { elementColor } from '../model/structure/derive';
-import { duplicateElement, modelOf, updateElement } from '../model/structure/ops';
+import { duplicateElement, updateElement } from '../model/structure/ops';
 import type { StructureElement } from '../model/structure/types';
 import type { MapData } from '../model/types';
 import { ColorPicker } from './ColorPicker';
@@ -17,7 +16,7 @@ import { ColorPicker } from './ColorPicker';
 const num = (v: number) => (Number.isFinite(v) ? v : 0);
 
 /**
- * One element of the structure: its type, name, section, colour (the preset palette, or "the section's"), height, where it starts above the floor, thickness (walls and partitions), the text
+ * One element of the structure: its type, name, colour (the preset palette, or the kind's own), height, where it starts above the floor, thickness (walls and partitions), the text
  * shown on top (machines, pillars, areas), opacity (glass) and its place: points of a line or outline are dragged on the map, blocks have x / y / width / depth / rotation here.
  */
 export function ElementForm({
@@ -43,7 +42,6 @@ export function ElementForm({
   const e = element;
   const patch = (p: Partial<StructureElement>, key?: string) => edit((m) => updateElement(m, e.id, p), key);
   const [name, setName] = useSyncedState(e.name ?? '', e.id);
-  const sections = modelOf(data).sections;
   const box = e.kind === 'machine' || e.kind === 'pillar' ? e : null;
   const workArea = e.kind === 'area' && !!e.work;
   const line = e.kind === 'wall' || e.kind === 'partition' ? e : null;
@@ -75,20 +73,10 @@ export function ElementForm({
           if (ev.key === 'Enter') (ev.target as HTMLInputElement).blur();
         }}
       />
-      <Select
-        label={f.section}
-        size="sm"
-        isDisabled={!editable}
-        selectedKey={e.section ?? ''}
-        onSelectionChange={(k) => patch({ section: String(k) || undefined })}
-        items={[{ id: '', label: f.noSection }, ...sections.map((s) => ({ id: s.id, label: s.name }))]}
-      >
-        {(item) => <Select.Item {...item} />}
-      </Select>
       <ColorPicker
         label={f.color}
         value={e.color}
-        inherit={f.noSection}
+        inherit={f.defaultColor}
         custom={f.customColor}
         disabled={!editable}
         onChange={(color) => patch({ color })}

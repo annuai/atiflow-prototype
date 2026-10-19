@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Dotpoints01 } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
-import { Viewport3d, navOf, siteOf, type WallSource } from '@/features/map-3d';
+import { Viewport3d, navOf, siteOf } from '@/features/map-3d';
 import { copy } from '../copy';
 import { pickElement, selectIds } from '../model/structure/select';
 import type { MapData, Selection } from '../model/types';
@@ -17,8 +17,6 @@ export function Stage3d({
   onSelection,
   multi,
   onMulti,
-  source,
-  onSource,
 }: {
   name: string;
   data: MapData;
@@ -26,10 +24,8 @@ export function Stage3d({
   onSelection(sel: Selection): void;
   multi: boolean;
   onMulti(): void;
-  source: WallSource;
-  onSource(s: WallSource): void;
 }) {
-  const site = useMemo(() => siteOf(name, data, source), [name, data, source]);
+  const site = useMemo(() => siteOf(name, data), [name, data]);
   const nav = useMemo(() => navOf(data), [data]);
   const ids = selection?.kind === 'element' ? (selection.ids ?? [selection.id]) : [];
   return (
@@ -43,9 +39,6 @@ export function Stage3d({
           onSelection(id ? pickElement(selection, id, additive || multi) : additive || multi ? selection : null)
         }
         onBox={(boxed, additive) => onSelection(selectIds(selection, boxed, additive || multi))}
-        source={source}
-        onSource={onSource}
-        hasDwg={!!data.dwg}
       />
       <div className="absolute top-3 right-3">
         <Button

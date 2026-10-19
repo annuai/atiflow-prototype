@@ -1,6 +1,7 @@
 import type { NavGraph, SiteLayout } from '@/core/types';
 import { type FleetMap } from '@/features/maps';
 import { roadsFromLanes } from './roads';
+import { withoutSections } from './structure/legacy';
 import { areasToWorkAreas, workAreaOf } from './workAreas';
 import { fitRect, gateFromThin, polygonOf } from './shape';
 import type { MapData, MapZone, StagingAreaDef } from './types';
@@ -103,7 +104,6 @@ export function seedMapData(map: Pick<FleetMap, 'fleetLive'>, site: SiteLayout, 
       elements: site.zones
         .filter((z) => z.active && (fleet?.areas ?? []).includes(z.id))
         .map((z) => workAreaOf(z, nav.fleets)),
-      sections: [],
       hiddenWalls: [],
       hiddenEquipment: [],
     },
@@ -119,7 +119,7 @@ export function normaliseData(
     ...d,
     roads: d.roads ?? roadsFromLanes(d.lanes),
     stagingAreas: (d.stagingAreas ?? []).map((a) => ({ ...a, retrieval: a.retrieval ?? 'fifo' })),
-    ...areasToWorkAreas({ zones: d.zones.map(normaliseZone), model3d: d.model3d }),
+    ...areasToWorkAreas({ zones: d.zones.map(normaliseZone), model3d: withoutSections(d.model3d) }),
   } as MapData;
 }
 

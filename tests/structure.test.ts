@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { MapData } from '@/features/map-editor';
 import { structureSite } from '@/features/map-editor/model/structure/derive';
 import { structureHits } from '@/features/map-editor/model/structure/collide';
+import { withoutSections } from '@/features/map-editor/model/structure/legacy';
 import { structureDxf } from '@/features/map-editor/model/structure/dxf';
 import { publishProblems } from '@/features/map-editor/model/validate';
 import {
@@ -10,20 +11,16 @@ import {
   addDoor,
   addLine,
   addRoom,
-  addSection,
   addWorkArea,
   deleteElements,
-  deleteSection,
   duplicateElement,
-  elementOf,
   modelOf,
   moveElement,
   setPoint,
-  setSection,
   updateElement,
   updateElements,
-  updateSection,
 } from '@/features/map-editor/model/structure/ops';
+import { boxAround, carry } from '@/features/map-editor/model/structure/transform';
 import { boxElements, elementsInRect, pickElement } from '@/features/map-editor/model/structure/select';
 import {
   eraseRect,
@@ -111,34 +108,32 @@ describe('structure elements', () => {
   });
 });
 
-describe('colours and sections', () => {
-  it("an element's own colour wins over its section's, which wins over the kind's", () => {
+describe('colours and labels', () => {
+  it("an element's own colour wins over its kind's", () => {
     let d = blank();
-    const s = addSection(d, 'ASRS & Preparation', '#93c5fd');
-    d = s.data;
     d = addBox(d, 'machine', [0, 0], [2, 2]).data;
     d = addBox(d, 'machine', [3, 0], [5, 2]).data;
-    d = addBox(d, 'machine', [6, 0], [8, 2]).data;
-    d = setSection(d, ['E1', 'E2'], s.id);
     d = updateElement(d, 'E2', { color: '#fda4af' });
     const eq = structureSite({ ...d, structure: undefined }).equipment;
-    expect(eq.map((q) => q.color)).toEqual(['#93c5fd', '#fda4af', '#9aa9a5']);
-    // recolouring the section recolours its elements, deleting it keeps the elements
-    d = updateSection(d, s.id, { color: '#fcd34d' });
-    expect(structureSite({ ...d, structure: undefined }).equipment[0].color).toBe('#fcd34d');
-    d = deleteSection(d, s.id);
-    expect(modelOf(d).elements).toHaveLength(3);
-    expect(elementOf(d, 'E1')?.section).toBeUndefined();
+    expect(eq.map((q) => q.color)).toEqual(['#9aa9a5', '#fda4af']);
   });
-  it('a machine label is carried to the scene, a section with a label gets one over its elements', () => {
-    let d = blank();
-    const s = addSection(d, 'Assembly workstations', '#86efac');
-    d = addBox(s.data, 'machine', [0, 0], [2, 2], { label: 'Press 1' }).data;
-    d = setSection(d, ['E1'], s.id);
-    const site = structureSite({ ...d, structure: undefined });
-    expect(site.equipment[0].label).toBe('Press 1');
-    expect(site.labels).toEqual([{ text: 'Assembly workstations', x: 1, y: 1, z: 1.8 + 1.5 }]);
-    expect(structureSite({ ...updateSection(d, s.id, { label: false }), structure: undefined }).labels).toEqual([]);
+  it('a machine label is carried to the scene', () => {
+    const d = addBox(blank(), 'machine', [0, 0], [2, 2], { label: 'Press 1' }).data;
+    expect(structureSite({ ...d, structure: undefined }).equipment[0].label).toBe('Press 1');
+  });
+  it('a map saved with sections keeps the colours people saw and loses the sections', () => {
+    const old = {
+      elements: [
+        { id: 'E1', kind: 'machine', x: 0, y: 0, w: 1, d: 1, rot: 0, height: 1, section: 's1' },
+        { id: 'E2', kind: 'machine', x: 3, y: 0, w: 1, d: 1, rot: 0, height: 1, section: 's1', color: '#fda4af' },
+      ],
+      sections: [{ id: 's1', name: 'ASRS', color: '#93c5fd', label: true }],
+      hiddenWalls: [],
+      hiddenEquipment: [],
+    } as never;
+    const m = withoutSections(old)!;
+    expect(m.elements.map((e) => e.color)).toEqual(['#93c5fd', '#fda4af']);
+    expect(JSON.stringify(m)).not.toContain('section');
   });
 });
 
@@ -364,5 +359,26 @@ describe('selecting several elements', () => {
     d = updateElements(d, ['E1', 'E2'], { color: '#93c5fd' });
     expect(modelOf(d).elements.every((e) => e.color === '#93c5fd')).toBe(true);
     expect(modelOf(deleteElements(d, ['E1', 'E2'])).elements).toHaveLength(0);
+  });
+});
+
+describe('resizing and turning a wall as a whole', () => {
+  it('carries points into a bigger or turned box', () => {
+    const pts: [number, number][] = [
+      [0, 0],
+      [10, 0],
+    ];
+    const from = boxAround(pts);
+    expect(from).toMatchObject({ cx: 5, cy: 0, w: 10 });
+    // twice as long, same place
+    expect(carry(pts, from, { ...from, w: 20, rot: 0 })).toEqual([
+      [-5, 0],
+      [15, 0],
+    ]);
+    // a quarter turn about its middle
+    const [a, b] = carry(pts, from, { ...from, rot: Math.PI / 2 });
+    expect(a[0]).toBeCloseTo(5);
+    expect(a[1]).toBeCloseTo(-5);
+    expect(b[1]).toBeCloseTo(5);
   });
 });

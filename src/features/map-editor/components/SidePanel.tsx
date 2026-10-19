@@ -25,8 +25,8 @@ import { ZoneForm, ZonesPanel } from './ZonesPanel';
 
 type Thing = NonNullable<Selection>;
 export interface SidePanelProps {
-  /** shown under the list or form of the open module (the DWG panel in the 3D view) */
-  footer?: ReactNode;
+  /** shown under the title (the 3D view's hint and its way back to 2D) */
+  notice?: ReactNode;
   mode: 'design' | 'simulation';
   module: Module | null;
   data: MapData;
@@ -235,6 +235,7 @@ export function SidePanel(p: SidePanelProps) {
       aria-label={mode === 'simulation' ? copy.sim.title : module ? copy.panelTitle[module] : copy.noTool.title}
     >
       <h2 className="border-b border-secondary px-4 py-4 text-md font-semibold text-primary">{title(p)}</h2>
+      {mode === 'design' && p.notice}
       {mode === 'simulation' && (
         <SimulationPanel
           data={data}
@@ -259,14 +260,6 @@ export function SidePanel(p: SidePanelProps) {
       {mode === 'design' && module === 'routes' && <RoutesSection {...p} />}
       {mode === 'design' && (module === 'exclusive' || module === 'zones') && <ZonesSection {...p} module={module} />}
       {mode === 'design' && module === 'structure' && <StructureSection {...p} />}
-      {p.footer && (
-        <details className="max-h-[55%] shrink-0 overflow-y-auto border-t border-secondary">
-          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-primary">
-            {copy.view3d.dwgSection.title}
-          </summary>
-          {p.footer}
-        </details>
-      )}
     </aside>
   );
 }

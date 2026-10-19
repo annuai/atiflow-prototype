@@ -1,14 +1,6 @@
 import type { MapData } from '../types';
 import { DEFAULTS, DOOR_WIDTH, PALETTE } from './palette';
-import {
-  emptyModel,
-  type BoxElement,
-  type ElementKind,
-  type MapModel3d,
-  type P,
-  type Section,
-  type StructureElement,
-} from './types';
+import { emptyModel, type BoxElement, type ElementKind, type MapModel3d, type P, type StructureElement } from './types';
 
 /** Pure edits of the 3D structure (the draft's `model3d`). Each returns a NEW MapData; the lidar estimate (`structure`) is never changed. */
 const round = (v: number) => Math.round(v * 100) / 100;
@@ -162,35 +154,18 @@ export function setPoint(data: MapData, id: string, index: number, to: P): MapDa
     ),
   }));
 }
+/** All the points of a wall, partition or outline at once (resized or turned as a whole). */
+export const setPoints = (data: MapData, id: string, points: P[]): MapData =>
+  withModel(data, (m) => ({
+    ...m,
+    elements: m.elements.map((e) => (e.id === id && 'points' in e ? ({ ...e, points } as StructureElement) : e)),
+  }));
 /** A copy of an element, moved a little so it can be told from the first. */
 export function duplicateElement(data: MapData, id: string, by: P = [1, 1]): { data: MapData; id: string | null } {
   const e = elementOf(data, id);
   if (!e) return { data, id: null };
   return append(data, { ...shift(e, by[0], by[1]), id: nextId(data), name: e.name ? `${e.name} copy` : undefined });
 }
-
-// ---------- sections ----------
-export function addSection(data: MapData, name: string, color: string): { data: MapData; id: string } {
-  const m = modelOf(data);
-  const id = `S${nextNumber(
-    m.sections.map((s) => s.id),
-    'S',
-  )}`;
-  const s: Section = { id, name: name.trim() || `Section ${m.sections.length + 1}`, color, label: true };
-  return { id, data: withModel(data, (x) => ({ ...x, sections: [...x.sections, s] })) };
-}
-export const updateSection = (data: MapData, id: string, patch: Partial<Omit<Section, 'id'>>): MapData =>
-  withModel(data, (m) => ({ ...m, sections: m.sections.map((s) => (s.id === id ? { ...s, ...patch } : s)) }));
-/** Delete a section: its elements stay, without a section. */
-export const deleteSection = (data: MapData, id: string): MapData =>
-  withModel(data, (m) => ({
-    sections: m.sections.filter((s) => s.id !== id),
-    elements: m.elements.map((e) => (e.section === id ? { ...e, section: undefined } : e)),
-    hiddenWalls: m.hiddenWalls,
-    hiddenEquipment: m.hiddenEquipment,
-  }));
-export const setSection = (data: MapData, ids: string[], section: string | undefined): MapData =>
-  withModel(data, (m) => ({ ...m, elements: m.elements.map((e) => (ids.includes(e.id) ? { ...e, section } : e)) }));
 
 /** A new point on a wall, partition or area where it was double-clicked (between the two points of the nearest piece). Returns the new point's index. */
 export function insertPoint(data: MapData, id: string, at: P): { data: MapData; index: number } {
@@ -255,7 +230,7 @@ export function addWorkArea(data: MapData, points: P[]): { data: MapData; id: st
   });
 }
 
-/** The same change for several elements at once (a colour, a section, a height). */
+/** The same change for several elements at once (a colour, a height). */
 export const updateElements = (data: MapData, ids: string[], patch: Partial<StructureElement>): MapData =>
   withModel(data, (m) => ({
     ...m,

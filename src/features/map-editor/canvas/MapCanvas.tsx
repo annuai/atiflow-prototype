@@ -40,6 +40,7 @@ interface Props {
   onElementMove(id: string, dx: number, dy: number): void;
   onElementPoint(id: string, index: number, to: P): void;
   onElementBox(id: string, b: { x: number; y: number; w: number; d: number; rot: number }): void;
+  onElementPoints(id: string, points: P[]): void;
   onElementAddPoint(id: string, at: P): void;
   /** Centre the view on a place and pulse it (a new `n` each time, so the same place can be shown again). */ locate?: {
     x: number;
@@ -90,6 +91,7 @@ export function MapCanvas({
   onElementMove,
   onElementPoint,
   onElementBox,
+  onElementPoints,
   onElementAddPoint,
   onMove,
   onZoneShape,
@@ -208,6 +210,7 @@ export function MapCanvas({
           onMove={onElementMove}
           onPoint={onElementPoint}
           onBox={onElementBox}
+          onPoints={onElementPoints}
         />
         <StagingLayer
           staging={staging}

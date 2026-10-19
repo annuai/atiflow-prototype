@@ -31,7 +31,7 @@ import { workflowsUsing } from './model/usage';
 import { useResetOnChange } from './hooks/useResetOnChange';
 import { useEditorView } from './hooks/useEditorView';
 import { Stage3d } from './components/Stage3d';
-import { dwgFooter } from './components/DwgFooter';
+import { view3dNotice } from './components/View3dNotice';
 import { publishProblems } from './model/validate';
 import { moveShape } from './model/shape';
 import { setZoneShape } from './model/zones';
@@ -151,7 +151,7 @@ export function MapEditorPage() {
   const tool: Tool = editable ? wantTool : SELECT; // a published version only allows looking
 
   const sim = useSimulationPanel(data, map?.fleetLive);
-  const v = useEditorView(!!data?.dwg, () => {
+  const v = useEditorView(() => {
     setModule('structure');
     setTool(SELECT);
     setDrawing([]);
@@ -290,8 +290,6 @@ export function MapEditorPage() {
               onSelection={setSelection}
               multi={multi}
               onMulti={v.toggleMulti}
-              source={v.source}
-              onSource={v.setSource}
             />
           ) : (
             <EditorStage
@@ -317,7 +315,7 @@ export function MapEditorPage() {
             />
           )}
           <SidePanel
-            footer={dwgFooter(v.view, data, current.id, !!isDraft, startDraft, editor.edit, v.setSource)}
+            notice={view3dNotice(v.view, v.setView)}
             mode={mode}
             module={module}
             data={data}
