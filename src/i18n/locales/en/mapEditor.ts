@@ -72,6 +72,12 @@ export const mapEditor = {
       erase: 'Click two corners of the region to erase: the estimate and the elements inside it go. Esc when done.',
     },
     list: {
+      traceWarn: {
+        title: 'Trace everything?',
+        body: (undo: string) =>
+          `Every wall and machine of the scan becomes an element you can edit. This can make a lot of small pieces, and cleaning them up may be hard. You can take it back at once with ${undo}.`,
+        confirm: 'Trace everything',
+      },
       elements: 'Elements',
       search: 'Search elements...',
       emptyTitle: 'No elements yet',
