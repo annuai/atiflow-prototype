@@ -4,6 +4,7 @@ import { Button } from '@/components/base/buttons/button';
 import { reportError } from '@/platform';
 import { copy } from './copy';
 import { Page } from '@/components/page';
+import { openSupport } from '@/features/support';
 
 /** A page that fails to draw must not leave a blank screen: say so, and offer to try again. (Keyed by the page, so moving to another page starts fresh.) */
 export class PageErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -24,9 +25,14 @@ export class PageErrorBoundary extends Component<{ children: ReactNode }, { fail
           </span>
           <h1 className="text-lg font-semibold text-primary">{copy.pageErrorTitle}</h1>
           <p className="text-sm text-tertiary">{copy.pageErrorText}</p>
-          <Button size="md" color="secondary" onPress={() => this.setState({ failed: false })}>
-            {copy.tryAgain}
-          </Button>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button size="md" color="secondary" onPress={() => this.setState({ failed: false })}>
+              {copy.tryAgain}
+            </Button>
+            <Button size="md" color="primary" onPress={() => openSupport({ view: 'new' })}>
+              {copy.startTicket}
+            </Button>
+          </div>
         </div>
       </Page>
     );

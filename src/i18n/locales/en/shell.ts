@@ -18,7 +18,8 @@ export const shell = {
   bootText: (failed: string) => `Could not load: ${failed}. Nothing was changed. Check your connection and try again.`,
   tryAgain: 'Try again',
   pageErrorTitle: 'This page could not be shown',
-  pageErrorText: 'Something went wrong while drawing it. Try again; if it keeps happening, tell a configurator.',
+  pageErrorText: 'Something went wrong while drawing it. Try again; if it keeps happening, start a support ticket.',
+  startTicket: 'Start a support ticket',
   notSavedTitle: (what: string) => `Your changes to ${what} were not saved`,
   notSavedText: (why: string) => `${why} They stay on screen and will be saved when it works again.`,
 } as const;

@@ -1002,3 +1002,6 @@ The three-dot menu of a Maps card has **Download map** above Delete map (`maps/c
 
 ## 104. 3D -> 2D opens on the same place (user request; the other way is section 99)
 Leaving the 3D view remembers the patch of floor it showed (`Engine.viewArea()`: the floor point in the middle of the picture and how many metres wide the picture is there; `Viewport3d onLeave`, `canvas/lastView.ts rememberView3d / takeView3d`), and the plan opens on it once, when its container has its real size (`useViewport.showArea`, `measured`; `MapCanvas`). Checked in the browser: after zooming in 3D the plan's visible width equalled the 3D view's width (59.07 m). Limit: the plan is always seen from straight above and north-up, so a 3D view turned to another direction shows the same centre and width, not the same angle.
+
+## 105. The page error points to support (user request)
+`shell/PageErrorBoundary.tsx`: the text now ends "...if it keeps happening, start a support ticket." (`shell.pageErrorText`, five languages) and a primary **Start a support ticket** button (`shell.startTicket`) beside Try again opens the support window on its New ticket form (`openSupport({ view: 'new' })`, nothing is sent until the person sends the ticket). Test: `tests/ui/pageError.test.tsx`.
