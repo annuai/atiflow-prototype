@@ -7,6 +7,7 @@ import { deviceStore, useDevices } from '../model/store';
 import { blankValues, shownFields, suggestName, validateNew, withoutHidden } from '../model/validate';
 import type { DeviceKind, FieldValue } from '../model/types';
 import { t } from '../text';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 interface Props {
   kind: DeviceKind;
@@ -89,7 +90,7 @@ function Form({ kind, preset, isOpen, onOpenChange }: Props) {
     });
     const problems = validateNew(kind, clean, existing);
     setErrors(problems);
-    if (Object.keys(problems).length) return;
+    if (Object.keys(problems).length) return focusFirstError();
     deviceStore.getState().add(kind.id, clean);
     onOpenChange(false);
     const done = t.modal.added(String(clean.name));

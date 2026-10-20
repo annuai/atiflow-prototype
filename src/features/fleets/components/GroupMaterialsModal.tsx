@@ -9,6 +9,7 @@ import { freeStations, validateGroupForm } from '../model/logic';
 import { mapById } from '../model/maps';
 import { fleetsStore, profileOf, useFleets } from '../model/store';
 import type { FleetId } from '@/data/fleets';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 interface Props {
   fleet: FleetId;
@@ -28,7 +29,7 @@ function Body({ fleet, rows, preselected, onOpenChange }: Props) {
     const v = { name, stationId, codes: [...sel] };
     const e = validateGroupForm(v, profile.groups);
     setErrors(e);
-    if (Object.keys(e).length) return;
+    if (Object.keys(e).length) return focusFirstError();
     fleetsStore.getState().createGroup(fleet, v);
     onOpenChange(false);
     const c = copy.groups.created(name.trim());

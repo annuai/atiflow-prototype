@@ -1,5 +1,5 @@
 import { NoResults } from '@/components/data/EmptyState';
-import { useSearchText } from '@/hooks/use-search-text';
+import { useUrlSearchText } from '@/hooks/use-search-text';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -23,8 +23,8 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
   const devices = useDevices((s) => s[kind.id]);
   const [adding, setAdding] = useState(false);
   const [preset, setPreset] = useState<Record<string, FieldValue>>();
-  const [searching, setSearching] = useState(false);
-  const { text: q, setText: setQ, matches } = useSearchText();
+  const { text: q, setText: setQ, matches } = useUrlSearchText('q');
+  const [searching, setSearching] = useState(!!q);
   const rows = devices.filter((d) =>
     matches(nameOf(d) + ' ' + kind.typeOf(d) + ' ' + fleetDirectory.nameOf(String(d.values.fleet ?? ''))),
   );

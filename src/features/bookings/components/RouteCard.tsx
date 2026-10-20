@@ -169,7 +169,7 @@ export function RouteCard({
       <div className="flex gap-3">
         <span className="relative h-[68px] w-[104px] shrink-0">
           <span className="flex size-full items-center justify-center overflow-hidden rounded-lg bg-secondary p-1.5">
-            <img src={picture} alt="" className="size-full object-contain" />
+            <img src={picture} alt="" className="size-full object-contain" loading="lazy" decoding="async" />
           </span>
         </span>
         <div className="flex h-[68px] min-w-0 flex-1 flex-col justify-between">

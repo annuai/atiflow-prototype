@@ -3,6 +3,7 @@ import type { shell } from '../en/shell';
 
 export const messages: Messages<typeof shell> = {
   menuOpen: 'மெனுவைத் திற',
+  skipToContent: 'முக்கிய உள்ளடக்கத்திற்குச் செல்',
   back: 'பின்செல்',
   forward: 'முன்செல்',
   search: 'தேடு',
@@ -15,7 +16,7 @@ export const messages: Messages<typeof shell> = {
   comingSoon: 'விரைவில்',
   searchConfigurator: 'ரோபோக்கள், நிலையங்கள், மண்டலங்களைத் தேடுங்கள்…',
   searchOperator: 'தேடு…',
-  searchSupervisor: 'நேரடி இயக்கங்கள், ஃப்ளீட்கள், பயணங்கள், பகுப்பாய்வுகளைத் தேடுங்கள்...',
+  searchSupervisor: 'நேரடி இயக்கங்கள், ஃப்ளீட்கள், பயணங்கள், பகுப்பாய்வுகளைத் தேடுங்கள்…',
   bootTitle: 'Ati Flow உங்கள் தரவை ஏற்ற முடியவில்லை',
   bootText: (failed) =>
     `ஏற்ற முடியவில்லை: ${failed}. எதுவும் மாற்றப்படவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.`,

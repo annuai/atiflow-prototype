@@ -16,7 +16,9 @@ export function DeviceTable({ kind, rows, onOpen }: { kind: DeviceKind; rows: De
       cell: (d) => (
         <div className="flex items-center gap-3">
           {kind.thumb(d)}
-          <span className="text-sm font-bold whitespace-nowrap text-primary">{nameOf(d)}</span>
+          <span translate="no" className="text-sm font-bold whitespace-nowrap text-primary">
+            {nameOf(d)}
+          </span>
         </div>
       ),
     },

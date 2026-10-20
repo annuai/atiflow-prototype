@@ -211,7 +211,7 @@ const HARDWARE_FIELDS: FieldDef[] = [
 /** The side-view illustration of the robot's type (src/assets/robots). Without a robot (empty state) the default type is shown. */
 const robotPicture = (cls: string, sherpaType?: unknown) => {
   const t = robotTypeByLabel(sherpaType);
-  return <img src={t.illustration} alt={t.label} className={cls} />;
+  return <img src={t.illustration} alt={t.label} className={cls} loading="lazy" decoding="async" />;
 };
 const hardwarePicture = (type: string, cls: string) => {
   const I = hwIcon(type);

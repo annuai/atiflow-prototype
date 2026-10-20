@@ -65,7 +65,13 @@ export function StationsStep({
             className="flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-xl border border-secondary bg-primary p-2 pr-4 text-left outline-focus-ring transition hover:bg-primary_hover focus-visible:outline-2"
           >
             <span className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary p-1">
-              <img src={robot.illustration} alt="" className="size-full object-contain" />
+              <img
+                src={robot.illustration}
+                alt=""
+                className="size-full object-contain"
+                loading="lazy"
+                decoding="async"
+              />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-md font-semibold text-primary">{robot.label}</span>

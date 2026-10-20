@@ -34,7 +34,7 @@ export const users = {
   },
   fleets: {
     label: 'Assigned fleets',
-    placeholder: 'Search fleets to add',
+    placeholder: 'Search fleets to add…',
     hint: 'They only see these fleets (robots, trips, alerts and reports). Configurators always see every fleet.',
     required: 'Select at least one fleet',
   },

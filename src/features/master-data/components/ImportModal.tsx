@@ -18,6 +18,7 @@ import { MethodStep } from './MethodStep';
 import { ProgressStep } from './ProgressStep';
 import { ReviewStep } from './ReviewStep';
 import { UploadStep } from './UploadStep';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 const BIG_IMPORT = 500;
 
@@ -115,7 +116,7 @@ export function ImportModal({ flow, dispatch, source }: Props) {
   const submitManual = () => {
     const e = validateMaterial(manual, materials);
     setErrors(e);
-    if (Object.keys(e).length) return;
+    if (Object.keys(e).length) return focusFirstError();
     masterDataStore.getState().addMaterials([{ code: manual.code, name: manual.name }]);
     close();
     notify.success(copy.manual.done.title, copy.manual.done.body, 'materials-added');

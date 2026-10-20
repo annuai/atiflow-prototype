@@ -449,7 +449,7 @@ export const messages: Messages<typeof insights> = {
     points: (n) => `${n} ಬಿಂದುಗಳು`,
     simSay: {
       start: (robot, from) => `${robot}: ${from} ನಿಂದ ಆರಂಭವಾಗುತ್ತಿದೆ`,
-      drive: (robot, to, m) => `${robot}: ${to} ಕಡೆಗೆ ಹೋಗುತ್ತಿದೆ, ${m} m`,
+      drive: (robot, to, m) => `${robot}: ${to} ಕಡೆಗೆ ಹೋಗುತ್ತಿದೆ, ${m}\u00a0m`,
       arrive: (robot, to) => `${robot}: ${to} ತಲುಪಿತು`,
     },
   },

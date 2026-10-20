@@ -9,8 +9,8 @@ export const materials = {
   units: (n: number) => `${n} pcs`,
   duration: {
     none: '—',
-    min: (m: number) => `${m} min`,
-    hourMin: (h: number, m: number) => `${h} h ${m} min`,
+    min: (m: number) => `${m}\u00a0min`,
+    hourMin: (h: number, m: number) => `${h}\u00a0h ${m}\u00a0min`,
     lessThanMin: '< 1 min',
   },
   live: {

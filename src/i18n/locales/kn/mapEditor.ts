@@ -84,7 +84,7 @@ export const messages: Messages<typeof mapEditor> = {
         confirm: 'ಎಲ್ಲವನ್ನೂ ಟ್ರೇಸ್ ಮಾಡಿ',
       },
       elements: 'ಅಂಶಗಳು',
-      search: 'ಅಂಶಗಳನ್ನು ಹುಡುಕಿ...',
+      search: 'ಅಂಶಗಳನ್ನು ಹುಡುಕಿ…',
       emptyTitle: 'ಇನ್ನೂ ಅಂಶಗಳಿಲ್ಲ',
       emptyBody: 'ಬರೆಯಲು ನಕ್ಷೆಯ ಕೆಳಗಿನ ಸಾಧನವನ್ನು ಆರಿಸಿ, ಅಥವಾ ಲೈಡಾರ್ ಅಂದಾಜಿನಿಂದ ಗೋಡೆಗಳನ್ನು ಟ್ರೇಸ್ ಮಾಡಿ.',
       traceAll: 'ಗೋಡೆಗಳನ್ನು ಟ್ರೇಸ್ ಮಾಡಿ',

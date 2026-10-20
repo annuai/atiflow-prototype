@@ -171,7 +171,7 @@ export const messages: Messages<typeof floor> = {
     hintDesktop: 'WASD ಚಲನೆ · ಮೌಸ್‌ನಿಂದ ನೋಡಿ · Shift ಓಟ · Esc ನಿರ್ಗಮನ',
   },
   locate: {
-    placeholder: 'ID ಮೂಲಕ ರೋಬೋಟ್ ಅಥವಾ ಸ್ಟೇಷನ್ ಹುಡುಕಿ',
+    placeholder: 'ID ಮೂಲಕ ರೋಬೋಟ್ ಅಥವಾ ಸ್ಟೇಷನ್ ಹುಡುಕಿ…',
     matches: 'ಹೊಂದಾಣಿಕೆಗಳು',
     locate: 'ಪತ್ತೆಹಚ್ಚಿ',
     mapKey: 'ನಕ್ಷೆ ಸೂಚಿ',

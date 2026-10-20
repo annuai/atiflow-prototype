@@ -80,7 +80,7 @@ export const messages: Messages<typeof maps> = {
   importMap: {
     title: 'മാപ്പ് ഇറക്കുമതി ചെയ്യുക',
     subtitle: 'ഡിപ്ലോയ്മെന്റ് മാനേജറിൽ നിന്ന് എക്സ്പോർട്ട് ചെയ്ത മാപ്പ് ഫോൾഡർ (.zip) അപ്‌ലോഡ് ചെയ്യുക.',
-    dropHint: (types, mb) => `${types} (പരമാവധി ${mb} MB)`,
+    dropHint: (types, mb) => `${types} (പരമാവധി ${mb}\u00a0MB)`,
     back: 'റദ്ദാക്കുക',
     next: 'ഇറക്കുമതി ചെയ്യുക',
     reading: 'മാപ്പ് വായിക്കുന്നു…',
@@ -118,7 +118,7 @@ export const messages: Messages<typeof maps> = {
       type: 'പിന്തുണയ്ക്കാത്ത ഫയൽ ഫോർമാറ്റ്',
       typeBody: (types) => `ഇവയിൽ ഒന്ന് അപ്‌ലോഡ് ചെയ്യുക: ${types}.`,
       size: 'ഫയൽ വളരെ വലുതാണ്',
-      sizeBody: (mb) => `ഫയൽ ${mb} MB-യേക്കാൾ വലുതാണ്.`,
+      sizeBody: (mb) => `ഫയൽ ${mb}\u00a0MB-യേക്കാൾ വലുതാണ്.`,
       read: {
         'zip.invalid': 'ഇത് വായിക്കാവുന്ന zip ഫയൽ അല്ല.',
         'zip.tooMany': 'zip-ൽ വളരെയധികം ഫയലുകളുണ്ട്.',

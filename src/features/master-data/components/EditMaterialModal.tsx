@@ -8,6 +8,7 @@ import { validateMaterial } from '../model/logic';
 import { masterDataStore, useMasterData } from '../model/store';
 import type { Material } from '../model/types';
 import { FieldStack } from './MaterialForm';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 function Body({ material, onOpenChange }: { material: Material; onOpenChange(o: boolean): void }) {
   const groups = useMasterData((s) => s.groups);
@@ -18,7 +19,7 @@ function Body({ material, onOpenChange }: { material: Material; onOpenChange(o: 
   const save = () => {
     const e = validateMaterial(v, [], material.code);
     setErrors(e);
-    if (Object.keys(e).length) return;
+    if (Object.keys(e).length) return focusFirstError();
     masterDataStore.getState().updateMaterial(material.code, {
       name: v.name.trim(),
       groupName: v.group === copy.materials.noGroup ? '' : v.group,

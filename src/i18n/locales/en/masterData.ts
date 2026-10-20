@@ -116,7 +116,7 @@ export const masterData = {
     uploadStep: 'Upload a CSV or XLSX file with one material per row.',
     dropLink: 'Click to upload',
     dropText: ' or drag and drop',
-    hint: (types: string, mb: number) => `${types} (max. ${mb} MB)`,
+    hint: (types: string, mb: number) => `${types} (max. ${mb}\u00a0MB)`,
     template: 'Download template',
     fileInfo: (rows: number) => `${rows.toLocaleString('en-IN')} rows found`,
     back: 'Back',

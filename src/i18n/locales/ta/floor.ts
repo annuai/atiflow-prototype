@@ -134,7 +134,7 @@ export const messages: Messages<typeof floor> = {
     free: 'காலி',
     locate: 'கண்டறி',
     waitingEta: (s) => `காத்திருக்கிறது · ${s}s`,
-    eta: (s, m) => `~${s}s · ${m} m`,
+    eta: (s, m) => `~${s}s · ${m}\u00a0m`,
     emptyTitle: 'எந்த ரோபோவும் இங்கு வரவில்லை',
     emptyText: 'வழியில் உள்ள ரோபோக்கள் இங்கே தெரியும்.',
   },
@@ -171,7 +171,7 @@ export const messages: Messages<typeof floor> = {
     hintDesktop: 'WASD நகர்வு · மவுஸ் பார்வை · Shift ஓட்டம் · Esc வெளியேறு',
   },
   locate: {
-    placeholder: 'ரோபோ அல்லது நிலையத்தை ID மூலம் தேடு',
+    placeholder: 'ரோபோ அல்லது நிலையத்தை ID மூலம் தேடு…',
     matches: 'பொருத்தங்கள்',
     locate: 'கண்டறி',
     mapKey: 'வரைபடக் குறியீடு',

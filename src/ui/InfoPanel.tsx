@@ -71,7 +71,7 @@ export function InfoPanel({ title, subtitle, pill, chips, stats, alerts, actions
     <div className="float rpanel">
       <SheetHandle onClose={onClose} />
       <h3>
-        {title}
+        <span translate="no">{title}</span>
         <ButtonUtility size="xs" color="tertiary" icon={XClose} tooltip={copy.toast.close} onPress={onClose} />
       </h3>
       {subtitle && <div className="sub">{subtitle}</div>}

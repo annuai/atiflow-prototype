@@ -1,3 +1,4 @@
+import { formatNumber } from '@/i18n';
 import { ArrowDown, ArrowUp } from '@untitledui/icons';
 import { cx } from '@/utils/cx';
 import { copy } from '../copy';
@@ -29,7 +30,7 @@ export function Delta({
       )}
     >
       {d.pct > 0 ? <ArrowUp className="size-3" /> : d.pct < 0 ? <ArrowDown className="size-3" /> : null}
-      {d.improved === null ? copy.card.same : `${Math.abs(d.pct).toFixed(0)}%`}
+      {d.improved === null ? copy.card.same : `${formatNumber(Math.abs(d.pct), 0)}%`}
       <span className="font-normal text-tertiary"> {copy.card.vs(label)}</span>
     </span>
   );

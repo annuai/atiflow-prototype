@@ -1,3 +1,6 @@
+import { useQueryParam } from '@/hooks/use-query-param';
+import { useSearchParams } from 'react-router-dom';
+import { rangeFromParams, rangeToParams } from './model/rangeUrl';
 import { EmptyState } from '@/components/data/EmptyState';
 import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, ChevronDown, ChevronUp, RefreshCcw01 } from '@untitledui/icons';
@@ -19,6 +22,7 @@ import { resolveRange } from './model/range';
 import { reportSource } from './data/source';
 import { useReport } from './data/useReport';
 import { moves, summary } from './model/derive';
+import { METRIC_ORDER } from './model/metrics';
 import type { MetricId, RangeSelection } from './model/types';
 import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
 
@@ -27,10 +31,21 @@ import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
  * what changed and its trend; every other KPI is one click away. Numbers come from `reportSource` (measured for today, sample otherwise).
  */
 export function ReportsPage() {
-  const [range, setRange] = useState<RangeSelection>({ preset: 'today' }),
-    [trend, setTrend] = useState<MetricId>('utilisation'),
-    [all, setAll] = useState(false),
-    [view, setView] = useState<InsightView>('fleet');
+  const [params, setParams] = useSearchParams();
+  const range = useMemo(() => rangeFromParams(params), [params]);
+  const setRange = (r: RangeSelection) =>
+    setParams(
+      (p) => {
+        const next = new URLSearchParams(p);
+        ['range', 'from', 'to'].forEach((k) => next.delete(k));
+        Object.entries(rangeToParams(r)).forEach(([k, v]) => next.set(k, v));
+        return next;
+      },
+      { replace: true },
+    );
+  const [trend, setTrend] = useQueryParam<MetricId>('trend', 'utilisation', METRIC_ORDER);
+  const [view, setView] = useQueryParam<InsightView>('view', 'fleet', ['fleet', 'materials']);
+  const [all, setAll] = useState(false);
   const materialsRelevant = useMaterialsRelevant();
   const period = useMemo(() => resolveRange(range), [range]);
   useEffect(() => feed.acquire(), []); // the fleet keeps running (and being measured) while this page is open

@@ -131,7 +131,7 @@ export const messages: Messages<typeof masterData> = {
     uploadStep: 'ஒரு வரிசைக்கு ஒரு பொருள் கொண்ட CSV அல்லது XLSX கோப்பைப் பதிவேற்றவும்.',
     dropLink: 'பதிவேற்ற கிளிக் செய்யவும்',
     dropText: ' அல்லது இழுத்து விடவும்',
-    hint: (types, mb) => `${types} (அதிகபட்சம் ${mb} MB)`,
+    hint: (types, mb) => `${types} (அதிகபட்சம் ${mb}\u00a0MB)`,
     template: 'டெம்ப்ளேட்டைப் பதிவிறக்கு',
     fileInfo: (rows) => `${rows.toLocaleString('en-IN')} வரிசைகள் கிடைத்தன`,
     back: 'பின்',

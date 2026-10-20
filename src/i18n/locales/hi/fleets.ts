@@ -89,7 +89,7 @@ export const messages: Messages<typeof fleets> = {
     title: 'फ़्लीट बनाएँ',
     subtitle: 'फ़्लीट को नाम दें। उसका मैप, रोबोट और हार्डवेयर आप बाद में असाइन कर सकते हैं।',
     label: 'फ़्लीट का नाम',
-    placeholder: 'उदाहरण: Warehouse Fleet',
+    placeholder: 'उदाहरण: Warehouse Fleet…',
     confirm: 'फ़्लीट बनाएँ',
     cancel: 'रद्द करें',
   },

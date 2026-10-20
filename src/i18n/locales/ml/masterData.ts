@@ -132,7 +132,7 @@ export const messages: Messages<typeof masterData> = {
     uploadStep: 'ഒരു വരിയിൽ ഒരു മെറ്റീരിയൽ വീതമുള്ള CSV അല്ലെങ്കിൽ XLSX ഫയൽ അപ്‌ലോഡ് ചെയ്യുക.',
     dropLink: 'അപ്‌ലോഡ് ചെയ്യാൻ ക്ലിക്ക് ചെയ്യുക',
     dropText: ' അല്ലെങ്കിൽ വലിച്ചിടുക',
-    hint: (types, mb) => `${types} (പരമാവധി ${mb} MB)`,
+    hint: (types, mb) => `${types} (പരമാവധി ${mb}\u00a0MB)`,
     template: 'ടെംപ്ലേറ്റ് ഡൗൺലോഡ് ചെയ്യുക',
     fileInfo: (rows) => `${rows.toLocaleString('en-IN')} വരികൾ കണ്ടെത്തി`,
     back: 'പിന്നോട്ട്',

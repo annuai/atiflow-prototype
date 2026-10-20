@@ -91,7 +91,7 @@ export const messages: Messages<typeof fleets> = {
     title: 'ஃப்ளீட்டை உருவாக்கு',
     subtitle: 'ஃப்ளீட்டுக்கு ஒரு பெயர் கொடுக்கவும். வரைபடம், ரோபோக்கள், வன்பொருளை பிறகு ஒதுக்கலாம்.',
     label: 'ஃப்ளீட் பெயர்',
-    placeholder: 'எடுத்துக்காட்டு: Warehouse Fleet',
+    placeholder: 'எடுத்துக்காட்டு: Warehouse Fleet…',
     confirm: 'ஃப்ளீட்டை உருவாக்கு',
     cancel: 'ரத்துசெய்',
   },

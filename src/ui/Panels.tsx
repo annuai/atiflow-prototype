@@ -1,3 +1,4 @@
+import { formatNumber } from '@/i18n';
 import { useState } from 'react';
 import { useApp, store } from '../core/store';
 import type { RobotState } from '../core/types';
@@ -237,7 +238,7 @@ export function RobotPanel() {
           value: r.battery + '%',
           bar: { pct: r.battery, tone: r.battery < 25 ? 'error' : 'success' },
         },
-        { label: copy.robotPanel.speed, value: r.speed.toFixed(1) + ' m/s' },
+        { label: copy.robotPanel.speed, value: `${formatNumber(r.speed, 1)}\u00a0m/s` },
         { label: copy.robotPanel.trip, value: r.task?.id ?? '—' },
         { label: copy.robotPanel.destination, value: r.task?.to ?? '—' },
         {

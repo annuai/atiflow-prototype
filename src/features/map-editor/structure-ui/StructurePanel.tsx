@@ -82,7 +82,7 @@ export function StructurePanel({
   const elements: ListItem[] = m.elements.map((e) => ({
     id: e.id,
     title: e.name ?? e.id,
-    subtitle: `${t.tools[e.kind === 'area' ? 'work' : e.kind]} · ${e.height} m`,
+    subtitle: `${t.tools[e.kind === 'area' ? 'work' : e.kind]} · ${e.height}\u00a0m`,
     dot: elementColor(data, e),
   }));
   const canTrace = (data.structure?.walls.length ?? 0) + (data.structure?.equipment.length ?? 0) > 0; // there is a scan to trace, even if it was traced and deleted

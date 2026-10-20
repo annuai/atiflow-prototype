@@ -29,7 +29,7 @@ export function RobotTile({
       )}
     >
       <span className="flex h-32 items-center justify-center overflow-hidden rounded-lg bg-secondary p-2">
-        <img src={picture} alt="" className="size-full object-contain" />
+        <img src={picture} alt="" className="size-full object-contain" loading="lazy" decoding="async" />
       </span>
       <span className="flex flex-col">
         <span className="text-lg font-semibold text-primary">{label}</span>

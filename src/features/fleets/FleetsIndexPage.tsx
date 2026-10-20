@@ -1,5 +1,5 @@
 import { asFleetId, type FleetId } from '@/data/fleets';
-import { useSearchText } from '@/hooks/use-search-text';
+import { useUrlSearchText } from '@/hooks/use-search-text';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cube01, Dataflow03, SearchLg } from '@untitledui/icons';
@@ -31,8 +31,8 @@ export function FleetsIndexPage() {
   const hardware = useDevices((s) => s.hardware);
   const profiles = useFleets((s) => s.profiles);
   const maps = useMaps();
-  const { text: query, setText: setQuery, matches } = useSearchText();
-  const [searching, setSearching] = useState(false);
+  const { text: query, setText: setQuery, matches } = useUrlSearchText('q');
+  const [searching, setSearching] = useState(!!query);
   const [making, setMaking] = useState(false);
   const [open, setOpen] = useState<FleetId | null>(null);
   const unassigned = robots.filter((d) => !d.values.fleet);

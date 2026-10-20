@@ -75,7 +75,7 @@ export const messages: Messages<typeof maps> = {
   importMap: {
     title: 'मैप इम्पोर्ट करें',
     subtitle: 'डिप्लॉयमेंट मैनेजर से एक्सपोर्ट किया गया मैप फ़ोल्डर (.zip) अपलोड करें।',
-    dropHint: (types, mb) => `${types} (अधिकतम ${mb} MB)`,
+    dropHint: (types, mb) => `${types} (अधिकतम ${mb}\u00a0MB)`,
     back: 'रद्द करें',
     next: 'इम्पोर्ट करें',
     reading: 'मैप पढ़ा जा रहा है…',
@@ -114,7 +114,7 @@ export const messages: Messages<typeof maps> = {
       type: 'फ़ाइल प्रारूप समर्थित नहीं है',
       typeBody: (types) => `इनमें से कोई एक अपलोड करें: ${types}।`,
       size: 'फ़ाइल बहुत बड़ी है',
-      sizeBody: (mb) => `फ़ाइल ${mb} MB से बड़ी है।`,
+      sizeBody: (mb) => `फ़ाइल ${mb}\u00a0MB से बड़ी है।`,
       read: {
         'zip.invalid': 'यह पढ़ने योग्य ज़िप फ़ाइल नहीं है।',
         'zip.tooMany': 'ज़िप में बहुत ज़्यादा फ़ाइलें हैं।',

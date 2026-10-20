@@ -1,5 +1,5 @@
 import { Package } from '@untitledui/icons';
-import { useSearchText } from '@/hooks/use-search-text';
+import { useUrlSearchText } from '@/hooks/use-search-text';
 import { useFleetName } from '@/data/fleetDirectory';
 import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useMemo, useState } from 'react';
@@ -30,7 +30,7 @@ interface Props {
 export function FleetMaterials({ fleet, materials, total, onAssign, onGroup, toolbarLeft }: Props) {
   const fleetName = useFleetName(fleet);
   const groups = useFleets((s) => profileOf(s.profiles, fleet).groups);
-  const { text, setText, matches } = useSearchText();
+  const { text, setText, matches } = useUrlSearchText('q');
   const [sel, setSel] = useState<Set<string>>(new Set());
   const rows = useMemo(
     () => materials.filter((m) => matches(m.code, m.name, ...stationsOfMaterial(groups, m.code))),

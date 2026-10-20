@@ -51,8 +51,8 @@ export const devices = {
     exclusiveTag: 'Ati Exclusive',
   },
   placeholders: {
-    robotName: 'e.g. AMR-020',
-    hardwareName: 'e.g. Line-01 Summon Button',
+    robotName: 'e.g. AMR-020…',
+    hardwareName: 'e.g. Line-01 Summon Button…',
   },
   tabs: {
     Details: 'Details',

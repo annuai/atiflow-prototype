@@ -1,6 +1,7 @@
 /** The frame around every page: top bar, sidebar, user menu, and the messages shown when the app itself fails. */
 export const shell = {
   menuOpen: 'Open menu',
+  skipToContent: 'Skip to main content',
   back: 'Back',
   forward: 'Forward',
   search: 'Search',
@@ -13,7 +14,7 @@ export const shell = {
   comingSoon: 'Coming soon',
   searchConfigurator: 'Search robots, stations, zones…',
   searchOperator: 'Search…',
-  searchSupervisor: 'Search live operations, fleets, trips, analytics...',
+  searchSupervisor: 'Search live operations, fleets, trips, analytics…',
   bootTitle: 'Ati Flow could not load your data',
   bootText: (failed: string) => `Could not load: ${failed}. Nothing was changed. Check your connection and try again.`,
   tryAgain: 'Try again',

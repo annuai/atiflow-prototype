@@ -1,5 +1,5 @@
 import { GitBranch01 } from '@untitledui/icons';
-import { useSearchText } from '@/hooks/use-search-text';
+import { useUrlSearchText } from '@/hooks/use-search-text';
 import { EmptyState, NoResults } from '@/components/data/EmptyState';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -18,7 +18,7 @@ import type { FleetId } from '@/data/fleets';
 export function WorkflowsPanel({ fleet }: { fleet: FleetId }) {
   const navigate = useNavigate();
   const workflows = useWorkflow((s) => s.workflows);
-  const { text, setText, matches } = useSearchText();
+  const { text, setText, matches } = useUrlSearchText('q');
   const [sel, setSel] = useState<Set<string>>(new Set());
   const rows: WorkflowRow[] = useMemo(
     () => workflowsOfFleet(workflows, fleet).filter(isKept).map(workflowSummary),

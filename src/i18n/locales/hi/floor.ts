@@ -164,7 +164,7 @@ export const messages: Messages<typeof floor> = {
     hintDesktop: 'WASD से चलें · माउस से देखें · Shift से दौड़ें · Esc से बाहर',
   },
   locate: {
-    placeholder: 'ID से रोबोट या स्टेशन खोजें',
+    placeholder: 'ID से रोबोट या स्टेशन खोजें…',
     matches: 'मिलान',
     locate: 'खोजें',
     mapKey: 'मैप कुंजी',

@@ -1,5 +1,5 @@
 import { NoResults } from '@/components/data/EmptyState';
-import { useSearchText } from '@/hooks/use-search-text';
+import { useUrlSearchText } from '@/hooks/use-search-text';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Plus } from '@untitledui/icons';
@@ -23,9 +23,9 @@ const misc = localized('misc');
 export function UsersPage() {
   const navigate = useNavigate();
   const users = useUsers((s) => s.users).map(toPublic);
+  const { text: q, setText: setQ, matches } = useUrlSearchText('q');
   const [adding, setAdding] = useState(false),
-    [searching, setSearching] = useState(false);
-  const { text: q, setText: setQ, matches } = useSearchText();
+    [searching, setSearching] = useState(!!q);
   const rows = users.filter((u) => matches(u.name, u.username, u.email, roleById(u.role).label));
   const columns: Column<PublicUser>[] = [
     {

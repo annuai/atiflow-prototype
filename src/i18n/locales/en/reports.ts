@@ -4,7 +4,7 @@ export const reports = {
   subtitle: 'How the fleet performed over a period. Arrows show whether higher or lower is better.',
   sample:
     'Sample data: there is no history API yet, so periods other than a few minutes of today are generated from the robots on the floor. Today switches to measured values once the fleet has run for a few minutes.',
-  origin: { live: (min: number) => `Live · ${min} min measured`, sample: 'Sample data' },
+  origin: { live: (min: number) => `Live · ${min}\u00a0min measured`, sample: 'Sample data' },
   trend: {
     title: 'Trend',
     hint: (daily: boolean) => (daily ? 'one point per day' : 'one point per hour'),
@@ -17,7 +17,7 @@ export const reports = {
     custom: 'Custom',
     label: 'Report period',
     refresh: 'Refresh',
-    updated: (min: number) => (min < 1 ? 'Updated just now' : `Updated ${min} min ago`),
+    updated: (min: number) => (min < 1 ? 'Updated just now' : `Updated ${min}\u00a0min ago`),
   },
   better: { higher: 'Higher is better', lower: 'Lower is better' },
   card: { vs: (what: string) => `vs ${what}`, same: 'No change' },

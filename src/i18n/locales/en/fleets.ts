@@ -88,7 +88,7 @@ export const fleets = {
     title: 'Make a fleet',
     subtitle: 'Give the fleet a name. You can assign its map, robots and hardware afterwards.',
     label: 'Fleet name',
-    placeholder: 'For example: Warehouse Fleet',
+    placeholder: 'For example: Warehouse Fleet…',
     confirm: 'Make fleet',
     cancel: 'Cancel',
   },

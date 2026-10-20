@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useSearchText } from '@/hooks/use-search-text';
+import { useUrlSearchText } from '@/hooks/use-search-text';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { FilterLines, Map01, Plus, SearchLg, Upload01 } from '@untitledui/icons';
 import { EmptyState, NoResults } from '@/components/data/EmptyState';
@@ -21,7 +21,7 @@ import { Page, PageCard, PageCardBody, PageHeader } from '@/components/page';
 export function MapsPage() {
   const maps = useMaps();
   const profiles = useFleets((s) => s.profiles);
-  const { text, setText } = useSearchText();
+  const { text, setText } = useUrlSearchText('q');
   const [sort, setSort] = useState<MapSort>('name');
   const [generating, setGenerating] = useState(false);
   const [importing, setImporting] = useState(false);

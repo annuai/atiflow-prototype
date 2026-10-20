@@ -127,7 +127,7 @@ export const messages: Messages<typeof masterData> = {
     uploadStep: 'हर पंक्ति में एक सामग्री वाली CSV या XLSX फ़ाइल अपलोड करें।',
     dropLink: 'अपलोड करने के लिए क्लिक करें',
     dropText: ' या खींचकर छोड़ें',
-    hint: (types, mb) => `${types} (अधिकतम ${mb} MB)`,
+    hint: (types, mb) => `${types} (अधिकतम ${mb}\u00a0MB)`,
     template: 'टेम्पलेट डाउनलोड करें',
     fileInfo: (rows) => `${count(rows)} पंक्तियाँ मिलीं`,
     back: 'वापस',

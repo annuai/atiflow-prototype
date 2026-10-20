@@ -78,7 +78,7 @@ export const search = {
     seeAll: (q: string) => `See all results for "${q}"`,
     noResults: (q: string) => `No results for "${q}"`,
     didYouMean: (w: string) => `Did you mean "${w}"?`,
-    loading: 'Searching...',
+    loading: 'Searching…',
     error: 'Search did not work',
     retry: 'Try again',
     count: (n: number) => `${n} ${n === 1 ? 'result' : 'results'}`,

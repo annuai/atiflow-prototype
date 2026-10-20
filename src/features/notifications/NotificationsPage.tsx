@@ -1,3 +1,4 @@
+import { useQueryParam } from '@/hooks/use-query-param';
 import { useEffect, useState } from 'react';
 import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -25,7 +26,7 @@ export function NotificationsPage() {
       : 'supervisor';
   const navigate = useNavigate(); // the workspace the page is opened in decides the shell around it
   const items = useWorkspaceNotifications(); // only what is meant for the workspace that is open
-  const [tab, setTab] = useState<Tab>('all');
+  const [tab, setTab] = useQueryParam<Tab>('tab', 'all', ['all', 'unread']);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = window.setInterval(() => setNow(Date.now()), 20_000);

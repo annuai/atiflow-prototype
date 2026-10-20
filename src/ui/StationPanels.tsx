@@ -1,3 +1,4 @@
+import { formatNumber } from '@/i18n';
 import { useApp, store } from '../core/store';
 import { handle } from './engineHandle';
 import { STATE_COLOR } from '../engine/stateStyle';
@@ -70,7 +71,7 @@ export function StationPanel() {
               <i className="dot" style={{ background: STATE_COLOR[r.state] }} />
               <b>{r.id}</b>
               <span style={{ color: f?.color }}>{f?.name.split(' ')[0]}</span>
-              <em>{r.state === 'waiting' ? sp.waitingEta(eta) : sp.eta(eta, d.toFixed(0))}</em>
+              <em>{r.state === 'waiting' ? sp.waitingEta(eta) : sp.eta(eta, formatNumber(d, 0))}</em>
             </button>
           );
         })}

@@ -1,3 +1,4 @@
+import { UnsavedGuard } from '@/components/modal/UnsavedGuard';
 import { useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Trash01 } from '@untitledui/icons';
@@ -32,6 +33,7 @@ import { validateBasics } from './model/validate';
 import { localized } from '@/i18n';
 import { PageTitleName } from '@/shell/PageTitle';
 import { Page, PageCard, PageHeader, PageSubtitle, PageTitle } from '@/components/page';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 const misc = localized('misc');
 
@@ -93,7 +95,7 @@ export function UserDetailPage() {
   const save = () => {
     const p = validateBasics(draft);
     setErrors(p);
-    if (Object.keys(p).length) return;
+    if (Object.keys(p).length) return focusFirstError();
     const roleChanged = draft.role !== user.role && canAccess;
     userDirectory.getState().update(user.username, {
       firstName: draft.firstName.trim(),
@@ -111,6 +113,7 @@ export function UserDetailPage() {
   const roleField = { key: 'role', label: misc.userForm.roles, control: 'select' as const, options: roles };
   return (
     <>
+      <UnsavedGuard dirty={dirty} paused={deleting} />
       <PageTitleName name={user.name} />
       <Page>
         <PageHeader

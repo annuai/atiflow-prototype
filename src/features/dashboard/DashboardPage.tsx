@@ -43,10 +43,27 @@ export function DashboardPage() {
   const tv = params.get('tv') === '1';
   const materialsRelevant = useMaterialsRelevant();
   const view: InsightView = materialsRelevant && params.get('view') === 'materials' ? 'materials' : 'fleet';
-  const setView = (v: InsightView) => setParams(v === 'materials' ? { view: 'materials' } : {}, { replace: true });
+  const setView = (v: InsightView) =>
+    setParams(
+      (p) => {
+        const next = new URLSearchParams(p);
+        if (v === 'materials') next.set('view', 'materials');
+        else next.delete('view');
+        return next;
+      },
+      { replace: true },
+    );
   const setTv = useCallback(
     (on: boolean) => {
-      setParams(on ? { tv: '1' } : {}, { replace: true });
+      setParams(
+        (p) => {
+          const next = new URLSearchParams(p);
+          if (on) next.set('tv', '1');
+          else next.delete('tv');
+          return next;
+        },
+        { replace: true },
+      );
       if (on) void document.documentElement.requestFullscreen?.().catch(() => {});
       else if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}); // real full screen when the browser allows it
     },

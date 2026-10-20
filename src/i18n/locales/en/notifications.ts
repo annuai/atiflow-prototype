@@ -19,5 +19,9 @@ export const notifications = {
   emptyUnread: 'No unread notifications',
   actions: { locate: 'Locate', liveFloor: 'Full view', requests: 'View request', approvals: 'Open approvals' },
   now: 'just now',
-  ago: { min: (n: number) => `${n} min ago`, hour: (n: number) => `${n} h ago`, day: (n: number) => `${n} d ago` },
+  ago: {
+    min: (n: number) => `${n}\u00a0min ago`,
+    hour: (n: number) => `${n}\u00a0h ago`,
+    day: (n: number) => `${n} d ago`,
+  },
 } as const;

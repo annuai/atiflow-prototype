@@ -60,9 +60,9 @@ describe('dashboard: state groups and status', () => {
     expect(c.headline).toContain('2 robots need you, 1 urgent');
   });
   it('durations read naturally', () => {
-    expect(fmtDuration(42)).toBe('42 s');
-    expect(fmtDuration(125)).toBe('2 min 5 s'.replace(' 5 s', ''));
-    expect(fmtDuration(3700)).toBe('1 h 1 min');
+    expect(fmtDuration(42)).toBe('42\u00a0s');
+    expect(fmtDuration(125)).toBe('2\u00a0min');
+    expect(fmtDuration(3700)).toBe('1\u00a0h 1\u00a0min');
   });
 });
 

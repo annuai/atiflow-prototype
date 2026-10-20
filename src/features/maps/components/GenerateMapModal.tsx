@@ -13,6 +13,7 @@ import { DEFAULT_ROUTING } from '../model/routing';
 import { useMaps } from '../model/maps';
 import { RobotPicker } from './RobotPicker';
 import { RoutingVersionPicker } from './RoutingVersionPicker';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 const BLANK: NewMapForm = { name: '', robot: '', runData: '', version: DEFAULT_ROUTING, zMin: '', zMax: '' };
 
@@ -43,7 +44,7 @@ function Body({ onOpenChange, source }: { onOpenChange(o: boolean): void; source
   const submit = () => {
     const e = validateNewMap(f, maps, t.errors);
     setErrors(e);
-    if (Object.keys(e).length) return;
+    if (Object.keys(e).length) return focusFirstError();
     onOpenChange(false);
     notify.info(t.notDefined.title, t.notDefined.body, 'map-generate'); // what happens after "Generate Map" is not defined yet
   };

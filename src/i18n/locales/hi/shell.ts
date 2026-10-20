@@ -3,6 +3,7 @@ import type { shell } from '../en/shell';
 
 export const messages: Messages<typeof shell> = {
   menuOpen: 'मेनू खोलें',
+  skipToContent: 'मुख्य सामग्री पर जाएँ',
   back: 'वापस',
   forward: 'आगे',
   search: 'खोजें',
@@ -15,7 +16,7 @@ export const messages: Messages<typeof shell> = {
   comingSoon: 'जल्द आ रहा है',
   searchConfigurator: 'रोबोट, स्टेशन, ज़ोन खोजें…',
   searchOperator: 'खोजें…',
-  searchSupervisor: 'लाइव संचालन, फ़्लीट, ट्रिप, एनालिटिक्स खोजें...',
+  searchSupervisor: 'लाइव संचालन, फ़्लीट, ट्रिप, एनालिटिक्स खोजें…',
   bootTitle: 'Ati Flow आपका डेटा लोड नहीं कर सका',
   bootText: (failed) => `लोड नहीं हो सका: ${failed}। कुछ भी नहीं बदला गया। अपना कनेक्शन जाँचें और फिर कोशिश करें।`,
   tryAgain: 'फिर कोशिश करें',

@@ -77,7 +77,7 @@ export const messages: Messages<typeof mapEditor> = {
         confirm: 'सब कुछ ट्रेस करें',
       },
       elements: 'तत्व',
-      search: 'तत्व खोजें...',
+      search: 'तत्व खोजें…',
       emptyTitle: 'अभी कोई तत्व नहीं',
       emptyBody: 'बनाने के लिए मैप के नीचे से टूल चुनें, या लिडार अनुमान से दीवारें ट्रेस करें।',
       traceAll: 'दीवारें ट्रेस करें',

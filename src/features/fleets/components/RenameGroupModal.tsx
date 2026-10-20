@@ -8,6 +8,7 @@ import { validateGroupForm } from '../model/logic';
 import { fleetsStore, profileOf, useFleets } from '../model/store';
 import { t } from '../text';
 import type { FleetId } from '@/data/fleets';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 function Body({
   fleet,
@@ -25,6 +26,7 @@ function Body({
     const e = validateGroupForm({ name, stationId: '', codes: [] }, groups, group.id);
     if (e.name) {
       setError(e.name);
+      focusFirstError();
       return;
     }
     fleetsStore.getState().renameGroup(fleet, group.id, name);

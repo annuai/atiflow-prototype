@@ -80,7 +80,7 @@ export const messages: Messages<typeof maps> = {
   importMap: {
     title: 'வரைபடத்தை இறக்குமதி செய்',
     subtitle: 'டெப்ளாய்மென்ட் மேனேஜரிலிருந்து ஏற்றுமதி செய்த வரைபடக் கோப்புறையை (.zip) பதிவேற்றவும்.',
-    dropHint: (types, mb) => `${types} (அதிகபட்சம் ${mb} MB)`,
+    dropHint: (types, mb) => `${types} (அதிகபட்சம் ${mb}\u00a0MB)`,
     back: 'ரத்துசெய்',
     next: 'இறக்குமதி',
     reading: 'வரைபடம் படிக்கப்படுகிறது…',
@@ -119,7 +119,7 @@ export const messages: Messages<typeof maps> = {
       type: 'ஆதரிக்கப்படாத கோப்பு வடிவம்',
       typeBody: (types) => `இவற்றில் ஒன்றைப் பதிவேற்றவும்: ${types}.`,
       size: 'கோப்பு மிகப் பெரியது',
-      sizeBody: (mb) => `கோப்பு ${mb} MB ஐ விடப் பெரியது.`,
+      sizeBody: (mb) => `கோப்பு ${mb}\u00a0MB ஐ விடப் பெரியது.`,
       read: {
         'zip.invalid': 'இது படிக்கக்கூடிய zip கோப்பு அல்ல.',
         'zip.tooMany': 'zip-இல் மிக அதிகமான கோப்புகள் உள்ளன.',

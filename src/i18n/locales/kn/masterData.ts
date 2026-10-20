@@ -132,7 +132,7 @@ export const messages: Messages<typeof masterData> = {
     uploadStep: 'ಪ್ರತಿ ಸಾಲಿಗೆ ಒಂದು ಸಾಮಗ್ರಿ ಇರುವ CSV ಅಥವಾ XLSX ಫೈಲ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.',
     dropLink: 'ಅಪ್‌ಲೋಡ್ ಮಾಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ',
     dropText: ' ಅಥವಾ ಎಳೆದು ಬಿಡಿ',
-    hint: (types, mb) => `${types} (ಗರಿಷ್ಠ ${mb} MB)`,
+    hint: (types, mb) => `${types} (ಗರಿಷ್ಠ ${mb}\u00a0MB)`,
     template: 'ಟೆಂಪ್ಲೇಟ್ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ',
     fileInfo: (rows) => `${rows.toLocaleString('en-IN')} ಸಾಲುಗಳು ಸಿಕ್ಕಿವೆ`,
     back: 'ಹಿಂದೆ',

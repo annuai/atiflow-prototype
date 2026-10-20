@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useStore } from 'zustand';
 import { useFleetOptions } from '@/features/auth';
 import { fleetFilterStore } from './store';
@@ -7,8 +9,25 @@ import { fleetFilterStore } from './store';
  * choose); `scope` is that fleet's id, or undefined for all of them: what a data source takes.
  */
 export function useFleetFilter() {
-  const chosen = useStore(fleetFilterStore, (s) => s.fleetId);
+  const stored = useStore(fleetFilterStore, (s) => s.fleetId);
+  const [params, setParams] = useSearchParams();
+  const chosen = params.get('fleet') ?? stored; // a link names its fleet (`?fleet=line-side`); without one the device's own choice applies
   const options = useFleetOptions();
+  const choose = useCallback(
+    (id: string) => {
+      fleetFilterStore.getState().choose(id);
+      setParams(
+        (p) => {
+          const next = new URLSearchParams(p);
+          if (id === 'all') next.delete('fleet');
+          else next.set('fleet', id);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setParams],
+  );
   const many = options.length > 1;
   const fleetId = many && options.some((o) => o.id === chosen) ? chosen : 'all';
   return {
@@ -16,6 +35,6 @@ export function useFleetFilter() {
     scope: fleetId === 'all' ? undefined : fleetId,
     name: options.find((o) => o.id === fleetId)?.label,
     many,
-    choose: fleetFilterStore.getState().choose,
+    choose,
   };
 }

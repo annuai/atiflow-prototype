@@ -1,3 +1,4 @@
+import { UnsavedGuard } from '@/components/modal/UnsavedGuard';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
@@ -11,6 +12,7 @@ import { ZONES } from '../model/zones';
 import { settingsStore, useSettings } from '../data/store';
 import type { GeneralSettings, Units } from '../model/types';
 import { localized } from '@/i18n';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 /** Site name, time zone, units and language: one form with Save / Cancel (Save is enabled only after a change). */
 export function GeneralPanel() {
@@ -22,6 +24,7 @@ export function GeneralPanel() {
   const save = () => {
     if (!g.siteName.trim()) {
       setError(localized('common').required);
+      focusFirstError();
       return;
     }
     settingsStore.getState().saveGeneral({ ...g, siteName: g.siteName.trim() });
@@ -30,6 +33,7 @@ export function GeneralPanel() {
   };
   return (
     <div className="flex max-w-4xl flex-col">
+      <UnsavedGuard dirty={dirty} />
       <SettingsRow label={copy.general.siteName} hint={copy.general.siteNameHint}>
         <Input
           aria-label={copy.general.siteName}

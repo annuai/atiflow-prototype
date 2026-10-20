@@ -7,6 +7,7 @@ import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { passwordError } from '../model/validate';
 import { localized } from '@/i18n';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 function Form({
   username,
@@ -24,7 +25,7 @@ function Form({
   const submit = () => {
     const e = passwordError(pw);
     setError(e);
-    if (e) return;
+    if (e) return focusFirstError();
     userDirectory.getState().resetPassword(username, pw);
     onOpenChange(false);
     notify.success(copy.reset.done, undefined, 'password-reset');

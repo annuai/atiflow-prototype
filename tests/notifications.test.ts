@@ -320,8 +320,8 @@ describe('time', () => {
   it('reads naturally', () => {
     const t = 10_000_000;
     expect(timeAgo(t, t + 10_000)).toBe('just now');
-    expect(timeAgo(t, t + 5 * 60_000)).toBe('5 min ago');
-    expect(timeAgo(t, t + 3 * 3_600_000)).toBe('3 h ago');
+    expect(timeAgo(t, t + 5 * 60_000)).toBe('5\u00a0min ago');
+    expect(timeAgo(t, t + 3 * 3_600_000)).toBe('3\u00a0h ago');
     expect(timeAgo(t, t + 50 * 3_600_000)).toBe('2 d ago');
   });
 });

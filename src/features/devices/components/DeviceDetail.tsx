@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { UnsavedGuard } from '@/components/modal/UnsavedGuard';
 import { TabbedPanel } from '@/components/data/TabbedPanel';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GamingPad01, RefreshCcw03, Rows01, Settings02, Trash01 } from '@untitledui/icons';
@@ -56,6 +57,8 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
     : [{ label: kind.plural, onPress: () => navigate(back) }, { label: name }];
   const value = (key: string) => (key in draft ? draft[key] : (device.values[key] ?? ''));
   const current = { ...device.values, ...draft }; // what the record would be if saved now
+  const dirty =
+    editing && Object.keys(draft).some((k) => JSON.stringify(draft[k]) !== JSON.stringify(device.values[k] ?? ''));
   const fields = shownFields(kind, current)
     .map((f, i) => ({ f, o: f.detailOrder ?? 100 + i }))
     .filter((x) => x.f.detail)
@@ -185,6 +188,7 @@ export function DeviceDetail({ kind, device }: { kind: DeviceKind; device: Devic
   );
   return (
     <>
+      <UnsavedGuard dirty={dirty} />
       <div className="flex shrink-0 flex-wrap items-end justify-between gap-4 px-1 sm:min-h-[96px] sm:flex-nowrap">
         <div className="flex h-full min-w-0 flex-1 flex-col justify-between gap-2">
           <DetailBreadcrumb trail={trail} />

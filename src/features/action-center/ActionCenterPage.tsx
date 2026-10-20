@@ -1,3 +1,4 @@
+import { useQueryParam } from '@/hooks/use-query-param';
 import { useEffect, useState } from 'react';
 import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
 import { useNavigate } from 'react-router-dom';
@@ -41,7 +42,7 @@ export function ActionCenterPage() {
   useActionCenterRunning();
   const { active, log, mine, open } = useCalls();
   const phase = useLoadPhase(!useFeedReady());
-  const [tab, setTab] = useState<Tab>('open');
+  const [tab, setTab] = useQueryParam<Tab>('tab', 'open', ['open', 'mine', 'log']);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [resolving, setResolving] = useState<Call | null>(null);
   const [now, setNow] = useState(() => Date.now());

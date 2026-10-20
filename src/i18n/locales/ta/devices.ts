@@ -54,8 +54,8 @@ export const messages: Messages<typeof devices> = {
     exclusiveTag: 'Ati பிரத்யேகம்',
   },
   placeholders: {
-    robotName: 'எ.கா. AMR-020',
-    hardwareName: 'எ.கா. Line-01 Summon Button',
+    robotName: 'எ.கா. AMR-020…',
+    hardwareName: 'எ.கா. Line-01 Summon Button…',
   },
   tabs: {
     Details: 'விவரங்கள்',

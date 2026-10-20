@@ -271,7 +271,15 @@ export const Input = ({
     ...props
 }: InputProps) => {
     return (
-        <TextField aria-label={!label ? placeholder : undefined} {...props} size={size} className={className}>
+        <TextField
+            aria-label={!label ? placeholder : undefined}
+            // not for sign-in fields (a caller passes its own): no spelling underline on names, codes and ids, and no password-manager prompt on ordinary fields
+            spellCheck="false"
+            autoComplete={type === "password" ? undefined : "off"}
+            {...props}
+            size={size}
+            className={className}
+        >
             {({ isRequired, isInvalid }) => (
                 <>
                     {label && (

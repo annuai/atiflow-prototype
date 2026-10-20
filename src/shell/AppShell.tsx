@@ -49,6 +49,9 @@ export function AppShell({ useNavModel, searchPlaceholder, children }: Props) {
   };
   return (
     <div className="app">
+      <a href="#main-content" className="skip-link">
+        {copy.skipToContent}
+      </a>
       <Sidebar
         title={current ? workspaceById(current).title : 'ATI FLOW'}
         switcher={{ items, value: current, onChange: switchTo }}
@@ -76,7 +79,10 @@ export function AppShell({ useNavModel, searchPlaceholder, children }: Props) {
           onSupport={toggleSupport}
           supportUnread={supportUnread}
         />
-        {children}
+        {/* `contents`: the landmark adds no box of its own, so the page layout is exactly as before */}
+        <main id="main-content" className="contents">
+          {children}
+        </main>
       </div>
       <AtiAiDock />
       <SupportWidget />

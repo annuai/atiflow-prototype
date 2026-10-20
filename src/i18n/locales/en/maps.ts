@@ -73,7 +73,7 @@ export const maps = {
   importMap: {
     title: 'Import map',
     subtitle: 'Upload a map folder (.zip) exported from the Deployment Manager.',
-    dropHint: (types: string, mb: number) => `${types} (max. ${mb} MB)`,
+    dropHint: (types: string, mb: number) => `${types} (max. ${mb}\u00a0MB)`,
     back: 'Cancel',
     next: 'Import',
     reading: 'Reading the map…',
@@ -86,7 +86,7 @@ export const maps = {
     found: {
       title: 'What was found',
       stations: (n: number) => `${n} stations`,
-      floor: (w: number, h: number) => `Floor picture ${w} × ${h} m`,
+      floor: (w: number, h: number) => `Floor picture ${w} × ${h}\u00a0m`,
       noFloor: 'No floor picture',
       path: (n: number) => `Mapping path: ${n} points`,
       roads: (n: number) => `${n} roads`,
@@ -111,7 +111,7 @@ export const maps = {
       type: 'Unsupported file format',
       typeBody: (types: string) => `Upload one of: ${types}.`,
       size: 'File too large',
-      sizeBody: (mb: number) => `The file is bigger than ${mb} MB.`,
+      sizeBody: (mb: number) => `The file is bigger than ${mb}\u00a0MB.`,
       read: {
         'zip.invalid': 'This is not a readable zip file.',
         'zip.tooMany': 'The zip holds too many files.',

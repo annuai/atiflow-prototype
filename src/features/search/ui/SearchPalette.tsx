@@ -130,6 +130,8 @@ export function SearchPalette({ placeholder }: { placeholder: string }) {
           aria-expanded={open}
           aria-controls={listId}
           aria-autocomplete="list"
+          autoComplete="off"
+          spellCheck={false}
           aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
           aria-label={copy.ui.label}
           placeholder={placeholder}

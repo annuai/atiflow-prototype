@@ -1,3 +1,4 @@
+import { focusFirstError } from '@/utils/focus-first-error';
 import { useState, type FormEvent } from 'react';
 import { RobotBeacon } from '@/components/data/RobotBeacon';
 import { StatusDot } from '@/components/data/StatusDot';
@@ -34,6 +35,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
     if (!username.trim() || !password) {
       setError(copy.errorEmpty);
       setShake((n) => n + 1);
+      focusFirstError();
       return;
     }
     setBusy(true);
@@ -44,6 +46,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
     else {
       setError(copy.errorWrong);
       setShake((n) => n + 1);
+      focusFirstError();
     }
   }
 
@@ -53,6 +56,8 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (user: PublicU
       <img
         src={bg}
         alt=""
+        fetchPriority="high"
+        decoding="async"
         className="pointer-events-none absolute inset-0 size-full object-cover object-[20%_bottom] sm:object-left-bottom"
       />
       <div className="absolute inset-0 bg-white/40" />

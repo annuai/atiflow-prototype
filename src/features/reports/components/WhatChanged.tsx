@@ -1,3 +1,4 @@
+import { formatNumber } from '@/i18n';
 import { BarChartSquare02 } from '@untitledui/icons';
 import { EmptyState } from '@/components/data/EmptyState';
 import { ArrowDown, ArrowUp } from '@untitledui/icons';
@@ -44,7 +45,7 @@ export function WhatChanged({ moves, vs }: { moves: Move[]; vs: string }) {
                           )}
                         >
                           {r.pct > 0 ? <ArrowUp className="size-3.5" /> : <ArrowDown className="size-3.5" />}
-                          {Math.abs(r.pct).toFixed(0)}%
+                          {formatNumber(Math.abs(r.pct), 0)}%
                         </span>
                       </li>
                     ))}

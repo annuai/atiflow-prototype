@@ -11,6 +11,7 @@ import { AvatarUpload } from './AvatarUpload';
 import { FleetPicker } from './FleetPicker';
 import { validateNew, type UserForm } from '../model/validate';
 import { localized } from '@/i18n';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 const misc = localized('misc');
 
@@ -75,7 +76,7 @@ function Form({
     };
     const problems = validateNew(clean, usernameTaken, assignable);
     setErrors(problems);
-    if (Object.keys(problems).length) return;
+    if (Object.keys(problems).length) return focusFirstError();
     const u = userDirectory
       .getState()
       .add({ ...clean, fleets: isFleetScoped(clean.role) ? clean.fleets : undefined, avatar });

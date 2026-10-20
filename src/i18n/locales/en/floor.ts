@@ -126,7 +126,7 @@ export const floor = {
     free: 'Free',
     locate: 'Locate',
     waitingEta: (s: number) => `waiting · ${s}s`,
-    eta: (s: number, m: string) => `~${s}s · ${m} m`,
+    eta: (s: number, m: string) => `~${s}s · ${m}\u00a0m`,
     emptyTitle: 'No robots are heading here',
     emptyText: 'Robots on their way will show here.',
   },
@@ -163,7 +163,7 @@ export const floor = {
     hintDesktop: 'WASD move · Mouse look · Shift run · Esc exit',
   },
   locate: {
-    placeholder: 'Search Robots or Stations by ID',
+    placeholder: 'Search Robots or Stations by ID…',
     matches: 'Matches',
     locate: 'Locate',
     mapKey: 'Map key',

@@ -45,7 +45,7 @@ export function RoutesPanel({
         .map((r) => ({
           id: r.id,
           title: r.name,
-          subtitle: `${r.oneWay ? text.roadKind.oneWay : text.roadKind.twoLanes} · ${roadLength(r)} m`,
+          subtitle: `${r.oneWay ? text.roadKind.oneWay : text.roadKind.twoLanes} · ${roadLength(r)}\u00a0m`,
           icon: <Route className="size-4 shrink-0 text-fg-brand-primary" />,
         }))}
       selectedId={selectedId}
@@ -212,7 +212,7 @@ export function RoadForm({
           {(item) => <Select.Item {...item} />}
         </Select>
       </div>
-      <Input label={f.length} {...help('route.length')} size="sm" value={`${roadLength(road)} m`} isDisabled />
+      <Input label={f.length} {...help('route.length')} size="sm" value={`${roadLength(road)}\u00a0m`} isDisabled />
       <Input label={f.lanes} {...help('route.lanes')} size="sm" value={road.laneIds.join(', ')} isDisabled />
       <div className="mt-auto flex flex-col gap-2">
         <LocateButton onPress={onLocate} />

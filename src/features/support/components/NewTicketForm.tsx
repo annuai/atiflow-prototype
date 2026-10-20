@@ -1,3 +1,4 @@
+import { focusFirstError } from '@/utils/focus-first-error';
 import { useState } from 'react';
 import { Camera01 } from '@untitledui/icons';
 import { notify } from '@/ui/toast';
@@ -23,7 +24,10 @@ export function NewTicketForm() {
   const context = buildContext({ aiSummary: prefill?.aiSummary });
   const dup = robot ? tickets.find((t) => t.robotId === robot && t.status !== 'solved') : undefined;
   const submit = async () => {
-    if (!description.trim()) return setError(copy.tickets.form.required);
+    if (!description.trim()) {
+      setError(copy.tickets.form.required);
+      return focusFirstError();
+    }
     const input = {
       category,
       severity,
@@ -106,6 +110,7 @@ export function NewTicketForm() {
       <label className="flex flex-col gap-1 text-sm font-semibold text-secondary">
         {copy.tickets.form.description}
         <textarea
+          aria-invalid={!!error}
           value={description}
           onChange={(e) => {
             setDescription(e.target.value);

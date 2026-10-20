@@ -80,7 +80,7 @@ export const messages: Messages<typeof search> = {
     seeAll: (q) => `"${q}" के सभी परिणाम देखें`,
     noResults: (q) => `"${q}" के लिए कोई परिणाम नहीं`,
     didYouMean: (w) => `क्या आपका मतलब "${w}" था?`,
-    loading: 'खोज रहे हैं...',
+    loading: 'खोज रहे हैं…',
     error: 'खोज काम नहीं कर पाई',
     retry: 'फिर कोशिश करें',
     count: (n) => `${n} परिणाम`,

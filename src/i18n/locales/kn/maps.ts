@@ -75,7 +75,7 @@ export const messages: Messages<typeof maps> = {
   importMap: {
     title: 'ನಕ್ಷೆ ಆಮದು ಮಾಡಿ',
     subtitle: 'ಡಿಪ್ಲಾಯ್ಮೆಂಟ್ ಮ್ಯಾನೇಜರ್‌ನಿಂದ ರಫ್ತು ಮಾಡಿದ ನಕ್ಷೆ ಫೋಲ್ಡರ್ (.zip) ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.',
-    dropHint: (types, mb) => `${types} (ಗರಿಷ್ಠ ${mb} MB)`,
+    dropHint: (types, mb) => `${types} (ಗರಿಷ್ಠ ${mb}\u00a0MB)`,
     back: 'ರದ್ದುಮಾಡಿ',
     next: 'ಆಮದು ಮಾಡಿ',
     reading: 'ನಕ್ಷೆಯನ್ನು ಓದಲಾಗುತ್ತಿದೆ…',
@@ -114,7 +114,7 @@ export const messages: Messages<typeof maps> = {
       type: 'ಬೆಂಬಲಿಸದ ಫೈಲ್ ಸ್ವರೂಪ',
       typeBody: (types) => `ಇವುಗಳಲ್ಲಿ ಒಂದನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ: ${types}.`,
       size: 'ಫೈಲ್ ತುಂಬಾ ದೊಡ್ಡದಾಗಿದೆ',
-      sizeBody: (mb) => `ಫೈಲ್ ${mb} MB ಗಿಂತ ದೊಡ್ಡದಾಗಿದೆ.`,
+      sizeBody: (mb) => `ಫೈಲ್ ${mb}\u00a0MB ಗಿಂತ ದೊಡ್ಡದಾಗಿದೆ.`,
       read: {
         'zip.invalid': 'ಇದು ಓದಬಹುದಾದ ಜಿಪ್ ಫೈಲ್ ಅಲ್ಲ.',
         'zip.tooMany': 'ಜಿಪ್‌ನಲ್ಲಿ ತುಂಬಾ ಫೈಲ್‌ಗಳಿವೆ.',

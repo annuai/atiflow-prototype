@@ -75,7 +75,7 @@ export const mapEditor = {
         confirm: 'Trace walls',
       },
       elements: 'Elements',
-      search: 'Search elements...',
+      search: 'Search elements…',
       emptyTitle: 'No elements yet',
       emptyBody: 'Pick a tool below the map to draw, or trace walls from the lidar estimate.',
       traceAll: 'Trace walls',

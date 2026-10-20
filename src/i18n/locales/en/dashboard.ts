@@ -49,7 +49,7 @@ export const dashboard = {
     utilisation: 'Utilisation',
     trips: 'Trips running',
     waiting: 'Robots waiting',
-    since: (m: number) => (m < 1 ? 'Collecting…' : `Last ${m} min (since this page opened)`),
+    since: (m: number) => (m < 1 ? 'Collecting…' : `Last ${m}\u00a0min (since this page opened)`),
   },
   map: { open: 'Open Live Floor' },
   sample: 'No history API yet: charts start when this page opens.',

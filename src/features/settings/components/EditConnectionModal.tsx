@@ -8,6 +8,7 @@ import { settingsStore, useSettings } from '../data/store';
 import { connectionErrors } from '../model/validate';
 import type { ConnectionDef, ConnectionField } from '../model/types';
 import { localized } from '@/i18n';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 function Form({ def, onOpenChange }: { def: ConnectionDef; onOpenChange(o: boolean): void }) {
   const saved = useSettings((s) => s.connections[def.id].values);
@@ -23,7 +24,7 @@ function Form({ def, onOpenChange }: { def: ConnectionDef; onOpenChange(o: boole
     // required fields may be left empty here (saved as not set); only what is typed has to be valid
     const typed = Object.fromEntries(Object.entries(p).filter(([k]) => clean[k] !== ''));
     setErrors(typed);
-    if (Object.keys(typed).length) return;
+    if (Object.keys(typed).length) return focusFirstError();
     settingsStore.getState().saveConnection(def.id, clean);
     onOpenChange(false);
     notify.success(copy.edit.saved(def.name), undefined, `save-${def.id}`);

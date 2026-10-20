@@ -1,3 +1,4 @@
+import { focusFirstError } from '@/utils/focus-first-error';
 import { useState } from 'react';
 import { PhoneCall01 } from '@untitledui/icons';
 import { notify } from '@/ui/toast';
@@ -29,7 +30,10 @@ export function CallView() {
       ]
     : [['reopen', copy.call.whenReopen]];
   const request = async () => {
-    if (!phone.trim()) return setError(copy.call.phoneRequired);
+    if (!phone.trim()) {
+      setError(copy.call.phoneRequired);
+      return focusFirstError();
+    }
     const input: CallbackInput = { phone: phone.trim(), when, context: buildContext() };
     if (!internetUp()) {
       supportStore.getState().saveDraft(callbackTicket(input));
@@ -94,6 +98,7 @@ export function CallView() {
           <input
             type="tel"
             inputMode="tel"
+            aria-invalid={!!error}
             value={phone}
             onChange={(e) => {
               setPhone(e.target.value);

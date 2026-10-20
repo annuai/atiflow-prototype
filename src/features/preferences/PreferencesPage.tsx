@@ -1,3 +1,4 @@
+import { UnsavedGuard } from '@/components/modal/UnsavedGuard';
 import { useMemo, useState } from 'react';
 import { TabbedPanel } from '@/components/data/TabbedPanel';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -24,6 +25,7 @@ import {
 } from './model/defaults';
 import type { Preferences } from './model/types';
 import { Page, PageCard, PageHeader } from '@/components/page';
+import { focusFirstError } from '@/utils/focus-first-error';
 
 const ALL_TABS = [
   { id: 'alerts', icon: Bell01 },
@@ -70,6 +72,7 @@ export function PreferencesPage() {
     setErrors(e);
     if (Object.keys(e).length) {
       navigate(`${base}/alerts`);
+      focusFirstError();
       return;
     }
     preferencesStore.getState().save(user.username, d);
@@ -94,6 +97,7 @@ export function PreferencesPage() {
   );
   return (
     <>
+      <UnsavedGuard dirty={dirty} allow={(path) => path.startsWith(base)} />
       <Page>
         <PageHeader title={copy.title} subtitle={copy.tabs[active.id].subtitle} />
         <PageCard>

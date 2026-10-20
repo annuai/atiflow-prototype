@@ -40,5 +40,5 @@ export const preferences = {
   seconds: (n: number) => `${n} seconds`,
   oneMinute: '1 minute',
   minutes: (n: number) => `${n} minutes`,
-  minSec: (m: number, s: number) => `${m} min ${s} s`,
+  minSec: (m: number, s: number) => `${m}\u00a0min ${s}\u00a0s`,
 } as const;

@@ -375,7 +375,10 @@ img {
 .ev:hover,
 .ev:focus-visible {
   background: rgba(20, 184, 166, 0.12);
-  outline: none;
+}
+.ev:focus-visible {
+  outline: 2px solid #14b8a6;
+  outline-offset: -2px;
 }
 .ev span {
   text-decoration: underline dotted rgba(100, 116, 139, 0.6);
@@ -1109,4 +1112,38 @@ body {
   .robot-beacon {
     animation: none;
   }
+}
+
+/* ---------- web interface guidelines ---------- */
+:root {
+  color-scheme: light;
+}
+/* headings break evenly instead of leaving one word alone on the last line */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+/* figures in columns line up */
+table {
+  font-variant-numeric: tabular-nums;
+}
+/* first thing a keyboard user reaches: jumps over the sidebar and top bar to the page */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #fff;
+  color: #171717;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: none;
+  outline: 2px solid #14b8a6;
 }

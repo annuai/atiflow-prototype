@@ -1,3 +1,4 @@
+import { useQueryParam } from '@/hooks/use-query-param';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { TabPanelMotion } from '@/components/motion/TabPanelMotion';
@@ -30,7 +31,7 @@ export function OperatorHistoryPage() {
   useRequestsRunning();
   useBookingsRunning();
   const me = useOperator();
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useQueryParam<Filter>('filter', 'all', ['all', 'request', 'approval', 'trip']);
   const [cancelling, setCancelling] = useState<TripRequest | null>(null);
   const [opened, setOpened] = useState<string | null>(() => new URLSearchParams(window.location.search).get('open')); // search opens an item's details
   const { search: urlSearch } = useLocation();
