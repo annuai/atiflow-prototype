@@ -12,6 +12,8 @@ export const messages: Messages<typeof shell> = {
   aiToast: 'അതി AI ഈ പ്രോട്ടോടൈപ്പിന്റെ ഭാഗമല്ല',
   logout: 'ലോഗ് ഔട്ട്',
   sidebarExpand: 'സൈഡ്ബാർ വികസിപ്പിക്കുക',
+  takeTour: 'ടൂർ കാണുക',
+  profileBlank: 'ശൂന്യം',
   sidebarCollapse: 'സൈഡ്ബാർ ചുരുക്കുക',
   comingSoon: 'ഉടൻ വരുന്നു',
   searchConfigurator: 'റോബോട്ടുകൾ, സ്റ്റേഷനുകൾ, സോണുകൾ തിരയുക…',

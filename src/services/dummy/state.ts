@@ -18,7 +18,8 @@ import { createSavedState } from './savedState';
 import seedDataset from '@/fixtures/dataset.json';
 import { SEED_PROFILES } from '@/fixtures/fleetProfiles';
 import { seedAreas, seedGroups, seedMaterials } from '@/fixtures/masterData';
-import { seedSettings } from '@/fixtures/settings';
+import { blankSettings, seedSettings } from '@/fixtures/settings';
+import { activeProfile } from '@/data/profile';
 
 /**
  * The saved-state adapters (dummy: browser storage, same keys the app has always used). The schemas check the ENVELOPE of each document (the fields every reader depends on); the finer
@@ -51,7 +52,10 @@ export const createDummyDataset = (backend?: Backend): DatasetService =>
       robot: z.array(device),
       hardware: z.array(device),
     }),
-    seed: () => structuredClone(seedDataset) as never, // (the envelope schema is looser than the types)
+    seed: () =>
+      (activeProfile().starterData
+        ? structuredClone(seedDataset)
+        : { version: 1, fleets: [], robot: [], hardware: [] }) as never, // (the envelope schema is looser than the types)
   }) as unknown as DatasetService;
 
 export const createDummyFleetProfiles = (backend?: Backend): FleetProfileService =>
@@ -59,7 +63,7 @@ export const createDummyFleetProfiles = (backend?: Backend): FleetProfileService
     key: FLEETS_KEY,
     backend,
     schema: z.record(z.string(), z.object({ mapId: z.string().nullable(), groups: z.array(item) }).passthrough()),
-    seed: () => structuredClone(SEED_PROFILES) as never,
+    seed: () => (activeProfile().starterData ? structuredClone(SEED_PROFILES) : {}) as never,
   }) as unknown as FleetProfileService;
 
 export const createDummyMasterData = (backend?: Backend): MasterDataService =>
@@ -68,6 +72,7 @@ export const createDummyMasterData = (backend?: Backend): MasterDataService =>
     backend,
     schema: z.object({ materials: z.array(item), groups: z.array(item), areas: z.array(item) }),
     seed: () => {
+      if (!activeProfile().starterData) return { groups: [], materials: [], areas: [] } as never;
       const now = Date.now();
       const groups = seedGroups(now);
       const materials = seedMaterials(now, groups);
@@ -100,7 +105,7 @@ export const createDummySettings = (backend?: Backend): SettingsService =>
       connections: z.object({ 'fleet-manager': item, mes: item }).passthrough(),
       general: item,
     }),
-    seed: () => seedSettings() as never,
+    seed: () => (activeProfile().starterData ? seedSettings() : blankSettings()) as never,
   }) as unknown as SettingsService;
 
 export const createDummyPreferences = (backend?: Backend): PreferenceService =>

@@ -22,6 +22,18 @@ export function importedSite(name: string, data?: MapData): SiteLayout {
       ys.push(y);
     }
   }
+  // a map with no floor picture (generated, or drawn by hand) is as big as what has been drawn on it
+  for (const e of data?.model3d?.elements ?? []) {
+    if ('points' in e)
+      for (const [x, y] of e.points) {
+        xs.push(x);
+        ys.push(y);
+      }
+    else {
+      xs.push(e.x - 1, e.x + 1);
+      ys.push(e.y - 1, e.y + 1);
+    }
+  }
   const pad = 2;
   let minX = Math.min(...xs) - pad,
     maxX = Math.max(...xs) + pad,

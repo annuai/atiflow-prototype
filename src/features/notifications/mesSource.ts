@@ -1,3 +1,4 @@
+import { activeProfile } from '@/data/profile';
 import { masterDataStore } from '@/features/master-data';
 import { localized } from '@/i18n';
 import type { NewNotification, NotificationSource } from './types';
@@ -65,6 +66,7 @@ export function mesNext(
 /** Mock of the MES connection: a short history, then something new about once a minute. Replace with the real MES webhook / API. */
 export const mesSource = (everyMs = 60_000): NotificationSource => ({
   start(emit) {
+    if (!activeProfile().mockFeeds) return () => {}; // a blank workspace has no made-up MES traffic
     emit(mesBackfill(Date.now()));
     let n = 0;
     const t = window.setInterval(() => emit([mesNext(Date.now(), n++)]), everyMs);

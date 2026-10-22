@@ -10,6 +10,8 @@ export const shell = {
   aiToast: 'Ati AI isn’t part of this prototype',
   logout: 'Log out',
   sidebarExpand: 'Expand sidebar',
+  takeTour: 'Take the tour',
+  profileBlank: 'Blank',
   sidebarCollapse: 'Collapse sidebar',
   comingSoon: 'Coming soon',
   searchConfigurator: 'Search robots, stations, zones…',

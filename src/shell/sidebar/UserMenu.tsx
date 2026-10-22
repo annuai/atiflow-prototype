@@ -1,5 +1,5 @@
 import { Button as AriaButton } from 'react-aria-components';
-import { LogOut01 } from '@untitledui/icons';
+import { HelpCircle, LogOut01 } from '@untitledui/icons';
 import { Avatar } from '@/components/base/avatar/avatar';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
 import type { PublicUser } from '@/features/auth/types';
@@ -7,7 +7,7 @@ import { copy } from '../copy';
 import { copy as floor } from '@/ui/copy';
 
 /** Avatar block at the bottom of the sidebar. Click opens an account menu with Log out. */
-export function UserMenu({ user, onLogout }: { user: PublicUser; onLogout: () => void }) {
+export function UserMenu({ user, onLogout, onTour }: { user: PublicUser; onLogout: () => void; onTour?: () => void }) {
   return (
     <Dropdown.Root>
       <AriaButton className="sb-user" aria-label={floor.frame.accountMenu(user.name)}>
@@ -28,8 +28,10 @@ export function UserMenu({ user, onLogout }: { user: PublicUser; onLogout: () =>
         <Dropdown.Menu
           onAction={(k) => {
             if (k === 'logout') onLogout();
+            if (k === 'tour') onTour?.();
           }}
         >
+          {onTour && <Dropdown.Item id="tour" icon={HelpCircle} label={copy.takeTour} />}
           <Dropdown.Item id="logout" icon={LogOut01} label={copy.logout} />
         </Dropdown.Menu>
       </Dropdown.Popover>

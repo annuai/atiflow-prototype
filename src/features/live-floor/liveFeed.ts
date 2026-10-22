@@ -13,6 +13,8 @@ import { mapsStore } from '@/data/maps';
 import { layoutOf } from '@/features/map-import';
 import { visibleLiveIds } from '@/features/auth';
 import { buildWorld, type World } from './world/buildWorld';
+import { emptyBase } from './world/emptyBase';
+import { activeProfile } from '@/data/profile';
 import { authStore } from '@/features/auth';
 import type { RosterEntry } from '@/adapters/sim';
 import type {
@@ -80,10 +82,12 @@ function refreshWorld(b: { site: SiteLayout; nav: NavGraph }): World {
   return next;
 }
 function load() {
-  return (base ??= Promise.all([
-    fetch(`/sites/${SITE}/site.json`).then((r) => r.json() as Promise<SiteLayout>),
-    fetch(`/sites/${SITE}/nav.json`).then((r) => r.json() as Promise<NavGraph>),
-  ]).then(([site, nav]) => ({ site, nav }))).then((b) => {
+  return (base ??= activeProfile().builtInSite
+    ? Promise.all([
+        fetch(`/sites/${SITE}/site.json`).then((r) => r.json() as Promise<SiteLayout>),
+        fetch(`/sites/${SITE}/nav.json`).then((r) => r.json() as Promise<NavGraph>),
+      ]).then(([site, nav]) => ({ site, nav }))
+    : Promise.resolve(emptyBase())).then((b) => {
     // every map has its first version from the start (staging areas, entry stations and retrieval orders are read from the maps' versions wherever they are needed: requests, workflows, Master Data)
     for (const m of mapsStore.getState().maps)
       mapVersionsStore.getState().ensure(m.id, m.version, seedMapData(m, b.site, b.nav));

@@ -10,6 +10,7 @@ export type { StagingAreaDef } from './model/types';
 export { accessNodes, ensureNode, routable } from './model/connect';
 export { addZone } from './model/zones';
 export { routeLine, routeSegments } from './model/fillet';
+export { generateSampleMap } from './model/sampleMap';
 export { structureSite } from './model/structure/derive';
 export { modelOf } from './model/structure/ops';
 export type { MapModel3d, StructureElement } from './model/structure/types';

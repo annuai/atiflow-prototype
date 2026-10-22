@@ -1,5 +1,6 @@
 import { toast, Toaster } from 'sonner';
 import { AlertCircle, CheckCircle, InfoCircle, XClose } from '@untitledui/icons';
+import { Button } from '@/components/base/buttons/button';
 import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { FeaturedIcon } from '@/components/foundations/featured-icon/featured-icon';
 import { copy } from './copy';
@@ -26,15 +27,22 @@ export function AppToaster() {
   );
 }
 
+/** A link-style button under the text of a toast (for example "Create map"). */
+export interface ToastAction {
+  label: string;
+  onPress(): void;
+}
 function Notice({
   title,
   description,
   tone,
+  action,
   onClose,
 }: {
   title: string;
   description?: string;
   tone: Tone;
+  action?: ToastAction;
   onClose: () => void;
 }) {
   return (
@@ -46,22 +54,38 @@ function Notice({
       <div className="min-w-0 flex-1 pt-0.5">
         <p className="text-sm font-semibold text-secondary">{title}</p>
         {description && <p className="mt-0.5 text-sm text-tertiary">{description}</p>}
+        {action && (
+          <Button
+            size="sm"
+            color="link-color"
+            className="mt-2"
+            onPress={() => {
+              action.onPress();
+              onClose();
+            }}
+          >
+            {action.label}
+          </Button>
+        )}
       </div>
       <ButtonUtility size="xs" color="tertiary" icon={XClose} tooltip={copy.toast.dismiss} onPress={onClose} />
     </div>
   );
 }
 
-function show(tone: Tone, title: string, description?: string, id?: string) {
+function show(tone: Tone, title: string, description?: string, id?: string, action?: ToastAction) {
   return toast.custom(
-    (t) => <Notice tone={tone} title={title} description={description} onClose={() => toast.dismiss(t)} />,
-    { id, duration: 4000 },
+    (t) => (
+      <Notice tone={tone} title={title} description={description} action={action} onClose={() => toast.dismiss(t)} />
+    ),
+    { id, duration: action ? 8000 : 4000 },
   );
 }
 
 /** `id` makes repeated calls reuse one toast instead of stacking. */
 export const notify = {
-  warning: (title: string, description?: string, id?: string) => show('warning', title, description, id),
+  warning: (title: string, description?: string, id?: string, action?: ToastAction) =>
+    show('warning', title, description, id, action),
   success: (title: string, description?: string, id?: string) => show('success', title, description, id),
   info: (title: string, description?: string, id?: string) => show('info', title, description, id),
   error: (title: string, description?: string, id?: string) => show('error', title, description, id),

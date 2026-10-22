@@ -65,10 +65,13 @@ export const maps = {
       z: 'Z Min must be lower than Z Max',
       number: 'Enter a number',
     },
-    notDefined: {
-      title: 'Map generation starts here',
-      body: 'The generation flow is not defined yet, so nothing was created.',
+    done: {
+      title: 'Map created',
+      body: (name: string, robot: string) =>
+        `“${name}” was generated from ${robot}’s run data and saved as a draft. Open it in the Map Editor to add stations and routes.`,
     },
+    sample:
+      'Sample run data: in this prototype the map is a generated example hall that you then edit in the Map Editor.',
   },
   importMap: {
     title: 'Import map',

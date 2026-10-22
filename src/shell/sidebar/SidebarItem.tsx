@@ -23,6 +23,7 @@ export function SidebarItem({ item }: { item: NavItem }) {
     <Tooltip title={item.label} placement="right" isDisabled={!collapsed}>
       <AriaButton
         className="sb-item"
+        data-tour={`nav-${item.id}`}
         data-active={item.active ? '' : undefined}
         onPress={() => {
           item.onSelect?.();

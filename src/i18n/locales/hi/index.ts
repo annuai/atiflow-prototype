@@ -20,6 +20,7 @@ import { messages as maps } from './maps';
 import { messages as masterData } from './masterData';
 import { messages as materials } from './materials';
 import { messages as nav } from './nav';
+import { messages as onboarding } from './onboarding';
 import { messages as notifications } from './notifications';
 import { messages as preferences } from './preferences';
 import { messages as reports } from './reports';
@@ -30,6 +31,7 @@ import { messages as shell } from './shell';
 import { messages as users } from './users';
 
 export const catalog: Catalog = {
+  onboarding,
   delight,
   ai,
   support,

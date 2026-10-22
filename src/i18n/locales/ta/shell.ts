@@ -12,6 +12,8 @@ export const messages: Messages<typeof shell> = {
   aiToast: 'Ati AI இந்த முன்மாதிரியில் இல்லை',
   logout: 'வெளியேறு',
   sidebarExpand: 'பக்கப்பட்டியை விரி',
+  takeTour: 'சுற்றுப்பயணத்தைப் பாருங்கள்',
+  profileBlank: 'வெற்று',
   sidebarCollapse: 'பக்கப்பட்டியைச் சுருக்கு',
   comingSoon: 'விரைவில்',
   searchConfigurator: 'ரோபோக்கள், நிலையங்கள், மண்டலங்களைத் தேடுங்கள்…',

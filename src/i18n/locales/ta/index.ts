@@ -19,6 +19,7 @@ import { messages as masterData } from './masterData';
 import { messages as misc } from './misc';
 import { messages as materials } from './materials';
 import { messages as nav } from './nav';
+import { messages as onboarding } from './onboarding';
 import { messages as notifications } from './notifications';
 import { messages as preferences } from './preferences';
 import { messages as reports } from './reports';
@@ -30,6 +31,7 @@ import { messages as users } from './users';
 import { messages as workflow } from './workflow';
 
 export const catalog: Catalog = {
+  onboarding,
   delight,
   ai,
   support,

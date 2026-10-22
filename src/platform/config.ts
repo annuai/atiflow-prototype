@@ -16,6 +16,8 @@ export const AppConfigSchema = z.object({
   /** Feature flags by name; a missing flag is off. */
   features: z.record(z.string(), z.boolean()).default({}),
   logLevel: z.enum(['debug', 'info', 'warn', 'error', 'silent']).default('info'),
+  /** Which data profile a fresh browser starts in: `demo` (the starting data) or `blank` (an empty site). A person's own choice (Settings, or `?profile=`) wins. */
+  profile: z.enum(['demo', 'blank']).default('demo'),
   errorReporting: z
     .object({ enabled: z.boolean().default(false), dsn: z.string().optional() })
     .default({ enabled: false }),
@@ -54,6 +56,7 @@ export function fromEnv(env: Record<string, unknown>): Record<string, unknown> {
   if (env.VITE_RELEASE) out.release = env.VITE_RELEASE;
   if (env.VITE_DATA_MODE) out.dataMode = env.VITE_DATA_MODE;
   if (env.VITE_LOG_LEVEL) out.logLevel = env.VITE_LOG_LEVEL;
+  if (env.VITE_PROFILE) out.profile = env.VITE_PROFILE;
   const api: Record<string, unknown> = {};
   if (env.VITE_FLEET_MANAGER_URL) api.fleetManager = env.VITE_FLEET_MANAGER_URL;
   if (env.VITE_DEPLOYMENT_MANAGER_URL) api.deploymentManager = env.VITE_DEPLOYMENT_MANAGER_URL;

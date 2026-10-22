@@ -2,7 +2,7 @@ import { NoResults } from '@/components/data/EmptyState';
 import { useUrlSearchText } from '@/hooks/use-search-text';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { SearchToggle } from '@/components/data/SearchToggle';
@@ -22,6 +22,16 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
   const navigate = useNavigate();
   const devices = useDevices((s) => s[kind.id]);
   const [adding, setAdding] = useState(false);
+  const [params, setParams] = useSearchParams();
+  // `?add=1` (the setup steps and the welcome cards link here) opens the Add dialog straight away
+  const addOpen = adding || params.get('add') === '1';
+  const setAddOpen = (o: boolean) => {
+    setAdding(o);
+    if (!o && params.has('add')) {
+      params.delete('add');
+      setParams(params, { replace: true });
+    }
+  };
   const [preset, setPreset] = useState<Record<string, FieldValue>>();
   const { text: q, setText: setQ, matches } = useUrlSearchText('q');
   const [searching, setSearching] = useState(!!q);
@@ -59,7 +69,7 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
                   setQ('');
                 }}
               />
-              <Button size="sm" color="primary" iconLeading={Plus} onPress={() => add()}>
+              <Button size="sm" color="primary" iconLeading={Plus} data-tour="add-device" onPress={() => add()}>
                 {kind.addLabel}
               </Button>
             </>
@@ -83,7 +93,7 @@ export function DeviceListPage({ kind }: { kind: DeviceKind }) {
           )}
         </PageCard>
       </Page>
-      <AddDeviceModal kind={kind} isOpen={adding} onOpenChange={setAdding} preset={preset} />
+      <AddDeviceModal kind={kind} isOpen={addOpen} onOpenChange={setAddOpen} preset={preset} />
     </>
   );
 }

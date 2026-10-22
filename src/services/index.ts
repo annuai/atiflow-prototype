@@ -1,6 +1,7 @@
 import type { AppConfig } from '@/platform';
 import { log, reportError } from '@/platform';
 import { reinitStores } from '@/data/storeInit';
+import { profileBackend, profileSessionBackend } from '@/data/profile';
 import { installTripIdCounter } from '@/data/tripIds';
 import type { Services } from './ports';
 import { createDummyServices } from './dummy';
@@ -30,7 +31,14 @@ export function services(): Services {
  * exists for a service it falls back to the dummy one and says so in the log, so a half-wired deployment is visible rather than silently fake.
  */
 export function createServices(config: Pick<AppConfig, 'dataMode' | 'api'>): Services {
-  const dummy = instrumentServices(createDummyServices({ latencyMs: 450, workMs: 2500 }));
+  const dummy = instrumentServices(
+    createDummyServices({
+      latencyMs: 450,
+      workMs: 2500,
+      backend: profileBackend(),
+      sessionBackend: profileSessionBackend(),
+    }),
+  );
   if (config.dataMode === 'dummy') return dummy;
   const l = log.child('services');
   for (const name of Object.keys(dummy) as (keyof Services)[])

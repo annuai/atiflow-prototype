@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { LayoutGroup } from 'motion/react';
 import type { PublicUser } from '@/features/auth/types';
 import logo from '@/ui/icons/ati-flow-logo.svg';
@@ -10,6 +11,7 @@ import { CollapsedCtx, SelectCtx, SidebarItem } from './SidebarItem';
 import './sidebar.css';
 import { copy } from '../copy';
 import { copy as floor } from '@/ui/copy';
+import { activeProfile } from '@/data/profile';
 
 interface Props {
   title: string;
@@ -21,9 +23,25 @@ interface Props {
   onClose: () => void;
   collapsed: boolean;
   onToggle: () => void;
+  /** something to show at the bottom of the sidebar above the footer items (the Setup Progress card); gets whether the rail is narrow */
+  footerSlot?: (collapsed: boolean) => ReactNode;
+  /** "Take the tour" in the account menu (starts the walkthrough of this workspace) */
+  onTour?: () => void;
 }
 /** Data-driven sidebar: the page supplies groups/items (`useNavModel`), the shell supplies chrome, collapse and the account menu. */
-export function Sidebar({ title, switcher, useNavModel, user, onLogout, open, onClose, collapsed, onToggle }: Props) {
+export function Sidebar({
+  title,
+  switcher,
+  useNavModel,
+  user,
+  onLogout,
+  open,
+  onClose,
+  collapsed,
+  onToggle,
+  footerSlot,
+  onTour,
+}: Props) {
   const { groups, footerItems } = useNavModel();
   return (
     <CollapsedCtx.Provider value={collapsed}>
@@ -39,6 +57,7 @@ export function Sidebar({ title, switcher, useNavModel, user, onLogout, open, on
                 <img className="sb-logo-mark" src={mark} alt="Ati Flow" />
               </div>
               <span className="sb-ver">v4.0</span>
+              {activeProfile().id !== 'demo' && <span className="sb-ver sb-tag">{copy.profileBlank}</span>}
               <button
                 className="sb-collapse"
                 aria-label={collapsed ? copy.sidebarExpand : copy.sidebarCollapse}
@@ -56,10 +75,11 @@ export function Sidebar({ title, switcher, useNavModel, user, onLogout, open, on
               ))}
             </div>
             <div className="sb-foot">
+              {footerSlot?.(collapsed)}
               {footerItems.map((it) => (
                 <SidebarItem key={it.id} item={it} />
               ))}
-              <UserMenu user={user} onLogout={onLogout} />
+              <UserMenu user={user} onLogout={onLogout} onTour={onTour} />
             </div>
           </aside>
         </LayoutGroup>

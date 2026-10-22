@@ -18,6 +18,7 @@ cat > /usr/share/nginx/html/config.json <<JSON
   "release": "$(json_string "${RELEASE:-unknown}")",
   "dataMode": "$(json_string "${DATA_MODE:-dummy}")",
   "logLevel": "$(json_string "${LOG_LEVEL:-warn}")",
+  "profile": "$(json_string "${PROFILE:-demo}")",
   "api": { ${api} },
   "features": {},
   "analytics": { ${analytics} }

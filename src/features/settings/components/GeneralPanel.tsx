@@ -13,6 +13,7 @@ import { settingsStore, useSettings } from '../data/store';
 import type { GeneralSettings, Units } from '../model/types';
 import { localized } from '@/i18n';
 import { focusFirstError } from '@/utils/focus-first-error';
+import { WorkspacePanel } from './WorkspacePanel';
 
 /** Site name, time zone, units and language: one form with Save / Cancel (Save is enabled only after a change). */
 export function GeneralPanel() {
@@ -93,6 +94,7 @@ export function GeneralPanel() {
           {copy.general.save}
         </Button>
       </div>
+      <WorkspacePanel />
     </div>
   );
 }

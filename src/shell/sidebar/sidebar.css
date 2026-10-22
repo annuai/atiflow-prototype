@@ -69,6 +69,11 @@
   padding: 1px 6px;
   border-radius: var(--r-sm);
 }
+.sb-ver.sb-tag {
+  margin-left: 6px; /* the version badge has the auto margin; the workspace tag sits right after it */
+  background: rgba(251, 191, 36, 0.16);
+  color: #fcd34d;
+}
 .sb-collapse {
   margin-left: 8px;
   width: 24px;
@@ -251,6 +256,7 @@
     padding-right: 8px;
   }
   .sidebar[data-collapsed] .sb-ver,
+  .sidebar[data-collapsed] .sb-tag,
   .sidebar[data-collapsed] .sb-head,
   .sidebar[data-collapsed] .sb-label,
   .sidebar[data-collapsed] .sb-new-fleet,

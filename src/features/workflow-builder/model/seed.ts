@@ -4,9 +4,14 @@ import { defaultWorkflowName } from './names';
 import type { WfNode, Workflow, Workflows } from './types';
 import { DEFAULT_ROBOT_TYPE, ROBOT_TYPE_LABELS } from '@/data/robotTypes';
 import type { FleetId } from '@/data/fleets';
+import { activeProfile } from '@/data/profile';
 
 /** The starting workflows of the dummy data: one per seed fleet, brought up to the current shape, plus the samples. */
-export const seedWorkflows = (): Workflows => upgradeToV7(upgradeToV6(baseSeedWorkflows()));
+export const seedWorkflows = (): Workflows =>
+  activeProfile().starterData ? upgradeToV7(upgradeToV6(baseSeedWorkflows())) : {};
+/** The sample workflows of the demo data (none in a blank workspace). */
+const samples = () => (activeProfile().starterData ? sampleWorkflows() : []);
+const routeSamples = () => (activeProfile().starterData ? routeSampleWorkflows() : []);
 /**
  * The Start step's Robot Type is a robot of the catalog. A value saved earlier that is not one (the old list had names such as "Sherpa Hitch" that match no robot) becomes the default robot,
  * so a trip never waits for a robot type that does not exist.
@@ -24,7 +29,7 @@ export function normaliseRobots(workflows: Workflows): Workflows {
 /** Adds the sample routes that are missing (a list saved before they existed). */
 export function withRouteSamples(workflows: Workflows): Workflows {
   const out = { ...workflows };
-  for (const w of routeSampleWorkflows()) if (!out[w.id]) out[w.id] = w;
+  for (const w of routeSamples()) if (!out[w.id]) out[w.id] = w;
   return out;
 }
 /** Workflows saved before requests existed: "Request from Tablet" became "Tablet". The sample workflows are added when missing. */
@@ -39,7 +44,7 @@ export function upgradeToV5(workflows: Workflows): Workflows {
           : { ...n, f: { ...n.f, request: n.f.request === 'Request from Tablet' ? 'Tablet' : n.f.request } },
       ),
     };
-  for (const s of sampleWorkflows()) if (!out[s.id]) out[s.id] = s;
+  for (const s of samples()) if (!out[s.id]) out[s.id] = s;
   return out;
 }
 /** The Start step no longer lists User IDs (the operators mapped to the drop-off station request) and every Confirm step has a station (the one just before it). The sample workflows are replaced by the current ones. */
@@ -62,7 +67,7 @@ export function upgradeToV6(workflows: Workflows): Workflows {
   };
   const out: Workflows = {};
   for (const [id, w] of Object.entries(workflows)) out[id] = { ...w, nodes: fix(w.nodes) };
-  for (const s of sampleWorkflows()) out[s.id] = s;
+  for (const s of samples()) out[s.id] = s;
   return out;
 }
 /**
@@ -89,7 +94,7 @@ export function upgradeToV7(workflows: Workflows): Workflows {
     });
   const out: Workflows = {};
   for (const [id, w] of Object.entries(workflows)) out[id] = { ...w, nodes: fix(w.nodes) };
-  for (const s of sampleWorkflows()) out[s.id] = s;
+  for (const s of samples()) out[s.id] = s;
   return withRouteSamples(out);
 }
 

@@ -239,4 +239,8 @@ export const messages: Messages<typeof floor> = {
     loading: 'ஏற்றப்படுகிறது',
   },
   toast: { dismiss: 'மூடு', close: 'மூடு' },
+  noFleets: {
+    title: 'தளத்தில் இன்னும் எதுவும் இல்லை',
+    body: 'முதலில் ஒரு கட்டமைப்பாளர் அமைவை முடிக்க வேண்டும்: ஒரு ரோபோ, ஒரு வரைபடம், ஒரு ஃப்ளீட்.',
+  },
 };

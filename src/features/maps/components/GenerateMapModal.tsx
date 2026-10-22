@@ -9,18 +9,28 @@ import { notify } from '@/ui/toast';
 import { copy } from '../copy';
 import { validateNewMap, type NewMapForm } from '../model/logic';
 import { mockRunData, type RunData, type RunDataSource } from '../model/runData';
-import { DEFAULT_ROUTING } from '../model/routing';
+import { DEFAULT_ROUTING, ROUTING_VERSIONS } from '../model/routing';
 import { useMaps } from '../model/maps';
 import { RobotPicker } from './RobotPicker';
 import { RoutingVersionPicker } from './RoutingVersionPicker';
 import { focusFirstError } from '@/utils/focus-first-error';
+import { authStore } from '@/features/auth';
+import { deviceStore, nameOf as deviceName } from '@/features/devices';
+import { createGeneratedMap } from '../model/generateMap';
 
 const BLANK: NewMapForm = { name: '', robot: '', runData: '', version: DEFAULT_ROUTING, zMin: '', zMax: '' };
+
+/** The robot added last (its name), or none. */
+const lastRobot = () => {
+  const d = deviceStore.getState().robot.at(-1);
+  return d ? deviceName(d) : '';
+};
 
 function Body({ onOpenChange, source }: { onOpenChange(o: boolean): void; source: RunDataSource }) {
   const maps = useMaps();
   const t = copy.generate;
-  const [f, setF] = useState<NewMapForm>(BLANK);
+  // the robot that was added last is chosen to begin with (a first map is nearly always made from the robot just added)
+  const [f, setF] = useState<NewMapForm>(() => ({ ...BLANK, robot: lastRobot() }));
   const [posegraph, setPosegraph] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState<{ robot: string; runs: RunData[] } | null>(null);
@@ -45,8 +55,16 @@ function Body({ onOpenChange, source }: { onOpenChange(o: boolean): void; source
     const e = validateNewMap(f, maps, t.errors);
     setErrors(e);
     if (Object.keys(e).length) return focusFirstError();
+    const by = authStore.getState().user?.username ?? 'system';
+    createGeneratedMap({
+      name: f.name,
+      routing: ROUTING_VERSIONS.find((v) => v.id === f.version)?.version ?? 5,
+      robot: f.robot,
+      runData: f.runData,
+      by,
+    });
     onOpenChange(false);
-    notify.info(t.notDefined.title, t.notDefined.body, 'map-generate'); // what happens after "Generate Map" is not defined yet
+    notify.success(t.done.title, t.done.body(f.name.trim(), f.robot), 'map-generate');
   };
   const runOptions = (runs ?? []).map((r) => ({ id: r.id, label: r.label }));
   return (
@@ -63,6 +81,7 @@ function Body({ onOpenChange, source }: { onOpenChange(o: boolean): void; source
       onSubmit={submit}
     >
       <div className="flex flex-col gap-5 pt-4">
+        <p className="rounded-lg bg-secondary px-3 py-2 text-xs text-tertiary">{t.sample}</p>
         <FormField
           def={{ key: 'name', label: t.name, control: 'text', placeholder: t.namePlaceholder, required: true }}
           value={f.name}
@@ -131,6 +150,6 @@ function Body({ onOpenChange, source }: { onOpenChange(o: boolean): void; source
     </ModalShell>
   );
 }
-/** "Generate New Map" dialog. Validates the form; what generation does next is not defined yet. Mounted only while open. */
+/** "Generate New Map" dialog: validates the form and makes a draft map from the robot's run data (an example hall until real run data exists). Mounted only while open. */
 export const GenerateMapModal = (p: { isOpen: boolean; onOpenChange(o: boolean): void; source?: RunDataSource }) =>
   p.isOpen ? <Body onOpenChange={p.onOpenChange} source={p.source ?? mockRunData} /> : null;

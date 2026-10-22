@@ -14,7 +14,7 @@ import plusI from '@/ui/icons/plus-square.svg';
 import bellI from '@/ui/icons/bell.svg';
 import gearI from '@/ui/icons/settings.svg';
 import { KINDS } from '@/features/devices';
-import { fleetPath, FLEETS_PATH } from '@/features/fleets';
+import { fleetPath, FLEETS_PATH, requestMakeFleet } from '@/features/fleets';
 import { useFleetDirectory } from '@/data/fleetDirectory';
 import { wfStore } from '@/features/workflow-builder';
 import { datasetStore } from '@/data/dataset';
@@ -44,7 +44,11 @@ function NewFleet() {
   };
   return (
     <>
-      <SidebarButton icon={plusI} label={nav.items.createFleet} onPress={() => setOpen((o) => !o)} />
+      <SidebarButton
+        icon={plusI}
+        label={nav.items.createFleet}
+        onPress={() => requestMakeFleet(navigate, () => setOpen((o) => !o))}
+      />
       {open && (
         <form
           className="sb-new-fleet"

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useUrlSearchText } from '@/hooks/use-search-text';
 import { fleetDirectory } from '@/data/fleetDirectory';
 import { FilterLines, Map01, Plus, SearchLg, Upload01 } from '@untitledui/icons';
@@ -25,6 +26,16 @@ export function MapsPage() {
   const [sort, setSort] = useState<MapSort>('name');
   const [generating, setGenerating] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [params, setParams] = useSearchParams();
+  // `?new=generate` (the setup steps, the first-robot dialog and the "No map available" toast link here) opens Generate New Map straight away
+  const generateOpen = generating || params.get('new') === 'generate';
+  const setGenerateOpen = (o: boolean) => {
+    setGenerating(o);
+    if (!o && params.has('new')) {
+      params.delete('new');
+      setParams(params, { replace: true });
+    }
+  };
   const byMap = useMemo(() => fleetsByMap(profiles, fleetDirectory.nameOf), [profiles]);
   const history = useMapVersions((s) => s.byMap);
   const rows = useMemo(
@@ -38,7 +49,7 @@ export function MapsPage() {
           {copy.import}
         </Button>
       )}
-      <Button size="sm" color="primary" iconLeading={Plus} onPress={() => setGenerating(true)}>
+      <Button size="sm" color="primary" iconLeading={Plus} data-tour="create-map" onPress={() => setGenerating(true)}>
         {copy.create}
       </Button>
     </>
@@ -107,7 +118,7 @@ export function MapsPage() {
           )}
         </PageCard>
       </Page>
-      <GenerateMapModal isOpen={generating} onOpenChange={setGenerating} />
+      <GenerateMapModal isOpen={generateOpen} onOpenChange={setGenerateOpen} />
       <ImportMapModal isOpen={importing} onOpenChange={setImporting} />
     </>
   );

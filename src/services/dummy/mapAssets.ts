@@ -1,6 +1,7 @@
+import { activeProfile } from '@/data/profile';
 import type { MapAssetService } from '../ports';
 
-const DB = 'atiflow-map-assets',
+const DB = () => 'atiflow-map-assets' + activeProfile().idbSuffix,
   STORE = 'assets';
 type Row = { bytes: Uint8Array; mime: string };
 
@@ -10,7 +11,7 @@ async function sha256(bytes: Uint8Array): Promise<string> {
 }
 const open = () =>
   new Promise<IDBDatabase>((resolve, reject) => {
-    const r = indexedDB.open(DB, 1);
+    const r = indexedDB.open(DB(), 1);
     r.onupgradeneeded = () => r.result.createObjectStore(STORE);
     r.onsuccess = () => resolve(r.result);
     r.onerror = () => reject(r.error);

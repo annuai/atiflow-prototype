@@ -12,6 +12,7 @@ Files: `Dockerfile` (build, then nginx), `deploy/nginx.conf` (SPA fallback, cach
 | variable | meaning | default |
 |---|---|---|
 | `ENVIRONMENT` | `development`, `staging` or `production` (shown in logs and error reports) | `production` |
+| `PROFILE` | `demo` (the starting data, today's behaviour) or `blank` (an empty site: no fleets, robots, maps, materials or workflows, and no built-in demo floor). A person's own choice in Settings (or `?profile=`) wins; the two profiles keep their data apart | `demo` |
 | `DATA_MODE` | `dummy` (built-in fixtures and simulator) or `api` (the services call the URLs below; a service without an HTTP adapter yet falls back to dummy and logs a warning) | `dummy` |
 | `POSTHOG_KEY`, `POSTHOG_HOST` | turns on product analytics with full session recordings (PostHog) for a TESTING deployment: page views, clicks and everything typed except passwords, per person (username and role). Leave unset for a normal deployment: nothing is loaded or sent. Host defaults to `https://us.i.posthog.com` (use the EU one for an EU project). Build-time equivalents (use these on Vercel, then redeploy because they are read at build): `VITE_POSTHOG_PROJECT_TOKEN` (or `VITE_POSTHOG_KEY`), `VITE_POSTHOG_HOST` | off |
 | `API_FLEET_MANAGER_URL`, `API_DEPLOYMENT_MANAGER_URL`, `API_AUTH_URL` | addresses of the real systems (only with `DATA_MODE=api`) | none |

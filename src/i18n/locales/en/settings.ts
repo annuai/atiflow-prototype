@@ -42,4 +42,19 @@ export const settings = {
     saved: 'Settings saved',
     note: 'These are saved with the site. Units are not applied across the app yet.',
   },
+  workspace: {
+    label: 'Workspace data',
+    hint: 'Each workspace keeps its own data. Switching never deletes the other one.',
+    demo: 'Demo data',
+    blank: 'Blank workspace',
+    switch: 'Switch workspace',
+    confirmTitle: (name: string) => `Switch to ${name}?`,
+    confirmBody:
+      'The page reloads and shows that workspace. Nothing is deleted: the other workspace is kept and you can switch back at any time.',
+    confirm: 'Switch',
+    reset: 'Start this workspace over',
+    resetBody:
+      'Deletes everything in the blank workspace: robots, maps, fleets, materials, workflows and the setup progress. The demo data is not touched.',
+    resetConfirm: 'Delete and start over',
+  },
 } as const;

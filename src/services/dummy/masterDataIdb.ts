@@ -1,13 +1,14 @@
+import { activeProfile } from '@/data/profile';
 import type { MasterDataDocument, MasterDataService } from '../ports';
 
-const DB = 'atiflow-master-data',
+const DB = () => 'atiflow-master-data' + activeProfile().idbSuffix,
   STORE = 'docs',
   KEY = 'doc',
-  CHANNEL = 'atiflow-master-data';
+  CHANNEL = () => 'atiflow-master-data' + activeProfile().idbSuffix;
 
 const open = () =>
   new Promise<IDBDatabase>((resolve, reject) => {
-    const r = indexedDB.open(DB, 1);
+    const r = indexedDB.open(DB(), 1);
     r.onupgradeneeded = () => r.result.createObjectStore(STORE);
     r.onsuccess = () => resolve(r.result);
     r.onerror = () => reject(r.error);
@@ -39,7 +40,7 @@ const valid = (v: unknown): v is MasterDataDocument => {
 export function createIdbMasterData(fallback: MasterDataService): MasterDataService {
   if (typeof indexedDB === 'undefined') return fallback;
   let current: MasterDataDocument = fallback.read();
-  const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(CHANNEL);
+  const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(CHANNEL());
   const fromDb = () => run<unknown>('readonly', (s) => s.get(KEY));
   return {
     read: () => current,

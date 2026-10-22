@@ -1,0 +1,92 @@
+/* The Setup Progress card in the dark sidebar (Figma 311:30086). Prefix su- : nothing here styles the sidebar itself. */
+.su-card {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 10px 12px 12px;
+  margin: 0 0 6px;
+  color: var(--sb-text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.su-card:hover,
+.su-card[data-pressed] {
+  background: rgba(255, 255, 255, 0.09);
+}
+.su-card:focus-visible {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: 2px;
+}
+.su-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.su-count {
+  color: var(--sb-accent);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.su-bar {
+  display: block;
+  margin: 8px 0 7px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.su-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sb-accent);
+  transition: width 0.4s ease;
+}
+.su-next {
+  display: block;
+  font-size: 12px;
+  color: var(--sb-text);
+  opacity: 0.85;
+}
+/* the narrow rail: only a ring with the count */
+.su-rail {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 6px;
+  border-radius: 999px;
+  border: 0;
+  background: conic-gradient(var(--sb-accent) calc(var(--su-pct) * 1%), rgba(255, 255, 255, 0.14) 0);
+  cursor: pointer;
+  position: relative;
+}
+.su-rail::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: inherit;
+  background: #12202b;
+}
+.su-rail span {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sb-accent);
+}
+.su-rail:focus-visible {
+  outline: 2px solid var(--sb-accent);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .su-fill {
+    transition: none;
+  }
+}

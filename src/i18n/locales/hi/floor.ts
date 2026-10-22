@@ -232,4 +232,8 @@ export const messages: Messages<typeof floor> = {
     loading: 'लोड हो रहा है',
   },
   toast: { dismiss: 'हटाएँ', close: 'बंद करें' },
+  noFleets: {
+    title: 'फ़्लोर पर अभी कुछ नहीं है',
+    body: 'पहले किसी कॉन्फ़िगरेटर को सेटअप पूरा करना होगा: एक रोबोट, एक मैप और एक फ़्लीट।',
+  },
 };

@@ -239,4 +239,8 @@ export const messages: Messages<typeof floor> = {
     loading: 'ಲೋಡ್ ಆಗುತ್ತಿದೆ',
   },
   toast: { dismiss: 'ತೆಗೆದುಹಾಕಿ', close: 'ಮುಚ್ಚಿ' },
+  noFleets: {
+    title: 'ಫ್ಲೋರ್‌ನಲ್ಲಿ ಇನ್ನೂ ಏನೂ ಇಲ್ಲ',
+    body: 'ಮೊದಲು ಕಾನ್ಫಿಗರೇಟರ್ ಸೆಟಪ್ ಮುಗಿಸಬೇಕು: ಒಂದು ರೋಬೋಟ್, ಒಂದು ನಕ್ಷೆ ಮತ್ತು ಒಂದು ಫ್ಲೀಟ್.',
+  },
 };

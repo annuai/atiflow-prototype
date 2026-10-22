@@ -38,7 +38,9 @@ export function LiveFloorPage() {
   const [view, setView] = useState({ x: 0, y: 0, yaw: 0, zoomPct: 100 });
   const [ready, setReady] = useState(false);
   const [fleetOpen, setFleetOpen] = useState(() => window.innerWidth > 1100);
-  const manyFleets = useVisibleFleets().length > 1;
+  const visibleFleets = useVisibleFleets();
+  const manyFleets = visibleFleets.length > 1;
+  const noFleets = visibleFleets.length === 0; // a new site: nothing to show until a configurator has set up a fleet
   const fleetId = useApp((s) => s.fleetId),
     mode = useApp((s) => s.cameraMode),
     site = useApp((s) => s.site),
@@ -203,6 +205,12 @@ export function LiveFloorPage() {
                 {canConfigure && fleetDirectory.byName(idle.name) && (
                   <Link to={fleetPath(fleetDirectory.byName(idle.name)!.id)}>{copy.idleFleet.open}</Link>
                 )}
+              </div>
+            )}
+            {noFleets && (
+              <div className="float idle-fleet" role="status">
+                <b>{copy.noFleets.title}</b>
+                <span>{copy.noFleets.body}</span>
               </div>
             )}
             <RobotPanel />

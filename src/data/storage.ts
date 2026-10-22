@@ -157,3 +157,14 @@ export function createValidatedDocument<S extends z.ZodType>(opts: {
     parse,
   };
 }
+
+/** Remove every saved key (browser and tab storage) that starts with `prefix`. Used to start a whole profile over; never call it with an empty prefix. */
+export function clearStoragePrefix(prefix: string): void {
+  if (!prefix) return;
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith(prefix)) localStorage.removeItem(k);
+    for (const k of Object.keys(sessionStorage)) if (k.startsWith(prefix)) sessionStorage.removeItem(k);
+  } catch {
+    /* no storage */
+  }
+}

@@ -6,6 +6,7 @@ import { BootFailure } from './shell/BootFailure';
 import { initAnalytics, installGlobalErrorHandlers, loadConfig, log, observeWebVitals } from './platform';
 import { chooseLocale, showLocale } from './i18n';
 import { createServices, hydrateServices, setServices } from './services';
+import { chooseProfile, savedProfile, saveProfile, setActiveProfile } from './data/profile';
 
 /**
  * Start-up, in this order: read the runtime configuration, report uncaught errors, choose the services (dummy or API) from the configuration, LOAD THEIR DATA, and only then load and
@@ -25,6 +26,10 @@ async function start() {
   installGlobalErrorHandlers(window);
   observeWebVitals();
   void initAnalytics(config); // only when the configuration turns it on (a testing deployment); never delays the app
+  // which data profile: the address, else this device's choice, else the deployment's (demo = the starting data; blank = an empty site). Before the services, which are built on it.
+  const picked = chooseProfile({ search: location.search, saved: savedProfile(), config: config.profile });
+  if (picked.fromUrl) saveProfile(picked.id);
+  setActiveProfile(picked.id);
   const services = setServices(createServices(config));
   const { failed } = await hydrateServices(services);
   // the language before anything is drawn: this device's choice, else the site default, else the browser's

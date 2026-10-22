@@ -1,7 +1,7 @@
 import { asFleetId, type FleetId } from '@/data/fleets';
 import { useUrlSearchText } from '@/hooks/use-search-text';
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Cube01, Dataflow03, SearchLg } from '@untitledui/icons';
 import { Button } from '@/components/base/buttons/button';
 import { SearchToggle } from '@/components/data/SearchToggle';
@@ -13,7 +13,9 @@ import { KINDS, nameOf, useDevices } from '@/features/devices';
 import { copy } from './copy';
 import { DeviceCard } from './components/DeviceCard';
 import { FleetAccordion } from './components/FleetAccordion';
-import { MakeFleetModal } from './components/MakeFleetModal';
+import { AddFleetModal } from './components/AddFleetModal';
+import { FleetsWelcome } from './components/FleetsWelcome';
+import { requestMakeFleet } from './model/makeFleet';
 import { OverviewPanel } from './components/OverviewPanel';
 import { useMaps } from '@/features/maps';
 import { profileOf, useFleets } from './model/store';
@@ -34,6 +36,16 @@ export function FleetsIndexPage() {
   const { text: query, setText: setQuery, matches } = useUrlSearchText('q');
   const [searching, setSearching] = useState(!!query);
   const [making, setMaking] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const startMaking = () => requestMakeFleet(navigate, () => setMaking(true));
+  // `?new=1` (a link from the setup steps and the welcome cards) opens the Add Fleet dialog, or says that a map comes first
+  useEffect(() => {
+    if (params.get('new') !== '1') return;
+    params.delete('new');
+    setParams(params, { replace: true });
+    requestMakeFleet(navigate, () => setMaking(true));
+  }, [params, setParams, navigate]);
+  const empty = fleets.length === 0 && robots.length === 0 && hardware.length === 0;
   const [open, setOpen] = useState<FleetId | null>(null);
   const unassigned = robots.filter((d) => !d.values.fleet);
   const rows = useMemo(() => {
@@ -59,7 +71,7 @@ export function FleetsIndexPage() {
                   if (searching) setQuery('');
                 }}
               />
-              <Button size="md" color="secondary" iconLeading={Dataflow03} onPress={() => setMaking(true)}>
+              <Button size="md" color="secondary" iconLeading={Dataflow03} data-tour="make-fleet" onPress={startMaking}>
                 {copy.index.make}
               </Button>
             </>
@@ -67,82 +79,86 @@ export function FleetsIndexPage() {
         />
         <PageCard>
           <PageCardBody>
-            <div className="flex flex-col gap-8">
-              {searching && (
-                <Input
-                  autoFocus
-                  aria-label={copy.index.search}
-                  icon={SearchLg}
-                  placeholder={copy.index.searchPlaceholder}
-                  value={query}
-                  onChange={setQuery}
-                />
-              )}
-              <section className="flex flex-col gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-primary">{copy.index.unassignedTitle}</h2>
-                  <p className="text-sm text-tertiary">
-                    {unassigned.length ? copy.index.unassignedCount(unassigned.length) : copy.index.allAssigned}
-                  </p>
-                </div>
-                {unassigned.length > 0 && (
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    {unassigned.map((d) => (
-                      <DeviceCard key={nameOf(d)} kind={KINDS.robot} device={d} layout="tile" fleet={asFleetId('')} />
-                    ))}
-                  </div>
-                )}
-              </section>
-              <section className="flex flex-col gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-primary">{copy.index.activeTitle}</h2>
-                  <p className="text-sm text-tertiary">{copy.index.activeSubtitle}</p>
-                </div>
-                {fleets.length === 0 ? (
-                  <EmptyState
-                    framed
-                    icon={Cube01}
-                    title={copy.index.noFleets}
-                    subtext={copy.index.noFleetsBody}
-                    action={
-                      <Button size="md" color="primary" onPress={() => setMaking(true)}>
-                        {copy.index.make}
-                      </Button>
-                    }
+            {empty ? (
+              <FleetsWelcome />
+            ) : (
+              <div className="flex flex-col gap-8">
+                {searching && (
+                  <Input
+                    autoFocus
+                    aria-label={copy.index.search}
+                    icon={SearchLg}
+                    placeholder={copy.index.searchPlaceholder}
+                    value={query}
+                    onChange={setQuery}
                   />
-                ) : rows.length === 0 ? (
-                  <NoResults subtext={copy.index.noMatch} />
-                ) : (
-                  rows.map(({ f, map }) => (
-                    <FleetAccordion
-                      key={f.id}
-                      name={f.name}
-                      map={map}
-                      robots={robots.filter((d) => d.values.fleet === f.id).length}
-                      hardware={hardware.filter((d) => d.values.fleet === f.id).length}
-                      open={expanded === f.id}
-                      onToggle={() => setOpen(expanded === f.id ? ('' as FleetId) : f.id)}
-                      menu={
-                        <Dropdown.Root>
-                          <Dropdown.DotsButton aria-label={copy.index.fleetMenu} />
-                          <Dropdown.Popover className="w-48">
-                            <Dropdown.Menu onAction={() => navigate(fleetPath(f.id))}>
-                              <Dropdown.Item id="open" label={copy.index.open} />
-                            </Dropdown.Menu>
-                          </Dropdown.Popover>
-                        </Dropdown.Root>
-                      }
-                    >
-                      <OverviewPanel fleet={f.id} />
-                    </FleetAccordion>
-                  ))
                 )}
-              </section>
-            </div>
+                <section className="flex flex-col gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-primary">{copy.index.unassignedTitle}</h2>
+                    <p className="text-sm text-tertiary">
+                      {unassigned.length ? copy.index.unassignedCount(unassigned.length) : copy.index.allAssigned}
+                    </p>
+                  </div>
+                  {unassigned.length > 0 && (
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                      {unassigned.map((d) => (
+                        <DeviceCard key={nameOf(d)} kind={KINDS.robot} device={d} layout="tile" fleet={asFleetId('')} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+                <section className="flex flex-col gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-primary">{copy.index.activeTitle}</h2>
+                    <p className="text-sm text-tertiary">{copy.index.activeSubtitle}</p>
+                  </div>
+                  {fleets.length === 0 ? (
+                    <EmptyState
+                      framed
+                      icon={Cube01}
+                      title={copy.index.noFleets}
+                      subtext={copy.index.noFleetsBody}
+                      action={
+                        <Button size="md" color="primary" onPress={startMaking}>
+                          {copy.index.make}
+                        </Button>
+                      }
+                    />
+                  ) : rows.length === 0 ? (
+                    <NoResults subtext={copy.index.noMatch} />
+                  ) : (
+                    rows.map(({ f, map }) => (
+                      <FleetAccordion
+                        key={f.id}
+                        name={f.name}
+                        map={map}
+                        robots={robots.filter((d) => d.values.fleet === f.id).length}
+                        hardware={hardware.filter((d) => d.values.fleet === f.id).length}
+                        open={expanded === f.id}
+                        onToggle={() => setOpen(expanded === f.id ? ('' as FleetId) : f.id)}
+                        menu={
+                          <Dropdown.Root>
+                            <Dropdown.DotsButton aria-label={copy.index.fleetMenu} />
+                            <Dropdown.Popover className="w-48">
+                              <Dropdown.Menu onAction={() => navigate(fleetPath(f.id))}>
+                                <Dropdown.Item id="open" label={copy.index.open} />
+                              </Dropdown.Menu>
+                            </Dropdown.Popover>
+                          </Dropdown.Root>
+                        }
+                      >
+                        <OverviewPanel fleet={f.id} />
+                      </FleetAccordion>
+                    ))
+                  )}
+                </section>
+              </div>
+            )}
           </PageCardBody>
         </PageCard>
       </Page>
-      <MakeFleetModal isOpen={making} onOpenChange={setMaking} />
+      <AddFleetModal isOpen={making} onOpenChange={setMaking} />
     </>
   );
 }

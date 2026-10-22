@@ -19,3 +19,18 @@ export const seedSettings = (now = Date.now()): SettingsData => ({
     language: 'en',
   },
 });
+
+/** A site nobody has set up yet: no connection is configured or tested, and the site has no name. */
+export const blankSettings = (): SettingsData => ({
+  version: 1,
+  connections: {
+    'fleet-manager': { values: { host: '', clientId: '', clientSecret: '' } },
+    mes: { values: { amrUrl: '', bomUrl: '' } },
+  },
+  general: {
+    siteName: '',
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    units: 'metric',
+    language: 'en',
+  },
+});

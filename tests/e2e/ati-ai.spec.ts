@@ -130,10 +130,10 @@ test.describe('Ati AI', () => {
     await page.goto('/configurator/robots');
     await open(page);
     const p = panel(page);
-    await expect(p.getByRole('textbox', { name: 'Describe a workflow...' })).toBeVisible();
+    await expect(p.getByRole('textbox', { name: /^Describe a workflow/ })).toBeVisible();
     await expect(p.getByRole('button', { name: /Operator|Supervisor|Configurator/ })).toHaveCount(0);
     await page.goto('/supervisor/dashboard');
-    await expect(p.getByRole('textbox', { name: 'Ask about your fleet...' })).toBeVisible();
+    await expect(p.getByRole('textbox', { name: /^Ask about your fleet/ })).toBeVisible();
     const [box, button] = await Promise.all([
       p.getByRole('textbox').evaluate((e) => e.getBoundingClientRect()),
       p.locator('.ai-send').evaluate((e) => e.getBoundingClientRect()),

@@ -18,6 +18,7 @@ import { robotOps } from './robotOps';
 import { users } from './users';
 import { materials } from './materials';
 import { nav } from './nav';
+import { onboarding } from './onboarding';
 import { auth } from './auth';
 import { common } from './common';
 import { ai } from './ai';
@@ -30,6 +31,7 @@ import { shell } from './shell';
 
 /** Every area of the interface in English (the master). Add an area here, then in each language's `index.ts`. */
 export const catalog = {
+  onboarding,
   delight,
   common,
   auth,

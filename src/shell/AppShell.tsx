@@ -9,6 +9,7 @@ import { AtiAiDock, atiAiStore } from '@/features/ati-ai';
 import { Delight } from '@/features/delight';
 import { SupportWidget, toggleSupport, useSupportUnread } from '@/features/support';
 import { Sidebar } from './sidebar';
+import { MilestoneHost, SetupProgress, TourHost, WelcomeHost, tourRequests } from '@/features/onboarding';
 import { Topbar } from './Topbar';
 import type { NavModel } from './types';
 import { copy } from './copy';
@@ -61,6 +62,8 @@ export function AppShell({ useNavModel, searchPlaceholder, children }: Props) {
         open={navOpen}
         onClose={() => setNavOpen(false)}
         collapsed={collapsed}
+        onTour={current ? () => tourRequests.getState().start(current) : undefined}
+        footerSlot={current === 'configurator' ? (rail) => <SetupProgress collapsed={rail} /> : undefined}
         onToggle={() =>
           setCollapsed((c) => {
             services().device.set('sb-collapsed', c ? '0' : '1');
@@ -87,6 +90,9 @@ export function AppShell({ useNavModel, searchPlaceholder, children }: Props) {
       <AtiAiDock />
       <SupportWidget />
       <Delight />
+      {current === 'configurator' && <MilestoneHost />}
+      {current && <WelcomeHost workspace={current} />}
+      <TourHost />
     </div>
   );
 }

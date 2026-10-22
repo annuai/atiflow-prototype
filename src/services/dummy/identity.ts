@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createValidatedDocument, localBackend, sessionBackend, type StorageBackend } from '@/data/storage';
 import seedDataset from '@/fixtures/dataset.json';
+import { activeProfile } from '@/data/profile';
 import { ALL_PERMISSIONS, isFleetScoped, presetOf } from '@/features/access';
 import type { UserRecord } from '@/features/auth/types';
 import { SEED_CREDENTIALS, SEED_GRANTS, SEED_REVISION, SEED_SINCE, SEED_USERS } from '@/fixtures/users';
@@ -122,7 +123,11 @@ export function createDummyIdentity(opts: IdentityOptions = {}): {
   const usersDoc = createValidatedDocument({
     backend: backend(USERS_KEY),
     schema: UsersSchema,
-    seed: () => structuredClone(SEED_USERS) as z.infer<typeof UsersSchema>,
+    // a blank site has no fleets yet: the people are the same, with no fleet until one is made and given to them
+    seed: () =>
+      structuredClone(
+        activeProfile().starterData ? SEED_USERS : SEED_USERS.map((u) => ({ ...u, fleets: [] })),
+      ) as z.infer<typeof UsersSchema>,
     onInvalid: (why) => log.child('identity').warn(`saved users ignored: ${why}`),
   });
   const credentialsDoc = createValidatedDocument({

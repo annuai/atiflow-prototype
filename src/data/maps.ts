@@ -1,6 +1,7 @@
 import { createStore } from 'zustand/vanilla';
 import { registerStoreInit } from '@/data/storeInit';
 import { createPersister } from '@/data/persist';
+import { activeProfile } from '@/data/profile';
 import { useStore } from 'zustand';
 import { services } from '@/services';
 import { localized } from '@/i18n';
@@ -69,7 +70,7 @@ const withNames = (maps: FleetMap[]) => {
   return maps.map((m) => (n[m.id] ? { ...m, name: n[m.id] } : m));
 };
 /** Maps that were imported from a file: the built-in ones are code, these are saved. */
-const allMaps = () => withNames([...SYSTEM_MAPS, ...services().mapCatalog.read()]);
+const allMaps = () => withNames([...(activeProfile().builtInSite ? SYSTEM_MAPS : []), ...services().mapCatalog.read()]);
 const catalogPersist = createPersister('imported maps', (v: FleetMap[]) => services().mapCatalog.save(v));
 
 const namePersist = createPersister('map names', (v: Record<string, string>) => services().mapNames.save(v));

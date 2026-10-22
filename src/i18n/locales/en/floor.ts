@@ -231,4 +231,8 @@ export const floor = {
     loading: 'Loading',
   },
   toast: { dismiss: 'Dismiss', close: 'Close' },
+  noFleets: {
+    title: 'Nothing is on the floor yet',
+    body: 'A configurator has to finish the setup first: a robot, a map and a fleet.',
+  },
 } as const;

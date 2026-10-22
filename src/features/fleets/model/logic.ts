@@ -46,3 +46,6 @@ export const removeFromGroup = (groups: StationGroup[], id: string, code: string
 /** A material left the fleet: it also leaves every group. */
 export const pruneMaterial = (groups: StationGroup[], code: string) =>
   groups.map((g) => (g.codes.includes(code) ? { ...g, codes: g.codes.filter((c) => c !== code) } : g));
+
+/** A fleet can be made once the site has at least one map (a fleet is where a map and robots come together). Later fleets may be made without a map when every map is already taken by another fleet. */
+export const canCreateFleet = (maps: number) => maps > 0;

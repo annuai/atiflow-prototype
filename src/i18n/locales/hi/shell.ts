@@ -12,6 +12,8 @@ export const messages: Messages<typeof shell> = {
   aiToast: 'अति AI इस प्रोटोटाइप का हिस्सा नहीं है',
   logout: 'लॉग आउट',
   sidebarExpand: 'साइडबार फैलाएँ',
+  takeTour: 'टूर देखें',
+  profileBlank: 'खाली',
   sidebarCollapse: 'साइडबार समेटें',
   comingSoon: 'जल्द आ रहा है',
   searchConfigurator: 'रोबोट, स्टेशन, ज़ोन खोजें…',
