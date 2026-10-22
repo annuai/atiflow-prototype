@@ -110,7 +110,7 @@ export const mapEditor = {
       deleteManyBody: 'The elements are removed from the draft. The lidar estimate is not changed.',
       locate: 'Locate on Map',
     },
-    drawing: { menu: 'Drawing', upload: 'Upload DXF', soon: 'coming soon' },
+    drawing: { menu: 'Drawing', upload: 'Import drawing' },
     multi: {
       title: (n: number) => `${n} selected`,
       hint: 'The colour applies to all of them. Click an element to add or remove it; drag the floor to draw a box.',

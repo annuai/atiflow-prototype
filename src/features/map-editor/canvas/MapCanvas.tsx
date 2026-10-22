@@ -15,6 +15,7 @@ import type { Tool } from './tools';
 import { usePointerTools } from './usePointerTools';
 import { boundsKey, rememberPlanView, takeView3d } from './lastView';
 import { useViewport } from './useViewport';
+import { useSpacePan } from './useSpacePan';
 
 interface Props {
   /** a staging area is moved, resized (whole rows and columns) or turned with its handles */
@@ -130,6 +131,7 @@ export function MapCanvas({
   const attach = useCallback((n: HTMLDivElement | null) => attachBox(n), [attachBox]);
   const [hover, setHover] = useState<string | null>(null);
   const nodes = useMemo(() => new Map(data.nodes.map((n) => [n.id, n])), [data.nodes]);
+  const spacePan = useSpacePan(vp.panBy);
   const pointer = usePointerTools({
     vp,
     tool,
@@ -137,6 +139,7 @@ export function MapCanvas({
     nodes: data.nodes,
     selection,
     p2p: data.p2p,
+    drawing,
     boxSelect: structureOpen && editable,
     multi,
     onMarquee,
@@ -337,6 +340,7 @@ export function MapCanvas({
           X: {cursor[0].toFixed(2)} &nbsp; Y: {cursor[1].toFixed(2)}
         </span>
       )}
+      {spacePan}
       <ZoomControls vp={vp} />
     </div>
   );

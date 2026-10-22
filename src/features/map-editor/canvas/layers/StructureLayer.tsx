@@ -11,6 +11,7 @@ import type {
   StructureElement,
 } from '../../model/structure/types';
 import type { MapData, MapZone, ZoneShape } from '../../model/types';
+import { polygonOf } from '../../model/shape';
 import type { useViewport } from '../useViewport';
 import { polyPoints } from '../layers';
 import { boxAround, carry } from '../../model/structure/transform';
@@ -87,14 +88,10 @@ function PointsBox({
   );
 }
 const isWork = (e: StructureElement) => e.kind === 'area' && !!e.work;
-const asZone = (e: BoxElement): MapZone => ({
-  id: e.id,
-  type: 'area',
-  name: e.name ?? e.id,
-  shape: { kind: 'rect', cx: e.x, cy: e.y, w: e.w, h: e.d, rot: e.rot },
-  polygon: [],
-  props: {},
-});
+const asZone = (e: BoxElement): MapZone => {
+  const shape: ZoneShape = { kind: 'rect', cx: e.x, cy: e.y, w: e.w, h: e.d, rot: e.rot };
+  return { id: e.id, type: 'area', name: e.name ?? e.id, shape, polygon: polygonOf(shape), props: {} }; // the polygon is the body that is dragged
+};
 
 /**
  * The 3D structure drawn flat: the elements in their colours (walls and partitions as thick lines, machines and pillars as blocks with their text, areas, doors), the faint lidar estimate under
@@ -121,12 +118,14 @@ export function StructureLayer({
   const hw = new Set(m.hiddenWalls),
     he = new Set(m.hiddenEquipment);
   const pick = (e: StructureElement) => (active ? { 'data-hit': `element:${e.id}` } : {});
+  const isPicked = (id: string) => id === selectedId || selectedIds.includes(id);
+  const bodyCursor = (id: string) => (active && selecting && editable && isPicked(id) ? 'move' : 'pointer');
   const dragBody = (e: ReactPointerEvent, id: string) => {
     if (!active || !selecting) return;
     e.stopPropagation();
     const additive = !!multi || e.shiftKey;
     onSelect(id, additive);
-    if (!editable || additive) return;
+    if (!editable || additive || !isPicked(id)) return; // the first press only selects; a selected element is the one that moves
     e.preventDefault();
     let last = vp.toSite(e.clientX, e.clientY);
     const move = (ev: PointerEvent) => {
@@ -195,7 +194,7 @@ export function StructureLayer({
           strokeLinecap="round"
           style={{
             pointerEvents: active ? 'stroke' : 'none',
-            cursor: active && selecting && editable ? 'move' : 'pointer',
+            cursor: bodyCursor(e.id),
           }}
           onPointerDown={(ev) => dragBody(ev, e.id)}
         />
@@ -225,11 +224,10 @@ export function StructureLayer({
           style={{
             // a Work area is a big floor patch under everything: it is picked by its outline (or from the list), so the floor inside it still pans and everything on it can be picked
             pointerEvents: active ? (e.work ? 'stroke' : 'all') : 'none',
-            cursor: active && selecting && editable ? 'move' : 'pointer',
+            cursor: bodyCursor(e.id),
           }}
           onPointerDown={(ev) => dragBody(ev, e.id)}
         />
-        {e.label && <Label text={e.label} at={centroid(e.points)} vp={vp} />}
       </g>
     );
   };
@@ -302,7 +300,6 @@ export function StructureLayer({
           vectorEffect="non-scaling-stroke"
           pointerEvents="none"
         />
-        {shownText(e) && <Label text={shownText(e)!} at={[b.x, b.y]} vp={vp} />}
         {!(sel && editable && selecting) && (
           <polygon
             {...pick(e)}
@@ -310,7 +307,7 @@ export function StructureLayer({
             fill="transparent"
             style={{
               pointerEvents: active ? 'all' : 'none',
-              cursor: active && selecting && editable ? 'move' : 'pointer',
+              cursor: bodyCursor(e.id),
             }}
             onPointerDown={(ev) => dragBody(ev, e.id)}
           />
@@ -367,6 +364,16 @@ export function StructureLayer({
           if (e.kind === 'door') return doorEl(e, sel);
           return boxEl(e as BoxElement, color, sel);
         })}
+      {/* every name lies above all the elements (they never take a click), so a Work area's name is not hidden by what stands on it */}
+      <g pointerEvents="none">
+        {m.elements.map((e) => {
+          if (e.kind === 'area')
+            return e.label ? <Label key={e.id} text={e.label} at={centroid(e.points)} vp={vp} /> : null;
+          if (e.kind === 'machine' || e.kind === 'pillar')
+            return shownText(e) ? <Label key={e.id} text={shownText(e)!} at={[e.x, e.y]} vp={vp} /> : null;
+          return null;
+        })}
+      </g>
       {selected && editable && selecting && (selected.kind === 'machine' || selected.kind === 'pillar') && (
         <ZoneHandles
           zone={asZone(selected)}

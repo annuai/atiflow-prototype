@@ -22,6 +22,10 @@ interface Common {
   name?: string;
   /** made from a wall or machine of the lidar estimate (so a route through it is a warning: the estimate is rough) */
   traced?: boolean;
+  /** made from the drawing a built-in map stands on: its routes were derived from the free floor, so they are not checked against it */
+  fromSite?: boolean;
+  /** made by importing this drawing (its file name): what an earlier import of it made can be replaced as a whole */
+  fromDrawing?: string;
 }
 /** A wall or a partition (a lower wall): a line through points, with a thickness. */
 export interface LineElement extends Common {
@@ -64,5 +68,7 @@ export interface MapModel3d {
   /** indexes into `MapData.structure.walls` / `.equipment` that are removed or replaced by an element: they are not shown and can be brought back */
   hiddenWalls: number[];
   hiddenEquipment: number[];
+  /** the walls, machines and pillars of the drawing a built-in map stands on have been made into elements (done once) */
+  siteTraced?: boolean;
 }
 export const emptyModel = (): MapModel3d => ({ elements: [], hiddenWalls: [], hiddenEquipment: [] });

@@ -52,9 +52,11 @@ const boxEdges = (b: { x: number; y: number; w: number; d: number; rot: number }
 export function structureHits(data: MapData): Hit[] {
   const m = modelOf(data);
   if (!m.elements.length) return [];
-  const traced = new Map(m.elements.map((e) => [e.id, !!e.traced]));
+  const own = m.elements.filter((e) => !e.fromSite);
+  if (!own.length) return [];
+  const traced = new Map(m.elements.map((e) => [e.id, !!(e.traced || e.fromDrawing)]));
   // (only the elements: the estimate is not checked)
-  const site = structureSite({ ...data, structure: undefined });
+  const site = structureSite({ ...data, structure: undefined, model3d: { ...m, elements: own } });
   const walls = site.walls.filter((w) => (w.base ?? 0) < ROBOT_HEIGHT && w.id);
   const boxes = site.equipment.filter((q) => (q.base ?? 0) < ROBOT_HEIGHT && q.id);
   const out: Hit[] = [];

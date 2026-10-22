@@ -15,6 +15,7 @@ import { messages as delight } from './delight';
 import { messages as dashboard } from './dashboard';
 import { messages as fleets } from './fleets';
 import { messages as mapEditor } from './mapEditor';
+import { messages as drawingImport } from './drawingImport';
 import { messages as maps } from './maps';
 import { messages as masterData } from './masterData';
 import { messages as materials } from './materials';
@@ -40,6 +41,7 @@ export const catalog: Catalog = {
   dashboard,
   fleets,
   mapEditor,
+  drawingImport,
   maps,
   masterData,
   notifications,

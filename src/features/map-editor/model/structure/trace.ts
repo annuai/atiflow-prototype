@@ -1,3 +1,4 @@
+import type { SiteLayout } from '@/core/types';
 import type { MapData } from '../types';
 import { DEFAULTS } from './palette';
 import { modelOf } from './ops';
@@ -163,3 +164,54 @@ export const restoreEstimate = (data: MapData): MapData => ({
   ...data,
   model3d: { ...modelOf(data), hiddenWalls: [], hiddenEquipment: [] },
 });
+
+/**
+ * A built-in map stands on the real drawing (`site.json`), whose walls, machines and pillars are not part of the map's own data, so they could not be picked, resized or deleted. This makes
+ * every one of them an element of the map (once: `siteTraced`), marked as traced like elements made from a scan, so a route through one is a warning, not an error.
+ */
+export function traceSite(data: MapData, site: SiteLayout): MapData {
+  const m = modelOf(data);
+  if (m.siteTraced) return data;
+  let n = nextNumber(data);
+  const made: StructureElement[] = [];
+  for (const w of site.walls)
+    made.push({
+      id: `E${n}`,
+      kind: 'wall',
+      points: [
+        [round(w.a[0]), round(w.a[1])],
+        [round(w.b[0]), round(w.b[1])],
+      ],
+      thickness: round(Math.max(w.t, 0.1)),
+      height: w.h || DEFAULTS.wall.height,
+      name: `Wall ${n++}`,
+      fromSite: true,
+    });
+  for (const q of site.equipment)
+    made.push({
+      id: `E${n}`,
+      kind: 'machine',
+      x: round(q.x),
+      y: round(q.y),
+      w: round(q.w),
+      d: round(q.d),
+      rot: q.rot ?? 0,
+      height: q.h || DEFAULTS.machine.height,
+      name: `Machine ${n++}`,
+      fromSite: true,
+    });
+  for (const q of site.pillars as { x: number; y: number; w: number; d: number }[])
+    made.push({
+      id: `E${n}`,
+      kind: 'pillar',
+      x: round(q.x),
+      y: round(q.y),
+      w: round(q.w),
+      d: round(q.d),
+      rot: 0,
+      height: DEFAULTS.pillar.height,
+      name: `Pillar ${n++}`,
+      fromSite: true,
+    });
+  return { ...data, model3d: { ...m, elements: [...m.elements, ...made], siteTraced: true } };
+}

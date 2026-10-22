@@ -5,6 +5,7 @@ import { Dropdown } from '@/components/base/dropdown/dropdown';
 import { EmptyState } from '@/components/data/EmptyState';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
 import { copy } from '../copy';
+import { DrawingImportDialog } from '../drawing/ui/DrawingImportDialog';
 import { ModuleList, type ListItem } from '../components/ModuleList';
 import { elementColor } from '../model/structure/derive';
 import { modelOf } from '../model/structure/ops';
@@ -23,8 +24,8 @@ function downloadDxf(data: MapData) {
   URL.revokeObjectURL(url);
 }
 
-/** The Drawing menu: the structure as a DXF to edit outside (and, later, a DXF coming back in). */
-function DrawingMenu({ data }: { data: MapData }) {
+/** The Drawing menu: the structure as a DXF to edit outside, and a drawing (DXF, converted DWG, Illustrator) coming in to build the structure from. */
+function DrawingMenu({ data, editable, onImport }: { data: MapData; editable: boolean; onImport(): void }) {
   const d = copy.structure.drawing;
   return (
     <Dropdown.Root>
@@ -33,9 +34,12 @@ function DrawingMenu({ data }: { data: MapData }) {
         <ChevronDown className="size-4" />
       </AriaButton>
       <Dropdown.Popover className="w-56">
-        <Dropdown.Menu onAction={(k) => k === 'download' && downloadDxf(data)}>
+        <Dropdown.Menu
+          disabledKeys={editable ? [] : ['upload']}
+          onAction={(k) => (k === 'download' ? downloadDxf(data) : k === 'upload' && onImport())}
+        >
           <Dropdown.Item id="download" label={copy.structure.view3d.downloadDxf} />
-          <Dropdown.Item id="upload" label={`${d.upload} (${d.soon})`} isDisabled />
+          <Dropdown.Item id="upload" label={d.upload} />
         </Dropdown.Menu>
       </Dropdown.Popover>
     </Dropdown.Root>
@@ -78,6 +82,7 @@ export function StructurePanel({
 }) {
   const t = copy.structure;
   const [askTrace, setAskTrace] = useState(false);
+  const [importing, setImporting] = useState(false);
   const m = modelOf(data);
   const elements: ListItem[] = m.elements.map((e) => ({
     id: e.id,
@@ -96,11 +101,12 @@ export function StructurePanel({
         confirmLabel={t.list.traceWarn.confirm}
         onConfirm={() => edit((d) => retraceAll(d))}
       />
+      <DrawingImportDialog isOpen={importing} onOpenChange={setImporting} data={data} onApply={edit} />
       <ModuleList
         controls={
           <>
             <div className="flex items-center gap-1">
-              <DrawingMenu data={data} />
+              <DrawingMenu data={data} editable={editable} onImport={() => setImporting(true)} />
               {editable && canTrace && <TraceMenu onTrace={() => setAskTrace(true)} />}
             </div>
           </>

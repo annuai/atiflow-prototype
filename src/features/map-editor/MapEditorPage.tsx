@@ -101,11 +101,17 @@ function useShownMap(id: string, viewing: Viewing) {
     if (map && base && !imported)
       mapVersionsStore.getState().ensure(map.id, map.version, seedMapData(map, base.site, base.nav));
     if (base) mapVersionsStore.getState().restoreAreas(base.site, base.nav.fleets);
+    if (base && !imported) mapVersionsStore.getState().traceSites(base.site);
   }, [map, base, imported]);
   const { draft, latest, current } = versionShown(history, viewing);
   const data: MapData | undefined = current?.data;
   const isDraft = current?.status === 'draft';
-  const site = imported ? importedSite(map?.name ?? '', data) : base?.site;
+  // a built-in map's walls and machines are elements of the map once they are made so; the plan then draws them as elements, not from the drawing too
+  const site = imported
+    ? importedSite(map?.name ?? '', data)
+    : base && data?.model3d?.siteTraced
+      ? { ...base.site, walls: [], equipment: [], pillars: [] }
+      : base?.site;
   const fleetKey = map ? fleetDirectory.byLiveId(map.fleetLive)?.id : undefined;
   const takenStations = useMemo(() => base?.live.stations.map((s) => s.id) ?? [], [base]);
   const takenAreas = useMemo(
@@ -290,6 +296,7 @@ export function MapEditorPage() {
               onSelection={setSelection}
               multi={multi}
               onView={v.setView}
+              base={map.source === 'imported' ? undefined : site}
             />
           ) : (
             <EditorStage

@@ -2,10 +2,21 @@ import type { NavGraph, SiteLayout } from '@/core/types';
 import type { MapData } from '@/features/map-editor';
 import { layoutOf } from '@/features/map-import';
 
-/** The scene's site: the layout plus a floor (the DWG's floor polygons, or the rectangle around everything). */
-export function siteOf(name: string, data: MapData): SiteLayout | null {
-  const l = layoutOf(data, data.dwg ? 'dwg' : 'lidar'); // a map that already holds a DWG layer keeps drawing its walls
-  if (!l) return null;
+/**
+ * The scene's site: the layout plus a floor (the DWG's floor polygons, or the rectangle around everything). `base` is the real site a built-in map stands on (its walls, machines and pillars come from the
+ * drawing, not from a scan, so the map's own data does not hold them): it is the base under whatever was drawn on the map.
+ */
+export function siteOf(name: string, data: MapData, base?: SiteLayout): SiteLayout | null {
+  const own = layoutOf(data, data.dwg ? 'dwg' : 'lidar'); // a map that already holds a DWG layer keeps drawing its walls
+  if (!own && !base) return null;
+  const l = {
+    walls: [...(base?.walls ?? []), ...(own?.walls ?? [])],
+    equipment: [...(base?.equipment ?? []), ...(own?.equipment ?? [])],
+    floorPolygons: own?.floorPolygons.length ? own.floorPolygons : (base?.floorPolygons ?? []),
+    shapes: own?.shapes,
+    labels: own?.labels,
+    zones: own?.zones,
+  };
   const xs: number[] = [0],
     ys: number[] = [0];
   for (const w of l.walls) {
@@ -45,7 +56,7 @@ export function siteOf(name: string, data: MapData): SiteLayout | null {
     bounds,
     floorPolygons: floor,
     walls: l.walls,
-    pillars: [],
+    pillars: base?.pillars ?? [],
     zones: l.zones ?? [], // Work areas: floor tints under everything (not picked in 3D)
     equipment: l.equipment,
     doors: [],

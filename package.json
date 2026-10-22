@@ -23,7 +23,9 @@
     "derive:zones": "vite-node tools/derive-zones/derive-zones.ts",
     "build:dummy-erp": "node tools/build-dummy-erp.mjs",
     "test:browsers": "playwright test -c playwright.browsers.config.ts",
-    "test:browsers:install": "playwright install chromium firefox webkit"
+    "test:browsers:install": "playwright install chromium firefox webkit",
+    "convert:drawing": "python3 -I tools/drawing-convert/convert.py",
+    "convert:pointcloud": "python3 -I tools/pointcloud-to-dxf/pointcloud_to_dxf.py"
   },
   "dependencies": {
     "@internationalized/date": "^3.12.4",

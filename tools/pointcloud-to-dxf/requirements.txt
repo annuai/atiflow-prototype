@@ -1,0 +1,5 @@
+numpy
+scipy
+scikit-image
+opencv-python-headless
+ezdxf>=1.3

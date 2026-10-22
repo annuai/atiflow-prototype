@@ -3,6 +3,7 @@ import { useStore } from 'zustand';
 import { services } from '@/services';
 import { normaliseData } from './seed';
 import { restoreWorkAreas } from './workAreas';
+import { traceSite } from './structure/trace';
 import type { SiteLayout } from '@/core/types';
 import type { MapData, MapHistory, MapVersion } from './types';
 
@@ -37,6 +38,8 @@ export interface MapVersionsState {
   publish(mapId: string, by: string, now?: number): number | null;
   /** Gives the Work areas that were made from an older saved zone their real outline and tint again (once; nothing else changes, published versions included). */
   restoreAreas(site: SiteLayout, fleets: { color: string; areas: string[] }[]): void;
+  /** Makes the walls, machines and pillars of the drawing a built-in map stands on into elements of every saved version (once each). */
+  traceSites(site: SiteLayout): void;
   reset(): void;
 }
 const put = (s: Saved, mapId: string, versions: MapVersion[]): Saved => ({
@@ -64,6 +67,20 @@ export const mapVersionsStore = createPersistedStore<MapVersionsState, Saved>(
     devHandle: '__mapVersions',
   },
   (set, get) => ({
+    traceSites(site) {
+      const by = get().byMap;
+      let changed = false;
+      const next: Saved = {};
+      for (const [id, h] of Object.entries(by)) {
+        const versions = h.versions.map((v) => {
+          if (v.data.model3d?.siteTraced || v.data.source || v.data.base || v.data.structure) return v;
+          changed = true;
+          return { ...v, data: traceSite(v.data, site) };
+        });
+        next[id] = { ...h, versions };
+      }
+      if (changed) set({ byMap: next });
+    },
     restoreAreas(site, fleets) {
       const by = get().byMap;
       let changed = false;

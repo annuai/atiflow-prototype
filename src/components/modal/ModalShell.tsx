@@ -12,8 +12,8 @@ interface ModalAction {
   isLoading?: boolean;
   destructive?: boolean;
 }
-type Size = 'md' | 'lg';
-const WIDTH: Record<Size, string> = { md: 'max-w-[640px]', lg: 'max-w-[840px]' };
+type Size = 'md' | 'lg' | 'xl';
+const WIDTH: Record<Size, string> = { md: 'max-w-[640px]', lg: 'max-w-[840px]', xl: 'max-w-[1120px]' };
 
 /** The overlay + dialog window only. Multi-step flows keep one frame open and swap the DialogLayout inside, so steps do not re-animate. */
 export function ModalFrame({

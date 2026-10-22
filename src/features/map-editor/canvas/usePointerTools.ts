@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { gestureBusy, useTouchGestures } from '@/components/map/useTouchGestures';
 import { nearestNode } from '../model/roads';
 import type { MapData, Selection } from '../model/types';
@@ -23,6 +23,8 @@ export interface PointerToolsInput {
   onMarquee?(a: P, b: P, additive: boolean): void;
   /** a point-to-point (v2) map: with the Routes tool armed a station is the end of a route, not a thing to select or move (Shift / Alt-click still selects it) */
   p2p?: boolean;
+  /** the points of the shape being drawn so far (Shift straightens the next segment from the last one) */
+  drawing?: P[];
   onPoint(p: P): void;
   onMove(kind: 'station' | 'staging', id: string, to: { x: number; y: number }): void;
 }
@@ -38,6 +40,7 @@ export function usePointerTools({
   nodes,
   selection,
   p2p,
+  drawing = [],
   boxSelect,
   multi,
   onMarquee,
@@ -58,6 +61,34 @@ export function usePointerTools({
     const n = nearestNode(nodes, p[0], p[1], 12 * vp.u);
     return n ? [n.x, n.y] : p;
   };
+  /** Where the pointer aims: with Shift held while drawing a line, the segment from the last point snaps to the nearest 45 degrees (so a wall, route or gate is straight); otherwise a road end snaps to a node near it. */
+  const lineTool = mode === 'many' || (tool.kind === 'gate' && tool.shape === 'line');
+  const aim = (p: P, shift: boolean): P => {
+    if (!(shift && lineTool && drawing.length)) return snap(p);
+    const a = drawing[drawing.length - 1];
+    const dx = p[0] - a[0],
+      dy = p[1] - a[1];
+    const d = Math.hypot(dx, dy);
+    if (d < 1e-9) return p;
+    const raw = Math.atan2(dy, dx);
+    const ang = Math.round(raw / (Math.PI / 4)) * (Math.PI / 4);
+    const along = d * Math.cos(raw - ang); // the pointer's distance projected onto the straight direction
+    return [a[0] + along * Math.cos(ang), a[1] + along * Math.sin(ang)];
+  };
+  const lastRaw = useRef<P | null>(null);
+  useEffect(() => {
+    // pressing or letting go of Shift straightens the preview at once, without moving the mouse
+    const on = (e: KeyboardEvent) => {
+      if (e.key === 'Shift' && lastRaw.current && lineTool && drawing.length)
+        setCursor(aim(lastRaw.current, e.type === 'keydown'));
+    };
+    window.addEventListener('keydown', on);
+    window.addEventListener('keyup', on);
+    return () => {
+      window.removeEventListener('keydown', on);
+      window.removeEventListener('keyup', on);
+    };
+  });
   const hit = (x: number, y: number): Selection => {
     const found: NonNullable<Selection>[] = [];
     for (const el of document.elementsFromPoint(x, y)) {
@@ -90,7 +121,8 @@ export function usePointerTools({
       return; // two fingers: the pinch handles it
     }
     const at = vp.toSite(e.clientX, e.clientY);
-    setCursor(snap([at.x, at.y]));
+    lastRaw.current = [at.x, at.y];
+    setCursor(aim([at.x, at.y], e.shiftKey));
     const d = dragging.current;
     if (d) {
       onMove(d.kind, d.id, { x: at.x + d.dx, y: at.y + d.dy });
@@ -130,7 +162,7 @@ export function usePointerTools({
     if (mode !== 'none') {
       if (editable) {
         const at = vp.toSite(e.clientX, e.clientY);
-        onPoint(snap([at.x, at.y]));
+        onPoint(aim([at.x, at.y], e.shiftKey));
       }
       return;
     }

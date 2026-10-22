@@ -38,7 +38,6 @@ export interface SupportState {
   saveDraft(input: TicketInput): void;
   flushDrafts(): Promise<void>;
 }
-const OPEN = 'support-open';
 const DRAFTS = 'support:drafts';
 const readDrafts = (): Draft[] => {
   try {
@@ -49,7 +48,7 @@ const readDrafts = (): Draft[] => {
 };
 
 export const supportStore = createStore<SupportState>((set, get) => ({
-  open: services().device.get(OPEN) === '1',
+  open: false,
   view: 'home',
   ticketId: null,
   prefill: null,
@@ -62,7 +61,6 @@ export const supportStore = createStore<SupportState>((set, get) => ({
     menu: typeof location !== 'undefined' && /[?&]devSupport=1/.test(location.search),
   },
   setOpen(open) {
-    services().device.set(OPEN, open ? '1' : '0');
     set({ open });
   },
   go(view, opts = {}) {

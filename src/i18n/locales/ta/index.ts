@@ -13,6 +13,7 @@ import { messages as fleets } from './fleets';
 import { messages as floor } from './floor';
 import { messages as insights } from './insights';
 import { messages as mapEditor } from './mapEditor';
+import { messages as drawingImport } from './drawingImport';
 import { messages as maps } from './maps';
 import { messages as masterData } from './masterData';
 import { messages as misc } from './misc';
@@ -43,6 +44,7 @@ export const catalog: Catalog = {
   floor,
   insights,
   mapEditor,
+  drawingImport,
   maps,
   masterData,
   misc,

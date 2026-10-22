@@ -56,7 +56,7 @@ function cutSegment(w: Wall, doors: Extract<StructureElement, { kind: 'door' }>[
 
 /** The text shown on top of a machine or pillar: its own text, else its name (a machine traced from the scan only has an automatic name, which is not shown). */
 export const shownText = (e: StructureElement): string | undefined =>
-  e.label?.trim() || (e.traced ? undefined : e.name?.trim()) || undefined;
+  e.label?.trim() || (e.traced || e.fromSite || e.fromDrawing ? undefined : e.name?.trim()) || undefined;
 
 export function structureSite(data: MapData): StructureSite {
   const m = modelOf(data);

@@ -8,6 +8,7 @@ import { bookings } from './bookings';
 import { dashboard } from './dashboard';
 import { fleets } from './fleets';
 import { mapEditor } from './mapEditor';
+import { drawingImport } from './drawingImport';
 import { maps } from './maps';
 import { masterData } from './masterData';
 import { notifications } from './notifications';
@@ -40,6 +41,7 @@ export const catalog = {
   dashboard,
   fleets,
   mapEditor,
+  drawingImport,
   maps,
   masterData,
   notifications,

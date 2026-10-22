@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { SiteLayout } from '@/core/types';
 import { Viewport3d, navOf, siteOf } from '@/features/map-3d';
 import { planViewOf, rememberView3d } from '../canvas/lastView';
 import { ViewSwitch } from './ViewSwitch';
@@ -17,6 +18,7 @@ export function Stage3d({
   onSelection,
   multi,
   onView,
+  base,
 }: {
   name: string;
   /** which map's plan view to open on (`boundsKey` of its plan site) */
@@ -26,8 +28,10 @@ export function Stage3d({
   onSelection(sel: Selection): void;
   multi: boolean;
   onView(v: '2d' | '3d'): void;
+  /** the real site a built-in map stands on (its walls and machines are not part of the map's own data) */
+  base?: SiteLayout;
 }) {
-  const site = useMemo(() => siteOf(name, data), [name, data]);
+  const site = useMemo(() => siteOf(name, data, base), [name, data, base]);
   const nav = useMemo(() => navOf(data), [data]);
   const start = useMemo(() => planViewOf(planKey), [planKey]);
   const ids = selection?.kind === 'element' ? (selection.ids ?? [selection.id]) : [];

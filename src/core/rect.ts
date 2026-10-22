@@ -43,8 +43,8 @@ function hull(pts: P[]): P[] {
   }
   return [...lo.slice(0, -1), ...up.slice(0, -1)];
 }
-/** The smallest rotated rectangle that covers a polygon (never smaller than it): an edge of the convex hull always lies along one side of it. */
-export function fitRect(poly: P[]): Rect {
+/** The smallest rotated rectangle that covers a polygon (never smaller than it, and no side shorter than `min`: zones need 0.5 m, a thin wall or a post does not): an edge of the convex hull always lies along one side of it. */
+export function fitRect(poly: P[], min = MIN_SIZE): Rect {
   const h = hull(poly);
   if (h.length < 3) {
     const [x, y] = h[0] ?? [0, 0];
@@ -74,8 +74,8 @@ export function fitRect(poly: P[]): Rect {
   return {
     cx: round(cx),
     cy: round(cy),
-    w: Math.max(MIN_SIZE, round(b.maxX - b.minX)),
-    h: Math.max(MIN_SIZE, round(b.maxY - b.minY)),
+    w: Math.max(min, round(b.maxX - b.minX)),
+    h: Math.max(min, round(b.maxY - b.minY)),
     rot: b.a,
   };
 }

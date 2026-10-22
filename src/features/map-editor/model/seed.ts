@@ -1,6 +1,7 @@
 import type { NavGraph, SiteLayout } from '@/core/types';
 import { type FleetMap } from '@/features/maps';
 import { roadsFromLanes } from './roads';
+import { traceSite } from './structure/trace';
 import { floorAreasAreWorkAreas, withoutSections } from './structure/legacy';
 import { areasToWorkAreas, workAreaOf } from './workAreas';
 import { fitRect, gateFromThin, polygonOf } from './shape';
@@ -90,21 +91,24 @@ export function seedMapData(map: Pick<FleetMap, 'fleetLive'>, site: SiteLayout, 
       props: { reason: z.reason },
     })),
   ];
-  return {
-    nodes,
-    lanes,
-    roads: roadsFromLanes(lanes),
-    stations,
-    stagingAreas: structuredClone(DEMO_AREAS[f] ?? []),
-    zones,
-    model3d: {
-      elements: site.zones
-        .filter((z) => z.active && (fleet?.areas ?? []).includes(z.id))
-        .map((z) => workAreaOf(z, nav.fleets)),
-      hiddenWalls: [],
-      hiddenEquipment: [],
+  return traceSite(
+    {
+      nodes,
+      lanes,
+      roads: roadsFromLanes(lanes),
+      stations,
+      stagingAreas: structuredClone(DEMO_AREAS[f] ?? []),
+      zones,
+      model3d: {
+        elements: site.zones
+          .filter((z) => z.active && (fleet?.areas ?? []).includes(z.id))
+          .map((z) => workAreaOf(z, nav.fleets)),
+        hiddenWalls: [],
+        hiddenEquipment: [],
+      },
     },
-  };
+    site,
+  );
 }
 
 /** Data saved by an earlier version of the editor gets the parts it did not have (roads grouped from its lanes, no staging areas). */

@@ -112,7 +112,7 @@ export const messages: Messages<typeof mapEditor> = {
       deleteManyBody: 'एलिमेंट ड्राफ़्ट से हटा दिए जाएँगे। लिडार अनुमान नहीं बदलता।',
       locate: 'मैप पर दिखाएँ',
     },
-    drawing: { menu: 'ड्रॉइंग', upload: 'DXF अपलोड करें', soon: 'जल्द आ रहा है' },
+    drawing: { menu: 'ड्रॉइंग', upload: 'ड्रॉइंग इम्पोर्ट करें' },
     multi: {
       title: (n: number) => `${n} चुने गए`,
       hint: 'रंग सभी पर लागू होता है। जोड़ने या हटाने के लिए किसी एलिमेंट पर क्लिक करें; बॉक्स बनाने के लिए फ़र्श पर खींचें।',
