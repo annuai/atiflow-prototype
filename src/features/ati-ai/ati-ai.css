@@ -12,7 +12,7 @@
     visibility 0s linear 0.22s;
 }
 .ai-dock[data-open='true'] {
-  width: 380px; /* the gap to the page is the page's own right padding, the same as the sidebar's */
+  width: 400px; /* the panel (380) plus the 20px gap to the page, the same as between the sidebar and the page */
   visibility: visible;
   transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -20,7 +20,7 @@
   box-sizing: border-box;
   width: 380px;
   height: 100%;
-  margin-left: 0;
+  margin-left: 20px;
   display: flex;
   flex-direction: column;
   border-radius: var(--r-xl);

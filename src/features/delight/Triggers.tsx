@@ -56,12 +56,12 @@ function useSecrets() {
   }, []);
 }
 
-/** Once a day, the first time the app is open for a person: good morning before noon, "go home" after 19:00. */
-function useDaily(username: string, firstName: string) {
+/** Once a day, the first time the app is open for a person: good morning before noon, "go home" after 19:00 (supervisors and operators only). */
+function useDaily(username: string, firstName: string, floorRole: boolean) {
   useEffect(() => {
     const t = window.setTimeout(() => {
       const h = new Date().getHours();
-      const kind = h < 12 ? 'morning' : h >= 19 ? 'late' : null;
+      const kind = h < 12 ? 'morning' : h >= 19 && floorRole ? 'late' : null; // "go home" is only for the people on the floor
       if (!kind) return;
       const key = `egg:${kind}:${username}`;
       const device = services().device;
@@ -70,7 +70,7 @@ function useDaily(username: string, firstName: string) {
       celebrate(kind === 'morning' ? copy.morning(firstName) : copy.late);
     }, 1500);
     return () => window.clearTimeout(t);
-  }, [username, firstName]);
+  }, [username, firstName, floorRole]);
 }
 
 /** Things done for the first time, and an empty queue: a robot goes by with a word. Each first happens once per person. */
@@ -132,7 +132,7 @@ function AllClear({ username }: { username: string }) {
 export function Triggers() {
   const user = useAuth((s) => s.user);
   useSecrets();
-  useDaily(user?.username ?? '', user?.firstName ?? '');
+  useDaily(user?.username ?? '', user?.firstName ?? '', user?.role === 'supervisor' || user?.role === 'operator');
   useMilestones(user?.username ?? '');
   return user ? <AllClear username={user.username} /> : null;
 }

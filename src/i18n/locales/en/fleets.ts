@@ -238,21 +238,5 @@ export const fleets = {
     body: 'You have no fleets yet. Start by adding your first robot to begin building and managing your autonomous fleet operations.',
     cta: 'Add Your First Robot',
     walkthrough: 'Take a Walkthrough',
-    robots: {
-      title: 'Add Robots',
-      hint: 'Register and configure your AMRs',
-    },
-    fleet: {
-      title: 'Add Fleet',
-      hint: 'Group robots and give them a map',
-    },
-    maps: {
-      title: 'Create Maps',
-      hint: 'Generate or import facility maps',
-    },
-    stations: {
-      title: 'Stations and routes',
-      hint: 'Define where robots stop and drive',
-    },
   },
 } as const;

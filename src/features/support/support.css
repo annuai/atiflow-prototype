@@ -1,7 +1,7 @@
 /* Ati Support window: a card at the top right, under the Go to Support button; it moves left while the Ati AI panel is docked (the dock sets html.ai-docked). */
 .sup-pop {
   position: fixed;
-  right: 20px;
+  right: 16px; /* level with the right edge of the top bar's buttons (12px frame + 4px bar) */
   top: 76px; /* just under the Go to Support button in the top bar */
   z-index: 40;
   display: flex;
@@ -17,7 +17,7 @@
   transition: right 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 html.ai-docked .sup-pop {
-  right: calc(380px + 40px);
+  right: calc(16px + 400px); /* the Ati AI panel's space (380px + its 20px gap) */
 }
 .sup-icon {
   display: grid;

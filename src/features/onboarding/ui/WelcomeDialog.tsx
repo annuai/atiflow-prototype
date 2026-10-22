@@ -2,7 +2,7 @@ import { Button } from '@/components/base/buttons/button';
 import { Badge } from '@/components/base/badges/badges';
 import { CloseButton } from '@/components/base/buttons/close-button';
 import { ModalFrame } from '@/components/modal/ModalShell';
-import mark from '@/ui/icons/ati-logo.svg';
+import mark from '@/ui/icons/ati-logo-black.svg';
 import { copy } from '../copy';
 
 const ITEMS = ['i1', 'i2', 'i3', 'i4'] as const;

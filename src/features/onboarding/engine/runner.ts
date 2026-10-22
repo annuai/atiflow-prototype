@@ -1,6 +1,7 @@
 import { driver, type Driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import type { Tour } from '../model/tours';
+import { mountTourButtons } from '../ui/TourButtons';
 
 export interface TourLabels {
   next: string;
@@ -40,9 +41,11 @@ export function runTour(tour: Tour, deps: TourDeps): () => void {
   const total = tour.steps.length;
   let ended = false;
   let d: Driver | null = null;
+  let unmountButtons: (() => void) | null = null;
   const end = (type: 'done' | 'skipped') => {
     if (ended) return;
     ended = true;
+    unmountButtons?.();
     d?.destroy();
     deps.onEvent({ type });
   };
@@ -77,13 +80,18 @@ export function runTour(tour: Tour, deps: TourDeps): () => void {
         description: text.body,
         side: step.side ?? 'bottom',
         align: 'start',
-        showButtons: i === 0 ? ['next', 'close'] : ['next', 'previous', 'close'],
-        nextBtnText: last ? deps.labels.done : deps.labels.next,
-        prevBtnText: deps.labels.prev,
+        showButtons: ['close'], // Back / Next are our own Buttons, drawn in onPopoverRender
         progressText: deps.labels.progress(i + 1, total),
         showProgress: true,
-        onNextClick: () => void show(i + 1, 1),
-        onPrevClick: () => void show(i - 1, -1),
+        onPopoverRender: (popover) => {
+          unmountButtons?.();
+          unmountButtons = mountTourButtons(popover.footerButtons, {
+            next: last ? deps.labels.done : deps.labels.next,
+            prev: i === 0 ? undefined : deps.labels.prev,
+            onNext: () => void show(i + 1, 1),
+            onPrev: () => void show(i - 1, -1),
+          });
+        },
         onCloseClick: () => end('skipped'),
       },
     });

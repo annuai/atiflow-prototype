@@ -11,6 +11,7 @@ import { RowMenu } from '@/components/data/RowMenu';
 import { copy } from '../copy';
 import { t } from '../text';
 import { filterMaterials } from '../model/logic';
+import { useApiImported } from '../model/apiImported';
 import { useMasterData } from '../model/store';
 import type { Material } from '../model/types';
 import { EditMaterialModal } from './EditMaterialModal';
@@ -25,6 +26,7 @@ interface Props {
 
 /** The materials list: note, search + group filter, table with hover ⋮ menu. A material can be removed unless a workflow uses it. */
 export function MaterialsList({ onAddMore, onAdd }: Props) {
+  const apiImported = useApiImported();
   const materials = useMasterData((s) => s.materials);
   const groups = useMasterData((s) => s.groups);
   const [text, setText] = useState(() => new URLSearchParams(window.location.search).get('code') ?? ''); // search opens the list on that material
@@ -105,9 +107,11 @@ export function MaterialsList({ onAddMore, onAdd }: Props) {
     <>
       <div className="flex flex-wrap items-center justify-end gap-3">
         <div className="flex gap-3">
-          <Button size="sm" color="secondary" iconLeading={Database01} onPress={onAddMore}>
-            {copy.materials.addMore}
-          </Button>
+          {apiImported && (
+            <Button size="sm" color="secondary" iconLeading={Database01} onPress={onAddMore}>
+              {copy.materials.addMore}
+            </Button>
+          )}
           <Button size="sm" color="primary" iconLeading={Plus} onPress={onAdd}>
             {copy.materials.add}
           </Button>

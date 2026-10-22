@@ -1,6 +1,7 @@
 import { Check } from '@untitledui/icons';
-import { Dialog } from 'react-aria-components';
+import { Dialog } from '@/components/application/modals/modal';
 import { Badge } from '@/components/base/badges/badges';
+import { CloseButton } from '@/components/base/buttons/close-button';
 import { Button } from '@/components/base/buttons/button';
 import { ProgressBar } from '@/components/base/progress-indicators/progress-indicators';
 import { cx } from '@/utils/cx';
@@ -14,15 +15,16 @@ export const STEP_PATH: Record<SetupStepId, string> = {
   map: '/configurator/maps?new=generate',
   hardware: '/configurator/hardware?add=1',
   fleet: '/configurator/fleets?new=1',
-  materials: '/configurator/master-data/materials',
+  materials: '/configurator/master-data/materials?add=1',
   workflow: '/configurator',
 };
 
 /** What the Setup Progress card opens: every step with where it stands, a button to go there, and what to do next highlighted. */
 export function SetupPanel({ state, onGo }: { state: SetupState; onGo(path: string): void }) {
   return (
-    <Dialog aria-label={copy.setup.panelTitle} className="w-[360px] max-w-[calc(100vw-32px)] p-5 outline-hidden">
-      <h2 className="text-md font-semibold text-primary">{copy.setup.panelTitle}</h2>
+    <Dialog aria-label={copy.setup.panelTitle} className="relative p-4 sm:p-5">
+      <CloseButton className="absolute top-3 right-3" size="sm" />
+      <h2 className="pr-8 text-md font-semibold text-primary">{copy.setup.panelTitle}</h2>
       <p className="mt-0.5 text-sm text-tertiary">{copy.setup.panelHint}</p>
       <div className="mt-4 flex items-center gap-3">
         <ProgressBar className="h-2 flex-1" value={state.percent} />
@@ -30,14 +32,14 @@ export function SetupPanel({ state, onGo }: { state: SetupState; onGo(path: stri
           {copy.setup.count(state.done, state.total)}
         </span>
       </div>
-      <ol className="mt-4 flex flex-col gap-1">
+      <ol className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {state.steps.map((s, i) => {
           const isNext = state.next === s.id;
           const t = copy.setup.steps[s.id];
           return (
             <li
               key={s.id}
-              className={cx('flex items-start gap-3 rounded-lg p-2.5', isNext && 'bg-brand-primary ring-1 ring-brand')}
+              className={cx('flex items-start gap-3 rounded-lg p-3 ring-1 ring-secondary', isNext && 'bg-brand-primary ring-brand')}
               aria-current={isNext ? 'step' : undefined}
             >
               <span

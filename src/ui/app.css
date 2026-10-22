@@ -71,7 +71,7 @@ img {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 20px;
+  padding: 0 4px 0 20px; /* right: level with the page's action buttons (the title row's 4px) */
 }
 .search {
   position: relative;
@@ -543,7 +543,7 @@ img {
     display: grid;
   }
   .topbar {
-    padding: 0 12px;
+    padding: 0 4px 0 12px;
   }
   .search {
     flex: 1;
@@ -566,7 +566,7 @@ img {
   .topbar {
     height: 56px;
     gap: 4px;
-    padding: 0 8px;
+    padding: 0 2px 0 8px;
   } /* phones: one row, the search box takes every pixel the buttons leave */
   .topbar [aria-label='Go to Support'],
   .topbar [aria-label='Ati AI'] {

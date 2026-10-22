@@ -9,6 +9,7 @@ import { classifyRows } from '../import/review';
 import type { ParseOutcome } from '../import/parseFile';
 import { materialFields } from '../model/fields';
 import { validateMaterial } from '../model/logic';
+import { markApiImported } from '../model/apiImported';
 import { masterDataStore, useMasterData } from '../model/store';
 import { services } from '@/services';
 import type { ErpRow, MaterialSource } from '../sources/types';
@@ -102,6 +103,7 @@ export function ImportModal({ flow, dispatch, source }: Props) {
       .map((c) => picked.rows.get(c))
       .filter((r): r is ErpRow => !!r)
       .map((r) => ({ code: r.code, name: r.name, groupName: r.group }));
+    markApiImported();
     if (incoming.length > BIG_IMPORT) {
       // a big list goes through the background job: progress, cancel and "run in background"
       startImport(incoming, copy.api.sourceName);

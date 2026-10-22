@@ -31,7 +31,7 @@ function SelectFleetPrompt() {
         <Select
           size="md"
           aria-label={copy.noFleet.aria}
-          className="mt-4 w-64"
+          className="mt-4 w-full min-w-72 max-w-md"
           selectedKey={null}
           placeholder={fleets.length ? copy.noFleet.placeholder : copy.noFleet.none}
           isDisabled={!fleets.length}

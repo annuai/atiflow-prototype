@@ -5,6 +5,7 @@ import { track } from '@/platform';
 import { copy } from '../copy';
 import { runTour } from '../engine/runner';
 import { peopleStore, tourRequests, useTourRequest } from '../model/progress';
+import { useSetup } from '../model/useSetup';
 import { TOURS, isTourId, type TourId } from '../model/tours';
 import './tour.css';
 
@@ -18,11 +19,16 @@ export function TourHost() {
   const location = useLocation();
   const user = useAuth((s) => s.user?.username ?? null);
   const requested = useTourRequest();
+  const setupDone = useSetup().complete;
+  const setupDoneRef = useRef(setupDone);
   const stop = useRef<(() => void) | null>(null);
   const pathRef = useRef(location.pathname);
   useEffect(() => {
     pathRef.current = location.pathname;
   }, [location.pathname]);
+  useEffect(() => {
+    setupDoneRef.current = setupDone;
+  }, [setupDone]);
   const fromUrl = params.get('tour');
   const want: TourId | null = isTourId(requested) ? requested : isTourId(fromUrl) ? fromUrl : null;
   useEffect(() => {
@@ -33,7 +39,9 @@ export function TourHost() {
       setParams(params, { replace: true });
     }
     stop.current?.();
-    const tour = TOURS[want];
+    // once setup is finished its progress card is gone, so the step that points at it is left out (and the last step says Done)
+    const base = TOURS[want];
+    const tour = setupDoneRef.current ? { ...base, steps: base.steps.filter((st) => st.id !== 'setup') } : base;
     stop.current = runTour(tour, {
       navigate: (p) => navigate(p),
       path: () => pathRef.current,

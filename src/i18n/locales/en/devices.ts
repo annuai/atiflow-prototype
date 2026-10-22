@@ -12,7 +12,7 @@ export const devices = {
       detailDescription: 'Basic configuration parameters for the robot',
       empty: {
         headline: 'Let’s add your first robot!',
-        description: 'Register your AMRs to start assigning them to fleets, maps and workflows.',
+        description: 'Register your robots to start assigning them to fleets, maps and workflows.',
         hint: 'Keep the Hardware ID and API key from the robot’s label handy.',
       },
     },

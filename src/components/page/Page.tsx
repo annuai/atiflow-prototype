@@ -3,9 +3,11 @@ import { cx } from '@/utils/cx';
 
 type Div = ComponentPropsWithRef<'div'>;
 
-/** The page frame: what sits beside the sidebar under the top bar. A column that fills the height, with the page's side padding (20 px, 12 on a phone). */
+/** The page frame: what sits beside the sidebar under the top bar. A column that fills the height, with 20 px on its left (12 on a phone) and none on its right: the app frame's 12 px is then the gap on the right, the same as on the left of the sidebar. */
 export function Page({ className, ...rest }: Div) {
-  return <div data-page {...rest} className={cx('flex min-h-0 flex-1 flex-col px-5 max-[720px]:px-3', className)} />;
+  return (
+    <div data-page {...rest} className={cx('flex min-h-0 flex-1 flex-col pr-0 pl-5 max-[720px]:pl-3', className)} />
+  );
 }
 
 /** The page's title (the one `h1`). Exported because a page with a custom heading (a rename field, an avatar) still has to look like every other title. */
