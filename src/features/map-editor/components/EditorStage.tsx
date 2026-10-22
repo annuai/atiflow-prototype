@@ -25,6 +25,8 @@ interface Props {
   tool: Tool;
   editable: boolean;
   locateAt: { x: number; y: number; span: number; n: number } | null;
+  /** the Locate button of the zoom controls: set while something is selected, so it is disabled otherwise */
+  onLocateSelected?: () => void;
   selection: Selection;
   mode: 'design' | 'simulation';
   sim: ReturnType<typeof useSimulationPanel>;
@@ -56,6 +58,7 @@ export function EditorStage({
   tool,
   editable,
   locateAt,
+  onLocateSelected,
   selection,
   mode,
   sim,
@@ -80,6 +83,7 @@ export function EditorStage({
         tool={tool}
         editable={editable}
         locate={locateAt}
+        onLocateSelected={onLocateSelected}
         selection={selection}
         canSelect={(s) => mode === 'design' || s.kind === 'station'}
         onSelect={mode === 'simulation' ? sim.pick : pick}

@@ -14,18 +14,19 @@ import { ButtonUtility } from '@/components/base/buttons/button-utility';
 import { ButtonGroup, ButtonGroupItem } from '@/components/base/button-group/button-group';
 import { ZoomBar } from './ZoomBar';
 import { ProgressBar } from '@/components/base/progress-indicators/progress-indicators';
-import { ChevronDown, ChevronRight, Home01, Users01, ChevronUp, XClose } from '@untitledui/icons';
+import { AlertOctagon, ChevronDown, ChevronRight, Home01, ChevronUp, XClose } from '@untitledui/icons';
 import type { NavGraph, RobotTelemetry } from '../core/types';
 import { locateTarget } from './locate';
 import { RelocalizeDialog } from './RelocalizeDialog';
 import { SendToChargerDialog } from './SendToChargerDialog';
+import { EmergencyStopDialog } from './StopDialogs';
 import { copy } from './copy';
 
 /** Looks up a translated name for an id the data may extend; unknown ids show as they are. */
 const tx = (m: Record<string, string>, k: string) => m[k] ?? k;
 
 type Mode = 'orbit' | 'top' | 'walk' | 'follow';
-export function CameraModes({ fleetOpen, onFleet }: { fleetOpen: boolean; onFleet: () => void }) {
+export function CameraModes() {
   const m = useApp((s) => s.cameraMode);
   const change = (v: Mode) => {
     if (v === 'follow' && !store.getState().selectedId) {
@@ -60,16 +61,6 @@ export function CameraModes({ fleetOpen, onFleet }: { fleetOpen: boolean; onFlee
       >
         <span className="lbl">{copy.camera.home}</span>
       </Button>
-      <Button
-        size="sm"
-        color={fleetOpen ? 'primary' : 'secondary'}
-        iconLeading={Users01}
-        aria-label={copy.camera.fleetAria}
-        aria-pressed={fleetOpen}
-        onPress={onFleet}
-      >
-        <span className="lbl">{copy.camera.fleet}</span>
-      </Button>
     </div>
   );
 }
@@ -89,7 +80,8 @@ const ORDER: RobotState[] = [
   'offline',
   'paused',
 ];
-export function FleetList() {
+/** The robot list and live events: one line (title and count) that opens and closes the panel; the Fleet button of the camera bar is gone. */
+export function FleetList({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   const robots = useApp((s) => s.robots),
     fleetId = useApp((s) => s.fleetId),
     sel = useApp((s) => s.selectedId),
@@ -102,62 +94,67 @@ export function FleetList() {
   const counts = ORDER.map((s) => [s, all.filter((r) => r.state === s).length] as const).filter(([, n]) => n);
   const list = all.filter((r) => !f || r.state === f).sort((a, b) => a.id.localeCompare(b.id));
   return (
-    <div className="float fleet">
-      <header>
+    <div className={'float fleet' + (open ? '' : ' collapsed')}>
+      <button type="button" className="fleet-head" aria-expanded={open} onClick={onToggle}>
+        {open ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
         <span>{copy.fleetList.title}</span>
         <Badge size="sm" color="gray">
           {copy.fleetList.robots(all.length)}
         </Badge>
-      </header>
-      <div className="counts">
-        {counts.map(([s, n]) => (
-          <button
-            key={s}
-            className={'cnt' + (f === s ? ' on' : '')}
-            aria-pressed={f === s}
-            onClick={() => setF(f === s ? null : s)}
-          >
-            <BadgeWithDot size="sm" color={STATE_TONE[s]}>
-              {copy.fleetList.count(n, copy.states[s])}
-            </BadgeWithDot>
-          </button>
-        ))}
-      </div>
-      <div className="rlist">
-        {list.map((r) => (
-          <button
-            key={r.id}
-            className={'ritem' + (sel === r.id ? ' sel' : '')}
-            onClick={() => handle.engine?.focusRobot(r.id)}
-          >
-            <i className="dot" style={{ background: STATE_COLOR[r.state], width: 10, height: 10 }} />
-            <div>
-              <div className="nm">{r.id}</div>
-              <small>{r.task ? `${tx(copy.taskTypes, r.task.type)} → ${r.task.to}` : copy.states[r.state]}</small>
-            </div>
-            <span className="bat" style={{ color: r.battery < 25 ? '#dc2626' : undefined }}>
-              {r.battery}%
-            </span>
-          </button>
-        ))}
-      </div>
-      <div className="events">
-        <b>{copy.fleetList.events}</b>
-        {events.slice(0, 6).map((e, i) => (
-          <button
-            type="button"
-            className="ev"
-            key={i}
-            title={copy.fleetList.showOnMap(e.robotId)}
-            aria-label={copy.fleetList.showOnMapAria(e.text, e.robotId)}
-            onClick={() => locateTarget(e.robotId)}
-          >
-            <i className="dot" style={{ background: e.level === 'critical' ? '#ef4444' : '#14b8a6' }} />
-            <span>{e.text}</span>
-          </button>
-        ))}
-        {!events.length && <span style={{ color: '#737373' }}>{copy.fleetList.noEvents}</span>}
-      </div>
+      </button>
+      {open && (
+        <>
+          <div className="counts">
+            {counts.map(([s, n]) => (
+              <button
+                key={s}
+                className={'cnt' + (f === s ? ' on' : '')}
+                aria-pressed={f === s}
+                onClick={() => setF(f === s ? null : s)}
+              >
+                <BadgeWithDot size="sm" color={STATE_TONE[s]}>
+                  {copy.fleetList.count(n, copy.states[s])}
+                </BadgeWithDot>
+              </button>
+            ))}
+          </div>
+          <div className="rlist">
+            {list.map((r) => (
+              <button
+                key={r.id}
+                className={'ritem' + (sel === r.id ? ' sel' : '')}
+                onClick={() => handle.engine?.focusRobot(r.id)}
+              >
+                <i className="dot" style={{ background: STATE_COLOR[r.state], width: 10, height: 10 }} />
+                <div>
+                  <div className="nm">{r.id}</div>
+                  <small>{r.task ? `${tx(copy.taskTypes, r.task.type)} → ${r.task.to}` : copy.states[r.state]}</small>
+                </div>
+                <span className="bat" style={{ color: r.battery < 25 ? '#dc2626' : undefined }}>
+                  {r.battery}%
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="events">
+            <b>{copy.fleetList.events}</b>
+            {events.slice(0, 6).map((e, i) => (
+              <button
+                type="button"
+                className="ev"
+                key={i}
+                title={copy.fleetList.showOnMap(e.robotId)}
+                aria-label={copy.fleetList.showOnMapAria(e.text, e.robotId)}
+                onClick={() => locateTarget(e.robotId)}
+              >
+                <i className="dot" style={{ background: e.level === 'critical' ? '#ef4444' : '#14b8a6' }} />
+                <span>{e.text}</span>
+              </button>
+            ))}
+            {!events.length && <span style={{ color: '#737373' }}>{copy.fleetList.noEvents}</span>}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -209,6 +206,21 @@ function TripSection({ r, nav }: { r: RobotTelemetry; nav: NavGraph | null }) {
   );
 }
 
+/** The last action of the robot window: Emergency stop (red), or Release stop while the robot is stopped. Nothing for an offline robot. */
+function stopAction(r: RobotTelemetry, ask: () => void) {
+  if (r.state === 'offline') return [];
+  if (r.state === 'paused')
+    return [
+      {
+        label: copy.estop.releaseButton,
+        onClick: () => {
+          if (handle.releaseStop?.(r.id)?.ok) notify.success(copy.estop.releasedDone(r.id), undefined, 'estop');
+        },
+      },
+    ];
+  return [{ label: copy.estop.robotButton, destructive: true, icon: AlertOctagon, onClick: ask }];
+}
+
 export function RobotPanel() {
   const id = useApp((s) => s.selectedId);
   const r = useApp((s) => (id ? s.robots[id] : null));
@@ -217,6 +229,7 @@ export function RobotPanel() {
   const open = useApp((s) => s.robotPanelOpen);
   const [charger, setCharger] = useState(false);
   const [relocalize, setRelocalize] = useState(false);
+  const [estop, setEstop] = useState(false);
   if (!r || !open) return null;
   const fleet = fleets.find((f) => f.id === r.fleetId);
   const dest = nav?.stations.find((s) => s.id === (r.task?.next ?? r.task?.to));
@@ -257,10 +270,12 @@ export function RobotPanel() {
           ? []
           : [{ label: copy.charger.button, onClick: () => setCharger(true) }]),
         ...(r.state === 'offline' ? [] : [{ label: copy.relocalize.button, onClick: () => setRelocalize(true) }]),
+        ...stopAction(r, () => setEstop(true)),
       ]}
     >
       <SendToChargerDialog robotId={charger ? r.id : null} onClose={() => setCharger(false)} />
       <RelocalizeDialog robotId={relocalize ? r.id : null} onClose={() => setRelocalize(false)} />
+      <EmergencyStopDialog robotId={estop ? r.id : null} onClose={() => setEstop(false)} />
       {dest && (
         <div className="sub" style={{ margin: '0 0 8px' }}>
           {copy.robotPanel.headingTo} <b>{dest.id}</b> · {dest.name}

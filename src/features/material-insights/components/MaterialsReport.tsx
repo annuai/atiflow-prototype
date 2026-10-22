@@ -8,6 +8,7 @@ import { useMaterialsView } from '../model/useMaterials';
 import type { MaterialStats, Period } from '../model/types';
 import { t } from '../text';
 import { Bars } from './Bars';
+import { MaterialHeatMap } from './MaterialHeatMap';
 import { minutesText } from './format';
 import { formatDate } from '@/i18n';
 
@@ -141,6 +142,7 @@ export function MaterialsReport({ period }: { period: Period }) {
               </ul>
             </Card>
           </div>
+          <MaterialHeatMap />
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             <Card>
               <CardTitle title={t.report.topTitle} hint={t.report.topHint} />

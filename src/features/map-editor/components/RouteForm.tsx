@@ -16,7 +16,6 @@ import {
 } from '../model/routes';
 import { updateRoad } from '../model/roads';
 import type { MapData, MapRoad } from '../model/types';
-import { LocateButton } from './LocateButton';
 import { NumberInput } from './NumberInput';
 
 /**
@@ -29,7 +28,6 @@ export function RouteForm({
   node,
   editable,
   onBack,
-  onLocate,
   onDelete,
   edit,
   onPick,
@@ -40,7 +38,6 @@ export function RouteForm({
   node?: number;
   editable: boolean;
   onBack(): void;
-  onLocate(): void;
   onDelete(): void;
   edit(fn: (m: MapData) => MapData): void;
   onPick(sel: { kind: 'road'; id: string; node?: number } | null): void;
@@ -151,7 +148,6 @@ export function RouteForm({
             {f.addReverse}
           </Button>
         )}
-        <LocateButton onPress={onLocate} />
         {!editable ? (
           <p className="text-xs text-tertiary">{copy.stations.readOnly}</p>
         ) : (

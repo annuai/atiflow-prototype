@@ -18,6 +18,7 @@ import type { RosterEntry } from '@/adapters/sim';
 import type {
   ChargeResult,
   RelocalizeResult,
+  StopResult,
   FleetEvent,
   NavGraph,
   OrderUpdate,
@@ -219,12 +220,26 @@ const robotCommands = {
   sendToCharger(id: string): ChargeResult {
     return adapter?.sendToCharger?.(id) ?? { ok: false, reason: 'not-running' };
   },
+  /** Emergency stop one robot (supervisors only): it stands where it is until released. */
+  emergencyStop(id: string): StopResult {
+    return adapter?.emergencyStop?.(id) ?? { ok: false, reason: 'not-running' };
+  },
+  releaseStop(id: string): StopResult {
+    return adapter?.releaseStop?.(id) ?? { ok: false, reason: 'not-running' };
+  },
+  /** Stop or release every robot of a fleet (supervisors only). */
+  stopFleet(fleetId: string, stop: boolean): StopResult {
+    return adapter?.stopFleet?.(fleetId, stop) ?? { ok: false, reason: 'not-running' };
+  },
   /** Ask a robot that was moved by hand to find its place on the map again (refused while it drives or is offline). */
   relocalize(id: string): RelocalizeResult {
     return adapter?.relocalize?.(id) ?? { ok: false, reason: 'not-running' };
   },
 };
 handle.relocalize = robotCommands.relocalize;
+handle.emergencyStop = robotCommands.emergencyStop;
+handle.releaseStop = robotCommands.releaseStop;
+handle.stopFleet = robotCommands.stopFleet;
 handle.sendToCharger = robotCommands.sendToCharger; // the robot window (ui layer) reaches it through the handle
 
 export const feed = {

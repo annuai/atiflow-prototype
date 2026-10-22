@@ -231,12 +231,22 @@ export interface TelemetryAdapter {
   sendToCharger?(robotId: string): ChargeResult;
   /** Optional: tell a robot that was moved by hand to find its place on the map again. Refused while it is driving, offline or unknown. The robot's own localization sets the pose; the dashboard only asks. */
   relocalize?(robotId: string): RelocalizeResult;
+  /** Optional: emergency stop one robot (it stands where it is until released), or release it. Refused for an unknown or offline robot. A real fleet manager sends its own stop command; the dashboard only asks. */
+  emergencyStop?(robotId: string): StopResult;
+  releaseStop?(robotId: string): StopResult;
+  /** Optional: stop (`stop` true) or release every robot of a fleet. */
+  stopFleet?(fleetId: string, stop: boolean): StopResult;
   cancelOrder?(id: string): boolean;
   onOrderUpdate?(cb: (u: OrderUpdate) => void): void;
 }
 
 export type CameraMode = 'orbit' | 'top' | 'walk' | 'follow';
 export type LayerKey = 'robots' | 'routes' | 'stations' | 'zones' | 'labels' | 'equipment' | 'alerts';
+
+/** The answer to "stop / release a robot or a fleet": how many robots changed. */
+export type StopResult =
+  | { ok: true; count: number }
+  | { ok: false; reason: 'not-found' | 'offline' | 'already-stopped' | 'not-stopped' | 'not-running' };
 
 /** The answer to "relocalize this robot". */
 export type RelocalizeResult = { ok: true } | { ok: false; reason: 'not-found' | 'offline' | 'moving' | 'not-running' };

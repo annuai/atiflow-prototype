@@ -305,6 +305,7 @@ export function MapEditorPage() {
               tool={tool}
               editable={editable}
               locateAt={locateAt}
+              onLocateSelected={selection ? () => locate(selection.kind, selection.id) : undefined}
               selection={selection}
               mode={mode}
               sim={sim}
@@ -357,7 +358,6 @@ export function MapEditorPage() {
               setTool(SELECT);
             }}
             onDelete={setDeleting}
-            onLocate={locate}
           />
         </div>
       </PageCard>

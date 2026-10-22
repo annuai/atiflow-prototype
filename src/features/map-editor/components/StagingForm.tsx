@@ -10,14 +10,12 @@ import { help } from '../help';
 import { clampCellAngle, DEFAULT_SEQ, stagingProblems, totalCells } from '../model/staging';
 import type { MapData, StagingAreaDef } from '../model/types';
 import { SequencePicker } from './SequencePicker';
-import { LocateButton } from './LocateButton';
 import { Hint } from './Hint';
 import { NumberInput } from './NumberInput';
 
 const NONE = '__none';
 /** One staging area (the old tool's "Add staging area"): name, rotation, where the A1 cell is, how many rows and columns, the size of a cell. */
 export function StagingForm({
-  onLocate,
   area,
   data,
   editable,
@@ -25,7 +23,6 @@ export function StagingForm({
   onPatch,
   onDelete,
 }: {
-  onLocate(): void;
   area: StagingAreaDef;
   data: MapData;
   editable: boolean;
@@ -240,7 +237,6 @@ export function StagingForm({
       </fieldset>
       <p className="text-xs text-tertiary">{f.master}</p>
       <div className="mt-auto flex flex-col gap-2">
-        <LocateButton onPress={onLocate} />
         {!editable ? (
           <p className="text-xs text-tertiary">{copy.stations.readOnly}</p>
         ) : (

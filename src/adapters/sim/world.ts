@@ -91,6 +91,7 @@ export class World {
         kWh: roster?.[i].batteryKWh ?? 3,
         faultUntil: 0,
         lostBy: null,
+        estop: false,
         chargeRequested: false,
         ignoreClaims: 0,
         handedOver: 0,

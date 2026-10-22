@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { createValidatedDocument, type StorageBackend } from '../src/data/storage';
 import {
+  AppConfigSchema,
   DEFAULT_CONFIG,
   fromEnv,
   getConfig,
@@ -95,6 +96,13 @@ describe('runtime configuration', () => {
     });
     expect(fromEnv({})).toEqual({});
     expect(mergeConfig({ api: { a: 1 }, x: 1 }, { api: { b: 2 }, x: 2 })).toEqual({ api: { a: 1, b: 2 }, x: 2 });
+  });
+  it('analytics are off unless a project key is given, and the host has a default', () => {
+    expect(DEFAULT_CONFIG.analytics.enabled).toBe(false);
+    expect(fromEnv({})).not.toHaveProperty('analytics');
+    expect(fromEnv({ VITE_POSTHOG_KEY: 'phc_x' })).toEqual({ analytics: { enabled: true, key: 'phc_x' } });
+    const on = AppConfigSchema.parse({ analytics: { enabled: true, key: 'phc_x' } });
+    expect(on.analytics.host).toBe('https://us.i.posthog.com');
   });
 });
 

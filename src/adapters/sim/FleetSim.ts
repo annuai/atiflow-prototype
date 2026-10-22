@@ -5,6 +5,7 @@ import type {
   NavGraph,
   OrderUpdate,
   RelocalizeResult,
+  StopResult,
   RobotTelemetry,
   TransportOrder,
   Vec2,
@@ -81,6 +82,15 @@ export class FleetSim {
   }
   sendToCharger(id: string): ChargeResult {
     return this.commands.sendToCharger(id);
+  }
+  emergencyStop(id: string): StopResult {
+    return this.commands.emergencyStop(id);
+  }
+  releaseStop(id: string): StopResult {
+    return this.commands.release(id);
+  }
+  stopFleet(fleetId: string, stop: boolean): StopResult {
+    return this.commands.stopFleet(fleetId, stop);
   }
   relocalize(id: string): RelocalizeResult {
     return this.commands.relocalize(id);

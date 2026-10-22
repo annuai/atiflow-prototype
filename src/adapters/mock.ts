@@ -40,6 +40,15 @@ export class MockSimulator implements TelemetryAdapter {
   sendToCharger(id: string) {
     return this.sim.sendToCharger(id);
   }
+  emergencyStop(id: string) {
+    return this.sim.emergencyStop(id);
+  }
+  releaseStop(id: string) {
+    return this.sim.releaseStop(id);
+  }
+  stopFleet(fleetId: string, stop: boolean) {
+    return this.sim.stopFleet(fleetId, stop);
+  }
   relocalize(id: string) {
     return this.sim.relocalize(id);
   }

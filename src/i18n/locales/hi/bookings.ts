@@ -76,8 +76,8 @@ export const messages: Messages<typeof bookings> = {
   history: {
     title: 'इतिहास',
     subtitle: 'आपके अनुरोध, आपकी मंज़ूरियाँ और आपकी बुक की ट्रिप, एक ही सूची में।',
-    filters: { all: 'सभी', request: 'अनुरोध', approval: 'मंज़ूरियाँ', trip: 'बुक की गई ट्रिप' },
-    kinds: { request: 'अनुरोध', approval: 'मंज़ूरी', trip: 'बुक की गई ट्रिप' },
+    filters: { all: 'सभी', request: 'सामग्री अनुरोध', approval: 'मंज़ूरियाँ', trip: 'बुक की गई ट्रिप' },
+    kinds: { request: 'सामग्री अनुरोध', approval: 'मंज़ूरी', trip: 'बुक की गई ट्रिप' },
     empty: { title: 'अभी कुछ नहीं', hint: 'अनुरोध, मंज़ूरियाँ और बुक की गई ट्रिप होते ही यहाँ दिखेंगी।' },
     none: 'इस सूची में अभी कुछ नहीं',
     cancel: 'ट्रिप रद्द करें',

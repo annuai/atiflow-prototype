@@ -4,7 +4,7 @@
  * `toXY` turns a site point (metres) into the SVG's coordinates; `u` is metres per screen pixel, so the arrows keep their pixel size while zooming and thin out when zoomed far out.
  */
 type P = [number, number];
-const SIZE_PX = 4.5,
+const SIZE_PX = 6,
   GAP_PX = 90,
   MIN_LEN_M = 1.2;
 export function laneArrowPath(

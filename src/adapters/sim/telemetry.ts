@@ -1,6 +1,7 @@
 import type { RobotTelemetry } from '../../core/types';
 import { STUCK_ALERT } from './constants';
 import { reportedPose } from './footprint';
+import type { Bot } from './types';
 import type { World } from './world';
 
 /** What the fleet reports about every robot right now (the telemetry contract of `core/types.ts`). */
@@ -14,36 +15,7 @@ export function snapshotOf(w: World): RobotTelemetry[] {
       : b.holds.size || b.locks.size
         ? { zoneId: [...b.holds.keys(), ...b.locks.keys()][0], status: 'inside' as const }
         : null;
-    const alerts: NonNullable<RobotTelemetry['alerts']> = [];
-    const who = b.waitsOn.length ? ` (${b.waitsOn.slice(0, 2).join(', ')} first)` : '';
-    if (b.state === 'error') alerts.push({ code: 'FAULT', severity: 'critical', msg: 'Fault: needs someone on site' });
-    if (b.state === 'blocked') alerts.push({ code: 'OBSTACLE', severity: 'critical', msg: 'Path obstructed' });
-    if (b.battery < 25) alerts.push({ code: 'LOW_BATT', severity: 'warn', msg: 'Low battery' });
-    if (b.handedOver > b.s)
-      alerts.push({
-        code: 'ZONE_HANDOVER',
-        severity: 'warn',
-        msg: 'Zone handed over to another robot to break a deadlock',
-      });
-    if (b.waitingZone) alerts.push({ code: 'TRAFFIC_WAIT', severity: 'info', msg: `Waiting for ${b.waitingZone}` });
-    else if (b.state === 'waiting' && b.waitReason === 'intersection')
-      alerts.push({
-        code: 'INTERSECTION_WAIT',
-        severity: 'info',
-        msg: `Waiting for the intersection to clear${who}`,
-      });
-    else if (b.state === 'waiting' && b.waitReason === 'headway')
-      alerts.push({
-        code: 'HEADWAY_WAIT',
-        severity: 'info',
-        msg: b.waitsOn.length ? `Queued behind ${b.waitsOn[0]}` : 'Queued behind another robot',
-      });
-    if (b.state === 'waiting' && b.waitSince >= 0 && w.time - b.waitSince > STUCK_ALERT)
-      alerts.push({
-        code: 'STUCK',
-        severity: 'warn',
-        msg: `Waiting for ${Math.round((w.time - b.waitSince) / 60)} min, needs a look`,
-      });
+    const alerts = alertsOf(b, w);
     return {
       id: b.id,
       model: b.model,
@@ -51,7 +23,7 @@ export function snapshotOf(w: World): RobotTelemetry[] {
       siteId: w.siteId,
       pose: reportedPose(b),
       speed: b.speed,
-      state: b.state,
+      state: b.estop ? 'paused' : b.state,
       battery: Math.round(b.battery),
       payload: b.attached ? b.payload : null,
       trailer: b.trailer ? { x: b.trailer.x, y: b.trailer.y, theta: b.trailer.th } : null,
@@ -69,4 +41,40 @@ export function snapshotOf(w: World): RobotTelemetry[] {
       ts,
     };
   });
+}
+
+/** What is wrong or worth knowing about one robot right now (faults, obstacles, low battery, emergency stop, why it waits). */
+function alertsOf(b: Bot, w: World): NonNullable<RobotTelemetry['alerts']> {
+  const alerts: NonNullable<RobotTelemetry['alerts']> = [];
+  const who = b.waitsOn.length ? ` (${b.waitsOn.slice(0, 2).join(', ')} first)` : '';
+  if (b.estop) alerts.push({ code: 'E_STOP', severity: 'warn', msg: 'Emergency stop: waiting to be released' });
+  if (b.state === 'error') alerts.push({ code: 'FAULT', severity: 'critical', msg: 'Fault: needs someone on site' });
+  if (b.state === 'blocked') alerts.push({ code: 'OBSTACLE', severity: 'critical', msg: 'Path obstructed' });
+  if (b.battery < 25) alerts.push({ code: 'LOW_BATT', severity: 'warn', msg: 'Low battery' });
+  if (b.handedOver > b.s)
+    alerts.push({
+      code: 'ZONE_HANDOVER',
+      severity: 'warn',
+      msg: 'Zone handed over to another robot to break a deadlock',
+    });
+  if (b.waitingZone) alerts.push({ code: 'TRAFFIC_WAIT', severity: 'info', msg: `Waiting for ${b.waitingZone}` });
+  else if (b.state === 'waiting' && b.waitReason === 'intersection')
+    alerts.push({
+      code: 'INTERSECTION_WAIT',
+      severity: 'info',
+      msg: `Waiting for the intersection to clear${who}`,
+    });
+  else if (b.state === 'waiting' && b.waitReason === 'headway')
+    alerts.push({
+      code: 'HEADWAY_WAIT',
+      severity: 'info',
+      msg: b.waitsOn.length ? `Queued behind ${b.waitsOn[0]}` : 'Queued behind another robot',
+    });
+  if (b.state === 'waiting' && b.waitSince >= 0 && w.time - b.waitSince > STUCK_ALERT)
+    alerts.push({
+      code: 'STUCK',
+      severity: 'warn',
+      msg: `Waiting for ${Math.round((w.time - b.waitSince) / 60)} min, needs a look`,
+    });
+  return alerts;
 }

@@ -19,6 +19,14 @@ export const AppConfigSchema = z.object({
   errorReporting: z
     .object({ enabled: z.boolean().default(false), dsn: z.string().optional() })
     .default({ enabled: false }),
+  /** Product analytics with session recordings (PostHog), for a testing deployment: off unless `enabled` and a project `key` are both set. */
+  analytics: z
+    .object({
+      enabled: z.boolean().default(false),
+      key: z.string().optional(),
+      host: z.url().default('https://us.i.posthog.com'),
+    })
+    .default({ enabled: false, host: 'https://us.i.posthog.com' }),
 });
 export type AppConfig = z.infer<typeof AppConfigSchema>;
 
@@ -51,6 +59,13 @@ export function fromEnv(env: Record<string, unknown>): Record<string, unknown> {
   if (env.VITE_DEPLOYMENT_MANAGER_URL) api.deploymentManager = env.VITE_DEPLOYMENT_MANAGER_URL;
   if (env.VITE_AUTH_URL) api.auth = env.VITE_AUTH_URL;
   if (Object.keys(api).length) out.api = api;
+  const phKey = env.VITE_POSTHOG_PROJECT_TOKEN ?? env.VITE_POSTHOG_KEY; // (PostHog calls it the project token)
+  if (phKey)
+    out.analytics = {
+      enabled: true,
+      key: phKey,
+      ...(env.VITE_POSTHOG_HOST ? { host: env.VITE_POSTHOG_HOST } : {}),
+    };
   return out;
 }
 /** Merge config layers (later wins; `api`, `features` and `errorReporting` are merged key by key). */

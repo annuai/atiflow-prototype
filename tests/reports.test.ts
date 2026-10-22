@@ -75,9 +75,9 @@ describe('the verdict and what changed', () => {
   it('warns when a headline KPI slipped 10%+ (direction aware: MORE deadlocks is worse), critical at 25%+ or when availability is below the 85% target', () => {
     expect(summary(report(fleet({ sla: 70 }), fleet({})))).toMatchObject({
       level: 'warn',
-      headline: 'SLA compliance slipped',
+      headline: 'Trips on time slipped',
     });
-    expect(summary(report(fleet({ deadlocks: 7 }), fleet({}))).headline).toMatch(/Deadlock frequency slipped/);
+    expect(summary(report(fleet({ deadlocks: 7 }), fleet({}))).headline).toMatch(/Traffic jams slipped/);
     expect(summary(report(fleet({ throughput: 60 }), fleet({})))).toMatchObject({ level: 'critical' });
     expect(summary(report(fleet({ chargingAvailability: 78 }), fleet({})))).toMatchObject({
       level: 'critical',

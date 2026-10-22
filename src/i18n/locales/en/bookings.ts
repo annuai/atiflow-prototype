@@ -74,8 +74,8 @@ export const bookings = {
   history: {
     title: 'History',
     subtitle: 'Your requests, your approvals and the trips you booked, in one list.',
-    filters: { all: 'All', request: 'Requests', approval: 'Approvals', trip: 'Booked trips' },
-    kinds: { request: 'Request', approval: 'Approval', trip: 'Booked trip' },
+    filters: { all: 'All', request: 'Material requests', approval: 'Approvals', trip: 'Booked trips' },
+    kinds: { request: 'Material request', approval: 'Approval', trip: 'Booked trip' },
     empty: { title: 'Nothing yet', hint: 'Requests, approvals and booked trips show here as they happen.' },
     none: 'Nothing in this list yet',
     cancel: 'Cancel trip',

@@ -57,7 +57,6 @@ export interface SidePanelProps {
   /** stop drawing: the select tool, nothing half drawn */
   onStopDrawing(): void;
   onDelete(what: Thing): void;
-  onLocate(kind: Thing['kind'], id: string): void;
 }
 
 const title = (p: SidePanelProps) =>
@@ -73,7 +72,6 @@ function StationsSection(p: SidePanelProps) {
   if (station && stationAt)
     return (
       <StationForm
-        onLocate={() => p.onLocate('station', station.id)}
         station={station}
         data={data}
         at={{ x: stationAt.x, y: stationAt.y }}
@@ -90,7 +88,6 @@ function StationsSection(p: SidePanelProps) {
   if (area)
     return (
       <StagingForm
-        onLocate={() => p.onLocate('staging', area.id)}
         area={area}
         data={data}
         editable={editable}
@@ -129,7 +126,6 @@ function RoutesSection(p: SidePanelProps) {
         node={selection?.node}
         editable={editable}
         onBack={p.onBack}
-        onLocate={() => p.onLocate('road', road.id)}
         onDelete={() => p.onDelete({ kind: 'road', id: road.id })}
         edit={p.edit}
         onPick={p.onPick}
@@ -138,7 +134,6 @@ function RoutesSection(p: SidePanelProps) {
   if (road)
     return (
       <RoadForm
-        onLocate={() => p.onLocate('road', road.id)}
         road={road}
         data={data}
         editable={editable}
@@ -168,7 +163,6 @@ function ZonesSection(p: SidePanelProps & { module: 'exclusive' | 'zones' }) {
   if (zone && zoneType(zone.type).module === module)
     return (
       <ZoneForm
-        onLocate={() => p.onLocate('zone', zone.id)}
         zone={zone}
         data={data}
         module={module}
@@ -214,7 +208,6 @@ function StructureSection(p: SidePanelProps) {
         editable={editable}
         edit={p.edit}
         onBack={p.onBack}
-        onLocate={() => p.onLocate('element', element.id)}
         onPick={(id) => p.onPick({ kind: 'element', id })}
         onDelete={() => p.onDelete({ kind: 'element', id: element.id })}
       />

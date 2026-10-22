@@ -1,3 +1,4 @@
+import { StopFleetButton } from '@/ui/StopDialogs';
 import { useEffect, useRef, useState } from 'react';
 import { services } from '@/services';
 import { Link, useLocation } from 'react-router-dom';
@@ -177,6 +178,7 @@ export function LiveFloorPage() {
             <span className="ic">▦</span>
             <h2>{copy.page.liveView}</h2>
             <div style={{ flex: 1 }} />
+            <StopFleetButton />
             {manyFleets && (
               <>
                 <span style={{ fontSize: 12, fontWeight: 600 }}>{copy.page.fleetLabel}</span>
@@ -192,8 +194,8 @@ export function LiveFloorPage() {
           <div className={'canvas' + ((sel && robotPanelOpen) || selStation ? ' has-sel' : '')}>
             <div className="gl" ref={holder} />
             {loadPhase !== 'ready' && (loadPhase === 'skeleton' ? <LiveFloorSkeleton /> : <div className="loading" />)}
-            <CameraModes fleetOpen={fleetOpen} onFleet={() => setFleetOpen((o) => !o)} />
-            {fleetOpen && <FleetList />}
+            <CameraModes />
+            <FleetList open={fleetOpen} onToggle={() => setFleetOpen((o) => !o)} />
             {idle && (
               <div className="float idle-fleet" role="status">
                 <b>{copy.idleFleet.title(idle.name)}</b>

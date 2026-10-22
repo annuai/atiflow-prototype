@@ -9,6 +9,9 @@ for pair in "fleetManager:${API_FLEET_MANAGER_URL:-}" "deploymentManager:${API_D
   key=${pair%%:*}; val=${pair#*:}
   [ -n "$val" ] && api="${api:+$api, }$(opt "$key" "$val")"
 done
+# analytics (PostHog session recordings) are off unless POSTHOG_KEY is set
+analytics=""
+[ -n "${POSTHOG_KEY:-}" ] && analytics="\"enabled\": true, \"key\": \"$(json_string "$POSTHOG_KEY")\"${POSTHOG_HOST:+, \"host\": \"$(json_string "$POSTHOG_HOST")\"}"
 cat > /usr/share/nginx/html/config.json <<JSON
 {
   "environment": "$(json_string "${ENVIRONMENT:-production}")",
@@ -16,7 +19,8 @@ cat > /usr/share/nginx/html/config.json <<JSON
   "dataMode": "$(json_string "${DATA_MODE:-dummy}")",
   "logLevel": "$(json_string "${LOG_LEVEL:-warn}")",
   "api": { ${api} },
-  "features": {}
+  "features": {},
+  "analytics": { ${analytics} }
 }
 JSON
 echo "config.json written for environment ${ENVIRONMENT:-production} (data mode ${DATA_MODE:-dummy})"

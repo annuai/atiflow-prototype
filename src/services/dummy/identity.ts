@@ -192,9 +192,10 @@ export function createDummyIdentity(opts: IdentityOptions = {}): {
   const auth: AuthService = {
     async signIn(username, password) {
       if (opts.latencyMs) await new Promise((r) => setTimeout(r, opts.latencyMs));
-      const name = norm(username);
-      const exists = users.snapshot().some((u) => u.username === name);
-      return exists && creds()[name] === password ? name : null;
+      const typed = norm(username);
+      // the sign-in box takes the username or the e-mail address (both belong to one person; the password is kept by username)
+      const user = users.snapshot().find((u) => u.username === typed || (!!u.email && norm(u.email) === typed));
+      return user && creds()[user.username] === password ? user.username : null;
     },
     async setPassword(username, password) {
       saveCreds({ ...creds(), [norm(username)]: password });

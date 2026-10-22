@@ -4,7 +4,6 @@ import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { copy } from '../copy';
-import { LocateButton } from '../components/LocateButton';
 import { NumberInput } from '../components/NumberInput';
 import { degrees, radians } from '../model/shape';
 import { elementColor } from '../model/structure/derive';
@@ -25,7 +24,6 @@ export function ElementForm({
   editable,
   edit,
   onBack,
-  onLocate,
   onPick,
   onDelete,
 }: {
@@ -34,7 +32,6 @@ export function ElementForm({
   editable: boolean;
   edit(fn: (d: MapData) => MapData, key?: string): void;
   onBack(): void;
-  onLocate(): void;
   onPick(id: string): void;
   onDelete(): void;
 }) {
@@ -188,7 +185,6 @@ export function ElementForm({
             {f.duplicate}
           </Button>
         )}
-        <LocateButton onPress={onLocate} />
         {editable && (
           <Button size="md" color="secondary-destructive" iconLeading={Trash01} onPress={onDelete}>
             {f.delete}

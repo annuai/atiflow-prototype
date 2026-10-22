@@ -36,6 +36,7 @@
     "fflate": "^0.8.3",
     "minisearch": "^7.2.0",
     "motion": "^13.5.1",
+    "posthog-js": "^1.438.15",
     "react": "^19.3.0",
     "react-aria": "^3.53.1",
     "react-aria-components": "^1.22.1",

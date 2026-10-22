@@ -3,7 +3,7 @@ import './styles/globals.css'; // Tailwind + Untitled UI theme first, so the das
 import './ui/tokens.css';
 import './ui/app.css';
 import { BootFailure } from './shell/BootFailure';
-import { installGlobalErrorHandlers, loadConfig, log, observeWebVitals } from './platform';
+import { initAnalytics, installGlobalErrorHandlers, loadConfig, log, observeWebVitals } from './platform';
 import { chooseLocale, showLocale } from './i18n';
 import { createServices, hydrateServices, setServices } from './services';
 
@@ -24,6 +24,7 @@ async function start() {
   });
   installGlobalErrorHandlers(window);
   observeWebVitals();
+  void initAnalytics(config); // only when the configuration turns it on (a testing deployment); never delays the app
   const services = setServices(createServices(config));
   const { failed } = await hydrateServices(services);
   // the language before anything is drawn: this device's choice, else the site default, else the browser's

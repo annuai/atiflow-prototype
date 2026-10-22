@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from 'react';
 import { XClose } from '@untitledui/icons';
+import type { FC as IconType } from 'react';
 import { Badge, BadgeWithDot } from '@/components/base/badges/badges';
 import type { BadgeColors } from '@/components/base/badges/badge-types';
 import { Button } from '@/components/base/buttons/button';
@@ -24,7 +25,14 @@ export interface InfoPanelProps {
   chips?: { label: string; color: string }[]; // `color` = fleet colour dot
   stats?: InfoStat[];
   alerts?: InfoAlert[];
-  actions?: { label: string; onClick: () => void; disabled?: boolean }[];
+  /** `destructive` = a red tertiary button with an icon (always the last one, full width) */
+  actions?: {
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+    destructive?: boolean;
+    icon?: IconType<{ className?: string }>;
+  }[];
   onClose: () => void;
   children?: ReactNode;
 }
@@ -113,8 +121,9 @@ export function InfoPanel({ title, subtitle, pill, chips, stats, alerts, actions
             <Button
               key={a.label}
               size="sm"
-              color="secondary"
-              className={i < 2 ? 'flex-1' : 'basis-full'}
+              color={a.destructive ? 'tertiary-destructive' : 'secondary'}
+              iconLeading={a.icon}
+              className={i < 2 && !a.destructive ? 'flex-1' : 'basis-full'}
               isDisabled={a.disabled}
               onPress={a.onClick}
             >

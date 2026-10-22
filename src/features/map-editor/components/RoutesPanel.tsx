@@ -12,7 +12,6 @@ import { text } from '../text';
 import { help, helpText } from '../help';
 import { nameProblem, roadAngle, roadLength, type RoadPatch } from '../model/roads';
 import type { MapData, MapRoad, RoadHeading } from '../model/types';
-import { LocateButton } from './LocateButton';
 import { Hint } from './Hint';
 import { ModuleList } from './ModuleList';
 import { NumberInput } from './NumberInput';
@@ -74,7 +73,6 @@ export function RoutesPanel({
 
 /** One road: name, where it starts and ends, its direction (swap), one lane or two, the heading setting; length and lanes; delete. (No lane weight yet: it will set a lane's priority once priorities exist.) */
 export function RoadForm({
-  onLocate,
   road,
   data,
   editable,
@@ -83,7 +81,6 @@ export function RoadForm({
   onPatch,
   onDelete,
 }: {
-  onLocate(): void;
   road: MapRoad;
   data: MapData;
   editable: boolean;
@@ -215,7 +212,6 @@ export function RoadForm({
       <Input label={f.length} {...help('route.length')} size="sm" value={`${roadLength(road)}\u00a0m`} isDisabled />
       <Input label={f.lanes} {...help('route.lanes')} size="sm" value={road.laneIds.join(', ')} isDisabled />
       <div className="mt-auto flex flex-col gap-2">
-        <LocateButton onPress={onLocate} />
         {!editable ? (
           <p className="text-xs text-tertiary">{copy.stations.readOnly}</p>
         ) : (

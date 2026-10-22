@@ -91,5 +91,13 @@ export const materials = {
     emptyHint: 'Requests made from the tablets show up here.',
     fleetTitle: 'By fleet',
     fleetHint: 'Pieces delivered',
+    heat: {
+      title: 'Where material waits',
+      hint: (f: string) => `Pieces waiting at each station of ${f}. Red means material piles up there.`,
+      aria: (n: number) => `Heat map of material on the floor with ${n} busiest stations marked`,
+      low: 'Little waiting',
+      high: 'Piles up',
+      example: 'Example numbers: live stock per station will replace them.',
+    },
   },
 } as const;

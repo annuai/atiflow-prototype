@@ -61,6 +61,7 @@ export interface Bot {
   kWh: number;
   faultUntil: number;
   /** how far the robot believes it is from where it really is (a robot moved by hand and not yet relocalized); null = localized */ lostBy: Vec2 | null;
+  /** a supervisor pressed emergency stop: the robot stands where it is (keeping its place on the road) until it is released */ estop: boolean;
   /** someone asked for this robot to go to a charger: its next trip is a charge trip */ chargeRequested: boolean;
   /** until this time the robot keeps clear of other robots' BODIES only, not of the way they have reserved ahead (breaks two robots that wait for each other's reservation) */
   ignoreClaims: number;

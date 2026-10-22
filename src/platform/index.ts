@@ -8,6 +8,7 @@ export {
   setConfig,
   type AppConfig,
 } from './config';
+export { identifyPerson, initAnalytics, track } from './analytics';
 export { createLogger, log, setLogSinks, type LogEntry, type Logger, type LogLevel, type LogSink } from './logger';
 export {
   installGlobalErrorHandlers,

@@ -1,4 +1,4 @@
-import type { ChargeResult, OrderUpdate, RelocalizeResult, TransportOrder, Vec2 } from '../../core/types';
+import type { ChargeResult, StopResult, OrderUpdate, RelocalizeResult, TransportOrder, Vec2 } from '../../core/types';
 import type { World } from './world';
 
 /** What the outside world can ask of the fleet: send a robot to a charger, relocalize it, hand it an order (and the test / demo aids that move or displace a robot). */
@@ -29,6 +29,30 @@ export class Commands {
     if (b.speed > 0.05) return { ok: false, reason: 'moving' };
     b.lostBy = null;
     return { ok: true };
+  }
+  /** "Emergency stop": the robot stops where it is and stays there until `release` (a robot already stopped is refused). */
+  emergencyStop(id: string): StopResult {
+    const b = this.w.bots.find((x) => x.id === id);
+    if (!b) return { ok: false, reason: 'not-found' };
+    if (b.state === 'offline') return { ok: false, reason: 'offline' };
+    if (b.estop) return { ok: false, reason: 'already-stopped' };
+    b.estop = true;
+    return { ok: true, count: 1 };
+  }
+  /** Let a stopped robot carry on. */
+  release(id: string): StopResult {
+    const b = this.w.bots.find((x) => x.id === id);
+    if (!b) return { ok: false, reason: 'not-found' };
+    if (!b.estop) return { ok: false, reason: 'not-stopped' };
+    b.estop = false;
+    return { ok: true, count: 1 };
+  }
+  /** Stop every robot of a fleet that is not stopped already (`stop`), or let them all carry on. */
+  stopFleet(fleetId: string, stop: boolean): StopResult {
+    const bots = this.w.bots.filter((b) => b.fleetId === fleetId && b.state !== 'offline' && b.estop !== stop);
+    if (!bots.length) return { ok: false, reason: stop ? 'already-stopped' : 'not-stopped' };
+    bots.forEach((b) => (b.estop = stop));
+    return { ok: true, count: bots.length };
   }
   /** Test and demo aid: make a robot report a position `by` metres away from where it is (as if someone had moved it and it has not found its place yet). */
   displace(id: string, by: Vec2): boolean {

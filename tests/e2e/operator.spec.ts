@@ -28,7 +28,7 @@ test.describe('an operator requests a material', () => {
     await expect(page.getByRole('heading', { name: 'Approve' })).toBeVisible();
     await expect(page.getByRole('radio', { name: /History/ })).toHaveCount(0);
   });
-  test('a called saved trip is under Booked trips in History, not under Requests', async ({ page }) => {
+  test('a called saved trip is under Booked trips in History, not under Material requests', async ({ page }) => {
     await signIn(page, 'rohan');
     await page.goto('/operator/book?tab=trips');
     await page.getByRole('button', { name: 'Add', exact: true }).first().click();
@@ -38,7 +38,7 @@ test.describe('an operator requests a material', () => {
       .getByRole('button', { name: /^Call 1 robot/ })
       .click();
     await page.goto('/operator/history');
-    await page.getByRole('radio', { name: /^Requests/ }).click();
+    await page.getByRole('radio', { name: /^Material requests/ }).click();
     await expect(page.getByText('Booked trip', { exact: true })).toHaveCount(0);
     await page.getByRole('radio', { name: /^Booked trips/ }).click();
     await expect(page.getByText('Booked trip', { exact: true }).first()).toBeVisible();

@@ -1,9 +1,10 @@
 import type { FC } from 'react';
-import { Building07, ChevronDown, Cursor01, LayoutGrid01, MarkerPin02, Route, Hand } from '@untitledui/icons';
+import { Building07, ChevronDown, LayoutGrid01, MarkerPin02, Route, Hand } from '@untitledui/icons';
 import { Button as AriaButton } from 'react-aria-components';
 import { Dropdown } from '@/components/base/dropdown/dropdown';
 import { Tooltip } from '@/components/base/tooltip/tooltip';
 import { cx } from '@/utils/cx';
+import { TrafficLight } from '@/ui/icons/traffic-light';
 import { choicesOf, moduleOfTool, type Module, type StructureTool, type Tool } from '../canvas/tools';
 import { copy } from '../copy';
 import { text } from '../text';
@@ -14,7 +15,7 @@ export type { Module };
 const ICON: Record<Module, FC<{ className?: string }>> = {
   stations: MarkerPin02,
   routes: Route,
-  exclusive: Hand,
+  exclusive: TrafficLight,
   zones: LayoutGrid01,
   structure: Building07,
 };
@@ -72,7 +73,7 @@ export function ModuleToolbar({
           onPress={onSelect}
           className={tile(tool.kind === 'select')}
         >
-          <Cursor01 className="size-5" />
+          <Hand className="size-5" />
           <span className="hidden text-[11px] leading-3 pointer-coarse:block">{copy.tools.select}</span>
         </AriaButton>
       </Tooltip>

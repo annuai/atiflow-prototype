@@ -12,11 +12,9 @@ import { help } from '../help';
 import { nameProblem, plainType, STATION_TYPES } from '../model/stations';
 import type { MapData, MapStation } from '../model/types';
 import { NumberInput } from './NumberInput';
-import { LocateButton } from './LocateButton';
 
 /** One station (Figma "Add v5 Station"): name, id, type, position, angle, on / off lane, the tag; delete. Read-only when the map is a published version. */
 export function StationForm({
-  onLocate,
   station,
   data,
   at,
@@ -29,7 +27,6 @@ export function StationForm({
   onRouteFrom,
   onDelete,
 }: {
-  onLocate(): void;
   station: MapStation;
   data: MapData;
   at: { x: number; y: number };
@@ -154,7 +151,6 @@ export function StationForm({
             {f.addRoute}
           </Button>
         )}
-        <LocateButton onPress={onLocate} />
         {!editable ? (
           <p className="text-xs text-tertiary">{copy.stations.readOnly}</p>
         ) : (

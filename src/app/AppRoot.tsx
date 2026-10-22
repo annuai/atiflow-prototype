@@ -11,6 +11,7 @@ import { NotificationsProvider } from '@/features/notifications/NotificationsPro
 import { PersistenceNotice } from '@/shell/PersistenceNotice';
 import { LocaleBoundary } from '@/i18n';
 import { LocaleSync } from './LocaleSync';
+import { AnalyticsSync } from './AnalyticsSync';
 import { PageTitle } from '@/shell/PageTitle';
 import { AppToaster } from '@/ui/toast';
 import { NoAccessPage } from '@/features/access/NoAccessPage';
@@ -137,6 +138,7 @@ export function AppRoot() {
     <BrowserRouter>
       <NotificationsProvider api={notificationApi}>
         <LocaleSync />
+        <AnalyticsSync />
         <LocaleBoundary>
           <AppToaster />
           <PersistenceNotice />

@@ -50,6 +50,7 @@ interface Props {
   onElementBox(id: string, b: { x: number; y: number; w: number; d: number; rot: number }): void;
   onElementPoints(id: string, points: P[]): void;
   onElementAddPoint(id: string, at: P): void;
+  /** Locate button of the zoom controls (undefined = nothing selected, so the button is disabled) */ onLocateSelected?: () => void;
   /** Centre the view on a place and pulse it (a new `n` each time, so the same place can be shown again). */ locate?: {
     x: number;
     y: number;
@@ -108,6 +109,7 @@ export function MapCanvas({
   onStagingChange,
   overlay,
   locate,
+  onLocateSelected,
 }: Props) {
   const vp = useViewport(site.bounds);
   const { P, X, Y, u, attach: attachBox } = vp;
@@ -268,7 +270,16 @@ export function MapCanvas({
           vectorEffect="non-scaling-stroke"
           pointerEvents="none"
         />
-        <path d={arrows} fill="#0f766e" fillOpacity={0.85} pointerEvents="none" />
+        <path
+          d={arrows}
+          fill="#0f766e"
+          stroke="#ffffff"
+          strokeWidth={1.25}
+          strokeLinejoin="round"
+          paintOrder="stroke"
+          vectorEffect="non-scaling-stroke"
+          pointerEvents="none"
+        />
         <RoadHits roads={roadLines} isSelected={isSelected} />
         <path
           d={layers.walls}
@@ -341,7 +352,7 @@ export function MapCanvas({
         </span>
       )}
       {spacePan}
-      <ZoomControls vp={vp} />
+      <ZoomControls vp={vp} withLocate onLocate={onLocateSelected} />
     </div>
   );
 }

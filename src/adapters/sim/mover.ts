@@ -20,6 +20,7 @@ export class Mover {
   /** One tick of one robot. Robots that are not driving stand still in their own way; a driving one asks for the permits ahead, finds how far it may go, moves, and arrives or breaks down. */
   stepBot(b: Bot, dt: number, claims: Map<string, Circle[]>) {
     b.speed = 0;
+    if (b.estop) return this.stepStopped(b, claims);
     if (b.state === 'blocked') return this.stepBlocked(b);
     if (b.state === 'error') return this.stepFaulted(b, claims);
     if (b.state === 'idle' || b.state === 'working' || b.state === 'charging') return this.stepParked(b, dt);
@@ -37,6 +38,14 @@ export class Mover {
     if (b.s >= plan.total - 1e-3) return this.arrive(b);
     claims.set(b.id, way.free.claim);
     this.breakDown(b, dt, claims);
+  }
+  /** Emergency stop: the robot stands exactly where it is, its footprint stays in the way, and nothing else about it changes until it is released. */
+  private stepStopped(b: Bot, claims: Map<string, Circle[]>) {
+    b.v = 0;
+    claims.set(b.id, [
+      ...robotCircles({ ...b.pos, th: b.theta }),
+      ...(b.attached && b.trailer ? trolleyCircles(b.trailer) : []),
+    ]);
   }
   /** A random obstacle in the way: the robot stops for a few seconds. */
   private stepBlocked(b: Bot) {

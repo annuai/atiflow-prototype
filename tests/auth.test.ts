@@ -26,6 +26,8 @@ describe('identity services (dummy)', () => {
     expect(await auth.signIn('  Arjun ', '1234')).toBe('arjun');
     expect(await auth.signIn('arjun', '12345')).toBeNull();
     expect(await auth.signIn('arjun', '')).toBeNull();
+    expect(await auth.signIn(' Arjun@AtiMotors.com ', '1234')).toBe('arjun'); // the e-mail address works like the username
+    expect(await auth.signIn('arjun@atimotors.com', '12345')).toBeNull();
   });
   it('rejects unknown users', async () => {
     const { auth } = fresh();

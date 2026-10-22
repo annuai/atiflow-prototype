@@ -16,7 +16,6 @@ import { zoneNameProblem } from '../model/zones';
 import { zoneType, zoneTypesOf, type ZoneType } from '../model/zoneTypes';
 import { ModuleList } from './ModuleList';
 import { NumberInput } from './NumberInput';
-import { LocateButton } from './LocateButton';
 
 type Module = 'exclusive' | 'zones';
 /** The panel of the Traffic Gates and Zones modules: the "Add new gate / zone" menu (types come from the zone registry), search and the list of that module's zones. */
@@ -97,7 +96,6 @@ export function ZonesPanel({
 const asNumber = (v: ZoneProp | undefined, d = 0) => (typeof v === 'number' ? v : d);
 /** One zone: name, type (zones), its settings from the registry, the shape of a gate; delete. */
 export function ZoneForm({
-  onLocate,
   zone,
   data,
   module,
@@ -107,7 +105,6 @@ export function ZoneForm({
   onShape,
   onDelete,
 }: {
-  onLocate(): void;
   zone: MapZone;
   data: MapData;
   module: Module;
@@ -209,7 +206,6 @@ export function ZoneForm({
       )}
       <ShapeFields shape={zone.shape} editable={editable} onShape={onShape} />
       <div className="mt-auto flex flex-col gap-2">
-        <LocateButton onPress={onLocate} />
         {!editable ? (
           <p className="text-xs text-tertiary">{copy.stations.readOnly}</p>
         ) : (
