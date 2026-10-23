@@ -36,10 +36,13 @@ export function StationLink({
     const s = net.stations.find((q) => q.id === stationId);
     const at = s && net.nodes.find((n) => n.id === s.nodeId);
     if (!s || !at) return null;
-    const off = s.onLane === false; // roles only matter for a station off the lane
-    const nodes = resolveNodes(data, s).flatMap((r) =>
-      r.at ? [{ ...r.at, badges: { park: off && !!r.node.roles.park, unpark: off && !!r.node.roles.unpark } }] : [],
-    );
+    // nodes belong to a station off the route; one on the route has none to show (it keeps its heading handle)
+    const nodes =
+      s.onLane === false
+        ? resolveNodes(data, s).flatMap((r) =>
+            r.at ? [{ ...r.at, badges: { park: !!r.node.roles.park, unpark: !!r.node.roles.unpark } }] : [],
+          )
+        : [];
     return { id: s.id, at, angle: s.angle, nodes };
   }, [data, stationId]);
   if (!shape) return null;
