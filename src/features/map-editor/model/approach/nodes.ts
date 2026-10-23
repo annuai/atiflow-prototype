@@ -29,13 +29,15 @@ export interface ResolvedNode {
  */
 export function resolveNodes(data: MapData, s: MapStation): ResolvedNode[] {
   const net = routable(data);
-  const claimed = new Set(stationNodes(s).flatMap((n) => (n.at ? [n.at] : [])));
+  // a node pinned to a network node that is gone (its road was deleted or redrawn) is automatic again: it finds the nearest route
+  const pinned = (n: StationNode) => !!n.at && net.nodes.some((q) => q.id === n.at);
+  const claimed = new Set(stationNodes(s).flatMap((n) => (pinned(n) ? [n.at!] : [])));
   const free = accessNodes(data, s.id).filter((n) => !claimed.has(n.id));
   return stationNodes(s).map((node, index) => ({
     index,
     node,
-    auto: !node.at,
-    at: node.at ? (net.nodes.find((n) => n.id === node.at) ?? null) : (free.shift() ?? null),
+    auto: !pinned(node),
+    at: pinned(node) ? (net.nodes.find((n) => n.id === node.at) ?? null) : (free.shift() ?? null),
   }));
 }
 

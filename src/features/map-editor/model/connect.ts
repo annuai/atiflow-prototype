@@ -13,7 +13,7 @@ const ON_ROAD = 0.15,
   SAME = 0.02, // a source node and the end of a road are the same point (road points are rounded to 0.01 m); nodes a few decimetres apart are two nodes
   ON_STATION = 0.3,
   NODE_SLACK = 0, // the nearest point of the route wins: an existing node only when it is at least as near as the road
-  REACH = 30;
+  REACH = 100; // a station joins the nearest point of the route however far it is, within the site
 type P = [number, number];
 
 /** The station's node is the end of at least one lane. */

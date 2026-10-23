@@ -122,6 +122,35 @@ describe('a station comes in at the nearest point of the route', () => {
   });
 });
 
+describe('a node is always found', () => {
+  it('a node pinned to a node that is gone falls back to the nearest route', () => {
+    const { data, id } = mini();
+    const gone = {
+      ...data,
+      stations: data.stations.map((s) => (s.id === id ? { ...s, nodes: [{ id: 'n1', at: 'N-NOPE', roles: {} }] } : s)),
+    };
+    const r = resolveNodes(
+      gone,
+      gone.stations.find((q) => q.id === id)!,
+    )[0];
+    expect(r.at).not.toBeNull();
+    expect(r.auto).toBe(true);
+  });
+  it('a station far from the route (but on the site) still joins it', () => {
+    let d: MapData = { nodes: [], lanes: [], roads: [], stations: [], stagingAreas: [], zones: [] };
+    d = addRoad(
+      d,
+      [
+        [0, 0],
+        [20, 0],
+      ],
+      { fleetLive: 'f' },
+    ).data;
+    const r = addStation(d, 'f', { x: 10, y: 60 });
+    expect(resolveNodes(r.data, r.data.stations[0])[0].at).not.toBeNull();
+  });
+});
+
 describe('front or behind', () => {
   it('flips the sign of the distances the maneuver reads and nothing else', () => {
     const slot = { maneuver: 'one_shot_turn' as const, params: { inlane_dist: 3, perpendicular_dist: 0.5, other: 9 } };
