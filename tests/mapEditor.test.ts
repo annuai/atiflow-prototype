@@ -158,11 +158,13 @@ describe('the publish gate', () => {
     const base = lineSide();
     expect(publishProblems(base, base, used)).toEqual([]);
     expect(publishProblems(addStation(base, 'line-side', { x: 1, y: 1 }).data, base, used)).toEqual([]); // joined to the nearest route on the fly
-    const off = addStation(base, 'line-side', { x: 5000, y: 5000 }); // nothing within reach
-    expect(publishProblems(off.data, base, used).map((p) => p.title)).toEqual([
+    expect(publishProblems(addStation(base, 'line-side', { x: 5000, y: 5000 }).data, base, used)).toEqual([]); // however far, it joins the nearest route
+    const noRoute = { ...base, nodes: [], lanes: [], roads: [], stations: [] }; // a map with no route at all
+    const off = addStation(noRoute, 'line-side', { x: 1, y: 1 });
+    expect(publishProblems(off.data, null, used).map((p) => p.title)).toEqual([
       expect.stringMatching(/no route reaches it/),
     ]);
-    expect(publishProblems(updateStation(off.data, off.id, { onLane: false }), base, used)).toEqual([]);
+    expect(publishProblems(updateStation(off.data, off.id, { onLane: false }), null, used)).toEqual([]);
     expect(
       publishProblems(updateStation(base, base.stations[0].id, { name: ' ' }), base, used).some((p) =>
         /has no name/.test(p.title),
@@ -385,12 +387,10 @@ describe("simulation: a robot drives from one station to another on the map's ow
     expect(planTrip(d, 'line-side', a, 'NOPE')).toEqual({ ok: false, reason: 'missing' });
     const near = addStation(d, 'line-side', { x: 1, y: 1 });
     expect(planTrip(near.data, 'line-side', a, near.id).ok).toBe(true); // an off-route station is joined to the nearest route on the fly
-    const lonely = addStation(d, 'line-side', { x: 5000, y: 5000 });
-    expect(planTrip(lonely.data, 'line-side', a, lonely.id)).toEqual({
-      ok: false,
-      reason: 'unlinked',
-      station: lonely.id,
-    }); // nothing within reach
+    const far = addStation(d, 'line-side', { x: 5000, y: 5000 });
+    expect(planTrip(far.data, 'line-side', a, far.id).ok).toBe(true); // however far, it joins the nearest route
+    const noRoads = { ...d, roads: [], lanes: [] }; // no route at all: nothing to join
+    expect(planTrip(noRoads, 'line-side', a, b)).toMatchObject({ ok: false, reason: 'unlinked' });
     expect(planTrip(d, 'asrs', a, b).ok).toBe(false); // another fleet's lanes are not used
   });
 });

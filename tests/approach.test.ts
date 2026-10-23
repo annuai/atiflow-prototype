@@ -136,7 +136,7 @@ describe('a node is always found', () => {
     expect(r.at).not.toBeNull();
     expect(r.auto).toBe(true);
   });
-  it('a station far from the route (but on the site) still joins it', () => {
+  it('a station far from the route still joins it, whatever the distance', () => {
     let d: MapData = { nodes: [], lanes: [], roads: [], stations: [], stagingAreas: [], zones: [] };
     d = addRoad(
       d,
@@ -146,8 +146,13 @@ describe('a node is always found', () => {
       ],
       { fleetLive: 'f' },
     ).data;
-    const r = addStation(d, 'f', { x: 10, y: 60 });
+    const r = addStation(d, 'f', { x: 10, y: 5000 });
     expect(resolveNodes(r.data, r.data.stations[0])[0].at).not.toBeNull();
+    const none = addStation({ nodes: [], lanes: [], roads: [], stations: [], stagingAreas: [], zones: [] }, 'f', {
+      x: 1,
+      y: 1,
+    });
+    expect(resolveNodes(none.data, none.data.stations[0])[0].at).toBeNull(); // no route at all
   });
 });
 

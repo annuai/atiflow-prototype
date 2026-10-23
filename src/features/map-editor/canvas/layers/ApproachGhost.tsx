@@ -32,6 +32,7 @@ export function ApproachGhost({
   const shape = useMemo(() => {
     if (!stationId || focus.station !== stationId || !focus.slot) return null;
     const s = data.stations.find((q) => q.id === stationId);
+    if (s?.onLane !== false) return null; // approach paths belong to a station off the route
     const here = s && data.nodes.find((n) => n.id === s.nodeId);
     const r = s && resolveNodes(data, s)[focus.node];
     const slot = r && slotOf(r.node, focus.slot);

@@ -154,15 +154,17 @@ export function StationForm({
       />
       {!data.p2p && (
         <>
-          <NodesSection
-            station={station}
-            data={data}
-            editable={editable}
-            adding={addingNode}
-            onEdit={onEdit}
-            onAdd={onAddNode}
-            onCancelAdd={onCancelAddNode}
-          />
+          {station.onLane === false && (
+            <NodesSection
+              station={station}
+              data={data}
+              editable={editable}
+              adding={addingNode}
+              onEdit={onEdit}
+              onAdd={onAddNode}
+              onCancelAdd={onCancelAddNode}
+            />
+          )}
           <FeaturesSection station={station} editable={editable} onChange={(features) => onPatch({ features })} />
         </>
       )}
