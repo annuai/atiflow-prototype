@@ -60,6 +60,8 @@ export interface ImportedStagingArea {
   fill: { by: 'row' | 'column'; lines: 'asc' | 'desc'; cells: 'asc' | 'desc' };
   emptyBy: 'arrival' | 'position';
   emptyPosition: { by: 'row' | 'column'; lines: 'asc' | 'desc'; cells: 'asc' | 'desc' };
+  /** Gaps between rows (the file's aisle rows); `rows` counts the real rows only. */
+  aisles?: { after: number; length: number }[];
   extra: Record<string, unknown>;
   /** The station of every cell as the attribute file holds it (rows of cells, null where the file has none). */
   cellStations?: (ImportedCellStation | null)[][];

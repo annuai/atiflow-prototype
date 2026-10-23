@@ -12,6 +12,7 @@ import type { MapData, StagingAreaDef } from '../model/types';
 import { SequencePicker } from './SequencePicker';
 import { Hint } from './Hint';
 import { NumberInput } from '@/components/form/NumberInput';
+import { AislesFieldset } from './AislesFieldset';
 
 const NONE = '__none';
 /** One staging area (the old tool's "Add staging area"): name, rotation, where the A1 cell is, how many rows and columns, the size of a cell. */
@@ -191,6 +192,13 @@ export function StagingForm({
           />
         </div>
       </fieldset>
+      <AislesFieldset
+        aisles={area.aisles ?? []}
+        rows={area.rows}
+        disabled={!editable}
+        error={problems.aisles}
+        onChange={(aisles) => onPatch({ aisles: aisles.length ? aisles : undefined })}
+      />
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-1 text-sm font-semibold text-primary">{f.fillTitle}</legend>
         <SequencePicker value={area.fill ?? DEFAULT_SEQ} disabled={!editable} onChange={(fill) => onPatch({ fill })} />

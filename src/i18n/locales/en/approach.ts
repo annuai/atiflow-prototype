@@ -168,4 +168,14 @@ export const approach = {
     makeSame: (ref: string) => `Use the nodes of ${ref} for all`,
     reset: 'Reset to the area’s settings',
   },
+  aisles: {
+    title: 'Aisles (gaps between rows)',
+    hint: 'An aisle is an empty strip between two rows. Its width is added to the gap between them (it can be negative to bring them closer). Rows keep their names (A1, A2…) and the aisle takes none.',
+    after: 'After row',
+    width: 'Width (m)',
+    add: 'Add aisle',
+    remove: 'Remove aisle',
+    none: 'No aisles.',
+    problem: 'Each aisle needs a row number from 0 to the number of rows and a width.',
+  },
 };

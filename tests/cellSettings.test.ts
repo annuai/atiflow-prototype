@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveNodes, addNodeAt, setSlotOn, slotOf, stationNodes } from '@/features/map-editor/model/approach/nodes';
 import { addRoad } from '@/features/map-editor/model/roads';
-import { cellCorners, stationPoint } from '@/features/map-editor/model/staging';
+import { cellCenter as cellCenterOf, cellCorners, stationPoint } from '@/features/map-editor/model/staging';
 import {
   CELL_STATION,
   cellSummary,
@@ -205,6 +205,71 @@ describe.skipIf(!existsSync(SAMPLE))('cells of the real amz_tcy5a export', () =>
     expect(
       Math.abs(Number((pose[2] as { value?: number }).value ?? pose[2]) - (91 + 15) * (Math.PI / 180)),
     ).toBeLessThan(0.01);
+  });
+  describe('aisle rows between the rows of an area', () => {
+    const exported = (data: MapData) => unzipSync(exportMapZip({ original: zip(), data, name: 'x', version: '2' }));
+    const file = (files: Record<string, Uint8Array>, name: string) =>
+      parsePy(dec(files[Object.keys(files).find((k) => k.endsWith('/' + name))!])) as PyObj;
+    const dropOf = (files: Record<string, Uint8Array>) =>
+      [...file(files, 'staging_areas.json').values()].find(
+        (v) => ((v as PyObj).get('metadata') as PyObj).get('name') === 'pallet_drop',
+      ) as PyObj;
+    const poseOf = (files: Record<string, Uint8Array>, name: string): [number, number] => {
+      const st = [...(file(files, 'grid_map_attributes.json').get('stations_info') as PyObj).values()].find(
+        (v) => (v as PyObj).get('station_name') === name,
+      ) as PyObj;
+      const p = st.get('pose') as unknown[];
+      const n = (v: unknown) => Number((v as { value?: number }).value ?? v);
+      return [n(p[0]), n(p[1])];
+    };
+    it('are read: real rows only, and every cell stands where the file puts its station', () => {
+      const d = build();
+      const a = d.stagingAreas.find((x) => x.name === 'pallet_drop')!;
+      expect(a.rows).toBe(18);
+      expect(a.aisles).toHaveLength(4);
+      const [fx, fy] = poseOf(unzipSync(zip()), 'pallet_drop_A12');
+      const c = cellCenterOf(a, 12, 1);
+      expect(Math.hypot(c.x - fx, c.y - fy)).toBeLessThan(0.01);
+    });
+    it('a wider aisle changes its width in the file and moves the rows after it, nothing else', () => {
+      const d = build();
+      const a = d.stagingAreas.find((x) => x.name === 'pallet_drop')!;
+      const wider = a.aisles!.map((x, i) => (i === 3 ? { ...x, length: x.length + 0.5 } : x));
+      const data = { ...d, stagingAreas: d.stagingAreas.map((x) => (x.id === a.id ? { ...x, aisles: wider } : x)) };
+      const out = exported(data),
+        orig = unzipSync(zip());
+      const area = dropOf(out);
+      expect(area.get('cells') as unknown[]).toHaveLength(22);
+      const params = area.get('row_level_params') as PyObj;
+      const len = (params.get('14') as PyObj).get('length') as { value?: number } | number;
+      expect(Number(typeof len === 'object' ? len.value : len)).toBeCloseTo(1.8, 3);
+      const [x0, y0] = poseOf(orig, 'pallet_drop_A12'),
+        [x1, y1] = poseOf(out, 'pallet_drop_A12');
+      expect(Math.hypot(x1 - x0, y1 - y0)).toBeCloseTo(0.5, 2);
+      const [u0, v0] = poseOf(orig, 'pallet_drop_A3'),
+        [u1, v1] = poseOf(out, 'pallet_drop_A3');
+      expect(Math.hypot(u1 - u0, v1 - v0)).toBeLessThan(0.001);
+    });
+    it('a new aisle adds an empty row to the cell table and moves the aisle rows after it', () => {
+      const d = build();
+      const a = d.stagingAreas.find((x) => x.name === 'pallet_drop')!;
+      const aisles = [{ after: 2, length: 1 }, ...a.aisles!];
+      const data = { ...d, stagingAreas: d.stagingAreas.map((x) => (x.id === a.id ? { ...x, aisles } : x)) };
+      const area = dropOf(exported(data));
+      const table = area.get('cells') as PyObj[][];
+      expect(table).toHaveLength(23);
+      expect(table[2]).toHaveLength(2);
+      expect([...table[2][0].keys()]).toEqual([]);
+      expect(((area.get('metadata') as PyObj).get('rows') as number) | 0).toBe(23);
+      const params = area.get('row_level_params') as PyObj;
+      expect([...params.keys()].filter((k) => (params.get(k) as PyObj).get('aisle')).sort((x, y) => +x - +y)).toEqual([
+        '2',
+        '6',
+        '10',
+        '13',
+        '15',
+      ]);
+    });
   });
 });
 

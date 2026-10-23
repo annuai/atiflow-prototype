@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Aisle } from '@/features/map-editor';
 import type { ImportedCellStation, ImportedRoad, ImportedStagingArea, ImportedStation } from '../../core/types';
 
 /**
@@ -130,6 +131,30 @@ const areaMeta = z
   })
   .passthrough();
 
+/**
+ * The aisles of an area: the file counts them as rows (slots) of the grid, `row_level_params[slot]` = `{ aisle: true, length }`, and its cell names (A1 ... A18) count only the real rows. Each
+ * aisle is returned as the number of real rows before it.
+ */
+/** The slots (rows of the file's grid, from 0) that are aisles. */
+export function aisleSlots(rowParams: unknown, slots: number): Set<number> {
+  const raw = rowParams && typeof rowParams === 'object' ? (rowParams as Record<string, { aisle?: unknown }>) : {};
+  return new Set(
+    Object.entries(raw)
+      .filter(([k, v]) => v?.aisle === true && Number(k) >= 0 && Number(k) < slots)
+      .map(([k]) => Number(k)),
+  );
+}
+export function aislesOf(rowParams: unknown, slots: number): Aisle[] {
+  const raw =
+    rowParams && typeof rowParams === 'object'
+      ? (rowParams as Record<string, { aisle?: unknown; length?: unknown }>)
+      : {};
+  const slotsOfAisles = Object.entries(raw)
+    .filter(([k, v]) => v?.aisle === true && Number(k) >= 0 && Number(k) < slots)
+    .map(([k, v]) => ({ slot: Number(k), length: Number(v.length) || 0 }))
+    .sort((a, b) => a.slot - b.slot);
+  return slotsOfAisles.map((x, i) => ({ after: x.slot - i, length: x.length }));
+}
 const order = (v: string | undefined): 'asc' | 'desc' => (v?.toLowerCase() === 'desc' ? 'desc' : 'asc');
 const by = (v: string | undefined): 'row' | 'column' => (v?.toLowerCase().includes('col') ? 'column' : 'row');
 
@@ -152,6 +177,8 @@ export function readStagingAreas(bytes: Uint8Array | undefined): ImportedStaging
     const m = areaMeta.safeParse(v?.metadata);
     if (!m.success) continue;
     const d = m.data;
+    const aisles = aislesOf(v.row_level_params, d.rows);
+    const lead = aisles.filter((x) => x.after < 1).reduce((n, x) => n + x.length + d.row_spacing, 0);
     const t = (d.rotation * Math.PI) / 180;
     const dx = Math.cos(t),
       dy = Math.sin(t),
@@ -162,9 +189,10 @@ export function readStagingAreas(bytes: Uint8Array | undefined): ImportedStaging
       externalId: key,
       name: (d.name ?? key).trim() || key,
       rotation: d.rotation,
-      x: r3(d.x + (dx * d.cell_width) / 2 + (rx * d.cell_height) / 2),
-      y: r3(d.y + (dy * d.cell_width) / 2 + (ry * d.cell_height) / 2),
-      rows: d.rows,
+      x: r3(d.x + (dx * d.cell_width) / 2 + rx * (d.cell_height / 2 + lead)),
+      y: r3(d.y + (dy * d.cell_width) / 2 + ry * (d.cell_height / 2 + lead)),
+      rows: d.rows - aisles.length,
+      ...(aisles.length ? { aisles } : {}),
       cols: d.cols,
       cellLength: d.cell_width,
       cellWidth: d.cell_height,
@@ -230,20 +258,23 @@ export function attachCellStations(
   for (const a of areas) {
     const rows = (a.extra.dm as { cells?: unknown } | undefined)?.cells;
     if (!Array.isArray(rows)) continue;
-    a.cellStations = rows.map((row) =>
-      (Array.isArray(row) ? row : []).map((c: { station_id?: unknown }): ImportedCellStation | null => {
-        const e = info[String(c?.station_id)] as
-          { station_name?: string; pose?: number[]; orientation?: string } | undefined;
-        if (!e || !Array.isArray(e.pose) || e.pose.length < 2) return null;
-        const name = String(e.station_name ?? '');
-        return {
-          name,
-          pose: [Number(e.pose[0]), Number(e.pose[1]), Number(e.pose[2] ?? 0)],
-          onLane: e.orientation === 'on_lane',
-          entry: e,
-          nodeIds: graph?.stationNodes.get(name),
-        };
-      }),
-    );
+    const slots = aisleSlots((a.extra.dm as { row_level_params?: unknown }).row_level_params, rows.length);
+    a.cellStations = rows
+      .filter((_, slot) => !slots.has(slot))
+      .map((row) =>
+        (Array.isArray(row) ? row : []).map((c: { station_id?: unknown }): ImportedCellStation | null => {
+          const e = info[String(c?.station_id)] as
+            { station_name?: string; pose?: number[]; orientation?: string } | undefined;
+          if (!e || !Array.isArray(e.pose) || e.pose.length < 2) return null;
+          const name = String(e.station_name ?? '');
+          return {
+            name,
+            pose: [Number(e.pose[0]), Number(e.pose[1]), Number(e.pose[2] ?? 0)],
+            onLane: e.orientation === 'on_lane',
+            entry: e,
+            nodeIds: graph?.stationNodes.get(name),
+          };
+        }),
+      );
   }
 }

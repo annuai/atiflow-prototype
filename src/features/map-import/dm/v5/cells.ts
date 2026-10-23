@@ -31,9 +31,19 @@ export function patchCells(c: V5, staging: Doc | null) {
     const fileArea = ext === undefined ? undefined : staging.tree.get(String(ext));
     if (!a.cellSettings || !fileArea) continue;
     const rows = list(obj(fileArea).get('cells'));
+    // the file's table also has a row for every aisle: a real row sits after the aisles before it
+    const aisleSlots = [...obj(obj(fileArea).get('row_level_params'))]
+      .filter(([, v]) => obj(v).get('aisle') === true)
+      .map(([k]) => Number(k))
+      .sort((x, y) => x - y);
+    const slotOf = (row: number) => {
+      let slot = row - 1;
+      for (const x of aisleSlots) if (x <= slot) slot++;
+      return slot;
+    };
     for (const [ref, ov] of Object.entries(a.cellSettings)) {
       const cell = parseCell(ref);
-      const slot = cell ? obj(list(rows[cell.row - 1])[cell.col - 1]) : null;
+      const slot = cell ? obj(list(rows[slotOf(cell.row)])[cell.col - 1]) : null;
       const entry = slot && attrStations.get(String(num(slot.get('station_id'))));
       if (!cell || !entry) continue;
       patchCell(c, a, ref, cell, obj(entry), ov);

@@ -69,6 +69,11 @@ export interface MapRoad {
 /** An order cells are used in: line by line (a line is a row, or a column), the lines first-to-last or last-to-first, and the cells of each line the same. */
 import type { CellSequence } from '@/core/cellOrder';
 export type { CellSequence };
+/** A gap in the rows of a staging area, between real row `after` and the next (0 = before the first row): `length` metres (it can be negative) plus one row gap. The Deployment Manager's "aisle" row. */
+export interface Aisle {
+  after: number;
+  length: number;
+}
 /**
  * What one cell of a staging area does differently from the area (a cell's station is a station of its own: it faces its own way, stands its own distance in front of the cell, is on or off the
  * route and has nodes like any station). Keyed by the cell's name in `StagingAreaDef.cellSettings` ("A1": column letter, row number). Nothing here = the area's setting.
@@ -113,6 +118,8 @@ export interface StagingAreaDef {
   emptyPosition?: CellSequence;
   /** Settings of single cells that differ from the area's, by cell name (A1, B1, A2...). */
   cellSettings?: Record<string, CellSettings>;
+  /** Gaps between rows. `rows` counts real rows only (the names A1... A18 run past an aisle without a number for it). */
+  aisles?: Aisle[];
 }
 
 /**

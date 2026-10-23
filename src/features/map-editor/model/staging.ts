@@ -1,3 +1,4 @@
+import { localized } from '@/i18n';
 import { text } from '../text';
 import { degrees } from './shape';
 import type { MapData, StagingAreaDef, ZoneShape } from './types';
@@ -20,6 +21,15 @@ export const cellRef = (row: number, col: number) => `${colLetter(col)}${row}`;
 export const cellKey = (row: number, col: number) => `${row}-${col}`;
 export const totalCells = (a: Pick<StagingAreaDef, 'rows' | 'cols'>) => a.rows * a.cols;
 
+/** How much further down the rows `row` lies than a grid without aisles puts it: each aisle before it adds its length and one row gap. */
+export const aisleShift = (a: Pick<StagingAreaDef, 'aisles' | 'rowGap'>, row: number): number =>
+  (a.aisles ?? []).filter((x) => x.after < row).reduce((n, x) => n + x.length + (a.rowGap ?? 0), 0);
+/** The height of the rows of an area (m), aisles included: `rows` real rows (default: the area's own count). */
+export const rowsSpan = (a: Pick<StagingAreaDef, 'aisles' | 'rowGap' | 'cellWidth' | 'rows'>, rows = a.rows): number =>
+  rows * a.cellWidth +
+  (rows - 1) * (a.rowGap ?? 0) +
+  (a.aisles ?? []).filter((x) => x.after <= rows).reduce((n, x) => n + x.length + (a.rowGap ?? 0), 0);
+
 const rad = (deg: number) => (deg * Math.PI) / 180;
 /** Centre of a cell: columns run along the area's direction, rows go to the right-hand side of it ("down" at rotation 0). */
 export function cellCenter(a: StagingAreaDef, row: number, col: number): { x: number; y: number } {
@@ -29,8 +39,14 @@ export function cellCenter(a: StagingAreaDef, row: number, col: number): { x: nu
     rx = Math.sin(t),
     ry = -Math.cos(t);
   return {
-    x: a.x + (col - 1) * (a.cellLength + (a.colGap ?? 0)) * dx + (row - 1) * (a.cellWidth + (a.rowGap ?? 0)) * rx,
-    y: a.y + (col - 1) * (a.cellLength + (a.colGap ?? 0)) * dy + (row - 1) * (a.cellWidth + (a.rowGap ?? 0)) * ry,
+    x:
+      a.x +
+      (col - 1) * (a.cellLength + (a.colGap ?? 0)) * dx +
+      ((row - 1) * (a.cellWidth + (a.rowGap ?? 0)) + aisleShift(a, row)) * rx,
+    y:
+      a.y +
+      (col - 1) * (a.cellLength + (a.colGap ?? 0)) * dy +
+      ((row - 1) * (a.cellWidth + (a.rowGap ?? 0)) + aisleShift(a, row)) * ry,
   };
 }
 /** The outline of the whole area (four corners). */
@@ -42,9 +58,10 @@ export function outline(a: StagingAreaDef): [number, number][] {
     ry = -Math.cos(t);
   const l = a.cellLength,
     w = a.cellWidth;
-  const o = { x: a.x - (l / 2) * dx - (w / 2) * rx, y: a.y - (l / 2) * dy - (w / 2) * ry };
+  const lead = aisleShift(a, 1); // an aisle before the first row pushes A1 away from the corner
+  const o = { x: a.x - (l / 2) * dx - (w / 2 + lead) * rx, y: a.y - (l / 2) * dy - (w / 2 + lead) * ry };
   const L = a.cols * l + (a.cols - 1) * (a.colGap ?? 0),
-    W = a.rows * w + (a.rows - 1) * (a.rowGap ?? 0);
+    W = rowsSpan(a);
   return [
     [o.x, o.y],
     [o.x + L * dx, o.y + L * dy],
@@ -94,6 +111,12 @@ export function stagingProblems(data: MapData, a: StagingAreaDef): Record<string
   if (!Number.isInteger(a.cols) || a.cols < 1 || a.cols > 200) e.cols = text.stagingProblems.cols;
   if (!(a.cellLength > 0)) e.cellLength = text.stagingProblems.cellLength;
   if (!(a.cellWidth > 0)) e.cellWidth = text.stagingProblems.cellWidth;
+  if (
+    (a.aisles ?? []).some(
+      (x) => !Number.isInteger(x.after) || x.after < 0 || x.after > a.rows || !Number.isFinite(x.length),
+    )
+  )
+    e.aisles = localized('approach').aisles.problem;
   if (!(a.stationOffset === undefined || (a.stationOffset >= 0 && a.stationOffset <= 20)))
     e.stationOffset = text.stagingProblems.stationOffset;
   return e;
@@ -105,10 +128,10 @@ const spanOf = (n: number, size: number, gap: number) => n * size + (n - 1) * ga
 export function stagingRect(a: StagingAreaDef): Rect {
   const t = rad(a.rotation),
     L = spanOf(a.cols, a.cellLength, a.colGap ?? 0),
-    W = spanOf(a.rows, a.cellWidth, a.rowGap ?? 0);
-  // the centre of A1 sits at local (-L/2 + l/2, +W/2 - w/2): walk from it back to the middle
+    W = rowsSpan(a);
+  // the centre of A1 sits at local (-L/2 + l/2, +W/2 - w/2 - lead): walk from it back to the middle
   const u = (L - a.cellLength) / 2,
-    v = (W - a.cellWidth) / 2;
+    v = (W - a.cellWidth) / 2 - aisleShift(a, 1);
   return {
     kind: 'rect',
     cx: round(a.x + u * Math.cos(t) + v * Math.sin(t)),
@@ -125,15 +148,21 @@ export function stagingRect(a: StagingAreaDef): Rect {
  */
 export function areaFromRect(from: StagingAreaDef, r: Rect): Partial<StagingAreaDef> {
   const f = stagingRect(from);
-  const gc = from.colGap ?? 0,
-    gr = from.rowGap ?? 0;
+  const gc = from.colGap ?? 0;
   const snap = (len: number, size: number, gap: number) =>
     Math.min(200, Math.max(1, Math.round((len + gap) / (size + gap))));
   const turned = Math.abs(r.rot - f.rot) > 1e-6;
   const cols = turned ? from.cols : snap(r.w, from.cellLength, gc);
-  const rows = turned ? from.rows : snap(r.h, from.cellWidth, gr);
+  // the number of rows whose height (aisles included) is nearest to the rectangle's
+  const rowsFor = (len: number) =>
+    Array.from({ length: 200 }, (_, i) => i + 1).reduce((best, n) =>
+      Math.abs(rowsSpan(from, n) - len) < Math.abs(rowsSpan(from, best) - len) ? n : best,
+    );
+  const rows = turned ? from.rows : rowsFor(r.h);
+  const kept = (from.aisles ?? []).filter((x) => x.after <= rows); // an aisle beyond the last row goes with the rows
+  const sized = { ...from, rows, aisles: kept };
   const w2 = spanOf(cols, from.cellLength, gc),
-    h2 = spanOf(rows, from.cellWidth, gr);
+    h2 = rowsSpan(sized);
   // the new centre, in the old frame: a moved or turned rectangle keeps the handles' centre; a resized edge keeps its opposite edge still
   const t0 = f.rot,
     dx = r.cx - f.cx,
@@ -148,10 +177,11 @@ export function areaFromRect(from: StagingAreaDef, r: Rect): Partial<StagingArea
     cy = f.cy + lx * Math.sin(t0) + ly * Math.cos(t0);
   const rot = turned ? r.rot : t0,
     u = (w2 - from.cellLength) / 2,
-    v = (h2 - from.cellWidth) / 2;
+    v = (h2 - from.cellWidth) / 2 - aisleShift(sized, 1);
   return {
     rows,
     cols,
+    ...(kept.length !== (from.aisles ?? []).length ? { aisles: kept } : {}),
     rotation: degrees(rot),
     x: round(cx - u * Math.cos(rot) - v * Math.sin(rot)),
     y: round(cy - u * Math.sin(rot) + v * Math.cos(rot)),

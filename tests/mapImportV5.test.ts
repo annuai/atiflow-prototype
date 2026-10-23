@@ -10,8 +10,8 @@ import { exportMapZip } from '@/features/map-import/export';
 import { importEntries } from '@/features/map-import/formats/registry';
 
 /** A NumPy .npy of bytes (shape rows x cols), and an .npz holding it, the way NumPy writes them. */
-function npy(rows: number, cols: number, data: Uint8Array): Uint8Array {
-  const text = `{'descr': '|u1', 'fortran_order': False, 'shape': (${rows}, ${cols}), }`;
+function npy(rows: number, cols: number, data: Uint8Array, descr = '|u1'): Uint8Array {
+  const text = `{'descr': '${descr}', 'fortran_order': False, 'shape': (${rows}, ${cols}), }`;
   const pad = 64 - ((10 + text.length + 1) % 64);
   const header = new TextEncoder().encode(text + ' '.repeat(pad) + '\n');
   const out = new Uint8Array(10 + header.length + data.length);
@@ -151,6 +151,12 @@ function v5Zip(extra: Record<string, Uint8Array> = {}) {
 }
 
 describe('streamed grid', () => {
+  it('reads a 16 bit grid (the v5 export stores `<i2`), clamping negatives and big values', () => {
+    const v = new Int16Array([0, 7, -3, 300, 20, 0, 1, 2, 3, 4, 5, 6]);
+    const bytes = new Uint8Array(v.buffer);
+    const g = poolNpz(zipSync({ 'arr_0.npy': npy(3, 4, bytes, '<i2') }))!;
+    expect([...g.levels]).toEqual([0, 7, 0, 255, 20, 0, 1, 2, 3, 4, 5, 6]);
+  });
   it('pools every block to its strongest cell, however big the grid', () => {
     const rows = 60,
       cols = 50,

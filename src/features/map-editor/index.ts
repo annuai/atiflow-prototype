@@ -28,5 +28,5 @@ export type { NodeRoles, Slot, StationNode, ThreePointTurn } from './model/appro
 export { cellRef, stationPoint as stationPointOf } from './model/staging';
 export { cellStationId } from './model/stagingCells';
 export { CELL_STATION, parseCell, settingsFromPose, withCellStation } from './model/stagingCells';
-export type { CellSettings } from './model/types';
+export type { Aisle, CellSettings } from './model/types';
 export { cellCenter as cellCenterOf, cellOffsetAt as cellOffsetOf } from './model/staging';
