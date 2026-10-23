@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { authStore } from '@/features/auth';
-import { greeting, resetMessages, runEgg, useEgg } from '@/features/delight/eggs';
+import { claimMorning, greeting, resetMessages, runEgg, useEgg } from '@/features/delight/eggs';
 import { copy } from '@/features/delight/copy';
+import { setServices } from '@/services';
+import { createDummyServices } from '@/services/dummy';
+import { memoryStorage } from './helpers/memoryStorage';
 
 beforeAll(() => {
+  setServices(createDummyServices({ backend: memoryStorage().backend }));
   window.matchMedia ??= (() => ({ matches: false })) as unknown as typeof window.matchMedia;
 });
 const reset = () => useEgg.setState({ items: [] });
@@ -35,6 +39,8 @@ describe('easter eggs', () => {
     }
   });
   it('sends every kind message once, in a shuffled order, before any repeats', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 9, 23, 14, 0)); // afternoon: the once-a-morning rule does not apply
     authStore.setState({ user: { firstName: 'Arjun' } } as never);
     reset();
     resetMessages();
@@ -52,6 +58,13 @@ describe('easter eggs', () => {
     expect(new Set(texts.slice(n)).size).toBe(n);
     expect(texts[n]).not.toBe(texts[n - 1]);
     expect(texts.filter((t) => t.includes('Arjun'))).toHaveLength(2);
+    vi.useRealTimers();
+  });
+  it('the morning greeting is shown once a day, however it is asked for', () => {
+    expect(claimMorning('arjun-test', new Date(2031, 0, 5, 8))).toBe(true);
+    expect(claimMorning('arjun-test', new Date(2031, 0, 5, 9))).toBe(false);
+    expect(claimMorning('arjun-test', new Date(2031, 0, 6, 8))).toBe(true);
+    expect(claimMorning('', new Date(2031, 0, 7, 8))).toBe(false);
   });
   it('greets by the time of day and the first name', () => {
     authStore.setState({ user: { firstName: 'Arjun' } } as never);
