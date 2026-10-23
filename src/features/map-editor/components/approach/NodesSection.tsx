@@ -1,4 +1,4 @@
-import { Plus, Trash01 } from '@untitledui/icons';
+import { ChevronDown, ChevronUp, Plus, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Toggle } from '@/components/base/toggle/toggle';
@@ -170,11 +170,12 @@ function SlotRow({
         {slot && (
           <button
             type="button"
-            className="ml-auto text-xs font-medium text-brand-secondary hover:underline"
-            aria-pressed={focused}
+            className="ml-auto flex shrink-0 items-center gap-1 text-xs font-medium whitespace-nowrap text-brand-secondary hover:underline"
+            aria-expanded={focused}
             onClick={() => onFocus(!focused)}
           >
             {slot.maneuver ? copy.maneuvers[slot.maneuver].label : copy.robotDefault}
+            {focused ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
           </button>
         )}
       </div>
