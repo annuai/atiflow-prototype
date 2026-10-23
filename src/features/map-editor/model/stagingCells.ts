@@ -231,3 +231,45 @@ export function settingsFromPose(
   if (onLane) out.onLane = true;
   return out;
 }
+
+/** The id of the station of a cell in the network robots drive (not the stand-in of the editor): "SA-001:B7". */
+export const cellStationId = (areaId: string, ref: string) => `${areaId}:${ref}`;
+export const isCellStationId = (id: string) => /^SA-\d+:[A-Z]+\d+$/.test(id);
+/** The cell a station id names ("SA-001:B7" -> its area and cell). */
+export function cellOfStationId(id: string): { area: string; ref: string } | null {
+  const m = /^(SA-\d+):([A-Z]+\d+)$/.exec(id);
+  return m ? { area: m[1], ref: m[2] } : null;
+}
+/**
+ * The map with a station for every cell of its staging areas (a real one each, with the cell's way, placement and nodes), so robots can drive to a particular cell. The caller joins them to the
+ * route (`routable`) and keeps them apart from the stations of the floor.
+ */
+export function withCellStations(data: MapData, fleetLive: string): MapData {
+  const nodes: MapData['nodes'] = [],
+    stations: MapStation[] = [];
+  const fleets = [...new Set(data.lanes.flatMap((l) => l.fleets))]; // every fleet that drives the map
+  if (!fleets.length) fleets.push(fleetLive);
+  for (const a of data.stagingAreas)
+    for (let row = 1; row <= a.rows; row++)
+      for (let col = 1; col <= a.cols; col++) {
+        const ref = cellRef(row, col);
+        const id = cellStationId(a.id, ref);
+        const p = stationPoint(a, row, col);
+        const ov = cellOverride(a, row, col);
+        nodes.push({ id: `N-${id}`, x: p.x, y: p.y, kind: 'station' });
+        stations.push({
+          id,
+          name: `${a.name}_${ref}`,
+          nodeId: `N-${id}`,
+          type: 'drop',
+          zone: null,
+          fleets,
+          angle: Math.round(degrees(p.heading) * 10) / 10,
+          onLane: ov?.onLane ?? false,
+          ...(ov?.nodes ? { nodes: ov.nodes } : {}),
+        });
+      }
+  return stations.length
+    ? { ...data, nodes: [...data.nodes, ...nodes], stations: [...data.stations, ...stations] }
+    : data;
+}

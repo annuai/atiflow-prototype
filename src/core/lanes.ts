@@ -87,8 +87,11 @@ export class LaneGraph {
   get intersections() {
     return (this.xings ??= new Intersections(this));
   }
+  private cells: Map<string, NavGraph['stations'][number]> | null = null;
   station(id: string) {
-    return this.nav.stations.find((s) => s.id === id);
+    const s = this.nav.stations.find((q) => q.id === id);
+    if (s || !this.nav.cellStations?.length) return s;
+    return (this.cells ??= new Map(this.nav.cellStations.map((q) => [q.id, q]))).get(id);
   }
   stationNode(id: string) {
     const s = this.station(id);

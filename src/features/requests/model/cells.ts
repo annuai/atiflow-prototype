@@ -1,4 +1,6 @@
 import type { FleetId } from '@/data/fleets';
+import { feed } from '@/features/live-floor';
+import { cellRef, cellStationId } from '@/features/map-editor';
 import { fleetAreas, isAreaId, masterDataStore, type CellPlan } from '@/features/master-data';
 
 /**
@@ -64,16 +66,41 @@ export function settleCells(
   return masterDataStore.getState().settleTrip(r.cells, r.tripId, how, (id) => areas.find((a) => a.id === id));
 }
 
-/** Where a robot goes for a leg: a staging area is reached through its entry station. Consecutive legs that become the same station are one stop. */
-export function entryLegs(r: { fleet: FleetId; legs: string[]; loadFrom: number }): {
+/** The cell a leg works on, from what was reserved for the trip: the first cell material is taken from, or the cell reserved for what arrives ("row-col" keys of Master Data). */
+function plannedCell(plan: CellPlan | undefined, areaId: string, action: string | undefined): string | undefined {
+  const key =
+    action === 'Pick Up' && plan?.pick?.areaId === areaId
+      ? plan.pick.items.find((x) => x.take > 0)?.key
+      : action === 'Drop Off' && plan?.drop?.areaId === areaId
+        ? plan.drop.key
+        : undefined;
+  const m = key && /^(\d+)-(\d+)$/.exec(key);
+  return m ? cellRef(Number(m[1]), Number(m[2])) : undefined;
+}
+
+/**
+ * Where a robot goes for a leg. A staging area is reached at the station of the CELL the trip works on (through that cell's nodes) when the floor has it, else through the area's entry station.
+ * Consecutive legs that become the same station are one stop.
+ */
+export function entryLegs(r: {
+  fleet: FleetId;
+  legs: string[];
+  loadFrom: number;
+  legActions?: string[];
+  cells?: CellPlan;
+}): {
   legs: string[];
   loadFrom: number;
 } {
   const areas = fleetAreas(r.fleet);
+  const known = new Set(feed.world()?.nav.cellStations?.map((s) => s.id));
   const legs: string[] = [];
   let loadFrom = r.loadFrom;
   r.legs.forEach((id, i) => {
-    const st = isAreaId(id) ? (areas.find((a) => a.id === id)?.stationId ?? id) : id;
+    const area = isAreaId(id) ? areas.find((a) => a.id === id) : undefined;
+    const ref = area && plannedCell(r.cells, area.id, r.legActions?.[i]);
+    const cell = area && ref ? cellStationId(area.id, ref) : undefined;
+    const st = !isAreaId(id) ? id : cell && known.has(cell) ? cell : (area?.stationId ?? id);
     if (legs[legs.length - 1] === st) {
       if (i < r.loadFrom) loadFrom--; // the stop it merged into came first
       return;

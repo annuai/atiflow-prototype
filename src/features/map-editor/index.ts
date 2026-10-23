@@ -25,7 +25,8 @@ export { defaultRoles, resolveNodes, stationNodes } from './model/approach/nodes
 export type { ResolvedNode } from './model/approach/nodes';
 export { nodesFromFile, threePointTurnFrom } from './model/approach/file';
 export type { NodeRoles, Slot, StationNode, ThreePointTurn } from './model/approach/types';
-export { stationPoint as stationPointOf } from './model/staging';
+export { cellRef, stationPoint as stationPointOf } from './model/staging';
+export { cellStationId } from './model/stagingCells';
 export { CELL_STATION, parseCell, settingsFromPose, withCellStation } from './model/stagingCells';
 export type { CellSettings } from './model/types';
 export { cellCenter as cellCenterOf, cellOffsetAt as cellOffsetOf } from './model/staging';

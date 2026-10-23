@@ -532,10 +532,10 @@ describe('staging area handles', () => {
 
 describe('staging stations and cell angle', () => {
   const a = { ...area0(), rotation: 0, cellAngle: 90, stationOffset: 1, cellLength: 2, cellWidth: 1 };
-  it('the station is in front of the cell along the area direction and faces the cell angle', () => {
+  it('the station is the offset from the cell centre along the area direction (0 = at the centre, as in the Deployment Manager) and faces the cell angle', () => {
     const s = stationPoint(a, 1, 1),
       c = cellCenter(a, 1, 1);
-    expect(s.x - c.x).toBeCloseTo(2); // half the length (1) + the offset (1)
+    expect(s.x - c.x).toBeCloseTo(1); // the offset (1) from the centre
     expect(s.y - c.y).toBeCloseTo(0);
     expect(s.heading).toBeCloseTo(Math.PI / 2);
   });

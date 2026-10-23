@@ -45,6 +45,7 @@ export function networkKey(nav: NavGraph): string {
     nav.lanes.map((l) => `${l.id}:${l.from}>${l.to}:${l.fleets.join('+')}:${l.geom.map(pt).join(' ')}`).join(';'),
     nav.stations.map((s) => `${s.id}:${s.nodeId}:${s.type}:${s.name}:${s.fleets.join('+')}`).join(';'),
     nav.nodes.map((n) => `${n.id}:${pt([n.x, n.y])}`).join(';'),
+    (nav.cellStations ?? []).map((s) => `${s.id}:${s.nodeId}:${s.fleets.join('+')}`).join(';'),
     nav.trafficZones.map((z) => `${z.id}:${z.capacity}:${z.fleets.join('+')}:${z.polygon.map(pt).join(' ')}`).join('|'),
     nav.forbiddenZones.map((z) => `${z.id}:${z.polygon.map(pt).join(' ')}`).join('|'),
     nav.fleets.map((f) => `${f.id}:${f.color}:${f.areas.join('+')}`).join(';'),
@@ -57,12 +58,14 @@ export function networkKey(nav: NavGraph): string {
  * this map (an imported map's carry its id in front, the ECC ones do not) and the fleets that appear on those lanes.
  */
 export function sliceNetwork(nav: NavGraph, fleetIds: string[], opts: { mapId: string; imported: boolean }): NavGraph {
+  const { cellStations: _cells, ...shown } = nav;
   const own = <T extends { fleets: string[] }>(x: T) => x.fleets.some((f) => fleetIds.includes(f));
-  const lanes = nav.lanes.filter(own),
+  // what a scene shows leaves out the lanes that join staging cells to the route and their stations (they are for the robots, not for the picture)
+  const lanes = nav.lanes.filter((l) => own(l) && !l.id.startsWith('AC-')),
     stations = nav.stations.filter(own);
   const used = new Set([...lanes.flatMap((l) => [l.from, l.to]), ...stations.map((s) => s.nodeId)]);
   return {
-    ...nav,
+    ...shown,
     nodes: nav.nodes.filter((n) => used.has(n.id)),
     lanes,
     stations,

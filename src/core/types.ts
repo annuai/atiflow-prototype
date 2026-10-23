@@ -126,6 +126,8 @@ export interface NavGraph {
   nodes: NavNode[];
   lanes: Lane[];
   stations: Station[];
+  /** The stations of staging cells (one per cell): robots can drive to them, but they are not stations of the floor (no lists, pins or random trips). */
+  cellStations?: Station[];
   fleets: FleetDef[];
   trafficZones: TrafficZone[];
   forbiddenZones: ForbiddenZone[];

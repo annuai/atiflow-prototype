@@ -87,6 +87,7 @@ function join(data: MapData, s: MapStation, station: NavNode, to: NavNode, fleet
     ],
     {
       fleetLive,
+      fleets: s.fleets.length ? s.fleets : undefined,
       nodeA: to.id,
       nodeB: station.id,
       name: `${s.name} access`,
@@ -98,7 +99,7 @@ function join(data: MapData, s: MapStation, station: NavNode, to: NavNode, fleet
   if (!r.id) return data;
   // access lanes carry their own prefix: they are made on the fly and must never share an id with a drawn lane
   const made = new Set(r.data.roads.find((q) => q.id === r.id)?.laneIds ?? []);
-  const rename = (id: string) => (made.has(id) ? `A-${id}` : id);
+  const rename = (id: string) => (made.has(id) ? `A-${s.id}-${id}` : id); // (named for its station: two stations must never share a lane id)
   return {
     ...r.data,
     lanes: r.data.lanes.map((l) => (made.has(l.id) ? { ...l, id: rename(l.id) } : l)),
@@ -121,7 +122,10 @@ export function connectStation(data: MapData, stationId: string, fleetLive: stri
     .map((q) => ({ q, d: Math.hypot(q.x - n.x, q.y - n.y) }))
     .sort((a, b) => a.d - b.d)[0];
   const road = data.roads.length ? nearestRoad(data, n.x, n.y) : undefined;
-  if (node && node.d <= REACH && (!road || node.d <= road.d + NODE_SLACK)) return join(data, s, n, node.q, fleetLive);
+  // the station of a staging cell joins the nearest route node and never cuts a road: a whole area of cells would cut the road into dozens of pieces (a node a person pinned is where it is)
+  const cell = /^SA-\d+:[A-Z]+\d+$/.test(s.id);
+  if (node && (cell || (node.d <= REACH && (!road || node.d <= road.d + NODE_SLACK))))
+    return join(data, s, n, node.q, fleetLive);
   if (!road || road.d > REACH) return data;
   // stand on the road: the station's own node is the cut; otherwise a new node at the nearest point
   const cutAt: NavNode =

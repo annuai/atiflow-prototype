@@ -51,6 +51,8 @@ export const nearestNode = (nodes: NavNode[], x: number, y: number, within: numb
 export interface RoadOptions {
   oneWay?: boolean;
   fleetLive: string;
+  /** Every fleet that drives the road (default: just `fleetLive`): a road cut in two keeps all of them. */
+  fleets?: string[];
   name?: string;
   /** Keep this id (a road that is rebuilt after an edit). */ id?: string;
   /** Use these nodes for the two ends instead of snapping. */ nodeA?: string;
@@ -107,7 +109,7 @@ export function addRoad(data: MapData, points: P[], opt: RoadOptions): { data: M
         : line,
       opt.offset ?? LANE_OFFSET,
     ),
-    fleets: [opt.fleetLive],
+    fleets: opt.fleets ?? [opt.fleetLive],
     speed: LANE_SPEED,
     len: round(pathLength(line)),
     ...(opt.weight ? { weight: opt.weight } : {}),
@@ -240,6 +242,7 @@ export function splitRoad(data: MapData, roadId: string, after: number, node: Na
   const common = {
     oneWay: road.oneWay,
     fleetLive: lane0.fleets[0],
+    fleets: lane0.fleets,
     heading: road.heading,
     extra: road.extra,
     snap: 0,

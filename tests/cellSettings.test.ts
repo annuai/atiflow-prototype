@@ -14,6 +14,9 @@ import {
   setCells,
   withCellStation,
 } from '@/features/map-editor/model/stagingCells';
+import { LaneGraph } from '@/core/lanes';
+import { applyPublishedMaps } from '@/features/map-editor/model/applyMaps';
+import { cellOfStationId, cellStationId } from '@/features/map-editor/model/stagingCells';
 import type { MapData, StagingAreaDef } from '@/features/map-editor/model/types';
 
 const area = (): StagingAreaDef => ({
@@ -57,6 +60,35 @@ describe('a station near the end of a road', () => {
       'A1',
     )!;
     expect(resolveNodes(stand.data, stand.station)[0].at).not.toBeNull();
+  });
+});
+
+describe('robots can drive to a particular cell', () => {
+  it('every cell has a station in the live network, joined to the route through its own nodes, and no cell is a station of the floor', () => {
+    let d = map();
+    d = addRoad(
+      d,
+      [
+        [-5, 0],
+        [25, 0],
+      ],
+      { fleetLive: 'f' },
+    ).data;
+    d = editCells(d, 'SA-001', ['B2'], (m, id) => addNodeAt(setSlotOn(m, id, 0, 'laden', false), id, { x: 22, y: 0 }))!;
+    const nav = applyPublishedMaps(
+      { schema: 2, siteId: 's', nodes: [], lanes: [], stations: [], fleets: [], trafficZones: [], forbiddenZones: [] },
+      [{ fleetLive: 'f', data: d }],
+    );
+    expect(nav.stations.some((s) => s.id.startsWith('SA-'))).toBe(false);
+    expect(nav.cellStations).toHaveLength(6); // 3 rows x 2 columns
+    const g = new LaneGraph(nav);
+    const near = g.stationNode(cellStationId('SA-001', 'A1'))!,
+      far = g.stationNode(cellStationId('SA-001', 'B3'))!;
+    expect(near).toBeDefined();
+    expect(far).toBeDefined();
+    const lanes = g.route(near.id, far.id, 'f');
+    expect(lanes?.length).toBeGreaterThan(0);
+    expect(cellOfStationId('SA-001:B3')).toEqual({ area: 'SA-001', ref: 'B3' });
   });
 });
 
@@ -173,5 +205,41 @@ describe.skipIf(!existsSync(SAMPLE))('cells of the real amz_tcy5a export', () =>
     expect(
       Math.abs(Number((pose[2] as { value?: number }).value ?? pose[2]) - (91 + 15) * (Math.PI / 180)),
     ).toBeLessThan(0.01);
+  });
+});
+
+import { readFileSync as readFile } from 'node:fs';
+import { FleetSim } from '@/adapters/sim';
+import { seedMapData } from '@/features/map-editor';
+import type { NavGraph, OrderUpdate, SiteLayout } from '@/core/types';
+
+describe('a requested trip drives to the station of a staging cell', () => {
+  it('a robot takes an order to cell B2 of the area, goes through the cell, and the order completes', () => {
+    const site = JSON.parse(readFile('public/sites/ecc/site.json', 'utf8')) as SiteLayout;
+    const base = JSON.parse(readFile('public/sites/ecc/nav.json', 'utf8')) as NavGraph;
+    const fleet = base.fleets[1].id;
+    const data = seedMapData({ fleetLive: fleet }, site, base);
+    const area = data.stagingAreas[0];
+    const live = applyPublishedMaps(base, [{ fleetLive: fleet, data }]);
+    const pick = live.stations.find((s) => s.fleets.includes(fleet) && s.type !== 'charge' && s.type !== 'park')!;
+    const to = cellStationId(area.id, 'B2');
+    expect(live.cellStations?.some((s) => s.id === to)).toBe(true);
+    const sim = new FleetSim(live, site.siteId, 14, 7);
+    expect(
+      sim.submitOrder({
+        id: 'REQ-C',
+        fleetId: fleet,
+        legs: [pick.id, to],
+        loadFrom: 1,
+        payload: { kind: 'x', qty: 1 },
+      }),
+    ).toBe(true);
+    const updates: OrderUpdate[] = [];
+    for (let t = 0; t < 3600 && !updates.some((u) => u.status === 'completed' || u.status === 'failed'); t += 0.1) {
+      sim.step(0.1);
+      updates.push(...sim.drainOrderUpdates());
+      sim.drainEvents();
+    }
+    expect(updates.map((u) => u.status)).toContain('completed');
   });
 });
