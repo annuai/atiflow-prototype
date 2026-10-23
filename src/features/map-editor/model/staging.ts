@@ -165,7 +165,7 @@ export function cellBoxes(a: StagingAreaDef) {
   for (let row = 1; row <= a.rows; row++)
     for (let col = 1; col <= a.cols; col++) {
       const c = cellCenter(a, row, col);
-      out.push({ x: c.x, y: c.y, w: a.cellLength, d: a.cellWidth, rot: cellHeading(a), h: CELL_HEIGHT });
+      out.push({ x: c.x, y: c.y, w: a.cellLength, d: a.cellWidth, rot: cellHeadingAt(a, row, col), h: CELL_HEIGHT });
     }
   return out;
 }
@@ -174,6 +174,14 @@ export { DEFAULT_SEQ, sequenceKeys } from '@/core/cellOrder';
 
 /** The direction the cells face, in radians: the area's rotation plus the cell angle. */
 export const cellHeading = (a: Pick<StagingAreaDef, 'rotation' | 'cellAngle'>) => rad(a.rotation + (a.cellAngle ?? 0));
+/** What one cell sets for itself (nothing: the area's setting counts). */
+export const cellOverride = (a: Pick<StagingAreaDef, 'cellSettings'>, row: number, col: number) =>
+  a.cellSettings?.[cellRef(row, col)];
+/** The way one cell faces (radians) and how far in front of it its station stands (m): its own setting, else the area's. */
+export const cellHeadingAt = (a: StagingAreaDef, row: number, col: number) =>
+  rad(a.rotation + (cellOverride(a, row, col)?.angle ?? a.cellAngle ?? 0));
+export const cellOffsetAt = (a: StagingAreaDef, row: number, col: number) =>
+  cellOverride(a, row, col)?.offset ?? a.stationOffset ?? 0;
 /** Cells may tilt at most this far either way; more makes the area unusable. */
 export const MAX_CELL_ANGLE = 60;
 export const clampCellAngle = (deg: number) => Math.max(-MAX_CELL_ANGLE, Math.min(MAX_CELL_ANGLE, deg));
@@ -181,13 +189,13 @@ export const clampCellAngle = (deg: number) => Math.max(-MAX_CELL_ANGLE, Math.mi
 export function stationPoint(a: StagingAreaDef, row: number, col: number): { x: number; y: number; heading: number } {
   const c = cellCenter(a, row, col),
     t = rad(a.rotation),
-    d = a.cellLength / 2 + (a.stationOffset ?? 0);
-  return { x: c.x + d * Math.cos(t), y: c.y + d * Math.sin(t), heading: cellHeading(a) };
+    d = a.cellLength / 2 + cellOffsetAt(a, row, col);
+  return { x: c.x + d * Math.cos(t), y: c.y + d * Math.sin(t), heading: cellHeadingAt(a, row, col) };
 }
 /** Corners of one cell, turned by the cell angle round the cell's own centre. */
 export function cellCorners(a: StagingAreaDef, row: number, col: number): [number, number][] {
   const c = cellCenter(a, row, col),
-    t = cellHeading(a),
+    t = cellHeadingAt(a, row, col),
     ex = [Math.cos(t), Math.sin(t)],
     ey = [Math.sin(t), -Math.cos(t)],
     hl = a.cellLength / 2,

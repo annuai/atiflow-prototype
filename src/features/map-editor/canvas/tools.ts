@@ -12,7 +12,7 @@ export type Tool =
   | { kind: 'staging' }
   | { kind: 'place'; id: string }
   /** adds another way in (a node) to a station: the next click on the map picks the lane */
-  | { kind: 'node'; station: string }
+  | { kind: 'node'; station: string; cells?: { area: string; refs: string[] } }
   | { kind: 'road'; oneWay: boolean }
   | { kind: 'gate'; shape: 'line' | 'box' }
   | { kind: 'zone'; type: ZoneTypeId }

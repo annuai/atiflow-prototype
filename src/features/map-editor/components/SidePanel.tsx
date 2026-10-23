@@ -20,6 +20,7 @@ import { StructurePanel } from '../structure-ui/StructurePanel';
 import { elementOf } from '../model/structure/ops';
 import { SimulationPanel } from './SimulationPanel';
 import { StagingForm } from './StagingForm';
+import { CellForm } from './CellForm';
 import { StationForm } from './StationForm';
 import { StationsPanel, type StationsSub } from './StationsPanel';
 import { ZoneForm, ZonesPanel } from './ZonesPanel';
@@ -54,6 +55,8 @@ export interface SidePanelProps {
   onPlace(stationId: string): void;
   /** arm the tool that adds another way in (a node) to a station: the next click on a lane */
   onAddNode(stationId: string): void;
+  /** the same for the picked cells of a staging area */
+  onAddCellNode(areaId: string, refs: string[]): void;
   /** point-to-point (v2) maps: start a route at this station (the next click on a station ends it) */
   onRouteFrom(stationId: string): void;
   /** stop drawing: the select tool, nothing half drawn */
@@ -89,6 +92,20 @@ function StationsSection(p: SidePanelProps) {
         onCancelAddNode={p.onStopDrawing}
         onRouteFrom={() => p.onRouteFrom(station.id)}
         onDelete={() => p.onDelete({ kind: 'station', id: station.id })}
+      />
+    );
+  if (area && selection?.kind === 'staging' && selection.cells?.length)
+    return (
+      <CellForm
+        area={area}
+        data={data}
+        refs={selection.cells}
+        editable={editable}
+        addingNode={tool.kind === 'node' && !!tool.cells}
+        onBack={() => p.onPick({ kind: 'staging', id: area.id })}
+        onEdit={p.edit}
+        onAddNode={() => p.onAddCellNode(area.id, selection.cells ?? [])}
+        onCancelAddNode={p.onStopDrawing}
       />
     );
   if (area)

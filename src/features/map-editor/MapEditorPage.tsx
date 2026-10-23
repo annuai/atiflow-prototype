@@ -1,3 +1,5 @@
+import { useZoneShortcuts } from './hooks/useZoneShortcuts';
+import { CELL_STATION } from './model/stagingCells';
 import { toolOfKey } from './canvas/toolKeys';
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
@@ -8,7 +10,7 @@ import { useMap } from '@/features/maps';
 import { useMapData, useWorkflow } from '@/features/workflow-builder';
 import { notify } from '@/ui/toast';
 import { DEFAULT_CHOICE, SELECT, toolFor, type Tool } from './canvas/tools';
-import { useDrawTools, useEditorShortcuts } from './canvas/useDrawTools';
+import { useDrawTools } from './canvas/useDrawTools';
 import type { P } from './canvas/layers';
 import { DeleteDialog } from './components/DeleteDialog';
 import { LeaveDialog } from './components/LeaveDialog';
@@ -35,9 +37,6 @@ import { boundsKey } from './canvas/lastView';
 import { Stage3d } from './components/Stage3d';
 import { view3dNotice } from './components/View3dNotice';
 import { publishProblems } from './model/validate';
-import { moveShape } from './model/shape';
-import { setZoneShape } from './model/zones';
-import { moveElements } from './model/structure/ops';
 import { deleteSelected, moduleOfSelection, versionBadge, versionShown, type Viewing } from './model/pageParts';
 import { boxElements, pickElement } from './model/structure/select';
 import { versionActions } from './model/versionActions';
@@ -46,51 +45,6 @@ import { seedMapData } from './model/seed';
 import { useSimulationPanel } from './sim/useSimulationPanel';
 import { PageTitleName } from '@/shell/PageTitle';
 import { Page, PageCard } from '@/components/page';
-
-type Zone = MapData['zones'][number];
-
-/** Keyboard shortcuts of the editor: undo / redo, Esc / Enter while drawing, and arrows / Delete for the selected zone. */
-function useZoneShortcuts({
-  tool,
-  canEdit,
-  editor,
-  draw,
-  zone,
-  element,
-  askDelete,
-  onToolKey,
-}: {
-  tool: Tool;
-  canEdit: boolean;
-  editor: ReturnType<typeof useDraftEditor>;
-  draw: ReturnType<typeof useDrawTools>;
-  zone: Zone | undefined;
-  /** the selected elements of the structure: arrows move them, Delete asks to remove them */
-  element?: string[];
-  askDelete: (d: NonNullable<Selection>) => void;
-  onToolKey: (key: string) => boolean;
-}) {
-  useEditorShortcuts({
-    tool,
-    canEdit,
-    ...editor,
-    cancel: draw.cancel,
-    finish: draw.finish,
-    onToolKey,
-    zone: zone
-      ? {
-          nudge: (dx, dy) =>
-            editor.edit((m) => setZoneShape(m, zone.id, moveShape(zone.shape, dx, dy)), `nudge:${zone.id}`),
-          remove: () => askDelete({ kind: 'zone', id: zone.id }),
-        }
-      : element
-        ? {
-            nudge: (dx, dy) => editor.edit((m) => moveElements(m, element, dx, dy), `nudge:${element.join()}`),
-            remove: () => askDelete({ kind: 'element', id: element[element.length - 1], ids: element }),
-          }
-        : undefined,
-  });
-}
 
 /** What is on screen: the map, its history, the version shown (and its data, site and fleet), and the ids that other maps and workflows already hold. */
 function useShownMap(id: string, viewing: Viewing) {
@@ -218,6 +172,10 @@ export function MapEditorPage() {
       return;
     }
     setTool(toolFor(m, choice));
+  };
+  const armNode = (what: { station: string; cells?: { area: string; refs: string[] } }) => {
+    setDrawing([]); // the tool that adds another way in (a node) to a station or to picked cells
+    setTool({ kind: 'node', ...what });
   };
   const selectTool = () => {
     setTool(SELECT);
@@ -362,10 +320,8 @@ export function MapEditorPage() {
               setDrawing([]);
               setTool({ kind: 'place', id: sid });
             }}
-            onAddNode={(sid) => {
-              setDrawing([]);
-              setTool({ kind: 'node', station: sid });
-            }}
+            onAddCellNode={(area, refs) => armNode({ station: CELL_STATION, cells: { area, refs } })}
+            onAddNode={(sid) => armNode({ station: sid })}
             onStopDrawing={() => {
               setDrawing([]);
               setTool(SELECT);

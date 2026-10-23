@@ -6,7 +6,7 @@ import { zoneType } from '../../model/zoneTypes';
 import { ImportedLayers } from './BaseLayer';
 import { ZoneHandles } from './ZoneHandles';
 import { centreOf, gateNormal } from '../../model/shape';
-import { polyPoints, type P, type stagingGeometry } from '../layers';
+import { polyPoints, type P } from '../layers';
 import type { useViewport } from '../useViewport';
 
 type Vp = ReturnType<typeof useViewport>;
@@ -100,85 +100,6 @@ function GateMark({ zone, vp }: { zone: MapData['zones'][number]; vp: Vp }) {
         points={`${X(tip[0])},${Y(tip[1])} ${X(base[0] + side[0])},${Y(base[1] + side[1])} ${X(base[0] - side[0])},${Y(base[1] - side[1])}`}
       />
     </g>
-  );
-}
-
-/** Staging areas: outline and cell grid; a draft's can be dragged. */
-export function StagingLayer({
-  staging,
-  isSelected,
-  movable,
-  startDrag,
-  endDrag,
-}: {
-  staging: ReturnType<typeof stagingGeometry>;
-  isSelected: IsSelected;
-  /** the pointer shows "move" (a draft, no drawing tool) */
-  movable: boolean;
-  startDrag: DragStart;
-  endDrag: DragEnd;
-}) {
-  return (
-    <>
-      {staging.map(({ a, u, cells, stations, letters, numbers, arrow, outline: o }) => (
-        <g
-          key={a.id}
-          data-hit={`staging:${a.id}`}
-          style={{ cursor: movable ? 'move' : 'pointer' }}
-          onPointerDown={(e) => startDrag(e, 'staging', a.id, a.x, a.y)}
-          onPointerUp={endDrag}
-        >
-          <polygon
-            points={o}
-            fill="#e0f2fe"
-            fillOpacity={isSelected('staging', a.id) ? 0.95 : 0.7}
-            stroke={isSelected('staging', a.id) ? '#0284c7' : '#7dd3fc'}
-            strokeWidth={isSelected('staging', a.id) ? 2.2 : 1.4}
-            vectorEffect="non-scaling-stroke"
-            data-hit={`staging:${a.id}`}
-          />
-          <path
-            d={cells}
-            fill="none"
-            stroke="#38bdf8"
-            strokeWidth={0.8}
-            vectorEffect="non-scaling-stroke"
-            pointerEvents="none"
-          />
-          <path
-            d={stations}
-            fill="none"
-            stroke="#0284c7"
-            strokeWidth={2}
-            vectorEffect="non-scaling-stroke"
-            pointerEvents="none"
-          />
-          {isSelected('staging', a.id) && (
-            <g
-              pointerEvents="none"
-              fontSize={20 * u}
-              fontWeight={600}
-              fill="#0369a1"
-              textAnchor="middle"
-              dominantBaseline="central"
-            >
-              {letters.map((l) => (
-                <text key={'c' + l.text} x={l.x} y={l.y}>
-                  {l.text}
-                </text>
-              ))}
-              {numbers.map((l) => (
-                <text key={'r' + l.text} x={l.x} y={l.y}>
-                  {l.text}
-                </text>
-              ))}
-              <DirectionArrow tail={arrow.tail} tip={arrow.tip} u={u} />
-            </g>
-          )}
-          <title>{`${a.name} · ${a.rows} x ${a.cols}`}</title>
-        </g>
-      ))}
-    </>
   );
 }
 

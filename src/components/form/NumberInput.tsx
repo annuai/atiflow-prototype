@@ -22,6 +22,7 @@ export function NumberInput({
   integer,
   className,
   tooltip,
+  mixed,
 }: {
   tooltip?: string;
   label: string;
@@ -32,14 +33,17 @@ export function NumberInput({
   hint?: string;
   integer?: boolean;
   className?: string;
+  /** the value differs between the things being edited: the box is empty and shows this word (the value is still that of the first, so a drag counts from it) */
+  mixed?: string;
 }) {
-  const [text, setText] = useSyncedState(String(value));
+  const [text, setText] = useSyncedState(mixed ? '' : String(value));
   const id = useId();
   const latest = useRef({ value, onCommit });
   useEffect(() => {
     latest.current = { value, onCommit };
   });
   const commit = () => {
+    if (mixed && text.trim() === '') return; // still mixed: nothing was typed
     const n = parseFloat(text);
     if (Number.isFinite(n) && (!integer || Number.isInteger(n))) {
       if (n !== value) onCommit(n);
@@ -90,6 +94,7 @@ export function NumberInput({
         tooltip={tooltip}
         size="sm"
         inputMode="decimal"
+        placeholder={mixed}
         value={text}
         isDisabled={disabled}
         isInvalid={!!error}

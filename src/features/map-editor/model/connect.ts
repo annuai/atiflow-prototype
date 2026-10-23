@@ -135,7 +135,8 @@ export function connectStation(data: MapData, stationId: string, fleetLive: stri
         };
   const withNode = cutAt === n ? data : { ...data, nodes: [...data.nodes, cutAt] };
   const cut = splitRoad(withNode, road.road.id, road.seg, cutAt);
-  return cut ? join(cut, s, n, cutAt, fleetLive) : data;
+  if (cut) return join(cut, s, n, cutAt, fleetLive);
+  return node ? join(data, s, n, node.q, fleetLive) : data; // the nearest point is too close to a road's end to cut it there: join that end
 }
 
 /** Connect every station that is not connected yet. `targets(station)` = the network node ids the source names for it. */

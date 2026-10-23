@@ -10,6 +10,7 @@ import { setParams, setThreePointTurn } from '../model/approach/nodes';
 import { addRouteNode, moveRouteNode } from '../model/routes';
 import { insertPoint, moveElements, setBox, setPoint, setPoints } from '../model/structure/ops';
 import { moveStation, updateStation } from '../model/stations';
+import { CELL_STATION, editCellsPicked, turnCellsPicked } from '../model/stagingCells';
 import { updateStagingArea } from '../model/staging';
 import { setZoneShape } from '../model/zones';
 import type { MapData, Selection } from '../model/types';
@@ -122,9 +123,20 @@ export function EditorStage({
         onStagingChange={(id, patch) => editor.edit((m) => updateStagingArea(m, id, patch), `stg:${id}`)}
         onThreePointBox={(sid, patch) => editor.edit((m) => setThreePointTurn(m, sid, patch), `turn:${sid}`)}
         onApproachParams={(sid, node, slot, params) =>
-          editor.edit((m) => setParams(m, sid, node, slot, params), `approach:${sid}:${node}:${slot}`)
+          editor.edit(
+            (m) =>
+              sid === CELL_STATION
+                ? editCellsPicked(m, selection, (x, id) => setParams(x, id, node, slot, params))
+                : setParams(m, sid, node, slot, params),
+            `approach:${sid}:${node}:${slot}`,
+          )
         }
-        onStationAngle={(sid, angle) => editor.edit((m) => updateStation(m, sid, { angle }), `angle:${sid}`)}
+        onStationAngle={(sid, angle) =>
+          editor.edit(
+            (m) => (sid === CELL_STATION ? turnCellsPicked(m, selection, angle) : updateStation(m, sid, { angle })),
+            `angle:${sid}`,
+          )
+        }
         onMove={(kind, sid, to) => editor.edit((m) => moveThing(m, kind, sid, to), `move:${kind}:${sid}`)}
       />
       {designing && tool.kind !== 'select' && (

@@ -58,6 +58,25 @@ export function StagingHandles({
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   };
+  /** The grip in the middle takes hold of the whole area: dragging it moves the area (a press on a cell picks that cell). */
+  const moveArea = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const from = vp.toSite(e.clientX, e.clientY);
+    const move = (ev: PointerEvent) => {
+      const at = vp.toSite(ev.clientX, ev.clientY);
+      onChange(area.id, {
+        x: Math.round((area.x + at.x - from.x) * 100) / 100,
+        y: Math.round((area.y + at.y - from.y) * 100) / 100,
+      });
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
   return (
     <>
       <ZoneHandles
@@ -81,7 +100,13 @@ export function StagingHandles({
         style={{ cursor: 'grab' }}
         onPointerDown={turn}
       />
-      <g transform={`translate(${cx} ${cy}) scale(${vp.u})`} pointerEvents="none" aria-hidden>
+      <g
+        data-handle="area-move"
+        transform={`translate(${cx} ${cy}) scale(${vp.u})`}
+        style={{ cursor: 'move' }}
+        onPointerDown={moveArea}
+      >
+        <circle r={18} fill="transparent" />
         <circle r={11} fill="#fff" stroke="#0284c7" strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
         <path
           d="M0-6V6M-6 0H6M0-6l-2.4 2.4M0-6l2.4 2.4M0 6l-2.4-2.4M0 6l2.4-2.4M-6 0l2.4-2.4M-6 0l2.4 2.4M6 0l-2.4-2.4M6 0l-2.4 2.4"

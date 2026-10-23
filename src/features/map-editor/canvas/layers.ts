@@ -1,5 +1,5 @@
 import type { SiteLayout } from '@/core/types';
-import { cellCenter, cellCorners, colLetter, cellHeading, outline, stationPoint } from '../model/staging';
+import { cellCenter, cellCorners, cellHeading, cellRef, colLetter, outline, stationPoint } from '../model/staging';
 import type { MapData } from '../model/types';
 import { newGate, polygonOf, rectFromCorners } from '../model/shape';
 import { zoneType } from '../model/zoneTypes';
@@ -34,8 +34,9 @@ export function stagingGeometry(areas: MapData['stagingAreas'], vp: Pick<Vp, 'X'
   return areas.map((a) => {
     const cells: string[] = [];
     const stations: string[] = [];
-    const letters: { x: number; y: number; text: string }[] = [];
-    const numbers: { x: number; y: number; text: string }[] = [];
+    const letters: { x: number; y: number; text: string; col: number }[] = [];
+    const numbers: { x: number; y: number; text: string; row: number }[] = [];
+    const cellPaths: Record<string, string> = {};
     const px = Math.abs(vp.X(1) - vp.X(0)); // pixels per metre
     const ring = Math.min(Math.max(12 * u, Math.min(0.3, a.cellWidth / 4) * px), a.cellWidth * px * 0.45);
     const t = (a.rotation * Math.PI) / 180,
@@ -45,13 +46,14 @@ export function stagingGeometry(areas: MapData['stagingAreas'], vp: Pick<Vp, 'X'
       ry = -Math.cos(t);
     for (let r = 1; r <= a.rows; r++)
       for (let c = 1; c <= a.cols; c++) {
-        cells.push(
+        const path =
           'M' +
-            cellCorners(a, r, c)
-              .map(([x, y]) => vp.P(x, y))
-              .join('L') +
-            'Z',
-        );
+          cellCorners(a, r, c)
+            .map(([x, y]) => vp.P(x, y))
+            .join('L') +
+          'Z';
+        cells.push(path);
+        cellPaths[cellRef(r, c)] = path;
         const s = stationPoint(a, r, c),
           X = vp.X(s.x),
           Y = vp.Y(s.y),
@@ -71,6 +73,7 @@ export function stagingGeometry(areas: MapData['stagingAreas'], vp: Pick<Vp, 'X'
         x: vp.X(m.x + (a.cellWidth / 2 + Math.max(0.3, 18 * u)) * -rx),
         y: vp.Y(m.y + (a.cellWidth / 2 + Math.max(0.3, 18 * u)) * -ry),
         text: colLetter(c),
+        col: c,
       });
     }
     for (let r = 1; r <= a.rows; r++) {
@@ -79,6 +82,7 @@ export function stagingGeometry(areas: MapData['stagingAreas'], vp: Pick<Vp, 'X'
         x: vp.X(m.x - (a.cellLength / 2 + Math.max(0.3, 18 * u)) * dx),
         y: vp.Y(m.y - (a.cellLength / 2 + Math.max(0.3, 18 * u)) * dy),
         text: String(r),
+        row: r,
       });
     }
     const mid = cellCenter(a, (a.rows + 1) / 2, (a.cols + 1) / 2);
@@ -90,6 +94,7 @@ export function stagingGeometry(areas: MapData['stagingAreas'], vp: Pick<Vp, 'X'
       a,
       u,
       cells: cells.join(''),
+      cellPaths,
       stations: stations.join(''),
       letters,
       numbers,

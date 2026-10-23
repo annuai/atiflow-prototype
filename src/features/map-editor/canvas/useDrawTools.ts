@@ -3,6 +3,7 @@ import { notify } from '@/ui/toast';
 import { localized } from '@/i18n';
 import { copy } from '../copy';
 import { addNodeAt } from '../model/approach/nodes';
+import { editCells } from '../model/stagingCells';
 import { addRoad } from '../model/roads';
 import { addRoute } from '../model/routes';
 import { addBox, addDoor, addLine, addRoom, addWorkArea } from '../model/structure/ops';
@@ -75,7 +76,10 @@ export function useDrawTools(i: DrawToolsInput) {
       return;
     }
     if (tool.kind === 'node') {
-      const next = addNodeAt(data, tool.station, { x: p[0], y: p[1] });
+      const at = { x: p[0], y: p[1] };
+      const next = tool.cells
+        ? editCells(data, tool.cells.area, tool.cells.refs, (m, id) => addNodeAt(m, id, at))
+        : addNodeAt(data, tool.station, at);
       if (!next) notify.warning(approach.addFailed, undefined, 'node-add');
       else {
         edit(() => next);

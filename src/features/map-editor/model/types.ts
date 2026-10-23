@@ -69,6 +69,20 @@ export interface MapRoad {
 /** An order cells are used in: line by line (a line is a row, or a column), the lines first-to-last or last-to-first, and the cells of each line the same. */
 import type { CellSequence } from '@/core/cellOrder';
 export type { CellSequence };
+/**
+ * What one cell of a staging area does differently from the area (a cell's station is a station of its own: it faces its own way, stands its own distance in front of the cell, is on or off the
+ * route and has nodes like any station). Keyed by the cell's name in `StagingAreaDef.cellSettings` ("A1": column letter, row number). Nothing here = the area's setting.
+ */
+export interface CellSettings {
+  /** Turns the cell on its own centre (degrees, on top of the area's rotation). */
+  angle?: number;
+  /** Metres between the cell's edge and its station. */
+  offset?: number;
+  /** The cell's station stands on the route (default: off it). */
+  onLane?: boolean;
+  /** Its nodes: missing = one automatic node. */
+  nodes?: StationNode[];
+}
 export interface StagingAreaDef {
   id: string;
   name: string;
@@ -97,6 +111,8 @@ export interface StagingAreaDef {
   /** How material is taken out: by arrival time (the order is `retrieval`: oldest or newest first) or by position (`emptyPosition`). Missing = by arrival. */
   emptyBy?: 'arrival' | 'position';
   emptyPosition?: CellSequence;
+  /** Settings of single cells that differ from the area's, by cell name (A1, B1, A2...). */
+  cellSettings?: Record<string, CellSettings>;
 }
 
 /**
@@ -183,4 +199,6 @@ export type Selection = {
   node?: number;
   /** several elements of the structure are selected at once (`id` is the last one picked) */
   ids?: string[];
+  /** a staging area: the cells picked inside it (names like A1); none = the whole area */
+  cells?: string[];
 } | null;

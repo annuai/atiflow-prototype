@@ -4,8 +4,11 @@ import type { SiteLayout } from '@/core/types';
 import { text } from '../text';
 import type { MapData, Selection, ZoneShape } from '../model/types';
 import { drawingPreview, floorPaths, pt, stagingGeometry, type P } from './layers';
-import { DrawingLayer, LocatePulse, RoadHits, StagingLayer, StationLayer, ZoneLayer } from './layers/MapLayers';
+import { DrawingLayer, LocatePulse, RoadHits, StationLayer, ZoneLayer } from './layers/MapLayers';
+import { StagingLayer } from './layers/StagingLayer';
 import type { SlotId, ThreePointTurn } from '../model/approach/types';
+import { useCellPicking } from './useCellPicking';
+import { useLinkedStation } from './useLinkedStation';
 import { ApproachGhost } from './layers/ApproachGhost';
 import { ThreePointBox } from './layers/ThreePointBox';
 import { StationLink } from './layers/StationLink';
@@ -191,7 +194,9 @@ export function MapCanvas({
   const preview = drawingPreview(tool, drawing, cursor);
   const movable = editable && mode === 'none';
   /** the station whose nodes and approach paths are drawn: the selected one (a point-to-point map has none) */
+  const link = useLinkedStation(data, selection);
   const linkedStation = selection?.kind === 'station' && !data.p2p ? selection.id : null;
+  const { cellsOf, pickCells, pickAt } = useCellPicking(data, selection, vp, onSelect);
   return (
     <div ref={attach} className="relative size-full touch-none select-none overflow-hidden bg-[#f6f7f5]" data-no-pan>
       <svg
@@ -267,6 +272,9 @@ export function MapCanvas({
         <StagingLayer
           staging={staging}
           isSelected={isSelected}
+          cellsOf={cellsOf}
+          onCells={pickCells}
+          onPickAt={pickAt}
           movable={movable}
           startDrag={pointer.startDrag}
           endDrag={pointer.endDrag}
@@ -336,9 +344,9 @@ export function MapCanvas({
           startDrag={pointer.startDrag}
           endDrag={pointer.endDrag}
         />
-        <StationLink data={data} stationId={linkedStation} vp={vp} editable={editable} onAngle={onStationAngle} />
+        <StationLink data={link.data} stationId={link.id} vp={vp} editable={editable} onAngle={onStationAngle} />
         <ThreePointBox data={data} stationId={linkedStation} vp={vp} editable={editable} onChange={onThreePointBox} />
-        <ApproachGhost data={data} stationId={linkedStation} vp={vp} editable={editable} onParams={onApproachParams} />
+        <ApproachGhost data={link.data} stationId={link.id} vp={vp} editable={editable} onParams={onApproachParams} />
         <LocatePulse locate={locate} vp={vp} />
         {pointer.box && (
           <rect
