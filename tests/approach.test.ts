@@ -96,6 +96,32 @@ describe('station nodes', () => {
   });
 });
 
+describe('a station comes in at the nearest point of the route', () => {
+  it('a station beside a road joins the road where it is nearest, not at the road end', () => {
+    const { data, id } = mini(); // road (0,0)-(20,0), station at (10,3)
+    const at = resolveNodes(
+      data,
+      data.stations.find((q) => q.id === id)!,
+    )[0].at!;
+    expect(Math.abs(at.x - 10)).toBeLessThan(0.6);
+    expect(Math.abs(at.y)).toBeLessThan(0.6);
+  });
+  it('a station standing on the road comes in at its own point, not at the far end of the road', () => {
+    let d: MapData = { nodes: [], lanes: [], roads: [], stations: [], stagingAreas: [], zones: [] };
+    d = addRoad(
+      d,
+      [
+        [0, 0],
+        [20, 0],
+      ],
+      { fleetLive: 'f' },
+    ).data;
+    const r = addStation(d, 'f', { x: 10, y: 0.1 });
+    const at = resolveNodes(r.data, r.data.stations[0])[0].at!;
+    expect(Math.abs(at.x - 10)).toBeLessThan(0.6);
+  });
+});
+
 describe('front or behind', () => {
   it('flips the sign of the distances the maneuver reads and nothing else', () => {
     const slot = { maneuver: 'one_shot_turn' as const, params: { inlane_dist: 3, perpendicular_dist: 0.5, other: 9 } };

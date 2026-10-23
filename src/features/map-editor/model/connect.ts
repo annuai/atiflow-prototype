@@ -12,7 +12,7 @@ import type { MapData, MapRoad, MapStation } from './types';
 const ON_ROAD = 0.15,
   SAME = 0.02, // a source node and the end of a road are the same point (road points are rounded to 0.01 m); nodes a few decimetres apart are two nodes
   ON_STATION = 0.3,
-  NODE_SLACK = 2,
+  NODE_SLACK = 0, // the nearest point of the route wins: an existing node only when it is at least as near as the road
   REACH = 30;
 type P = [number, number];
 
@@ -166,7 +166,14 @@ export function accessNodes(data: MapData, stationId: string): NavNode[] {
   const at = own?.nodeId ?? s.nodeId;
   const named = targetsOf(s).flatMap((id) => net.nodes.find((n) => n.id === id) ?? []);
   if (named.length) return named;
-  const ends = new Set(net.lanes.filter((l) => l.from === at || l.to === at).flatMap((l) => [l.from, l.to]));
+  const mine = net.lanes.filter((l) => l.from === at || l.to === at);
+  // a station joined by an access road comes in at the other end of it; a station that stands ON the route (the road was cut at it, or it sits on a node) comes in at its own point
+  const access = mine.filter((l) => l.id.startsWith('A-'));
+  if (!data.p2p && mine.length && !access.length) {
+    const own = net.nodes.find((n) => n.id === at);
+    return own ? [own] : [];
+  }
+  const ends = new Set((data.p2p ? mine : access).flatMap((l) => [l.from, l.to]));
   ends.delete(at);
   return [...ends].flatMap((id) => net.nodes.find((n) => n.id === id) ?? []);
 }
