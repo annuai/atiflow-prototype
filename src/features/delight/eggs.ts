@@ -36,8 +36,13 @@ const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
 
 /** The top edge of the page card: robots ride along it. Pages without a card use the main area. */
 export function cardLane(): Lane {
-  const r = (document.querySelector('[data-page-card]') ?? document.querySelector('.main'))?.getBoundingClientRect();
-  return { left: r?.left ?? 0, top: r?.top ?? 80, width: r?.width ?? window.innerWidth };
+  // never above the top bar: a page that is still loading (or leaving) has no card yet, or one that is not in its place
+  const floor = (document.querySelector('.topbar')?.getBoundingClientRect().bottom ?? 64) + 60;
+  const cards = [...document.querySelectorAll('[data-page-card]')].map((c) => c.getBoundingClientRect());
+  const r =
+    cards.find((c) => c.height > 100 && c.top >= floor - 10) ??
+    document.querySelector('.main')?.getBoundingClientRect();
+  return { left: r?.left ?? 0, top: Math.max(r?.top ?? 0, floor), width: r?.width ?? window.innerWidth };
 }
 const screenLane = (): Lane => ({ left: 0, top: window.innerHeight * 0.55, width: window.innerWidth });
 
