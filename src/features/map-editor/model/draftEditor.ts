@@ -1,3 +1,4 @@
+import { scrubKey } from '@/components/form/scrub';
 import { emptyHistory, record, redo as redoStep, undo as undoStep, type History } from './history';
 import { draftOf, mapVersionsStore } from './store';
 import type { MapData } from './types';
@@ -62,7 +63,7 @@ export class DraftEditor {
     if (!cur) return;
     const next = fn(cur);
     if (next === cur) return;
-    this.history = record(this.history, cur, key, Date.now());
+    this.history = record(this.history, cur, key ?? scrubKey(), Date.now());
     mapVersionsStore.getState().updateDraft(this.mapId, () => next);
     this.emit();
   };

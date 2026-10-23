@@ -11,7 +11,7 @@ import { copy } from '../copy';
 import { help } from '../help';
 import { nameProblem, plainType, STATION_TYPES } from '../model/stations';
 import type { MapData, MapStation } from '../model/types';
-import { NumberInput } from './NumberInput';
+import { NumberInput } from '@/components/form/NumberInput';
 import { FeaturesSection } from './approach/FeaturesSection';
 import { NodesSection } from './approach/NodesSection';
 

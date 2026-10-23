@@ -11,7 +11,7 @@ import { clampCellAngle, DEFAULT_SEQ, stagingProblems, totalCells } from '../mod
 import type { MapData, StagingAreaDef } from '../model/types';
 import { SequencePicker } from './SequencePicker';
 import { Hint } from './Hint';
-import { NumberInput } from './NumberInput';
+import { NumberInput } from '@/components/form/NumberInput';
 
 const NONE = '__none';
 /** One staging area (the old tool's "Add staging area"): name, rotation, where the A1 cell is, how many rows and columns, the size of a cell. */

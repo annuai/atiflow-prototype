@@ -4,7 +4,7 @@ import { Badge } from '@/components/base/badges/badges';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
 import { copy } from '../copy';
-import { NumberInput } from '../components/NumberInput';
+import { NumberInput } from '@/components/form/NumberInput';
 import { degrees, radians } from '../model/shape';
 import { elementColor } from '../model/structure/derive';
 import { duplicateElement, updateElement } from '../model/structure/ops';

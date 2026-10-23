@@ -13,7 +13,9 @@ const MAX_STEPS = 100,
 export const emptyHistory = <T>(): History<T> => ({ past: [], future: [], at: 0 });
 
 export function record<T>(h: History<T>, before: T, key: string | undefined, now: number): History<T> {
-  const merge = key !== undefined && key === h.key && now - h.at < COALESCE_MS && h.past.length > 0;
+  // a drag of a number (`scrub:` keys) is one step however long it takes; other changes with the same key merge when they follow each other quickly
+  const merge =
+    key !== undefined && key === h.key && (key.startsWith('scrub:') || now - h.at < COALESCE_MS) && h.past.length > 0;
   return { past: merge ? h.past : [...h.past, before].slice(-MAX_STEPS), future: [], key, at: now };
 }
 export function undo<T>(h: History<T>, current: T): { history: History<T>; value: T } | null {

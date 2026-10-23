@@ -16,7 +16,7 @@ import {
 } from '../model/routes';
 import { updateRoad } from '../model/roads';
 import type { MapData, MapRoad } from '../model/types';
-import { NumberInput } from './NumberInput';
+import { NumberInput } from '@/components/form/NumberInput';
 
 /**
  * One route of a point-to-point (v2) map, the way the Deployment Manager shows it: the start and end station (and a swap), Reverse mode, and, when a bend node of the route is selected on

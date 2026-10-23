@@ -3,7 +3,7 @@ import { Toggle } from '@/components/base/toggle/toggle';
 import { withoutThreePointTurn } from '@/data/robotTypes';
 import type { ThreePointTurn } from '../../model/approach/types';
 import type { MapStation } from '../../model/types';
-import { NumberInput } from '../NumberInput';
+import { NumberInput } from '@/components/form/NumberInput';
 import { Tip } from './Tip';
 import { copy } from './copy';
 

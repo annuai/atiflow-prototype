@@ -6,7 +6,7 @@ import { Select } from '@/components/base/select/select';
 import { MANEUVERS, maneuverOf, type ParamKey } from '../../model/approach';
 import { approachOf, paramValue, shownParams, withApproach } from '../../model/approach/params';
 import type { ManeuverId, Slot } from '../../model/approach/types';
-import { NumberInput } from '../NumberInput';
+import { NumberInput } from '@/components/form/NumberInput';
 import { copy } from './copy';
 
 const DEFAULT = '__default';

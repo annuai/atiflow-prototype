@@ -15,7 +15,7 @@ import { nameProblem, roadAngle, roadLength, type RoadPatch } from '../model/roa
 import type { MapData, MapRoad, RoadHeading } from '../model/types';
 import { Hint } from './Hint';
 import { ModuleList } from './ModuleList';
-import { NumberInput } from './NumberInput';
+import { NumberInput } from '@/components/form/NumberInput';
 
 const HEADINGS: RoadHeading[] = ['both', 'forward', 'backward'];
 

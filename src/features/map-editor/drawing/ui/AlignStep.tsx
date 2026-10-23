@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { applyPoint, IDENTITY, type Similarity } from '@/core/similarity';
 import type { Wall } from '@/core/types';
 import { copy } from '../copy';
-import { NumberInput } from '../../components/NumberInput';
+import { NumberInput } from '@/components/form/NumberInput';
 import { alignToMap } from '../core/autoAlign';
 import { aboutCentre, centreOf, placeCentre, twoPoints } from '../core/align';
 import type { Area } from '../core/place';

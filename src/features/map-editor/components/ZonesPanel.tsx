@@ -15,7 +15,7 @@ import type { MapData, MapZone, ZoneProp, ZoneShape } from '../model/types';
 import { zoneNameProblem } from '../model/zones';
 import { zoneType, zoneTypesOf, type ZoneType } from '../model/zoneTypes';
 import { ModuleList } from './ModuleList';
-import { NumberInput } from './NumberInput';
+import { NumberInput } from '@/components/form/NumberInput';
 
 type Module = 'exclusive' | 'zones';
 /** The panel of the Traffic Gates and Zones modules: the "Add new gate / zone" menu (types come from the zone registry), search and the list of that module's zones. */
