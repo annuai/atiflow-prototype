@@ -182,7 +182,7 @@ export function useDrawTools(i: DrawToolsInput) {
 
 /**
  * Keyboard shortcuts of the editor: Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z or Ctrl+Y redo (draft in Design mode only), Esc cancels the tool, Enter finishes a road, arrows / Delete act on the selected zone.
- * Ignored while typing in a field. Registered again each render because it reads the current drawing and tool.
+ * Single letters pick a tool (`onToolKey`). Ignored while typing in a field. Registered again each render because it reads the current drawing and tool.
  */
 export function useEditorShortcuts(o: {
   tool: Tool;
@@ -191,6 +191,8 @@ export function useEditorShortcuts(o: {
   redo(): void;
   cancel(): void;
   finish(): void;
+  /** A letter key that picks a tool (V select, S stations, R routes, T traffic gates, Z zones, W structure): true when it was used. */
+  onToolKey?(key: string): boolean;
   /** The selected zone of a draft: arrow keys move it (0.1 m, Shift 1 m), Delete asks to remove it. */
   zone?: { nudge(dx: number, dy: number): void; remove(): void };
 }) {
@@ -203,6 +205,10 @@ export function useEditorShortcuts(o: {
         e.preventDefault();
         if (k === 'y' || e.shiftKey) o.redo();
         else o.undo();
+        return;
+      }
+      if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey && o.onToolKey?.(k)) {
+        e.preventDefault();
         return;
       }
       if (o.zone && o.canEdit) {

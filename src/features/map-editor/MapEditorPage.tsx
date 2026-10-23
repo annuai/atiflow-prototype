@@ -1,3 +1,4 @@
+import { toolOfKey } from './canvas/toolKeys';
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/modal/ConfirmDialog';
@@ -57,6 +58,7 @@ function useZoneShortcuts({
   zone,
   element,
   askDelete,
+  onToolKey,
 }: {
   tool: Tool;
   canEdit: boolean;
@@ -66,6 +68,7 @@ function useZoneShortcuts({
   /** the selected elements of the structure: arrows move them, Delete asks to remove them */
   element?: string[];
   askDelete: (d: NonNullable<Selection>) => void;
+  onToolKey: (key: string) => boolean;
 }) {
   useEditorShortcuts({
     tool,
@@ -73,6 +76,7 @@ function useZoneShortcuts({
     ...editor,
     cancel: draw.cancel,
     finish: draw.finish,
+    onToolKey,
     zone: zone
       ? {
           nudge: (dx, dy) =>
@@ -188,6 +192,11 @@ export function MapEditorPage() {
     zone: selection?.kind === 'zone' ? data?.zones.find((z) => z.id === selection.id) : undefined,
     element: selection?.kind === 'element' ? (selection.ids ?? [selection.id]) : undefined,
     askDelete: setDeleting,
+    onToolKey: (key) => {
+      const what = toolOfKey(key); // a letter picks a tool, in the plan of Design mode only
+      if (!what || mode !== 'design' || v.view !== '2d') return false;
+      return (what === 'select' ? selectTool() : arm(what)) ?? true;
+    },
   });
 
   // a different version is shown: nothing is selected, drawn or simulated any more

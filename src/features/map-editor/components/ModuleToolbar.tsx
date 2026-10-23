@@ -9,6 +9,7 @@ import { choicesOf, moduleOfTool, type Module, type StructureTool, type Tool } f
 import { copy } from '../copy';
 import { text } from '../text';
 import { helpText } from '../help';
+import { TOOL_KEYS } from '../canvas/toolKeys';
 import { zoneType } from '../model/zoneTypes';
 
 export type { Module };
@@ -66,7 +67,12 @@ export function ModuleToolbar({
       aria-label={text.aria.tools}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <Tooltip title={copy.tools.select} description={helpText('tool.select')} placement="top" delay={500}>
+      <Tooltip
+        title={`${copy.tools.select} (${TOOL_KEYS.select})`}
+        description={helpText('tool.select')}
+        placement="top"
+        delay={500}
+      >
         <AriaButton
           aria-label={copy.tools.select}
           aria-current={tool.kind === 'select'}
@@ -84,7 +90,7 @@ export function ModuleToolbar({
         return (
           <div key={m} className="flex items-center">
             <Tooltip
-              title={`${copy.tabs[m]}: ${choiceLabel(m, choices[m])}`}
+              title={`${copy.tabs[m]}: ${choiceLabel(m, choices[m])} (${TOOL_KEYS[m]})`}
               description={helpText(`module.${m}`)}
               placement="top"
               delay={500}
