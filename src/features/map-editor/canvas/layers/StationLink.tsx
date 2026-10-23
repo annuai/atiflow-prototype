@@ -1,11 +1,14 @@
 import { useMemo, type PointerEvent as ReactPointerEvent } from 'react';
 import { routable } from '../../model/connect';
+import { resolveNodes } from '../../model/approach/nodes';
+import { localized } from '@/i18n';
 import type { MapData } from '../../model/types';
 import { isCoarse } from '@/components/map/useTouchGestures';
 import type { useViewport } from '../useViewport';
 import { ROTATE_CURSOR } from './ZoneHandles';
 
 type Vp = ReturnType<typeof useViewport>;
+const copy = localized('approach');
 
 const LINK = '#7ea6c8'; // a soft blue: the link is a hint, not a thing to look at
 const LINK_TEXT = '#5f87a8';
@@ -33,13 +36,11 @@ export function StationLink({
     const s = net.stations.find((q) => q.id === stationId);
     const at = s && net.nodes.find((n) => n.id === s.nodeId);
     if (!s || !at) return null;
-    const named = (s.routeNodes ?? []).flatMap((id) => net.nodes.find((n) => n.id === id) ?? []);
-    const joined = [
-      ...new Set(net.lanes.filter((l) => l.from === at.id || l.to === at.id).flatMap((l) => [l.from, l.to])),
-    ]
-      .filter((id) => id !== at.id)
-      .flatMap((id) => net.nodes.find((n) => n.id === id) ?? []);
-    return { id: s.id, at, angle: s.angle, nodes: named.length ? named : joined };
+    const off = s.onLane === false; // roles only matter for a station off the lane
+    const nodes = resolveNodes(data, s).flatMap((r) =>
+      r.at ? [{ ...r.at, badges: { park: off && !!r.node.roles.park, unpark: off && !!r.node.roles.unpark } }] : [],
+    );
+    return { id: s.id, at, angle: s.angle, nodes };
   }, [data, stationId]);
   if (!shape) return null;
   const { id, at, nodes, angle } = shape;
@@ -108,6 +109,20 @@ export function StationLink({
                 strokeWidth={3}
               >
                 {`N${i + 1}`}
+              </text>
+              <text
+                x={13}
+                y={14}
+                fontSize={13}
+                fontWeight={700}
+                fill={LINK_TEXT}
+                paintOrder="stroke"
+                stroke="#fff"
+                strokeWidth={3}
+              >
+                {[n.badges.park && `↘ ${copy.badge.park}`, n.badges.unpark && `↗ ${copy.badge.unpark}`]
+                  .filter(Boolean)
+                  .join('  ')}
               </text>
             </g>
           </g>

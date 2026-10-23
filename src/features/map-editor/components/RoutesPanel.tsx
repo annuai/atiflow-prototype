@@ -1,3 +1,4 @@
+import { copy as approachCopy } from './approach/copy';
 import { useSyncedState } from '@/hooks/use-synced-state';
 import { ArrowLeft, Route, SwitchVertical01, Trash01 } from '@untitledui/icons';
 import { Badge } from '@/components/base/badges/badges';
@@ -71,7 +72,7 @@ export function RoutesPanel({
   );
 }
 
-/** One road: name, where it starts and ends, its direction (swap), one lane or two, the heading setting; length and lanes; delete. (No lane weight yet: it will set a lane's priority once priorities exist.) */
+/** One road: name, where it starts and ends, its direction (swap), one lane or two, the heading setting; length and lanes; delete. (The lane weight is the router's cost of the road: default its length.) */
 export function RoadForm({
   road,
   data,
@@ -208,6 +209,21 @@ export function RoadForm({
         >
           {(item) => <Select.Item {...item} />}
         </Select>
+      </div>
+      <div className="flex flex-col gap-2">
+        <NumberInput
+          label={approachCopy.road.weight}
+          tooltip={approachCopy.road.weightHint}
+          value={road.weight ?? roadLength(road)}
+          disabled={!editable}
+          hint={road.weight ? undefined : approachCopy.road.weightDefault(String(roadLength(road)))}
+          onCommit={(v) => onPatch({ weight: v > 0 && v !== roadLength(road) ? v : null })}
+        />
+        {road.weight && editable && (
+          <Button size="sm" color="link-gray" className="w-fit" onPress={() => onPatch({ weight: null })}>
+            {approachCopy.road.weightReset}
+          </Button>
+        )}
       </div>
       <Input label={f.length} {...help('route.length')} size="sm" value={`${roadLength(road)}\u00a0m`} isDisabled />
       <Input label={f.lanes} {...help('route.lanes')} size="sm" value={road.laneIds.join(', ')} isDisabled />

@@ -25,6 +25,7 @@ import { ai } from './ai';
 import { support } from './support';
 import { search } from './search';
 import { delight } from './delight';
+import { approach } from './approach';
 import { preferences } from './preferences';
 import { settings } from './settings';
 import { shell } from './shell';
@@ -32,6 +33,7 @@ import { shell } from './shell';
 /** Every area of the interface in English (the master). Add an area here, then in each language's `index.ts`. */
 export const catalog = {
   onboarding,
+  approach,
   delight,
   common,
   auth,

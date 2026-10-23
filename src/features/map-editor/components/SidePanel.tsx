@@ -52,6 +52,8 @@ export interface SidePanelProps {
   onArm(module: Module, choice?: string): void;
   /** arm the tool that places an imported station that has no position yet */
   onPlace(stationId: string): void;
+  /** arm the tool that adds another way in (a node) to a station: the next click on a lane */
+  onAddNode(stationId: string): void;
   /** point-to-point (v2) maps: start a route at this station (the next click on a station ends it) */
   onRouteFrom(stationId: string): void;
   /** stop drawing: the select tool, nothing half drawn */
@@ -81,6 +83,10 @@ function StationsSection(p: SidePanelProps) {
         onPatch={(patch) => p.edit((m) => updateStation(m, station.id, patch))}
         onMove={(to) => p.edit((m) => moveStation(m, station.id, to))}
         onPlace={() => p.onPlace(station.id)}
+        onEdit={p.edit}
+        addingNode={tool.kind === 'node' && tool.station === station.id}
+        onAddNode={() => p.onAddNode(station.id)}
+        onCancelAddNode={p.onStopDrawing}
         onRouteFrom={() => p.onRouteFrom(station.id)}
         onDelete={() => p.onDelete({ kind: 'station', id: station.id })}
       />
@@ -241,6 +247,8 @@ export function SidePanel(p: SidePanelProps) {
           onChoice={sim.setChoice}
           state={sim.trip.state}
           error={sim.error}
+          info={sim.info}
+          fleet={sim.fleet}
           onRun={sim.run}
           onStop={sim.trip.stop}
         />

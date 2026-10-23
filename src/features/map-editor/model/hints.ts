@@ -1,6 +1,9 @@
 import { copy } from '../copy';
 import type { Tool } from '../canvas/tools';
+import { localized } from '@/i18n';
 import { zoneType } from './zoneTypes';
+
+const approach = localized('approach');
 
 /** The one-line instruction shown over the map for the armed tool (empty for the select tool). `placed` is how many points of the shape have been clicked so far. */
 export function hintFor(tool: Tool, placed: number, p2p = false): string {
@@ -11,6 +14,8 @@ export function hintFor(tool: Tool, placed: number, p2p = false): string {
       return copy.hint.staging;
     case 'place':
       return copy.hint.place;
+    case 'node':
+      return approach.addHint;
     case 'gate':
       return tool.shape === 'box' ? copy.hint.gateBox : copy.hint.gateLine;
     case 'road':

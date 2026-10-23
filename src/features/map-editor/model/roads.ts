@@ -56,6 +56,8 @@ export interface RoadOptions {
   /** Use these nodes for the two ends instead of snapping. */ nodeA?: string;
   nodeB?: string;
   heading?: RoadHeading;
+  /** Custom router cost of the road (default: its length). */
+  weight?: number;
   /** Source fields of an imported road, kept on it. */ extra?: Record<string, unknown>;
   /** How close (m) an end must be to an existing node to join it; default 1.5. An import uses a tight value: its junctions share exact points. */
   snap?: number;
@@ -108,6 +110,7 @@ export function addRoad(data: MapData, points: P[], opt: RoadOptions): { data: M
     fleets: [opt.fleetLive],
     speed: LANE_SPEED,
     len: round(pathLength(line)),
+    ...(opt.weight ? { weight: opt.weight } : {}),
   });
   lanes.push(mk(a, b, pts));
   if (!opt.oneWay) lanes.push(mk(b, a, [...pts].reverse()));
@@ -118,6 +121,7 @@ export function addRoad(data: MapData, points: P[], opt: RoadOptions): { data: M
     points: pts,
     laneIds: lanes.map((l) => l.id),
     ...(opt.heading ? { heading: opt.heading } : {}),
+    ...(opt.weight ? { weight: opt.weight } : {}),
     ...(opt.extra ? { extra: opt.extra } : {}),
     ...(opt.radius ? { radius: opt.radius } : {}),
     ...(opt.radius && opt.nodeRadii ? { nodeRadii: opt.nodeRadii } : {}),
@@ -128,6 +132,8 @@ export interface RoadPatch {
   points?: P[];
   oneWay?: boolean;
   heading?: RoadHeading;
+  /** The custom router cost (null = back to the default, the length). */
+  weight?: number | null;
   /** Reverse the direction of travel. */ swap?: boolean;
   /** Point-to-point (v2) routes: the radius of the turns. */ radius?: number;
   /** Point-to-point (v2) routes: the radius at each bend node. */ nodeRadii?: number[];
@@ -136,6 +142,27 @@ export interface RoadPatch {
  * Change a road: its end points, one lane or two, the direction, the heading setting. A change to the shape or lanes rebuilds the road's lanes (same id, same name); an end that was not moved keeps its
  * node, so the road stays joined to its neighbours and stations. The heading is only stored.
  */
+/** The settings that change no geometry (heading, custom weight): the road and its lanes are only updated. */
+function setRoadSettings(data: MapData, id: string, patch: RoadPatch): MapData {
+  const weight = patch.weight === undefined ? undefined : (patch.weight ?? null);
+  return {
+    ...data,
+    roads: data.roads.map((r) => {
+      if (r.id !== id) return r;
+      const { weight: _w, ...rest } = r;
+      const w = weight === undefined ? r.weight : (weight ?? undefined);
+      return { ...rest, heading: patch.heading ?? r.heading, ...(w ? { weight: w } : {}) };
+    }),
+    lanes:
+      weight === undefined
+        ? data.lanes
+        : data.lanes.map((l) => {
+            if (!data.roads.find((r) => r.id === id)?.laneIds.includes(l.id)) return l;
+            const { weight: _w, ...rest } = l;
+            return weight ? { ...rest, weight } : rest;
+          }),
+  };
+}
 export function updateRoad(data: MapData, id: string, patch: RoadPatch): MapData {
   const road = data.roads.find((r) => r.id === id);
   if (!road) return data;
@@ -146,7 +173,7 @@ export function updateRoad(data: MapData, id: string, patch: RoadPatch): MapData
     patch.radius === undefined &&
     patch.nodeRadii === undefined
   )
-    return { ...data, roads: data.roads.map((r) => (r.id === id ? { ...r, heading: patch.heading ?? r.heading } : r)) };
+    return setRoadSettings(data, id, patch);
   const lane0 = data.lanes.find((l) => l.id === road.laneIds[0]);
   if (!lane0) return data;
   let pts = (patch.points ?? road.points).map((p) => [...p] as P);
@@ -172,6 +199,7 @@ export function updateRoad(data: MapData, id: string, patch: RoadPatch): MapData
     nodeA,
     nodeB,
     heading: patch.heading ?? road.heading,
+    weight: patch.weight === undefined ? road.weight : (patch.weight ?? undefined),
     extra: road.extra,
     ...(data.p2p
       ? {
@@ -206,6 +234,9 @@ export function splitRoad(data: MapData, roadId: string, after: number, node: Na
     lanes: data.lanes.filter((l) => !road.laneIds.includes(l.id)),
     roads: data.roads.filter((r) => r.id !== roadId),
   };
+  const total = pathLength(road.points) || 1;
+  const share = (pts: P[]) =>
+    road.weight ? Math.round(road.weight * (pathLength(pts) / total) * 100) / 100 : undefined;
   const common = {
     oneWay: road.oneWay,
     fleetLive: lane0.fleets[0],
@@ -214,13 +245,21 @@ export function splitRoad(data: MapData, roadId: string, after: number, node: Na
     snap: 0,
     allowShort: true,
   };
-  const a = addRoad(base, first, { ...common, name: road.name, id: road.id, nodeA: lane0.from, nodeB: node.id });
+  const a = addRoad(base, first, {
+    ...common,
+    name: road.name,
+    id: road.id,
+    nodeA: lane0.from,
+    nodeB: node.id,
+    weight: share(first),
+  });
   if (!a.id) return null;
   const b = addRoad(a.data, second, {
     ...common,
     name: `${road.name} (2)`,
     nodeA: node.id,
     nodeB: lane0.to,
+    weight: share(second),
   });
   return b.id ? { ...b.data, roads: [...b.data.roads].sort((x, y) => numOf(x.id, 'R') - numOf(y.id, 'R')) } : null;
 }

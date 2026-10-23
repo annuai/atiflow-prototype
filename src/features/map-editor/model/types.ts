@@ -1,3 +1,4 @@
+import type { StationFeatures, StationNode } from './approach/types';
 import type { Equipment, Lane, NavNode, Station, Wall } from '@/core/types';
 import type { MapModel3d } from './structure/types';
 
@@ -31,6 +32,10 @@ export interface MapStation extends Station {
     unknown
   >;
   /** The file gave no real position: the station waits in the "Needs placement" list and Publish is blocked until it is placed. */ unplaced?: boolean;
+  /** How robots enter and leave this station: its nodes, each with its Park (Pick, Drop) and Unpark (Laden, Unladen) roles. Missing = one automatic node. */
+  nodes?: StationNode[];
+  /** Robot-specific features asked for at this station (a three-point turn). */
+  features?: StationFeatures;
   /** Ids of the route nodes the source joins this station to; its way onto the route is made to them (else to the nearest route node). */ routeNodes?: string[];
   /** heading of the robot at the station (degrees) */ angle?: number;
   /** stands on the lane (true, default) or off it */ onLane?: boolean;
@@ -47,6 +52,8 @@ export interface MapRoad {
   points: [number, number][];
   laneIds: string[];
   heading?: RoadHeading;
+  /** A custom cost of the road for the router (the Deployment Manager's lane weight); missing = its length. */
+  weight?: number;
   /** The source fields of an imported road (its id, regime, weight...) kept as they came so nothing is lost. */
   extra?: Record<string, unknown>;
   /** Point-to-point (v2) routes: the default radius of the turns at its corners (m). */

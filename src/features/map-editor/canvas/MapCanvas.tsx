@@ -5,6 +5,9 @@ import { text } from '../text';
 import type { MapData, Selection, ZoneShape } from '../model/types';
 import { drawingPreview, floorPaths, pt, stagingGeometry, type P } from './layers';
 import { DrawingLayer, LocatePulse, RoadHits, StagingLayer, StationLayer, ZoneLayer } from './layers/MapLayers';
+import type { SlotId, ThreePointTurn } from '../model/approach/types';
+import { ApproachGhost } from './layers/ApproachGhost';
+import { ThreePointBox } from './layers/ThreePointBox';
 import { StationLink } from './layers/StationLink';
 import { RouteNodes } from './layers/RouteNodes';
 import { StructureLayer } from './layers/StructureLayer';
@@ -64,6 +67,16 @@ interface Props {
     id: string,
     degrees: number,
   ): void;
+  /** A handle of the three-point-turn box changes its size (called while dragging). */ onThreePointBox(
+    stationId: string,
+    patch: Partial<ThreePointTurn>,
+  ): void;
+  /** A handle of the ghost path changes the distances of a slot (called while dragging). */ onApproachParams(
+    stationId: string,
+    node: number,
+    slot: SlotId,
+    params: Record<string, number>,
+  ): void;
   /** A zone's shape is changed with its handles (called while dragging, with the new shape). */ onZoneShape(
     id: string,
     shape: ZoneShape,
@@ -106,6 +119,8 @@ export function MapCanvas({
   onMove,
   onZoneShape,
   onStationAngle,
+  onApproachParams,
+  onThreePointBox,
   onStagingChange,
   overlay,
   locate,
@@ -175,6 +190,8 @@ export function MapCanvas({
   const selectedZone = selection?.kind === 'zone' ? data.zones.find((z) => z.id === selection.id) : undefined;
   const preview = drawingPreview(tool, drawing, cursor);
   const movable = editable && mode === 'none';
+  /** the station whose nodes and approach paths are drawn: the selected one (a point-to-point map has none) */
+  const linkedStation = selection?.kind === 'station' && !data.p2p ? selection.id : null;
   return (
     <div ref={attach} className="relative size-full touch-none select-none overflow-hidden bg-[#f6f7f5]" data-no-pan>
       <svg
@@ -319,13 +336,9 @@ export function MapCanvas({
           startDrag={pointer.startDrag}
           endDrag={pointer.endDrag}
         />
-        <StationLink
-          data={data}
-          stationId={selection?.kind === 'station' && !data.p2p ? selection.id : null}
-          vp={vp}
-          editable={editable}
-          onAngle={onStationAngle}
-        />
+        <StationLink data={data} stationId={linkedStation} vp={vp} editable={editable} onAngle={onStationAngle} />
+        <ThreePointBox data={data} stationId={linkedStation} vp={vp} editable={editable} onChange={onThreePointBox} />
+        <ApproachGhost data={data} stationId={linkedStation} vp={vp} editable={editable} onParams={onApproachParams} />
         <LocatePulse locate={locate} vp={vp} />
         {pointer.box && (
           <rect

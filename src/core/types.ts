@@ -83,6 +83,8 @@ export interface Lane {
   fleets: string[];
   speed: number;
   len: number;
+  /** A custom cost for the router (default: the length). A heavier lane is only used when it is the only way. */
+  weight?: number;
 }
 export interface Station {
   id: string;

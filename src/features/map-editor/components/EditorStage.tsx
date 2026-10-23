@@ -6,6 +6,7 @@ import type { P } from '../canvas/layers';
 import type { useDrawTools } from '../canvas/useDrawTools';
 import { copy } from '../copy';
 import { hintFor } from '../model/hints';
+import { setParams, setThreePointTurn } from '../model/approach/nodes';
 import { addRouteNode, moveRouteNode } from '../model/routes';
 import { insertPoint, moveElements, setBox, setPoint, setPoints } from '../model/structure/ops';
 import { moveStation, updateStation } from '../model/stations';
@@ -119,6 +120,10 @@ export function EditorStage({
         onFinish={draw.finish}
         onZoneShape={(zid, shape) => editor.edit((m) => setZoneShape(m, zid, shape), `shape:${zid}`)}
         onStagingChange={(id, patch) => editor.edit((m) => updateStagingArea(m, id, patch), `stg:${id}`)}
+        onThreePointBox={(sid, patch) => editor.edit((m) => setThreePointTurn(m, sid, patch), `turn:${sid}`)}
+        onApproachParams={(sid, node, slot, params) =>
+          editor.edit((m) => setParams(m, sid, node, slot, params), `approach:${sid}:${node}:${slot}`)
+        }
         onStationAngle={(sid, angle) => editor.edit((m) => updateStation(m, sid, { angle }), `angle:${sid}`)}
         onMove={(kind, sid, to) => editor.edit((m) => moveThing(m, kind, sid, to), `move:${kind}:${sid}`)}
       />

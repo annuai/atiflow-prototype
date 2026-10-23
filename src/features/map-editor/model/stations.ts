@@ -56,7 +56,7 @@ const round = (v: number) => Math.round(v * 100) / 100;
 export const updateStation = (
   data: MapData,
   id: string,
-  patch: Partial<Pick<MapStation, 'name' | 'type' | 'angle' | 'onLane'>>,
+  patch: Partial<Pick<MapStation, 'name' | 'type' | 'angle' | 'onLane' | 'features'>>,
 ): MapData => ({ ...data, stations: data.stations.map((s) => (s.id === id ? { ...s, ...patch } : s)) });
 export function moveStation(data: MapData, id: string, to: { x: number; y: number }): MapData {
   const s = data.stations.find((q) => q.id === id);

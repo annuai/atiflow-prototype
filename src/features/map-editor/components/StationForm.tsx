@@ -12,6 +12,8 @@ import { help } from '../help';
 import { nameProblem, plainType, STATION_TYPES } from '../model/stations';
 import type { MapData, MapStation } from '../model/types';
 import { NumberInput } from './NumberInput';
+import { FeaturesSection } from './approach/FeaturesSection';
+import { NodesSection } from './approach/NodesSection';
 
 /** One station (Figma "Add v5 Station"): name, id, type, position, angle, on / off lane, the tag; delete. Read-only when the map is a published version. */
 export function StationForm({
@@ -24,6 +26,10 @@ export function StationForm({
   onPatch,
   onMove,
   onPlace,
+  onEdit,
+  addingNode,
+  onAddNode,
+  onCancelAddNode,
   onRouteFrom,
   onDelete,
 }: {
@@ -33,7 +39,13 @@ export function StationForm({
   usedBy: string[];
   editable: boolean;
   onBack(): void;
-  onPatch(p: Partial<Pick<MapStation, 'name' | 'type' | 'angle' | 'onLane'>>): void;
+  onPatch(p: Partial<Pick<MapStation, 'name' | 'type' | 'angle' | 'onLane' | 'features'>>): void;
+  /** change the draft (nodes and their roles) */
+  onEdit(fn: (m: MapData) => MapData, key?: string): void;
+  /** the tool that adds a node is armed for this station */
+  addingNode: boolean;
+  onAddNode(): void;
+  onCancelAddNode(): void;
   onMove(to: { x: number; y: number }): void;
   /** arm the place tool: the next click on the map gives this station its position */
   onPlace(): void;
@@ -140,6 +152,20 @@ export function StationForm({
         disabled={!editable}
         onCommit={(angle) => onPatch({ angle })}
       />
+      {!data.p2p && (
+        <>
+          <NodesSection
+            station={station}
+            data={data}
+            editable={editable}
+            adding={addingNode}
+            onEdit={onEdit}
+            onAdd={onAddNode}
+            onCancelAdd={onCancelAddNode}
+          />
+          <FeaturesSection station={station} editable={editable} onChange={(features) => onPatch({ features })} />
+        </>
+      )}
       {usedBy.length > 0 && (
         <p className="rounded-lg bg-warning-secondary px-3 py-2 text-xs text-secondary">
           {f.usedBy(usedBy.length, usedBy.join(', '))}

@@ -36,8 +36,14 @@ function nearestOnRoad(r: MapRoad, x: number, y: number) {
   }
   return best;
 }
-const nearestRoad = (data: MapData, x: number, y: number) =>
+export const nearestRoad = (data: MapData, x: number, y: number) =>
   data.roads.map((road) => ({ road, ...nearestOnRoad(road, x, y) })).sort((a, b) => a.d - b.d)[0];
+
+/** The network nodes a station is joined to: the nodes a person (or the source) pinned it to, else the ones the source names. Nothing = the nearest route node, found on the fly. */
+export const targetsOf = (s: MapStation): string[] => {
+  const pinned = (s.nodes ?? []).flatMap((n) => (n.at ? [n.at] : []));
+  return pinned.length ? pinned : (s.routeNodes ?? []);
+};
 
 /** Nodes that belong to the road network (a lane starts or ends there) and are not stations. */
 const routeNodes = (data: MapData): NavNode[] => {
@@ -132,13 +138,13 @@ export function connectStation(data: MapData, stationId: string, fleetLive: stri
   return cut ? join(cut, s, n, cutAt, fleetLive) : data;
 }
 
-/** Connect every station that is not connected yet. `targetsOf(station)` = the network node ids the source names for it. */
+/** Connect every station that is not connected yet. `targets(station)` = the network node ids the source names for it. */
 export function connectStations(
   data: MapData,
   fleetLive: string,
-  targetsOf: (s: MapStation) => string[] = () => [],
+  targets: (s: MapStation) => string[] = () => [],
 ): MapData {
-  return data.stations.reduce((d, s) => connectStation(d, s.id, fleetLive, targetsOf(s)), data);
+  return data.stations.reduce((d, s) => connectStation(d, s.id, fleetLive, targets(s)), data);
 }
 
 /**
@@ -148,7 +154,7 @@ export function connectStations(
 export const routable = (data: MapData): MapData =>
   !data.p2p && // a point-to-point map has no free access roads: a station off its routes stays unconnected until a route is drawn to it
   data.stations.some((s) => !isConnected(data, s))
-    ? connectStations(data, data.lanes[0]?.fleets[0] ?? '', (s) => s.routeNodes ?? [])
+    ? connectStations(data, data.lanes[0]?.fleets[0] ?? '', targetsOf)
     : data;
 
 /** The route nodes a station is joined to as robots drive it: the ones the source names, else (a station made here) the nodes its on-the-fly access reaches. */
@@ -158,7 +164,7 @@ export function accessNodes(data: MapData, stationId: string): NavNode[] {
   const net = routable(data);
   const own = net.stations.find((q) => q.id === stationId);
   const at = own?.nodeId ?? s.nodeId;
-  const named = (s.routeNodes ?? []).flatMap((id) => net.nodes.find((n) => n.id === id) ?? []);
+  const named = targetsOf(s).flatMap((id) => net.nodes.find((n) => n.id === id) ?? []);
   if (named.length) return named;
   const ends = new Set(net.lanes.filter((l) => l.from === at || l.to === at).flatMap((l) => [l.from, l.to]));
   ends.delete(at);

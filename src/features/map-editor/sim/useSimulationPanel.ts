@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ROBOT_TYPES } from '@/data/robotTypes';
 import type { SimChoice } from '../components/SimulationPanel';
 import { copy } from '../copy';
+import { copy as approach } from '../components/approach/copy';
 import { planTrip } from '../model/simulate';
 import { nodeOf } from '../model/stations';
 import type { MapData, Selection } from '../model/types';
@@ -13,8 +14,15 @@ import { useTripSimulation } from './tripSim';
  */
 export function useSimulationPanel(data: MapData | undefined, fleetLive: string | undefined) {
   const trip = useTripSimulation();
-  const [choice, setChoice] = useState<SimChoice>({ type: ROBOT_TYPES[0].label, start: '', end: '' });
+  const [choice, setChoice] = useState<SimChoice>({
+    type: ROBOT_TYPES[0].label,
+    start: '',
+    end: '',
+    laden: false,
+    pick: false,
+  });
   const [error, setError] = useState('');
+  const [info, setInfo] = useState<string[]>([]);
   const marks = useMemo(
     () =>
       data
@@ -30,6 +38,8 @@ export function useSimulationPanel(data: MapData | undefined, fleetLive: string 
     trip,
     choice,
     error,
+    info,
+    fleet: fleetLive ?? '',
     marks,
     setChoice: (c: SimChoice) => {
       setChoice(c);
@@ -50,20 +60,38 @@ export function useSimulationPanel(data: MapData | undefined, fleetLive: string 
       if (!data) return; // an imported map no fleet runs yet has the empty fleet id: that is a valid map to simulate on
       const a = data.stations.find((x) => x.id === choice.start),
         b = data.stations.find((x) => x.id === choice.end);
-      const p = planTrip(data, fleetLive ?? '', choice.start, choice.end);
+      const p = planTrip(data, fleetLive ?? '', choice.start, choice.end, {
+        laden: choice.laden,
+        pick: choice.pick,
+        robot: choice.type,
+      });
       if (!p.ok || !a || !b) {
         setError(
           !p.ok && p.reason === 'same'
             ? copy.sim.sameStation
             : !p.ok && p.reason === 'unlinked'
               ? copy.sim.unlinked(data.stations.find((x) => x.id === p.station)?.name ?? p.station)
-              : !p.ok && p.reason === 'no-route' && a && b
-                ? copy.sim.noRoute(a.name, b.name)
-                : copy.sim.missing,
+              : !p.ok && p.reason === 'no-node'
+                ? approach.sim.noNode(
+                    data.stations.find((x) => x.id === p.station)?.name ?? p.station,
+                    approach.sim.what[p.slot],
+                  )
+                : !p.ok && p.reason === 'no-route' && a && b
+                  ? copy.sim.noRoute(a.name, b.name)
+                  : copy.sim.missing,
         );
         return;
       }
       setError('');
+      setInfo([
+        ...(p.via.start || p.via.end ? [approach.sim.via(String(p.via.start || '-'), String(p.via.end || '-'))] : []),
+        ...p.notes.map((n) =>
+          approach.sim.fellBack(
+            n.robot,
+            n.maneuver ? approach.maneuvers[n.maneuver as keyof typeof approach.maneuvers].label : '',
+          ),
+        ),
+      ]);
       void trip.run(p, choice.type, a.name, b.name);
     },
   };

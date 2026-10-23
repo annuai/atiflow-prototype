@@ -1,6 +1,9 @@
+import { localized } from '@/i18n';
 import { text } from '../text';
 import { stagingProblems, cellRef } from './staging';
-import { routable } from './connect';
+import { nearestRoad, routable } from './connect';
+import { resolveNodes, slotOf } from './approach/nodes';
+import type { SlotId } from './approach/types';
 import { nodeOf } from './stations';
 import { pointInPolygon } from './zones';
 import { zoneType } from './zoneTypes';
@@ -135,6 +138,30 @@ function structureProblems(data: MapData): MapProblem[] {
  * a staging area was deleted or made smaller while cells that would go are Filled or Reserved (Master Data owns those, and workflows rely on them).
  * Warns: a zone without a name; blocked cells that would go.
  */
+const approachText = localized('approach').problems;
+const ON_LANE_SLACK = 0.5;
+/** A station off the lane needs a way in and a way out; a station that is deliberately marked on the lane (imported, or chosen) should stand on it. */
+function approachProblems(data: MapData): MapProblem[] {
+  if (data.p2p) return [];
+  const out: MapProblem[] = [];
+  for (const s of data.stations) {
+    if (s.unplaced) continue;
+    const here = data.nodes.find((n) => n.id === s.nodeId);
+    if (s.onLane === false) {
+      const nodes = resolveNodes(data, s).map((r) => r.node);
+      const has = (ids: SlotId[]) => nodes.some((n) => ids.some((id) => slotOf(n, id)));
+      if (!has(['pick', 'drop'])) out.push({ level: 'block', title: approachText.noPark(s.name), stationId: s.id });
+      if (!has(['laden', 'unladen']))
+        out.push({ level: 'block', title: approachText.noUnpark(s.name), stationId: s.id });
+    } else if (s.onLane === true && here && data.roads.length) {
+      const road = nearestRoad(data, here.x, here.y);
+      if (road && road.d > ON_LANE_SLACK)
+        out.push({ level: 'warn', title: approachText.onLaneFar(s.name, road.d.toFixed(1)), stationId: s.id });
+    }
+  }
+  return out;
+}
+
 export function publishProblems(
   next: MapData,
   previous: MapData | null,
@@ -178,6 +205,7 @@ export function publishProblems(
       out.push({ level: 'block', title: `${a.name}: ${problem}`, detail: text.problems.field(field) });
   out.push(...lostCellProblems(next, previous, cellStatesOf));
   out.push(...structureProblems(next));
+  out.push(...approachProblems(next));
   for (const z of next.zones)
     if (!z.name.trim()) out.push({ level: 'warn', title: text.problems.zoneNoName(zoneType(z.type).label) });
   return out;

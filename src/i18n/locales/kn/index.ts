@@ -12,6 +12,7 @@ import { messages as ai } from './ai';
 import { messages as support } from './support';
 import { messages as search } from './search';
 import { messages as delight } from './delight';
+import { messages as approach } from './approach';
 import { messages as dashboard } from './dashboard';
 import { messages as fleets } from './fleets';
 import { messages as mapEditor } from './mapEditor';
@@ -32,6 +33,7 @@ import { messages as users } from './users';
 
 export const catalog: Catalog = {
   onboarding,
+  approach,
   delight,
   ai,
   support,

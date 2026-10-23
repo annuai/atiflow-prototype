@@ -21,3 +21,7 @@ export { structureDxf } from './model/structure/dxf';
 export { restoreWorkAreas, workAreaZones } from './model/workAreas';
 export { addWorkArea } from './model/structure/ops';
 export { withoutSections } from './model/structure/legacy';
+export { defaultRoles, resolveNodes, stationNodes } from './model/approach/nodes';
+export type { ResolvedNode } from './model/approach/nodes';
+export { nodesFromFile, threePointTurnFrom } from './model/approach/file';
+export type { NodeRoles, Slot, StationNode, ThreePointTurn } from './model/approach/types';

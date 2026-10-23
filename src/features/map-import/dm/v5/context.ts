@@ -19,6 +19,8 @@ export interface Group {
   t2: P;
   oneWay: boolean;
   heading: RoadHeading;
+  /** the custom weight of the whole line (its pieces added up), if any piece has one */
+  weight?: number;
   name: string;
 }
 /** A line that was changed, added or removed; `oldChain` = the file's nodes that lay on it. */
@@ -82,6 +84,9 @@ export function groupsOf(data: MapData): Group[] {
       t2: last.points[last.points.length - 1],
       oneWay: first.oneWay,
       heading: first.heading ?? 'both',
+      ...(ordered.some((e) => e.r.weight)
+        ? { weight: Math.round(ordered.reduce((n, e) => n + (e.r.weight ?? e.l.len), 0) * 100) / 100 }
+        : {}),
       name: first.name.replace(/ \(\d+\)$/, ''),
     });
   }

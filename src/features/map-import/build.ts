@@ -1,5 +1,14 @@
 import { fitRect } from '@/core/rect';
-import { addRoad, addZone, ensureNode, withoutSections } from '@/features/map-editor';
+import {
+  addRoad,
+  addZone,
+  defaultRoles,
+  ensureNode,
+  nodesFromFile,
+  threePointTurnFrom,
+  withoutSections,
+  type StationNode,
+} from '@/features/map-editor';
 import type { MapBase, MapData, MapStation, StagingAreaDef } from '@/features/map-editor';
 import type { PreparedImport } from './core/prepare';
 
@@ -65,6 +74,7 @@ export function buildMapData(
       allowShort: true,
       name: r.name,
       heading: r.heading,
+      ...(Number(r.extra.custom_weight) > 0 ? { weight: Number(r.extra.custom_weight) } : {}),
       extra: { dm: { externalId: r.externalId, ...r.extra } },
       ...(p2p
         ? {
@@ -189,7 +199,21 @@ function withAccess(data: MapData, prepared: PreparedImport): MapData {
       const routeNodes = (named.get(s.externalId ?? '') ?? [])
         .map((id) => ids.get(id))
         .filter((id): id is string => !!id);
-      return routeNodes.length ? { ...s, routeNodes } : s;
+      const gm = s.extra?.gmaj;
+      const inFile = nodesFromFile(gm);
+      const count = Math.max(inFile.length, routeNodes.length);
+      // each node of the file keeps its roles and its place in the file; the network node it sits on is the one the graph names for it (else it stays automatic)
+      const nodes: StationNode[] = Array.from({ length: count }, (_, i) => ({
+        ...(inFile[i] ?? { id: `n${i + 1}`, roles: defaultRoles() }),
+        ...(routeNodes[i] ? { at: routeNodes[i] } : {}),
+      }));
+      const turn = threePointTurnFrom(gm);
+      return {
+        ...s,
+        ...(routeNodes.length ? { routeNodes } : {}),
+        ...(nodes.length ? { nodes } : {}),
+        ...(turn ? { features: { threePointTurn: turn } } : {}),
+      };
     }),
   };
 }

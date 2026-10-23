@@ -6,6 +6,8 @@ import { EmptyState } from '@/components/data/EmptyState';
 import { ROBOT_TYPES, robotTypeByLabel } from '@/data/robotTypes';
 import { Route, SwitchVertical01 } from '@untitledui/icons';
 import { copy } from '../copy';
+import { copy as approach } from './approach/copy';
+import { RouteCheckPanel } from './approach/RouteCheckPanel';
 import type { MapData } from '../model/types';
 import type { SimState } from '../sim/tripSim';
 
@@ -13,6 +15,10 @@ export interface SimChoice {
   type: string;
   start: string;
   end: string;
+  /** the robot leaves the start station carrying a load (Laden) instead of empty (Unladen) */
+  laden: boolean;
+  /** the robot arrives at the end station to pick a load up (Pick) instead of putting one down (Drop) */
+  pick: boolean;
 }
 /** The Simulation panel: pick the robot type FIRST, then the start and end station, then Simulate route. The robot drives the lanes of this map from one to the other. */
 export function SimulationPanel({
@@ -21,6 +27,8 @@ export function SimulationPanel({
   onChoice,
   state,
   error,
+  info,
+  fleet,
   onRun,
   onStop,
 }: {
@@ -29,10 +37,15 @@ export function SimulationPanel({
   onChoice(c: SimChoice): void;
   state: SimState;
   error: string;
+  /** what the last run used: the nodes it went by and any maneuver the robot could not drive */
+  info: string[];
+  /** the lane-map fleet of the open map (routes are planned for it) */
+  fleet: string;
   onRun(): void;
   onStop(): void;
 }) {
   const t = copy.sim;
+  const a = approach.sim;
   const running = state.status === 'running';
   const stations = [...data.stations]
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
@@ -95,6 +108,34 @@ export function SimulationPanel({
           className="mt-6 shrink-0"
         />
       </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Select
+          label={a.leaving}
+          size="sm"
+          isDisabled={running}
+          selectedKey={choice.laden ? 'laden' : 'empty'}
+          onSelectionChange={(k) => set({ laden: k === 'laden' })}
+          items={[
+            { id: 'empty', label: a.empty },
+            { id: 'laden', label: a.laden },
+          ]}
+        >
+          {(item) => <Select.Item {...item} />}
+        </Select>
+        <Select
+          label={a.task}
+          size="sm"
+          isDisabled={running}
+          selectedKey={choice.pick ? 'pick' : 'drop'}
+          onSelectionChange={(k) => set({ pick: k === 'pick' })}
+          items={[
+            { id: 'drop', label: a.drop },
+            { id: 'pick', label: a.pick },
+          ]}
+        >
+          {(item) => <Select.Item {...item} />}
+        </Select>
+      </div>
       {error && (
         <p role="alert" className="rounded-lg bg-error-secondary px-3 py-2 text-sm text-error-primary">
           {error}
@@ -109,12 +150,26 @@ export function SimulationPanel({
           {state.status === 'done' ? t.again : t.run}
         </Button>
       )}
+      {!error && info.length > 0 && (
+        <div className="flex flex-col gap-1 rounded-lg bg-secondary px-3 py-2 text-xs text-tertiary" role="status">
+          {info.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
+      )}
       {(running || state.status === 'done') && (
         <div className="flex flex-col gap-2" role="status" aria-live="polite">
           <ProgressBar value={state.progress} max={100} valueFormatter={() => ''} />
           <p className="text-sm text-secondary">{state.status === 'done' ? t.done : state.step}</p>
         </div>
       )}
+      <RouteCheckPanel
+        data={data}
+        fleet={fleet}
+        robot={choice.type}
+        busy={running}
+        onShow={(start, end, type) => set({ start, end, type })}
+      />
     </div>
   );
 }

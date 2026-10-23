@@ -139,7 +139,7 @@ export class LaneGraph {
     };
     const relax = (l: Lane, d: number, p: Lane | null) => {
       if (!l.fleets.includes(fleet) || (avoid?.has(l.to) && l.to !== to)) return;
-      const nd = d + l.len + 0.5 + (cost?.(l) ?? 0);
+      const nd = d + (l.weight ?? l.len) + 0.5 + (cost?.(l) ?? 0);
       if (nd < (dist.get(l.id) ?? Infinity)) {
         dist.set(l.id, nd);
         prev.set(l.id, p);

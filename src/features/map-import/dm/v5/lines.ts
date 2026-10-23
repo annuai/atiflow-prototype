@@ -1,4 +1,4 @@
-import type { PyObj, PyValue } from '../pyjson';
+import { pyFloat, type PyObj, type PyValue } from '../pyjson';
 import { maxNum, num, obj, pt, put, str, xy } from '../tree';
 import { HEADING, near, type LineChange, type P, type V5 } from './context';
 
@@ -37,7 +37,10 @@ function syncExisting(c: V5, changes: LineChange[]) {
       continue;
     }
     const moved = !near(was[0], g.t1) || !near(was[1], g.t2);
-    const dir = m.get('bidirectional') !== !g.oneWay || str(m.get('heading_direction')) !== HEADING[g.heading];
+    const wasWeight = m.get('custom_weight');
+    const weighed = (g.weight ?? null) !== (wasWeight === undefined || wasWeight === null ? null : num(wasWeight));
+    const dir =
+      m.get('bidirectional') !== !g.oneWay || str(m.get('heading_direction')) !== HEADING[g.heading] || weighed;
     if (moved || dir) changes.push({ id, oldChain: nodesOn(c, ...was), group: g });
     if (moved) {
       put(c.gmaj, m, 't1', pt(...g.t1));
@@ -45,6 +48,7 @@ function syncExisting(c: V5, changes: LineChange[]) {
     }
     put(c.gmaj, m, 'bidirectional', !g.oneWay);
     put(c.gmaj, m, 'heading_direction', HEADING[g.heading]);
+    if (weighed) put(c.gmaj, m, 'custom_weight', g.weight === undefined ? null : pyFloat(g.weight));
     if (g.name) put(c.gmaj, m, 'lane_name', g.name);
   }
   for (const id of removed) {
@@ -73,7 +77,7 @@ function addNew(c: V5, changes: LineChange[], next: () => number) {
         ['bidirectional', !g.oneWay],
         ['bidirectional_line', null],
         ['heading_direction', HEADING[g.heading]],
-        ['custom_weight', null],
+        ['custom_weight', g.weight === undefined ? null : pyFloat(g.weight)],
       ]),
     );
     c.gmaj.dirty = true;
@@ -110,8 +114,8 @@ function syncAttributes(c: V5, removed: string[], next: () => number) {
       attrLines.set(id, copy);
       attrs.dirty = true;
     } else {
-      for (const k of ['t1', 't2', 'bidirectional', 'heading_direction', 'lane_name'] as const)
-        put(attrs, obj(attrLines.get(id)), k, g.get(k) as PyValue);
+      for (const k of ['t1', 't2', 'bidirectional', 'heading_direction', 'lane_name', 'custom_weight'] as const)
+        if (g.has(k)) put(attrs, obj(attrLines.get(id)), k, g.get(k) as PyValue);
     }
     const rid = reverseOf.get(id);
     if (two && !rid) {

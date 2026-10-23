@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { notify } from '@/ui/toast';
+import { localized } from '@/i18n';
 import { copy } from '../copy';
+import { addNodeAt } from '../model/approach/nodes';
 import { addRoad } from '../model/roads';
 import { addRoute } from '../model/routes';
 import { addBox, addDoor, addLine, addRoom, addWorkArea } from '../model/structure/ops';
@@ -13,6 +15,7 @@ import { addZone } from '../model/zones';
 import type { P } from './layers';
 import { drawMode, SELECT, type Tool } from './tools';
 
+const approach = localized('approach');
 export interface DrawToolsInput {
   data: MapData | undefined;
   /** the lane-map fleet of the open map (new roads and stations belong to it) */
@@ -69,6 +72,15 @@ export function useDrawTools(i: DrawToolsInput) {
       edit((m) => moveStation(m, tool.id, { x: p[0], y: p[1] }));
       setSelection({ kind: 'station', id: tool.id });
       setTool(SELECT);
+      return;
+    }
+    if (tool.kind === 'node') {
+      const next = addNodeAt(data, tool.station, { x: p[0], y: p[1] });
+      if (!next) notify.warning(approach.addFailed, undefined, 'node-add');
+      else {
+        edit(() => next);
+        setTool(SELECT);
+      }
       return;
     }
     if (tool.kind === 'station') {

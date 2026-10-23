@@ -29,9 +29,7 @@ describe('Simulation in the Map Editor on a map that no fleet runs (an imported 
     const data = importedLike();
     const work = data.stations.filter((s) => s.type !== 'park' && s.type !== 'charge');
     const { result } = renderHook(() => useSimulationPanel(data, ''));
-    act(() =>
-      result.current.setChoice({ type: result.current.choice.type, start: work[0].id, end: work[work.length - 1].id }),
-    );
+    act(() => result.current.setChoice({ ...result.current.choice, start: work[0].id, end: work[work.length - 1].id }));
     act(() => result.current.run());
     expect(result.current.error).toBe('');
     expect(result.current.trip.state.status).toBe('running');
@@ -42,7 +40,7 @@ describe('Simulation in the Map Editor on a map that no fleet runs (an imported 
     const [a, b] = [data.stations[0], data.stations[1]];
     const bare: MapData = { ...data, lanes: [], roads: [] };
     const { result } = renderHook(() => useSimulationPanel(bare, ''));
-    act(() => result.current.setChoice({ type: result.current.choice.type, start: a.id, end: b.id }));
+    act(() => result.current.setChoice({ ...result.current.choice, start: a.id, end: b.id }));
     act(() => result.current.run());
     expect(result.current.error).not.toBe('');
     expect(result.current.trip.state.status).toBe('idle');

@@ -11,6 +11,8 @@ export type Tool =
   | { kind: 'station' }
   | { kind: 'staging' }
   | { kind: 'place'; id: string }
+  /** adds another way in (a node) to a station: the next click on the map picks the lane */
+  | { kind: 'node'; station: string }
   | { kind: 'road'; oneWay: boolean }
   | { kind: 'gate'; shape: 'line' | 'box' }
   | { kind: 'zone'; type: ZoneTypeId }
@@ -22,6 +24,7 @@ export function drawMode(t: Tool): 'none' | 'one' | 'two' | 'many' {
     case 'station':
     case 'staging':
     case 'place':
+    case 'node':
       return 'one';
     case 'gate':
     case 'zone':
@@ -70,7 +73,7 @@ export function toolFor(m: Module, choice: string): Tool {
   }
 }
 export const moduleOfTool = (t: Tool): Module | null =>
-  t.kind === 'station' || t.kind === 'staging' || t.kind === 'place'
+  t.kind === 'station' || t.kind === 'staging' || t.kind === 'place' || t.kind === 'node'
     ? 'stations'
     : t.kind === 'road'
       ? 'routes'

@@ -353,6 +353,10 @@ export function MapEditorPage() {
               setDrawing([]);
               setTool({ kind: 'place', id: sid });
             }}
+            onAddNode={(sid) => {
+              setDrawing([]);
+              setTool({ kind: 'node', station: sid });
+            }}
             onStopDrawing={() => {
               setDrawing([]);
               setTool(SELECT);

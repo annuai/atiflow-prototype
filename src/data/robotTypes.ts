@@ -28,14 +28,128 @@ export interface RobotType {
   /** No 3D model yet (the generic 3D body is used) and possibly no picture yet (the placeholder is shown). PLACEHOLDER until the files are added. */ placeholder?: boolean;
   /** Side-view illustration (SVG url). */ illustration: string;
   /** Battery capacity in kWh (PLACEHOLDER values: replace with the data sheet), to turn battery % into energy. */ batteryKWh: number;
+  /** What the robot can do at a station (PLACEHOLDER until the data sheets are in: see `CAPABILITIES`). */ capabilities: RobotCapabilities;
 }
+/**
+ * What a robot type can do. The map only says what a station asks for; whether the robot does it is robot configuration (a station that asks for a three-point turn gets an in-place turn
+ * from a robot that cannot). `maneuvers` = the park / unpark maneuvers it can drive (ids of the Map Editor's maneuver list); `minTurnRadius` in metres.
+ */
+export interface RobotCapabilities {
+  threePointTurn: boolean;
+  /** detects the load before picking it (the pallet robots): a pick stops in front of the load */
+  detectsPayload: boolean;
+  minTurnRadius: number;
+  maneuvers: readonly string[];
+  /** the maneuver a station that names none gets (`[control.dynamic_router] default_parking_maneuver`) */
+  defaultManeuver: string;
+}
+const ALL_MANEUVERS = [
+  'one_shot_turn',
+  'inplace',
+  'lanechange',
+  'reverse_lanechange',
+  'three_point_turn',
+  'three_point_lanechange',
+] as const;
+/** PLACEHOLDER capabilities (from the walkthrough and the autonomy call: tugs and XT do three-point turns, pallet robots turn in place and detect the pallet); replace with the data sheets. */
+const CAPABILITIES: Record<RobotTypeId, RobotCapabilities> = {
+  'sherpa-xt-lite': {
+    threePointTurn: true,
+    detectsPayload: false,
+    minTurnRadius: 1.2,
+    maneuvers: ALL_MANEUVERS,
+    defaultManeuver: 'one_shot_turn',
+  },
+  'pallet-mover': {
+    threePointTurn: false,
+    detectsPayload: true,
+    minTurnRadius: 0.8,
+    maneuvers: ['one_shot_turn', 'inplace', 'lanechange', 'reverse_lanechange'],
+    defaultManeuver: 'one_shot_turn',
+  },
+  'sherpa-tug-1-5t': {
+    threePointTurn: true,
+    detectsPayload: false,
+    minTurnRadius: 1.5,
+    maneuvers: ALL_MANEUVERS,
+    defaultManeuver: 'one_shot_turn',
+  },
+  'sherpa-tug-5t': {
+    threePointTurn: true,
+    detectsPayload: false,
+    minTurnRadius: 2,
+    maneuvers: ALL_MANEUVERS,
+    defaultManeuver: 'one_shot_turn',
+  },
+  'sherpa-xt': {
+    threePointTurn: true,
+    detectsPayload: false,
+    minTurnRadius: 1.5,
+    maneuvers: ALL_MANEUVERS,
+    defaultManeuver: 'one_shot_turn',
+  },
+  'sherpa-tug': {
+    threePointTurn: true,
+    detectsPayload: false,
+    minTurnRadius: 1.5,
+    maneuvers: ALL_MANEUVERS,
+    defaultManeuver: 'one_shot_turn',
+  },
+  'sherpa-lite': {
+    threePointTurn: false,
+    detectsPayload: false,
+    minTurnRadius: 1,
+    maneuvers: ['one_shot_turn', 'inplace'],
+    defaultManeuver: 'one_shot_turn',
+  },
+  'sherpa-flex-fork': {
+    threePointTurn: false,
+    detectsPayload: true,
+    minTurnRadius: 1,
+    maneuvers: ['one_shot_turn', 'inplace', 'lanechange', 'reverse_lanechange'],
+    defaultManeuver: 'one_shot_turn',
+  },
+  'sherpa-flex-tug': {
+    threePointTurn: true,
+    detectsPayload: false,
+    minTurnRadius: 1.5,
+    maneuvers: ALL_MANEUVERS,
+    defaultManeuver: 'one_shot_turn',
+  },
+  'sherpa-lifter-1t': {
+    threePointTurn: false,
+    detectsPayload: true,
+    minTurnRadius: 1,
+    maneuvers: ['one_shot_turn', 'inplace'],
+    defaultManeuver: 'one_shot_turn',
+  },
+  'sherpa-lifter-500': {
+    threePointTurn: false,
+    detectsPayload: true,
+    minTurnRadius: 1,
+    maneuvers: ['one_shot_turn', 'inplace'],
+    defaultManeuver: 'one_shot_turn',
+  },
+};
 
 /** Pictures that have arrived (the rest show the placeholder); a new picture = drop the SVG in the folder and add it here. Files are `src/assets/robots/<id>.svg`. */
 const ILLUSTRATION: Partial<Record<RobotTypeId, string>> = { 'sherpa-flex-fork': flexFork, 'sherpa-flex-tug': flexTug };
 
 export const ROBOT_TYPES: readonly RobotType[] = [
-  { id: 'sherpa-xt-lite', label: 'Sherpa XT Lite', illustration: sherpaXtLite, batteryKWh: 2 },
-  { id: 'pallet-mover', label: 'Pallet Mover', illustration: palletMover, batteryKWh: 4 },
+  {
+    id: 'sherpa-xt-lite',
+    label: 'Sherpa XT Lite',
+    illustration: sherpaXtLite,
+    batteryKWh: 2,
+    capabilities: CAPABILITIES['sherpa-xt-lite'],
+  },
+  {
+    id: 'pallet-mover',
+    label: 'Pallet Mover',
+    illustration: palletMover,
+    batteryKWh: 4,
+    capabilities: CAPABILITIES['pallet-mover'],
+  },
   // The rest of the Sherpa range that is in the system today (names from the Deployment Manager). PLACEHOLDER picture, 3D body and battery size until the real ones are added.
   ...(
     [
@@ -55,6 +169,7 @@ export const ROBOT_TYPES: readonly RobotType[] = [
     illustration: ILLUSTRATION[id] ?? placeholder,
     batteryKWh: 3,
     placeholder: true,
+    capabilities: CAPABILITIES[id],
   })),
 ];
 /** The type of the robots on our maps; what an unknown type falls back to. */
@@ -70,3 +185,6 @@ export const robotTypeByLabel = (label: unknown): RobotType =>
 const AUTO_HITCH: readonly string[] = ['sherpa-xt-lite', 'sherpa-xt', 'sherpa-tug-5t', 'sherpa-tug-1-5t'];
 /** Does the robot type (its stored label) have the auto-hitch add-ons? */
 export const hasAutoHitch = (sherpaType: unknown) => AUTO_HITCH.includes(robotTypeByLabel(sherpaType).id);
+
+/** The robot types that can NOT do a three-point turn (they turn on the spot instead). */
+export const withoutThreePointTurn = (): RobotType[] => ROBOT_TYPES.filter((t) => !t.capabilities.threePointTurn);

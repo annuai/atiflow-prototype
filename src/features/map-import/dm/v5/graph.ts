@@ -32,7 +32,7 @@ export function patchGraph(c: V5, changes: LineChange[]) {
   }
   const has = new Set([...edgesInfo].map(([, e]) => `${str(obj(e).get('start_node'))}>${str(obj(e).get('end_node'))}`));
   let next = maxNum(edgesInfo.keys(), 'E');
-  const add = (a: string, b: string, heading: string | null) => {
+  const add = (a: string, b: string, heading: string | null, scale = 1) => {
     if (has.has(`${a}>${b}`)) return;
     const pa = xy(obj(nodesInfo.get(a)).get('pos')),
       pb = xy(obj(nodesInfo.get(b)).get('pos'));
@@ -41,7 +41,7 @@ export function patchGraph(c: V5, changes: LineChange[]) {
       new Map<string, PyValue>([
         ['start_node', a],
         ['end_node', b],
-        ['weight', pyFloat(r3(Math.hypot(pa[0] - pb[0], pa[1] - pb[1])))],
+        ['weight', pyFloat(r3(Math.hypot(pa[0] - pb[0], pa[1] - pb[1]) * scale))],
         ['heading_direction', heading],
       ]),
     );
@@ -51,12 +51,18 @@ export function patchGraph(c: V5, changes: LineChange[]) {
   for (const ch of changes) {
     const g = ch.group;
     if (!g) continue;
+    const len = g.roads.reduce(
+      (n, r) =>
+        n + r.points.reduce((s, p, i, a) => (i ? s + Math.hypot(p[0] - a[i - 1][0], p[1] - a[i - 1][1]) : s), 0),
+      0,
+    );
+    const scale = g.weight && len ? g.weight / len : 1; // a custom weight is shared over the line's edges by length
     for (let i = 1; i < g.chain.length; i++) {
       const a = c.gid(g.chain[i - 1]),
         b = c.gid(g.chain[i]);
       const heading = g.heading === 'forward' ? 'forward' : null;
-      add(a, b, heading);
-      if (!g.oneWay) add(b, a, heading);
+      add(a, b, heading, scale);
+      if (!g.oneWay) add(b, a, heading, scale);
     }
   }
   for (const gn of removedNodes) {
