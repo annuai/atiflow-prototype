@@ -98,7 +98,22 @@ const release = (unitId?: number) => {
   unit = null;
   pump();
 };
+/** A dialog (or the walkthrough) is open: the robots stay in the garage until it closes. */
+export const modalOpen = () =>
+  typeof document !== 'undefined' &&
+  !!document.querySelector('[role="dialog"][data-rac], [role="alertdialog"], .driver-popover');
+let waiting = 0;
 function pump() {
+  if (queue.length && !busy && modalOpen()) {
+    if (!waiting)
+      waiting = window.setInterval(() => {
+        if (modalOpen()) return;
+        window.clearInterval(waiting);
+        waiting = 0;
+        pump();
+      }, 400);
+    return;
+  }
   while (!busy && queue.length) {
     busy = true;
     unit = { id: ++unitSeq, robots: 0, startedAt: Date.now(), wait: 0, keep: false, seen: new Set() };

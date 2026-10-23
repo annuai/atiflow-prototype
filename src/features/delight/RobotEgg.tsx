@@ -3,7 +3,7 @@ import { RobotBeacon } from '@/components/data/RobotBeacon';
 import robot from '@/assets/robots/sherpa-xt-lite.svg';
 import ribbonTip from './assets/ribbon-tip.svg';
 import { copy } from './copy';
-import { dropEgg, EGG_SPEED, reportDriven, useEgg, type EggItem, type Lane } from './eggs';
+import { dropEgg, EGG_SPEED, modalOpen, reportDriven, useEgg, type EggItem, type Lane } from './eggs';
 import { beep } from './sound';
 import './delight.css';
 
@@ -125,6 +125,18 @@ function Confetti({ r }: { r: Of<'confetti'> }) {
 /** Draws every easter egg that is on its way: robots with ribbons, a dancer and confetti. */
 export function EggLayer() {
   const items = useEgg((s) => s.items);
+  // a dialog that opens while a robot is driving: it waits (paused and hidden) until the dialog closes
+  useEffect(() => {
+    const root = document.documentElement;
+    const check = () => root.toggleAttribute('data-egg-modal', modalOpen());
+    const watch = new MutationObserver(check);
+    watch.observe(document.body, { childList: true, subtree: true });
+    check();
+    return () => {
+      watch.disconnect();
+      root.removeAttribute('data-egg-modal');
+    };
+  }, []);
   return (
     <>
       {items.map((it) =>

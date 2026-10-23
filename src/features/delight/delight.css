@@ -226,3 +226,16 @@
     -webkit-mask-image: none;
   }
 }
+
+/* a dialog is open: robots on the stage wait, hidden, exactly where they are */
+html[data-egg-modal] .egg-lane,
+html[data-egg-modal] .egg-dancer,
+html[data-egg-modal] .egg-confetti {
+  visibility: hidden;
+}
+html[data-egg-modal] .egg-lane *,
+html[data-egg-modal] .egg-dancer,
+html[data-egg-modal] .egg-dancer *,
+html[data-egg-modal] .egg-confetti * {
+  animation-play-state: paused !important;
+}
