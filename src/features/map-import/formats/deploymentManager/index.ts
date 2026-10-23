@@ -6,7 +6,14 @@ import { detectOrientation } from '../../core/orient';
 import { MAX_POOLED_CELLS, poolNpz, type PooledGrid } from '../../core/pool';
 import { readZip, findEntry } from '../../core/zip';
 import { readGates, readRoutes } from './v2';
-import { attributeRoads, attributeStations, readAttributes, readGraph, readStagingAreas } from './v5';
+import {
+  attachCellStations,
+  attributeRoads,
+  attributeStations,
+  readAttributes,
+  readGraph,
+  readStagingAreas,
+} from './v5';
 import {
   ImportError,
   type Entries,
@@ -287,6 +294,7 @@ export const deploymentManager: MapImporter = {
     const graph = readGraph(findEntry(entries, 'graph_object_v5.json'));
     for (const st of stations) st.nodeIds = graph?.stationNodes.get(st.name);
     const stagingAreas = readStagingAreas(findEntry(entries, FILES.staging));
+    if (layout === 'v5') attachCellStations(stagingAreas, findEntry(entries, FILES.attributes), graph);
     // what proves which way round the grid is stored: the path the robot drove, else where the stations and roads are
     const probes: [number, number][] = path.length
       ? path.filter(([x, y]) => x !== 0 || y !== 0)

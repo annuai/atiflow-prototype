@@ -1,3 +1,4 @@
+import { declutterLabels } from './labels';
 import * as THREE from 'three';
 import { fromScene, toScene } from '../core/coords';
 import { store } from '../core/store';
@@ -24,6 +25,7 @@ export class Engine {
   private unsub: (() => void)[] = [];
   private resizeObserver: ResizeObserver | null = null;
   private lastView = 0;
+  private lastDeclutter = 0;
   private inset = 0;
   onView: (v: { x: number; y: number; yaw: number; dist: number; zoomPct: number }) => void = () => {};
 
@@ -242,11 +244,27 @@ export class Engine {
     this.robots.updateSelectedPath();
     // labels: zone labels fade when close, station labels when far
     const cd = this.s.dist(this.s.controls.target);
-    this.s.active
-      .flatMap((e) => e.scene.zoneLabels)
-      .forEach((l) => {
-        l.material.opacity = THREE.MathUtils.clamp((cd - 110) / 60, 0, 1);
-      });
+    // labels that would cover each other on screen: only the nearest of them stays (checked a few times a second, not per frame)
+    if (time - this.lastDeclutter > 0.15) {
+      this.lastDeclutter = time;
+      const el = this.s.renderer.domElement;
+      declutterLabels(
+        this.s.active.flatMap((e) =>
+          e.scene.layers.labels.filter((o): o is THREE.Sprite => o instanceof THREE.Sprite && o.visible),
+        ),
+        this.s.camera,
+        el.clientWidth,
+        el.clientHeight,
+      );
+    }
+    const zoneFade = THREE.MathUtils.clamp((cd - 110) / 60, 0, 1);
+    this.s.active.forEach((e) =>
+      e.scene.layers.labels.forEach((o) => {
+        if (!(o instanceof THREE.Sprite)) return;
+        const fade = e.scene.zoneLabels.includes(o) ? zoneFade : 1;
+        o.material.opacity = o.userData.crowded ? 0 : fade;
+      }),
+    );
     this.s.active.forEach((e) => e.scene.rules.tick(time, this.s.camera, this.s.k));
     this.robots.updateIncoming();
     this.rig.update(dt);

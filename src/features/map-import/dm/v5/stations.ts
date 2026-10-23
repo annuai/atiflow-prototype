@@ -8,7 +8,7 @@ import { near, type V5 } from './context';
 
 const rad = (deg: number) => (deg * Math.PI) / 180;
 /** What a station's entries are made from: where it is, the way it faces and the route nodes it is joined to. */
-interface Look {
+export interface Look {
   s: MapStation;
   x: number;
   y: number;
@@ -54,7 +54,7 @@ function associated(c: V5, l: Look): PyObj {
  * The `nodes` list of a station of `gmaj.json` / `grid_map_attributes.json`: each of our nodes updates the file node it came from (its roles only; its line stays), a node made here is added,
  * a node that was taken away is dropped. A list that did not change is not touched.
  */
-function syncFileNodes(c: V5, doc: Doc, entry: PyObj, l: Look, pose: boolean) {
+export function syncFileNodes(c: V5, doc: Doc, entry: PyObj, l: Look, pose: boolean) {
   const had = list(entry.get('nodes')).filter((v): v is PyObj => v instanceof Map);
   const kept: [number, PyObj][] = [];
   const added: PyObj[] = [];
@@ -150,7 +150,7 @@ function syncEntry(doc: Doc, entry: PyObj, l: Look, oldName: string, keys: { nam
 }
 
 /** The route nodes a station is joined to in the graph: nodes we know that are gone from the station are removed, each node it uses is there with its roles. */
-function syncAssociated(c: V5, ge: PyObj, l: Look) {
+export function syncAssociated(c: V5, ge: PyObj, l: Look) {
   const assoc = obj(ge.get('associated_nodes'));
   const want = new Set(l.gids);
   const ours = new Set(c.fileNode.values()); // nodes of the file that we know; any other node of the station stays as it was

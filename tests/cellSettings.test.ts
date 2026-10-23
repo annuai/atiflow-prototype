@@ -78,7 +78,7 @@ describe('cells of a staging area', () => {
     expect(a.cellSettings).toEqual({ B2: { angle: 20, offset: 2 } });
     const own = stationPoint(a, 2, 2),
       other = stationPoint(a, 2, 1);
-    expect(own.x - other.x).toBeGreaterThan(1.9);
+    expect(own.x - other.x).toBeGreaterThan(1.9); // two metres further from the centre
     expect(own.heading).not.toBe(other.heading);
     expect(cellCorners(a, 2, 2)).not.toEqual(cellCorners({ ...a, cellSettings: undefined }, 2, 2));
     // back to the area's value: the override goes away
@@ -119,3 +119,59 @@ describe('cells of a staging area', () => {
 function stand(d: MapData, ref: string) {
   return { ...withCellStation(d, d.stagingAreas[0], ref)!.station, nodes: d.stagingAreas[0].cellSettings![ref].nodes };
 }
+
+import { existsSync, readFileSync } from 'node:fs';
+import { unzipSync } from 'fflate';
+import { buildMapData } from '@/features/map-import/build';
+import { prepareImport } from '@/features/map-import/core/prepare';
+import { exportMapZip } from '@/features/map-import/export';
+import { parsePy, type PyObj } from '@/features/map-import/dm/pyjson';
+
+const SAMPLE = '/Users/annuaip/Downloads/amz_tcy5a_draft (1).zip';
+describe.skipIf(!existsSync(SAMPLE))('cells of the real amz_tcy5a export', () => {
+  const zip = () => new Uint8Array(readFileSync(SAMPLE));
+  const build = () => buildMapData(prepareImport(zip()), [], []);
+  const same = (a?: Uint8Array, b?: Uint8Array) => !!a && !!b && Buffer.compare(Buffer.from(a), Buffer.from(b)) === 0;
+  const dec = (b: Uint8Array) => new TextDecoder().decode(b);
+  it('reads every cell station: its nodes with their roles, and its own way where it differs', () => {
+    const d = build();
+    const a = d.stagingAreas.find((x) => x.name === 'pallet_pickup')!;
+    expect(Object.keys(a.cellSettings!)).toHaveLength(12);
+    expect(a.cellSettings!.A1.nodes!.length).toBe(2);
+    expect(a.cellSettings!.A1.nodes![0].roles.park?.pick).toMatchObject({
+      maneuver: 'inplace',
+      params: { perpendicular_dist: 7 },
+    });
+    const dropArea = d.stagingAreas.find((x) => x.name === 'pallet_drop')!;
+    expect(Object.values(dropArea.cellSettings!).some((s) => s.angle === -180)).toBe(true);
+  });
+  it('exports an untouched map byte for byte', () => {
+    const out = unzipSync(exportMapZip({ original: zip(), data: build(), name: 'x', version: '2' }));
+    const a = unzipSync(zip());
+    for (const k of Object.keys(a)) if (!k.endsWith('/')) expect(same(a[k], out[k]), k).toBe(true);
+  });
+  it('writes a cell change to the cell station only: its roles and its way', () => {
+    const d = build();
+    const area = d.stagingAreas.find((x) => x.name === 'pallet_pickup')!;
+    const edited = editCells(d, area.id, ['B2'], (m, id) => setSlotOn(m, id, 0, 'drop', false))!;
+    const turned = setCells(edited, area.id, ['B2'], { angle: 15 });
+    const out = unzipSync(exportMapZip({ original: zip(), data: turned, name: 'x', version: '2' }));
+    const orig = unzipSync(zip());
+    const changed = Object.keys(orig)
+      .filter((k) => !k.endsWith('/') && !same(orig[k], out[k]))
+      .map((k) => k.split('/').pop())
+      .sort();
+    expect(changed).toEqual(['graph_object_v5.json', 'grid_map_attributes.json']);
+    const attrs = parsePy(dec(out[Object.keys(out).find((k) => k.endsWith('/grid_map_attributes.json'))!])) as PyObj;
+    const st = [...(attrs.get('stations_info') as PyObj).values()].find(
+      (v) => (v as PyObj).get('station_name') === 'pallet_pickup_B2',
+    ) as PyObj;
+    const node0 = (st.get('nodes') as PyObj[])[0];
+    expect((node0.get('park') as PyObj).has('drop')).toBe(false);
+    expect((node0.get('park') as PyObj).has('pick')).toBe(true);
+    const pose = st.get('pose') as { value?: number }[] | number[];
+    expect(
+      Math.abs(Number((pose[2] as { value?: number }).value ?? pose[2]) - (91 + 15) * (Math.PI / 180)),
+    ).toBeLessThan(0.01);
+  });
+});

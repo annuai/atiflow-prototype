@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ImportedRoad, ImportedStagingArea, ImportedStation } from '../../core/types';
+import type { ImportedCellStation, ImportedRoad, ImportedStagingArea, ImportedStation } from '../../core/types';
 
 /**
  * The map files a Deployment Manager v5 export adds next to `webui_map.json`: `gmaj.json` (the real stations with their positions, and the roads as lines with a direction),
@@ -213,4 +213,37 @@ export function readGraph(bytes: Uint8Array | undefined): DmGraph | null {
   for (const [name, v] of Object.entries(raw.stations_info ?? {}))
     stationNodes.set(name, Object.keys(v?.associated_nodes ?? {}));
   return nodes.length ? { nodes, stationNodes } : null;
+}
+
+/**
+ * The station of every cell of the staging areas: `cells` of an area lists, row by row, the id and name of each cell's station; the attribute file holds the station itself (pose, lane,
+ * nodes with their roles) and the graph the nodes it is joined to. Cells the files do not know are null.
+ */
+export function attachCellStations(
+  areas: ImportedStagingArea[],
+  attributes: Uint8Array | undefined,
+  graph: { stationNodes: Map<string, string[]> } | null,
+): void {
+  const raw = json(attributes) as { stations_info?: Record<string, unknown> } | null;
+  const info = raw?.stations_info;
+  if (!info) return;
+  for (const a of areas) {
+    const rows = (a.extra.dm as { cells?: unknown } | undefined)?.cells;
+    if (!Array.isArray(rows)) continue;
+    a.cellStations = rows.map((row) =>
+      (Array.isArray(row) ? row : []).map((c: { station_id?: unknown }): ImportedCellStation | null => {
+        const e = info[String(c?.station_id)] as
+          { station_name?: string; pose?: number[]; orientation?: string } | undefined;
+        if (!e || !Array.isArray(e.pose) || e.pose.length < 2) return null;
+        const name = String(e.station_name ?? '');
+        return {
+          name,
+          pose: [Number(e.pose[0]), Number(e.pose[1]), Number(e.pose[2] ?? 0)],
+          onLane: e.orientation === 'on_lane',
+          entry: e,
+          nodeIds: graph?.stationNodes.get(name),
+        };
+      }),
+    );
+  }
 }

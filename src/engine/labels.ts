@@ -100,3 +100,41 @@ export function stripeTexture(color = '#ef4444') {
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
+
+/**
+ * Hides labels that would sit on top of another one. Walks the labels nearest first, measures the rectangle each covers on the screen and keeps a label only when it
+ * overlaps none already kept (`userData.crowded` marks the ones left out; the caller turns that into opacity). Sprites that are off screen or behind the camera are left alone.
+ */
+export function declutterLabels(
+  sprites: THREE.Sprite[],
+  camera: THREE.PerspectiveCamera,
+  width: number,
+  height: number,
+) {
+  const v = new THREE.Vector3();
+  const pxPerWorld = height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
+  const items: { s: THREE.Sprite; d: number; x: number; y: number; hw: number; hh: number }[] = [];
+  for (const s of sprites) {
+    s.userData.crowded = false;
+    s.getWorldPosition(v);
+    const d = v.distanceTo(camera.position);
+    v.project(camera);
+    if (v.z > 1 || Math.abs(v.x) > 1.3 || Math.abs(v.y) > 1.3) continue;
+    const k = pxPerWorld / d;
+    items.push({
+      s,
+      d,
+      x: ((v.x + 1) * width) / 2,
+      y: ((1 - v.y) * height) / 2,
+      hw: (s.scale.x * k) / 2 + 4,
+      hh: (s.scale.y * k) / 2 + 4,
+    });
+  }
+  items.sort((a, b) => a.d - b.d);
+  const kept: typeof items = [];
+  for (const it of items) {
+    const hit = kept.some((o) => Math.abs(o.x - it.x) < o.hw + it.hw && Math.abs(o.y - it.y) < o.hh + it.hh);
+    if (hit) it.s.userData.crowded = true;
+    else kept.push(it);
+  }
+}

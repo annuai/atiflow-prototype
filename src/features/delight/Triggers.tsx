@@ -5,7 +5,7 @@ import { mapsStore } from '@/features/maps';
 import { wfStore } from '@/features/workflow-builder';
 import { services } from '@/services';
 import { copy } from './copy';
-import { celebrate, parade, runEgg } from './eggs';
+import { celebrate, claimMorning, parade, runEgg } from './eggs';
 
 const KONAMI = [
   'arrowup',
@@ -59,14 +59,19 @@ function useSecrets() {
 /** Once a day, the first time the app is open for a person: good morning before noon, "go home" after 19:00 (supervisors and operators only). */
 function useDaily(username: string, firstName: string, floorRole: boolean) {
   useEffect(() => {
+    if (!username) return;
     const t = window.setTimeout(() => {
       const h = new Date().getHours();
       const kind = h < 12 ? 'morning' : h >= 19 && floorRole ? 'late' : null; // "go home" is only for the people on the floor
       if (!kind) return;
-      const key = `egg:${kind}:${username}`;
-      const device = services().device;
-      if (device.get(key) === today()) return;
-      device.set(key, today());
+      if (kind === 'morning') {
+        if (!claimMorning(username)) return;
+      } else {
+        const key = `egg:late:${username}`;
+        const device = services().device;
+        if (device.get(key) === today()) return;
+        device.set(key, today());
+      }
       celebrate(kind === 'morning' ? copy.morning(firstName) : copy.late);
     }, 1500);
     return () => window.clearTimeout(t);

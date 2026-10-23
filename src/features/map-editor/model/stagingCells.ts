@@ -1,5 +1,5 @@
 import { degrees } from './shape';
-import { cellCorners, cellOffsetAt, clampCellAngle, cellOverride, cellRef, stationPoint } from './staging';
+import { cellCenter, cellCorners, cellOffsetAt, clampCellAngle, cellOverride, cellRef, stationPoint } from './staging';
 import { pointInPolygon } from './zones';
 import { resolveNodes } from './approach/nodes';
 import type { CellSettings, MapData, MapStation, Selection, StagingAreaDef } from './types';
@@ -207,4 +207,27 @@ export function resetCells(data: MapData, areaId: string, refs: string[]): MapDa
       return { ...a, cellSettings: Object.keys(rest).length ? rest : undefined };
     }),
   };
+}
+
+const norm180 = (d: number) => ((((d + 180) % 360) + 360) % 360) - 180;
+/**
+ * What a cell's station says about itself in a Deployment Manager file (its pose and whether it is on a lane), as a setting of the cell: nothing when it matches the area. The station stands
+ * `offset` metres from the cell's centre along the area's direction and faces the way the cell faces.
+ */
+export function settingsFromPose(
+  a: StagingAreaDef,
+  row: number,
+  col: number,
+  pose: [number, number, number],
+  onLane: boolean,
+): Pick<CellSettings, 'angle' | 'offset' | 'onLane'> {
+  const out: Pick<CellSettings, 'angle' | 'offset' | 'onLane'> = {};
+  const turn = norm180((pose[2] * 180) / Math.PI - a.rotation);
+  if (Math.abs(turn - (a.cellAngle ?? 0)) > 0.05) out.angle = Math.round(turn * 10) / 10;
+  const c = cellCenter(a, row, col),
+    t = (a.rotation * Math.PI) / 180;
+  const along = (pose[0] - c.x) * Math.cos(t) + (pose[1] - c.y) * Math.sin(t);
+  if (Math.abs(along - (a.stationOffset ?? 0)) > 0.01) out.offset = Math.round(along * 100) / 100;
+  if (onLane) out.onLane = true;
+  return out;
 }

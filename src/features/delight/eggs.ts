@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { authStore } from '@/features/auth';
 import { handle } from '@/ui/engineHandle';
 import { store as floorStore } from '@/core/store';
+import { services } from '@/services';
 import { copy } from './copy';
 import { beep } from './sound';
 
@@ -52,6 +53,15 @@ export function greeting(hour = new Date().getHours()): string | null {
   if (!name) return null;
   return hour < 12 ? copy.morning(name) : hour < 17 ? copy.afternoon(name) : copy.evening(name);
 }
+/** The morning greeting is shown once a day per person, whichever way it is asked for (on opening the app, `robottt`, the logo). True the first time today (and marks it), false after. */
+export function claimMorning(username: string, now = new Date()): boolean {
+  if (!username) return false;
+  const key = `egg:morning:${username}`;
+  const device = services().device;
+  if (device.get(key) === now.toDateString()) return false;
+  device.set(key, now.toDateString());
+  return true;
+}
 let bag: number[] = [];
 let lastPick = -1;
 /** Starts the shuffle again (tests). */
@@ -73,7 +83,11 @@ export function nextMessage(): string {
   const size = copy.robot.length + 1;
   if (!bag.length) refill(size);
   lastPick = bag.shift()!;
-  return lastPick < copy.robot.length ? copy.robot[lastPick] : (greeting() ?? copy.robot[0]);
+  if (lastPick < copy.robot.length) return copy.robot[lastPick];
+  const user = authStore.getState().user;
+  const morning = new Date().getHours() < 12;
+  if (morning && user && !claimMorning(user.username)) return nextMessage(); // already greeted this morning: take another message
+  return greeting() ?? copy.robot[0];
 }
 
 export interface RobotOptions {

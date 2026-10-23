@@ -185,11 +185,11 @@ export const cellOffsetAt = (a: StagingAreaDef, row: number, col: number) =>
 /** Cells may tilt at most this far either way; more makes the area unusable. */
 export const MAX_CELL_ANGLE = 60;
 export const clampCellAngle = (deg: number) => Math.max(-MAX_CELL_ANGLE, Math.min(MAX_CELL_ANGLE, deg));
-/** The station of a cell: in front of it (the way the area's direction points), `stationOffset` metres from the cell's edge. It faces the way the cells face. */
+/** The station of a cell: `stationOffset` metres from the cell's centre along the way the area's direction points (the Deployment Manager's meaning: 0 = at the centre). It faces the way the cell faces. */
 export function stationPoint(a: StagingAreaDef, row: number, col: number): { x: number; y: number; heading: number } {
   const c = cellCenter(a, row, col),
     t = rad(a.rotation),
-    d = a.cellLength / 2 + cellOffsetAt(a, row, col);
+    d = cellOffsetAt(a, row, col);
   return { x: c.x + d * Math.cos(t), y: c.y + d * Math.sin(t), heading: cellHeadingAt(a, row, col) };
 }
 /** Corners of one cell, turned by the cell angle round the cell's own centre. */

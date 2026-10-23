@@ -537,13 +537,15 @@ img {
 }
 @media (max-width: 1024px) {
   .app {
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    /* the right and bottom keep the same 12px frame as on a wide screen (the left is the page's own 20px / 12px, there is no sidebar in the way) */
+    padding: env(safe-area-inset-top) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
+      env(safe-area-inset-left);
   }
   .menu-btn {
     display: grid;
   }
   .topbar {
-    padding: 0 4px 0 12px;
+    padding: 0 4px 0 20px; /* level with the page's own left edge */
   }
   .search {
     flex: 1;
@@ -566,7 +568,7 @@ img {
   .topbar {
     height: 56px;
     gap: 4px;
-    padding: 0 2px 0 8px;
+    padding: 0 2px 0 12px;
   } /* phones: one row, the search box takes every pixel the buttons leave */
   .topbar [aria-label='Go to Support'],
   .topbar [aria-label='Ati AI'] {

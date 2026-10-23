@@ -5,6 +5,7 @@ import {
   defaultRoles,
   ensureNode,
   nodesFromFile,
+  settingsFromPose,
   threePointTurnFrom,
   withoutSections,
   type StationNode,
@@ -105,7 +106,7 @@ export function buildMapData(
     : undefined;
   let area = Math.max(0, ...takenAreas.map((t) => parseInt(t.replace(/\D/g, ''), 10) || 0));
   const stagingAreas: StagingAreaDef[] = prepared.map.stagingAreas.map((a) => {
-    const { externalId, ...rest } = a;
+    const { externalId, cellStations: _cells, ...rest } = a;
     return { ...rest, id: `SA-${String(++area).padStart(3, '0')}`, extra: { dm: { externalId, ...a.extra } } };
   });
   const fresh: MapData = {
@@ -195,6 +196,12 @@ function withAccess(data: MapData, prepared: PreparedImport): MapData {
   return {
     ...work,
     fileNodes: Object.fromEntries([...ids].map(([file, ours]) => [ours, file])),
+    stagingAreas: work.stagingAreas.map((area) => {
+      const ext = (area.extra?.dm as { externalId?: unknown } | undefined)?.externalId;
+      const from = prepared.map.stagingAreas.find((p) => p.externalId === ext);
+      const cellSettings = from?.cellStations ? cellSettingsOf(area, from.cellStations, ids, at, line) : undefined;
+      return cellSettings ? { ...area, cellSettings } : area;
+    }),
     stations: work.stations.map((s) => {
       const routeNodes = (named.get(s.externalId ?? '') ?? [])
         .map((id) => ids.get(id))
@@ -272,3 +279,47 @@ function gatesOf(prepared: PreparedImport): MapData['zones'] {
   }
   return d.zones;
 }
+
+/**
+ * What each cell's station says that the area does not: its way and distance (from its pose), whether it is on a lane, and its nodes with their roles. The network node each node sits on is the one
+ * the graph names for it (matched like a station's, by the lines they lie on); a node the graph does not place stays automatic.
+ */
+function cellSettingsOf(
+  area: MapData['stagingAreas'][number],
+  cells: NonNullable<PreparedImport['map']['stagingAreas'][number]['cellStations']>,
+  ids: Map<string, string>,
+  at: Map<string, { id: string; x: number; y: number }>,
+  line: Map<string, [number, number][]>,
+): MapData['stagingAreas'][number]['cellSettings'] {
+  const out: NonNullable<MapData['stagingAreas'][number]['cellSettings']> = {};
+  cells.forEach((row, r) =>
+    row.forEach((info, c) => {
+      if (!info) return;
+      const pose = settingsFromPose(area, r + 1, c + 1, info.pose, info.onLane);
+      const stand = {
+        nodeIds: info.nodeIds,
+        extra: { gmaj: info.entry },
+      } as unknown as PreparedImport['map']['stations'][number];
+      const placed = orderLikeFile(stand, at, line)
+        .map((id) => ids.get(id))
+        .filter((id): id is string => !!id);
+      const inFile = nodesFromFile(info.entry);
+      const nodes: StationNode[] = Array.from({ length: inFile.length }, (_, i) => ({
+        ...inFile[i],
+        ...(placed[i] ? { at: placed[i] } : {}),
+      }));
+      const mine = { ...pose, ...(nodes.length ? { nodes } : {}) };
+      if (Object.keys(mine).length) out[`${colName(c + 1)}${r + 1}`] = mine;
+    }),
+  );
+  return Object.keys(out).length ? out : undefined;
+}
+const colName = (c: number): string => {
+  let s = '',
+    n = c;
+  while (n > 0) {
+    s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+};

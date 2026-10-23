@@ -1,5 +1,6 @@
 import type { MapData } from '@/features/map-editor';
 import { patchStaging } from './stagingPatch';
+import { patchCells } from './v5/cells';
 import { commit, maxNum, obj, openDoc } from './tree';
 import { groupsOf, type V5 } from './v5/context';
 import { patchGraph } from './v5/graph';
@@ -46,6 +47,7 @@ export function patchV5(files: Record<string, Uint8Array>, dir: string, data: Ma
   patchGraph(ctx, patchLines(ctx));
   patchStations(ctx);
   patchStaging(staging, data, { gmaj, attrs, graph });
+  patchCells(ctx, staging);
   data.fileNodes = Object.fromEntries(fileNode);
   for (const d of [gmaj, attrs, graph, staging]) commit(files, d);
 }

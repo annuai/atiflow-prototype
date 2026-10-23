@@ -34,6 +34,25 @@ export function poolFactor(rows: number, cols: number, maxCells = MAX_POOLED_CEL
   return f;
 }
 
+/** Table cell types read as streams: bytes, and 16 bit whole numbers (little endian) such as the v5 export's `<i2` grid. Values are clamped to 0..255 like the ordinary reader does. */
+const CELL_BYTES: Record<string, number> = { '|u1': 1, '<i2': 2, '<u2': 2 };
+
+/** Turns raw bytes of one cell type into levels (an odd trailing byte of a 16 bit chunk is returned as `rest`, to be joined to the next chunk). */
+function toLevels(descr: string, bytes: Uint8Array): { levels: Uint8Array; rest: Uint8Array } {
+  if (descr === '|u1') return { levels: bytes, rest: new Uint8Array(0) };
+  const n = bytes.length >> 1;
+  const out = new Uint8Array(n);
+  const signed = descr === '<i2';
+  for (let i = 0; i < n; i++) {
+    const lo = bytes[2 * i],
+      hi = bytes[2 * i + 1];
+    let v = lo | (hi << 8);
+    if (signed && v > 32767) v -= 65536;
+    out[i] = v <= 0 ? 0 : v > 255 ? 255 : v;
+  }
+  return { levels: out, rest: bytes.subarray(n * 2) };
+}
+
 /** Folds one chunk of cells into the pooled picture. `at` = the chunk's first cell as (row, col) in the original array; returns where the next chunk starts. */
 function fold(g: PooledGrid, shift: number, chunk: Uint8Array, row: number, col: number): [number, number] {
   let i = 0;
@@ -68,12 +87,26 @@ export function poolNpz(npz: Uint8Array, maxCells = MAX_POOLED_CELLS): PooledGri
   let grid: PooledGrid | null = null;
   let shift = 0;
   let head: Uint8Array = new Uint8Array(0);
+  let descr = '|u1';
+  let leftover: Uint8Array = new Uint8Array(0);
   let row = 0,
     col = 0;
   let found = false,
     unsupported = false,
     failure: unknown = null;
 
+  const feed = (bytes: Uint8Array) => {
+    if (!grid) return;
+    let data = bytes;
+    if (leftover.length) {
+      data = new Uint8Array(leftover.length + bytes.length);
+      data.set(leftover);
+      data.set(bytes, leftover.length);
+    }
+    const { levels, rest } = toLevels(descr, data);
+    leftover = rest.slice();
+    [row, col] = fold(grid, shift, levels, row, col);
+  };
   const onChunk = (chunk: Uint8Array) => {
     if (unsupported || failure) return;
     if (!grid) {
@@ -84,10 +117,11 @@ export function poolNpz(npz: Uint8Array, maxCells = MAX_POOLED_CELLS): PooledGri
       head = joined;
       if (!hasNpyHeader(head)) return;
       const h = parseNpyHeader(head);
-      if (h.descr !== '|u1' || h.shape.length !== 2) {
+      if (!(h.descr in CELL_BYTES) || h.shape.length !== 2) {
         unsupported = true;
         return;
       }
+      descr = h.descr;
       const [rows, cols] = h.shape;
       if (rows * cols > MAX_GRID_CELLS) throw new ImportError('npy.tooBig', 'The map grid is too large to open');
       const factor = poolFactor(rows, cols, maxCells);
@@ -97,10 +131,10 @@ export function poolNpz(npz: Uint8Array, maxCells = MAX_POOLED_CELLS): PooledGri
       grid = { rows, cols, factor, poolRows, poolCols, levels: new Uint8Array(poolRows * poolCols), max: 0 };
       const rest = head.subarray(h.start);
       head = new Uint8Array(0);
-      if (rest.length) [row, col] = fold(grid, shift, rest, row, col);
+      if (rest.length) feed(rest);
       return;
     }
-    [row, col] = fold(grid, shift, chunk, row, col);
+    feed(chunk);
   };
 
   try {

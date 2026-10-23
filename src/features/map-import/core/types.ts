@@ -61,6 +61,16 @@ export interface ImportedStagingArea {
   emptyBy: 'arrival' | 'position';
   emptyPosition: { by: 'row' | 'column'; lines: 'asc' | 'desc'; cells: 'asc' | 'desc' };
   extra: Record<string, unknown>;
+  /** The station of every cell as the attribute file holds it (rows of cells, null where the file has none). */
+  cellStations?: (ImportedCellStation | null)[][];
+}
+/** The station of one staging cell in the source: its pose, whether it is on a lane, its entry (nodes and roles) and the graph nodes it is joined to. */
+export interface ImportedCellStation {
+  name: string;
+  pose: [number, number, number];
+  onLane: boolean;
+  entry: unknown;
+  nodeIds?: string[];
 }
 
 /**
